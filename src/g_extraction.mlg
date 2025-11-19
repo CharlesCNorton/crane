@@ -1,0 +1,284 @@
+(* Copyright 2025 Bloomberg Finance L.P. *)
+(* Distributed under the terms of the GNU LGPL v2.1 license. *)
+(************************************************************************)
+(*         *      The Rocq Prover / The Rocq Development Team           *)
+(*  v      *         Copyright INRIA, CNRS and contributors             *)
+(* <O___,, * (see version control and CREDITS file for authors & dates) *)
+(*   \VV/  **************************************************************)
+(*    //   *    This file is distributed under the terms of the         *)
+(*         *     GNU Lesser General Public License Version 2.1          *)
+(*         *     (see LICENSE file for the text of the license)         *)
+(************************************************************************)
+
+{
+
+open Procq.Prim
+
+}
+
+DECLARE PLUGIN "rocq-crane.plugin"
+
+{
+
+(* ML names *)
+
+open Stdarg
+open Pp
+open Names
+open Table
+open Extract_env
+
+let pr_cppname s = spc () ++ qs s
+
+}
+
+VERNAC ARGUMENT EXTEND cppname
+  PRINTED BY { pr_cppname }
+| [ preident(id) ] -> { id }
+| [ string(s) ] -> { s }
+END
+
+{
+
+let pr_int_or_id = function
+  | ArgInt i -> int i
+  | ArgId id -> Id.print id
+
+}
+
+VERNAC ARGUMENT EXTEND crane_int_or_id
+  PRINTED BY { pr_int_or_id }
+| [ preident(id) ] -> { ArgId (Id.of_string id) }
+| [ integer(i) ] -> { ArgInt i }
+END
+
+{
+
+let pr_language = function
+  | Cpp -> str "C++"
+ (* | Rust -> str "Rust" *)
+
+}
+
+VERNAC ARGUMENT EXTEND crane_language
+PRINTED BY { pr_language }
+| [ "C++" ] -> { Cpp }
+(*| [ "Rust" ] -> { Rust } *)
+END
+
+(* Extraction commands *)
+
+VERNAC COMMAND EXTEND Extraction CLASSIFIED AS QUERY STATE opaque_access
+(* Extraction in the Rocq toplevel *)
+| [ "Crane" "Extraction" global(x) ] -> { simple_extraction x }
+| [ "Crane" "Recursive" "Extraction" ne_global_list(l) ] -> { full_extraction None l }
+
+(* Monolithic extraction to a file *)
+| [ "Crane" "Extraction" string(f) ne_global_list(l) ]
+  -> { full_extraction (Some f) l }
+
+(* Extraction to a temporary file and C++ compilation *)
+| [ "Crane" "Extraction" "TestCompile" ne_global_list(l) ]
+  -> { extract_and_compile None l }
+(* Extraction to a file and C++ compilation *)
+| [ "Crane" "Extraction" "TestCompile" string(f) ne_global_list(l) ]
+  -> { extract_and_compile (Some f) l }
+END
+
+VERNAC COMMAND EXTEND SeparateExtraction CLASSIFIED AS QUERY STATE opaque_access
+(* Same, with content split in several files *)
+| [ "Crane" "Separate" "Extraction" ne_global_list(l) ]
+  -> { separate_extraction l }
+END
+
+(* Modular extraction (one Rocq library = one ML module) *)
+VERNAC COMMAND EXTEND ExtractionLibrary CLASSIFIED AS QUERY STATE opaque_access
+| [ "Crane" "Extraction" "Library" identref(m) ]
+  -> { extraction_library false m }
+END
+
+VERNAC COMMAND EXTEND RecursiveExtractionLibrary CLASSIFIED AS QUERY STATE opaque_access
+| [ "Crane" "Recursive" "Extraction" "Library" identref(m) ]
+  -> { extraction_library true m }
+END
+
+{
+
+let pr_benchmark_language = function
+  | BenchmarkOCaml -> str "OCaml"
+  | BenchmarkCpp -> str "C++"
+
+let pr_benchmark_option (lang, file, flags) =
+  match flags with
+  | "" -> pr_benchmark_language lang ++ str " From " ++ quote (str file)
+  | _ -> pr_benchmark_language lang ++ str " From " ++ quote (str file) ++  str " With " ++ quote (str flags)
+
+}
+
+VERNAC ARGUMENT EXTEND crane_benchmark_language
+PRINTED BY { pr_benchmark_language }
+| [ "OCaml" ] -> { BenchmarkOCaml }
+| [ "C++" ] -> { BenchmarkCpp }
+END
+
+VERNAC ARGUMENT EXTEND crane_benchmark_option
+PRINTED BY { pr_benchmark_option }
+| [ crane_benchmark_language(lang) "From" string(file) "With" string(flags) ] -> { (lang, file, flags) }
+| [ crane_benchmark_language(lang) "From" string(file) ] -> { (lang, file, "") }
+END
+
+VERNAC COMMAND EXTEND Benchmark CLASSIFIED AS QUERY
+| [ "Crane" "Benchmark" global(g) "On" ne_crane_benchmark_option_list_sep(bl, ",") ]
+  -> { benchmark g bl }
+END
+
+(* Target Language *)
+VERNAC COMMAND EXTEND ExtractionLanguage CLASSIFIED AS SIDEFF
+| [ "Crane" "Extraction" "Language" crane_language(l) ]
+  -> { extraction_language l }
+END
+
+VERNAC COMMAND EXTEND ExtractionInline CLASSIFIED AS SIDEFF
+(* Custom inlining directives *)
+| [ "Crane" "Extraction" "Inline" ne_global_list(l) ]
+  -> { extraction_inline true l }
+END
+
+VERNAC COMMAND EXTEND ExtractionNoInline CLASSIFIED AS SIDEFF
+| [ "Crane" "Extraction" "NoInline" ne_global_list(l) ]
+  -> { extraction_inline false l }
+END
+
+VERNAC COMMAND EXTEND PrintExtractionInline CLASSIFIED AS QUERY
+| [ "Crane" "Print" "Extraction" "Inline" ]
+  -> {Feedback.msg_notice (print_extraction_inline ()) }
+END
+
+VERNAC COMMAND EXTEND ResetExtractionInline CLASSIFIED AS SIDEFF
+| [ "Crane" "Reset" "Extraction" "Inline" ]
+  -> { reset_extraction_inline () }
+END
+
+VERNAC COMMAND EXTEND ExtractionImplicit CLASSIFIED AS SIDEFF
+(* Custom implicit arguments of some csts/inds/constructors *)
+| [ "Crane" "Extraction" "Implicit" global(r) "[" crane_int_or_id_list(l) "]" ]
+  -> { extraction_implicit r l }
+END
+
+VERNAC COMMAND EXTEND ExtractionBlacklist CLASSIFIED AS SIDEFF
+(* Force Extraction to not use some filenames *)
+| [ "Crane" "Extraction" "Blacklist" ne_preident_list(l) ]
+  -> { extraction_blacklist l }
+END
+
+VERNAC COMMAND EXTEND PrintExtractionBlacklist CLASSIFIED AS QUERY
+| [ "Crane" "Print" "Extraction" "Blacklist" ]
+  -> { Feedback.msg_notice (print_extraction_blacklist ()) }
+END
+
+VERNAC COMMAND EXTEND ResetExtractionBlacklist CLASSIFIED AS SIDEFF
+| [ "Crane" "Reset" "Extraction" "Blacklist" ]
+  -> { reset_extraction_blacklist () }
+END
+
+(* Commands for setting, printing and resetting callbacks extraction. *)
+
+(* Defining a Rocq object as ML callback for FFI call target from C *)
+VERNAC COMMAND EXTEND ExtractionCallback CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Callback" string_opt(o) global(x) ]
+  -> { extract_callback o x }
+END
+
+VERNAC COMMAND EXTEND PrintExtractionCallback CLASSIFIED AS QUERY
+| [ "Crane" "Print" "Extraction" "Callback" ]
+  -> {Feedback.msg_notice (print_extraction_callback ()) }
+END
+
+VERNAC COMMAND EXTEND ResetExtractionCallback CLASSIFIED AS SIDEFF
+| [ "Crane" "Reset" "Extraction" "Callback" ]
+  -> { reset_extraction_callback () }
+END
+
+(* Commands for printing and resetting foreigns extraction. *)
+VERNAC COMMAND EXTEND PrintExtractionForeign CLASSIFIED AS QUERY
+| [ "Crane" "Print" "Extraction" "Foreign" ]
+  -> {Feedback.msg_notice (print_extraction_foreign ()) }
+END
+
+(*
+VERNAC COMMAND EXTEND ResetExtractionForeign CLASSIFIED AS SIDEFF
+| [ "Reset" "Extraction" "Foreign" ]
+  -> { reset_extraction_foreign () }
+END
+*)
+
+(* Overriding of a Rocq object by an ML one *)
+(* TODO: currently is inlined, no option for otherwise *)
+VERNAC COMMAND EXTEND ExtractionConstant CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Constant" global(x) string_list(idl) "=>" cppname(y) "From" string_list(import) ]
+  -> { extract_constant_import false x idl y import }
+| [ "Crane" "Extract" "Constant" global(x) string_list(idl) "=>" cppname(y) ]
+  -> { extract_constant_import false x idl y [] }
+END
+
+(* Overriding of a Rocq object by an ML one that will be a FFI call to C *)
+VERNAC COMMAND EXTEND ExtractionForeignConstant CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Foreign" "Constant" global(x) "=>" string(y) ]
+  -> { extract_constant_foreign x y }
+END
+
+VERNAC COMMAND EXTEND ExtractionInlinedConstant CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Inlined" "Constant" global(x) "=>" cppname(y) "From" string_list(import)]
+  -> { extract_constant_import true x [] y import }
+| [ "Crane" "Extract" "Inlined" "Constant" global(x) "=>" cppname(y) ]
+  -> { extract_constant_import true x [] y [] }
+END
+
+VERNAC COMMAND EXTEND ExtractionInductive CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Inductive" global(x) "=>"
+    cppname(id) "[" cppname_list(idl) "]" string_opt(o) "From" string_list(import) ]
+  -> { extract_inductive x id idl o import }
+| [ "Crane" "Extract" "Inductive" global(x) "=>"
+    cppname(id) "[" cppname_list(idl) "]" string_opt(o) ]
+  -> { extract_inductive x id idl o [] }
+END
+
+VERNAC COMMAND EXTEND ExtractionMonad CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Monad" global(m) "[" "bind" ":=" global(bind) "," "ret" ":=" global(ret) "]" "=>"
+    cppname(id) "From" string_list(import) ]
+  -> { extract_monad m bind ret id import }
+| [ "Crane" "Extract" "Monad" global(m) "[" "bind" ":=" global(bind) "," "ret" ":=" global(ret) "]" "=>"
+    cppname(id) ]
+  -> { extract_monad m bind ret id [] }
+| [ "Crane" "Extract" "Monad" global(m) "[" "ret" ":=" global(ret) "," "bind" ":=" global(bind) "]" "=>"
+    cppname(id) "From" string_list(import) ]
+  -> { extract_monad m bind ret id import }
+| [ "Crane" "Extract" "Monad" global(m) "[" "ret" ":=" global(ret) "," "bind" ":=" global(bind) "]" "=>"
+    cppname(id) ]
+  -> { extract_monad m bind ret id [] }
+| [ "Crane" "Extract" "Monad" global(m) "[" "bind" ":=" global(bind) "," "ret" ":=" global(ret) "]" "From" string_list(import) ]
+  -> { extract_monad m bind ret "%t0" import }
+| [ "Crane" "Extract" "Monad" global(m) "[" "bind" ":=" global(bind) "," "ret" ":=" global(ret) "]" ]
+  -> { extract_monad m bind ret "%t0" [] }
+| [ "Crane" "Extract" "Monad" global(m) "[" "ret" ":=" global(ret) "," "bind" ":=" global(bind) "]" "From" string_list(import) ]
+  -> { extract_monad m bind ret "%t0" import }
+| [ "Crane" "Extract" "Monad" global(m) "[" "ret" ":=" global(ret) "," "bind" ":=" global(bind) "]" ]
+  -> { extract_monad m bind ret "%t0" [] }
+END
+
+VERNAC COMMAND EXTEND ExtractionVoid CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Void" global(v) "[" global(g) "]" ]
+  -> { extract_void v g }
+END
+
+VERNAC COMMAND EXTEND ExtractionSkip CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Skip" global(v) ]
+  -> { extract_skip v }
+END
+
+(* Show the extraction of the current proof *)
+
+VERNAC COMMAND EXTEND ShowExtraction CLASSIFIED AS QUERY STATE proof_query
+| [ "Crane" "Show" "Extraction" ]
+  -> { show_extraction }
+END

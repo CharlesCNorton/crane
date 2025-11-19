@@ -1,0 +1,17 @@
+(include_subdirs qualified)
+
+(coq.theory
+ (name CraneTests)
+ (synopsis "Tests for the rocq-crane plugin")
+ (modules :standard) ; automatically includes all .v files in this directory
+ (theories
+   Stdlib
+   Crane)
+ (flags (:standard -output-directory ../../tests)))
+
+(alias
+ (name runtest)
+ (deps
+  ;; depend on all .vo files in this directory
+  ;; this ensures dune runtest compiles them
+  (glob_files *.vo)))

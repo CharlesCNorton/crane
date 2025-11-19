@@ -1,0 +1,34 @@
+opam-version: "2.0"
+synopsis: "Extraction of Rocq code to BDE-flavored C++ code"
+description: "This project provides extraction of Rocq code to BDE-flavored C++ code, implemented as a Rocq plugin. It extracts Rocq into valid, performant, and memory-safe C++17 code. The generated code avoids garbage collection and does not need a separate runtime system, relying instead on `shared_ptr` for reference counting."
+homepage: "https://github.com/bloomberg/crane"
+license: "Apache-2.0"
+bug-reports: "https://github.com/bloomberg/crane/issues"
+depends: [
+  "ocaml"
+  "coq" {>= "9.0.0"}
+  "rocq-runtime"
+  "conf-clang"
+  "conf-clang-format"
+]
+build: ["dune" "build"]
+install: ["dune" "install"]
+flags: light-uninstall
+remove: [
+  ["dune" "uninstall"]
+]
+maintainer: [
+  "jkorkut@bloomberg.net"
+  "mweaver89@bloomberg.net"
+]
+authors: [
+  "Joomy Korkut"
+  "Matthew Weaver"
+]
+tags: [
+  "date:2025-04-07"
+  "logpath:Crane"
+  "category:Miscellaneous/Coq Extensions"
+  "keyword:extraction"
+  "keyword:C++"
+]

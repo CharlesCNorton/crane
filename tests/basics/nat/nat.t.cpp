@@ -1,0 +1,56 @@
+// Copyright 2025 Bloomberg Finance L.P.
+// Distributed under the terms of the GNU LGPL v2.1 license.
+#include <nat.h>
+
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <variant>
+
+// ============================================================================
+//                     STANDARD BDE ASSERT TEST FUNCTION
+// ----------------------------------------------------------------------------
+
+namespace {
+
+int testStatus = 0;
+
+void aSsErT(bool condition, const char *message, int line)
+{
+    if (condition) {
+        std::cout << "Error " __FILE__ "(" << line << "): " << message
+             << "    (failed)" << std::endl;
+
+        if (0 <= testStatus && testStatus <= 100) {
+            ++testStatus;
+        }
+    }
+}
+
+}  // close unnamed namespace
+
+#define ASSERT(X)                                              \
+    aSsErT(!(X), #X, __LINE__);
+
+
+using namespace Nat;
+
+std::shared_ptr<nat::nat> int_to_nat(int x) {
+  if (x <= 0) {
+    return nat::O::make();
+  }
+  else {
+    return nat::S::make(int_to_nat(x-1));
+  }
+}
+
+int main() {
+
+  ASSERT(5 == nat_to_int(int_to_nat(5)));
+  ASSERT(9 == nat_to_int(add(int_to_nat(5), int_to_nat(4))));
+
+  return 0;
+}
+
+// clang++ -I. -I~/crane/theories/cpp -std=c++23 -O2 nat.o nat.t.cpp -o nat.t.o; ./nat.t.o
