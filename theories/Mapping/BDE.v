@@ -6,7 +6,7 @@ From Crane Require Export Mapping.Shared.
 #[export] Set Crane StdLib "BDE".
 (* If you have bde-format, you can uncomment the line below: *)
 (* #[export] Set Crane Format Style "BDE". *)
-#[export] Set Crane StdLib "LLVM".
+#[export] Set Crane Format Style "LLVM".
 
 
 Crane Extract Inductive option =>

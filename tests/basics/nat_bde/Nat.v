@@ -52,7 +52,7 @@ Module Nat.
 End Nat.
 
 Require Crane.Extraction.
-Require Crane.Mapping.BDE.
+Require Import Crane.Mapping.BDE.
 
 
 Crane Extract Inlined Constant Nat.int => "int".
@@ -68,6 +68,5 @@ Crane Extract Inlined Constant negb => "!(%a0)".
 *)
 
 
-Set Crane StdLib "BDE".
 Set Crane BDE Directory "~/bde_install/".
 Crane Extraction TestCompile "nat_bde" Nat.

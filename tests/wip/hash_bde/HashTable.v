@@ -178,6 +178,5 @@ End CHT.
 
 Crane Extract Inlined Constant max => "bsl::max(%a0, %a1)".
 
-Set Crane StdLib "BDE".
 Set Crane BDE Directory "~/bde_install/".
 Crane Extraction TestCompile "hash_bde" CHT.

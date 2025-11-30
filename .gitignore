@@ -15,6 +15,7 @@
 *.mlpack.d
 *.native
 *.o
+*.tmp
 *.v.d
 *.vio
 *.vo
@@ -46,6 +47,8 @@ result.html
 /tests/*.h
 /tests/*.o
 *.install
+infer-out
+*.pch
 
 /tests/basics/top/benchmark
 /tests/basics/top_bde/benchmark

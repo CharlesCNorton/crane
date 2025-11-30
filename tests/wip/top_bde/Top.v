@@ -151,7 +151,6 @@ Require Crane.Extraction.
 
 Set Crane BDE Directory "~/bde_install/".
 From Crane Require Import Mapping.BDE Mapping.NatIntBDE.
-Set Crane StdLib "BDE".
 Crane Extraction TestCompile "top_bde" TopSort ToString.
 
 From Stdlib Require Extraction ExtrOcamlBasic ExtrOcamlNatInt.
