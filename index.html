@@ -292,26 +292,26 @@
         }
       }
 
-      /* RESOURCES SECTION */
-      section.resources {
+      /* QUICK START SECTION */
+      section.quick-start {
         background: var(--b-dark-2);
         padding: 72px 18px;
         border-top: 1px solid var(--b-border);
         border-bottom: 1px solid var(--b-border);
       }
 
-      section.resources .container {
+      section.quick-start .container {
         max-width: 900px;
         margin: 0 auto;
       }
 
-      .res-title {
+      .qs-title {
         text-align: center;
         font-size: 28px;
         margin: 0 0 10px;
       }
 
-      .res-sub {
+      .qs-sub {
         text-align: center;
         font-size: 15px;
         color: var(--b-muted);
@@ -319,13 +319,13 @@
         margin: 12px auto 40px;
       }
 
-      .res-grid {
+      .qs-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 26px;
       }
 
-      .res-card {
+      .qs-card {
         display: block;
         padding: 22px;
         border-radius: 10px;
@@ -341,11 +341,11 @@
         text-decoration: none;
       }
 
-      .res-card:visited {
+      .qs-card:visited {
         color: var(--b-ink);
       }
 
-      .res-card:hover {
+      .qs-card:hover {
         border-color: var(--hl-blue);
         background: #101218;
         box-shadow: 0 0 16px rgba(125, 211, 252, 0.20);
@@ -354,7 +354,7 @@
       }
 
       /* Icon + title row */
-      .res-head {
+      .qs-head {
         display: flex;
         align-items: center;
         gap: 12px;          /* space between icon and title */
@@ -362,14 +362,14 @@
       }
 
       /* Adjust title when in the row */
-      .res-head h4 {
+      .qs-head h4 {
         margin: 0;
         font-size: 17px;
         font-weight: 600;
       }
 
       /* Slightly shrink icon container to match title height */
-      .res-icon {
+      .qs-icon {
         width: 32px;
         height: 32px;
         border-radius: 6px;       /* tighter, more Bloomberg-like */
@@ -382,7 +382,7 @@
         color: var(--hl-blue);
       }
 
-      .res-card p {
+      .qs-card p {
         margin: 0;
         color: var(--b-muted);
         font-size: 14px;
@@ -391,15 +391,60 @@
 
       /* Responsive */
       @media(max-width: 960px) {
-        .res-grid {
+        .qs-grid {
           grid-template-columns: repeat(2, 1fr);
         }
       }
 
       @media(max-width: 640px) {
-        .res-grid {
+        .qs-grid {
           grid-template-columns: 1fr;
         }
+      }
+
+      /* PAPERS */
+      section.papers {
+        background: var(--b-dark);
+        padding: 56px 18px;
+        border-bottom: 1px solid var(--b-border);
+      }
+
+      section.papers .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .papers-title {
+        text-align: center;
+        font-size: 26px;
+        margin: 0 0 24px;
+      }
+
+      .papers-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .papers-list li {
+        padding: 14px 0;
+        border-top: 1px solid var(--b-border);
+      }
+
+      .papers-list li:last-child {
+        border-bottom: 1px solid var(--b-border);
+      }
+
+      .papers-list a {
+        font-weight: 500;
+        color: var(--hl-blue);
+      }
+
+      .paper-meta {
+        display: block;
+        font-size: 14px;
+        color: var(--b-muted);
+        margin-top: 4px;
       }
 
       /* FOOTER */
@@ -479,59 +524,59 @@
         </p>
       </div>
     </header>
-    <section class="resources">
+    <section class="quick-start">
       <div class="container">
-        <h2 class="res-title">Quick Start</h2>
-        <p class="res-sub"> Explore common topics, guides, and documentation for Crane. </p>
-        <div class="res-grid">
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Getting-Started">
-            <div class="res-head">
-            <div class="res-icon">
+        <h2 class="qs-title">Quick Start</h2>
+        <p class="qs-sub"> Explore common topics, guides, and documentation for Crane. </p>
+        <div class="qs-grid">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Getting-Started">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-solid fa-book-open"></i>
             </div>
             <h4>Getting Started</h4>
             </div>
             <p>Install Crane, configure Rocq, and run your first extraction.</p>
           </a>
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Design-Principles">
-            <div class="res-head">
-            <div class="res-icon">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Design-Principles">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-solid fa-gem"></i>
             </div>
             <h4>Design Principles</h4>
             </div>
             <p>The goals and tradeoffs behind Crane's C++ extraction strategy.</p>
           </a>
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Examples">
-            <div class="res-head">
-            <div class="res-icon">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Examples">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-solid fa-puzzle-piece"></i>
             </div>
             <h4>Examples</h4>
             </div>
             <p>Browse example Rocq projects and extracted C++ code.</p>
           </a>
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Reference-Manual">
-            <div class="res-head">
-            <div class="res-icon">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Reference-Manual">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-regular fa-file-lines"></i>
             </div>
             <h4>Reference Manual</h4>
             </div>
             <p>Understand all Crane options, extraction rules, and flags.</p>
           </a>
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Crane-Base-Library">
-            <div class="res-head">
-            <div class="res-icon">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Crane-Base-Library">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-solid fa-cubes"></i>
             </div>
             <h4>Crane Base Library</h4>
             </div>
             <p>Our Rocq library of types, monads, etc. used from extracted code.</p>
           </a>
-          <a class="res-card" href="https://github.com/bloomberg/crane/wiki/Roadmap">
-            <div class="res-head">
-            <div class="res-icon">
+          <a class="qs-card" href="https://github.com/bloomberg/crane/wiki/Roadmap">
+            <div class="qs-head">
+            <div class="qs-icon">
               <i class="fa-solid fa-road"></i>
             </div>
             <h4>Roadmap</h4>
@@ -541,9 +586,26 @@
         </div>
       </div>
     </section>
+
+    <section class="papers">
+      <div class="container">
+        <h2 class="papers-title">Papers</h2>
+        <ul class="papers-list">
+          <li>
+            <a href="papers/crane-rocqpl26.pdf">
+              Crane Lowers Rocq Safely into C++ (Extended Abstract)
+            </a>
+            <span class="paper-meta">
+              Matthew Z. Weaver, Joomy Korkut. <a href="https://popl26.sigplan.org/home/rocqpl-2026">RocqPL 2026</a>.
+            </span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <footer id="footer" role="contentinfo">
       <div class="row">
-        <div> © 2025 Bloomberg L.P. </div>
+        <div> © 2026 Bloomberg L.P. </div>
         <ul style="list-style:none;display:flex;gap:18px;margin:0;padding:0;flex-wrap:wrap">
           <li>
             <a href="https://github.com/bloomberg/crane">GitHub</a>
