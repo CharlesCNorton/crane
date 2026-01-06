@@ -772,7 +772,7 @@ let simple_extraction ~opaque_access r =
       let d = get_decl_in_structure r struc in
       warns ();
       let flag =
-        if is_any_custom r then str "(** User defined extraction *)" ++ fnl()
+        if is_any_custom r then str "/* User defined extraction */" ++ fnl()
         else mt ()
       in
       let ans = flag ++ print_one_decl struc (modpath_of_r r) d in
