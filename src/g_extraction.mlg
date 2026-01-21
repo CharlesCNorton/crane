@@ -276,6 +276,11 @@ VERNAC COMMAND EXTEND ExtractionSkip CLASSIFIED AS SIDEFF
   -> { extract_skip v }
 END
 
+VERNAC COMMAND EXTEND ExtractionSkipModule CLASSIFIED AS SIDEFF
+| [ "Crane" "Extract" "Skip" "Module" global(v) ]
+  -> { extract_skip_module v }
+END
+
 (* Show the extraction of the current proof *)
 
 VERNAC COMMAND EXTEND ShowExtraction CLASSIFIED AS QUERY STATE proof_query
