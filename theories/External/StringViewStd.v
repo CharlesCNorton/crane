@@ -27,6 +27,45 @@ Axiom substr_of_string_comm : forall s i j, compare i j <> Gt
                               -> compare j (PrimString.length s) <> Gt
                               -> substr (sv_of_string s) i (sub j i) = sv_of_string (PrimString.sub s i j).
 
+(* Axioms relating contains, sv_get, substr, and length *)
+
+(* A string_view contains a character iff that character appears at some valid position *)
+Axiom contains_iff_exists_get : forall sv c,
+  contains sv c = true <-> exists i, leb 0 i = true /\ ltb i (length sv) = true /\ sv_get sv i = c.
+
+(* Characters in a prefix substr are exactly those in the corresponding positions of the original *)
+Axiom sv_get_substr : forall sv start len i,
+  leb 0 i = true -> ltb i len = true -> ltb (add start i) (length sv) = true ->
+  sv_get (substr sv start len) i = sv_get sv (add start i).
+
+(* Length of a substr is bounded by the requested length *)
+Axiom length_substr : forall sv start len,
+  leb 0 start = true -> leb 0 len = true ->
+  length (substr sv start len) = if ltb (add start len) (length sv)
+                                  then len
+                                  else if leb start (length sv)
+                                       then sub (length sv) start
+                                       else 0.
+
+(* Simpler axiom for prefix case: length of substr from 0 *)
+Axiom length_substr_prefix : forall sv len,
+  leb 0 len = true -> leb len (length sv) = true ->
+  length (substr sv 0 len) = len.
+
+(* Key axiom: if no position in [0, n) contains a character c, then contains returns false *)
+Axiom contains_substr_prefix_false : forall sv n c,
+  leb 0 n = true -> leb n (length sv) = true ->
+  (forall i, leb 0 i = true -> ltb i n = true -> sv_get sv i <> c) ->
+  contains (substr sv 0 n) c = false.
+
+(* Conversely, if some position contains c, then contains returns true *)
+Axiom contains_substr_prefix_true : forall sv n c i,
+  leb 0 n = true -> leb n (length sv) = true ->
+  leb 0 i = true -> ltb i n = true -> sv_get sv i = c ->
+  contains (substr sv 0 n) c = true.
+
+(* Non-negative length *)
+Axiom length_nonneg : forall sv, leb 0 (length sv) = true.
 
 Require Crane.Extraction.
 

@@ -3,6 +3,7 @@
 From Corelib Require Import PrimString.
 From Corelib Require Import PrimInt63.
 From Stdlib Require Import Lists.List.
+From Stdlib Require Import Structures.Equalities.
 From Crane Require Import Mapping.Std.
 From Crane Require Import Mapping.NatIntStd.
 From Crane Require Import External.StringViewStd.
@@ -92,20 +93,57 @@ Module Tokenizer.
 
 End Tokenizer.
 
-(*
 Module Tokenizer_Properties.
 
-  Theorem token_contains_no_delims (input soft hard : string_view)
-                                   (tok : string_view) :
-                                   fst (next_token input soft hard) = Some tok
-                                   -> (forall c, contains c soft -> ~ (contains c tok))
-                                   * (forall c, contains c hard -> ~ (contains c tok)).
-  Proof.
+  Import Tokenizer.
+  Open Scope int63.
 
+  (* ================================================================== *)
+  (* Theorems about next_token                                          *)
+  (* ================================================================== *)
+
+  (* Theorem: next_token on empty input returns None *)
+  Theorem next_token_empty_input :
+    forall input soft hard,
+      length input = 0 ->
+      fst (next_token input soft hard) = None.
+  Proof.
+    intros input soft hard Hlen.
+    unfold next_token. rewrite Hlen. rewrite nat_of_int_0. rewrite Hlen. simpl. reflexivity.
+  Qed.
+
+  (* Theorem: if next_token finds a hard delimiter at position 0,
+     it returns the empty prefix *)
+  Theorem next_token_leading_hard_delim :
+    forall input soft hard,
+      eqb (length input) 0 = false ->
+      contains hard (sv_get input 0) = true ->
+      fst (next_token input soft hard) = Some (substr input 0 0).
+  Proof.
+    intros input soft hard Hnonempty Hhard.
+    unfold next_token.
+    destruct (nat_of_int_pos (length input) Hnonempty) as [m Hm].
+    rewrite Hm. simpl. rewrite Hnonempty. rewrite Hhard. simpl. reflexivity.
+  Qed.
+
+  (* Theorem: if next_token finds a soft delimiter at position 0 and
+     the rest is empty, it returns None *)
+  Theorem next_token_leading_soft_delim :
+    forall input soft hard,
+      eqb (length input) 0 = false ->
+      contains hard (sv_get input 0) = false ->
+      contains soft (sv_get input 0) = true ->
+      eqb (length (substr input 1 (sub (length input) 1))) 0 = true ->
+      fst (next_token input soft hard) = None.
+  Proof.
+    intros input soft hard Hnonempty Hnohard Hsoft Hrestlen.
+    unfold next_token.
+    destruct (nat_of_int_pos (length input) Hnonempty) as [m Hm].
+    rewrite Hm. simpl. rewrite Hnonempty. rewrite Hnohard. rewrite Hsoft.
+    destruct m; simpl; rewrite Hrestlen; reflexivity.
   Qed.
 
 End Tokenizer_Properties.
-*)
 
 From Crane Require Extraction.
 From Crane Require Mapping.Std.
