@@ -1,7 +1,10 @@
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>
@@ -11,60 +14,6 @@ template <class... Ts> struct Overloaded : Ts... {
   using Ts::operator()...;
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
-
-struct Bool0 {
-  struct bool0 {
-  public:
-    struct true0 {};
-    struct false0 {};
-    using variant_t = std::variant<true0, false0>;
-
-  private:
-    variant_t v_;
-    explicit bool0(true0 x) : v_(std::move(x)) {}
-    explicit bool0(false0 x) : v_(std::move(x)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<bool0> true0_() {
-        return std::shared_ptr<bool0>(new bool0(true0{}));
-      }
-      static std::shared_ptr<bool0> false0_() {
-        return std::shared_ptr<bool0>(new bool0(false0{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
-
-struct Nat {
-  struct nat {
-  public:
-    struct O {};
-    struct S {
-      std::shared_ptr<nat> _a0;
-    };
-    using variant_t = std::variant<O, S>;
-
-  private:
-    variant_t v_;
-    explicit nat(O x) : v_(std::move(x)) {}
-    explicit nat(S x) : v_(std::move(x)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<nat> O_() {
-        return std::shared_ptr<nat>(new nat(O{}));
-      }
-      static std::shared_ptr<nat> S_(const std::shared_ptr<nat> &a0) {
-        return std::shared_ptr<nat>(new nat(S{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
 
 struct List {
   template <typename A> struct list {
@@ -107,12 +56,6 @@ struct List {
     }
   };
 };
-
-std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
-                              const std::shared_ptr<Nat::nat> &m);
-
-std::shared_ptr<Nat::nat> max(const std::shared_ptr<Nat::nat> &n,
-                              const std::shared_ptr<Nat::nat> &m);
 
 struct Tree {
   template <typename A> struct tree {
@@ -174,45 +117,36 @@ struct Tree {
               }},
           this->v());
     }
-    std::shared_ptr<Bool0::bool0> is_leaf() const {
-      return std::visit(Overloaded{[&](const typename tree<A>::leaf _args)
-                                       -> std::shared_ptr<Bool0::bool0> {
-                                     return Bool0::bool0::ctor::true0_();
-                                   },
-                                   [&](const typename tree<A>::node _args)
-                                       -> std::shared_ptr<Bool0::bool0> {
-                                     return Bool0::bool0::ctor::false0_();
-                                   }},
-                        this->v());
-    }
-    std::shared_ptr<Nat::nat> size() const {
+    bool is_leaf() const {
       return std::visit(
-          Overloaded{[&](const typename tree<A>::leaf _args)
-                         -> std::shared_ptr<Nat::nat> {
-                       return Nat::nat::ctor::S_(Nat::nat::ctor::O_());
+          Overloaded{
+              [&](const typename tree<A>::leaf _args) -> bool { return true; },
+              [&](const typename tree<A>::node _args) -> bool {
+                return false;
+              }},
+          this->v());
+    }
+    unsigned int size() const {
+      return std::visit(
+          Overloaded{[&](const typename tree<A>::leaf _args) -> unsigned int {
+                       return 1u;
                      },
-                     [&](const typename tree<A>::node _args)
-                         -> std::shared_ptr<Nat::nat> {
+                     [&](const typename tree<A>::node _args) -> unsigned int {
                        std::shared_ptr<tree<A>> l = _args._a0;
                        std::shared_ptr<tree<A>> r = _args._a2;
-                       return add(add(Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
-                                      l->size()),
-                                  r->size());
+                       return ((1u + l->size()) + r->size());
                      }},
           this->v());
     }
-    std::shared_ptr<Nat::nat> height() const {
+    unsigned int height() const {
       return std::visit(
-          Overloaded{[&](const typename tree<A>::leaf _args)
-                         -> std::shared_ptr<Nat::nat> {
-                       return Nat::nat::ctor::S_(Nat::nat::ctor::O_());
+          Overloaded{[&](const typename tree<A>::leaf _args) -> unsigned int {
+                       return 1u;
                      },
-                     [&](const typename tree<A>::node _args)
-                         -> std::shared_ptr<Nat::nat> {
+                     [&](const typename tree<A>::node _args) -> unsigned int {
                        std::shared_ptr<tree<A>> l = _args._a0;
                        std::shared_ptr<tree<A>> r = _args._a2;
-                       return add(Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
-                                  max(l->height(), r->height()));
+                       return (1u + std::max(l->height(), r->height()));
                      }},
           this->v());
     }
@@ -280,30 +214,19 @@ struct Tree {
     }
   };
 
-  static inline const std::shared_ptr<tree<std::shared_ptr<Nat::nat>>> tree1 =
-      tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-          tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-              tree<std::shared_ptr<Nat::nat>>::ctor::leaf_(),
-              Nat::nat::ctor::S_(
-                  Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::O_()))),
-              tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-                  tree<std::shared_ptr<Nat::nat>>::ctor::leaf_(),
-                  Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                      Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                          Nat::nat::ctor::S_(Nat::nat::ctor::O_()))))))),
-                  tree<std::shared_ptr<Nat::nat>>::ctor::leaf_())),
-          Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
-          tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-              tree<std::shared_ptr<Nat::nat>>::ctor::leaf_(),
-              Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                  Nat::nat::ctor::S_(Nat::nat::ctor::O_())))),
-              tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-                  tree<std::shared_ptr<Nat::nat>>::ctor::node_(
-                      tree<std::shared_ptr<Nat::nat>>::ctor::leaf_(),
-                      Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                          Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                              Nat::nat::ctor::S_(Nat::nat::ctor::O_())))))),
-                      tree<std::shared_ptr<Nat::nat>>::ctor::leaf_()),
-                  Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::O_())),
-                  tree<std::shared_ptr<Nat::nat>>::ctor::leaf_())));
+  static inline const std::shared_ptr<tree<unsigned int>> tree1 =
+      tree<unsigned int>::ctor::node_(
+          tree<unsigned int>::ctor::node_(
+              tree<unsigned int>::ctor::leaf_(), 3u,
+              tree<unsigned int>::ctor::node_(
+                  tree<unsigned int>::ctor::leaf_(), 7u,
+                  tree<unsigned int>::ctor::leaf_())),
+          1u,
+          tree<unsigned int>::ctor::node_(
+              tree<unsigned int>::ctor::leaf_(), 4u,
+              tree<unsigned int>::ctor::node_(
+                  tree<unsigned int>::ctor::node_(
+                      tree<unsigned int>::ctor::leaf_(), 6u,
+                      tree<unsigned int>::ctor::leaf_()),
+                  2u, tree<unsigned int>::ctor::leaf_())));
 };

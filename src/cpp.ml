@@ -1692,7 +1692,6 @@ let rec pp_structure_elem ~is_header f = function
                      let non_projection_candidates = List.filter (fun (r, _, _, _) ->
                        not (Table.is_projection r)
                      ) (List.rev this_method_candidates) in
-                     (* TODO: Is this being used? seems maybe dead *)
                      let method_fields = Translation.gen_record_methods epon_ref ty_vars non_projection_candidates in
                      let methods_pp = if method_fields = [] then mt () else
                        prlist_with_sep fnl (fun (fld, _vis) -> pp_cpp_field (empty_env ()) fld) method_fields ++ fnl ()
@@ -1744,6 +1743,7 @@ let rec pp_structure_elem ~is_header f = function
       let def = pp_module_type [] m in
       let name = pp_modname (MPdot (top_visible_mp (), l)) in
       (* Generate a C++ concept with template parameter *)
+      (* TODO: Don't love the hard-coded 'M' for the typename *)
       str "template<typename M>" ++ fnl () ++
       hov 1 (str "concept " ++ name ++ str " = requires {" ++ fnl () ++ def ++ str "};") ++
       (match Common.get_duplicate (top_visible_mp ()) l with

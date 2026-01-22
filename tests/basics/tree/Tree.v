@@ -2,6 +2,8 @@
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 From Stdlib Require Import Lists.List.
 From Stdlib Require Import Lia.
+From Crane Require Mapping.Std.
+From Crane Require Import Mapping.NatIntStd.
 Import ListNotations.
 
 Module Tree.
@@ -22,15 +24,15 @@ Definition is_leaf {A} (t : tree A) : bool :=
 (* number of nodes (leaf counts as 1) *)
 Fixpoint size {A} (t : tree A) : nat :=
   match t with
-  | leaf => 1
-  | node l _ r => 1 + size l + size r
+  | leaf => one
+  | node l _ r => one + size l + size r
   end.
 
 (* leaf has height 1 *)
 Fixpoint height {A} (t : tree A) : nat :=
   match t with
-  | leaf => 1
-  | node l _ r => 1 + Nat.max (height l) (height r)
+  | leaf => one
+  | node l _ r => one + Nat.max (height l) (height r)
   end.
 
 Fixpoint flatten {A : Type} (t : tree A) : list A :=
@@ -58,14 +60,14 @@ Fixpoint merge {A : Type}
       end
   end.
 
-Definition tree1 := node (node leaf 3 (node leaf 7 leaf)) 1 (node leaf 4 (node (node leaf 6 leaf) 2 leaf)).
+Definition tree1 := node (node leaf three (node leaf seven leaf)) one (node leaf four (node (node leaf six leaf) two leaf)).
 
 End Tree.
 
 Module Tree_Properties.
 Import Tree.
 
-Lemma height_pos {A : Type} (t : tree A) : 1 <= height t.
+Lemma height_pos {A : Type} (t : tree A) : one <= height t.
 Proof.
   induction t; simpl; lia.
 Qed.
@@ -76,13 +78,13 @@ Theorem merge_height_max {A : Type}
                          (height t2).
 Proof.
   revert t2.
-  induction t1 as [| l1 IHl1 a1 r1 IHr1]; intros t2; destruct t2 as [| l2 a2 r2]; simpl.
+  induction t1 as [| l1 IHl1 a1 r1 IHr1]; intros t2; destruct t2 as [| l2 a2 r2]; simpl; unfold one in *.
   - (* leaf, leaf *)
     lia.
   - (* leaf, node *)
-    pose proof (height_pos l2). pose proof (height_pos r2). lia.
+    pose proof (height_pos l2). pose proof (height_pos r2);unfold one in *. lia.
   - (* node, leaf *)
-    pose proof (height_pos l1). pose proof (height_pos r1). lia.
+    pose proof (height_pos l1). pose proof (height_pos r1); unfold one in *. lia.
   - (* node, node *)
     specialize (IHl1 l2).
     specialize (IHr1 r2).
