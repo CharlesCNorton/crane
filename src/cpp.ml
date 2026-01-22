@@ -1691,7 +1691,7 @@ let rec pp_structure_elem ~is_header f = function
                        since they have the same names as fields and are redundant *)
                      let non_projection_candidates = List.filter (fun (r, _, _, _) ->
                        not (Table.is_projection r)
-                     ) this_method_candidates in
+                     ) (List.rev this_method_candidates) in
                      (* TODO: Is this being used? seems maybe dead *)
                      let method_fields = Translation.gen_record_methods epon_ref ty_vars non_projection_candidates in
                      let methods_pp = if method_fields = [] then mt () else

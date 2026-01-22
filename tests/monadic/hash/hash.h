@@ -61,43 +61,27 @@ template <typename K, typename V> struct CHT {
   int cht_nbuckets;
   std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>
       cht_fallback;
-  V get_or(const K k, const V dflt) const {
-    return stm::atomically([&] { return this->stm_get_or(k, dflt); });
+  std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>
+  bucket_of(const K k) const {
+    int i = this->CHT::cht_hash(k) % this->CHT::cht_nbuckets;
+    return this->CHT::cht_buckets.at(i);
   }
-  template <MapsTo<V, std::optional<V>> F1>
-  V hash_update(const K k, F1 &&f) const {
-    return stm::atomically([&] { return this->stm_update(k, f); });
-  }
-  std::optional<V> hash_delete(const K k) const {
-    return stm::atomically([&] { return this->stm_delete(k); });
-  }
-  std::optional<V> get(const K k) const {
-    return stm::atomically([&] { return this->stm_get(k); });
-  }
-  void put(const K k, const V v) const {
-    return stm::atomically([&] { return this->stm_put(k, v); });
-  }
-  V stm_get_or(const K k, const V dflt) const {
-    std::optional<V> v = this->stm_get(k);
-    if (v.has_value()) {
-      V x = *v;
-      return x;
-    } else {
-      return dflt;
-    }
-  }
-  template <MapsTo<V, std::optional<V>> F1>
-  V stm_update(const K k, F1 &&f) const {
+  std::optional<V> stm_get(const K k) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List::list<std::pair<K, V>>> xs =
         stm::readTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b);
-    std::optional<V> ov = CHT::assoc_lookup<K, V>(this->CHT::cht_eqb, k, xs);
-    V v = f(ov);
+    return CHT::assoc_lookup<K, V>(this->CHT::cht_eqb, k, xs);
+  }
+  void stm_put(const K k, const V v) const {
+    std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>> b =
+        this->bucket_of(k);
+    std::shared_ptr<List::list<std::pair<K, V>>> xs =
+        stm::readTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b);
     std::shared_ptr<List::list<std::pair<K, V>>> xs_ =
         CHT::assoc_insert_or_replace<K, V>(this->CHT::cht_eqb, k, v, xs);
     stm::writeTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b, xs_);
-    return v;
+    return;
   }
   std::optional<V> stm_delete(const K k) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>> b =
@@ -114,27 +98,43 @@ template <typename K, typename V> struct CHT {
       return p.first;
     }
   }
-  void stm_put(const K k, const V v) const {
+  template <MapsTo<V, std::optional<V>> F1>
+  V stm_update(const K k, F1 &&f) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List::list<std::pair<K, V>>> xs =
         stm::readTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b);
+    std::optional<V> ov = CHT::assoc_lookup<K, V>(this->CHT::cht_eqb, k, xs);
+    V v = f(ov);
     std::shared_ptr<List::list<std::pair<K, V>>> xs_ =
         CHT::assoc_insert_or_replace<K, V>(this->CHT::cht_eqb, k, v, xs);
     stm::writeTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b, xs_);
-    return;
+    return v;
   }
-  std::optional<V> stm_get(const K k) const {
-    std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>> b =
-        this->bucket_of(k);
-    std::shared_ptr<List::list<std::pair<K, V>>> xs =
-        stm::readTVar<std::shared_ptr<List::list<std::pair<K, V>>>>(b);
-    return CHT::assoc_lookup<K, V>(this->CHT::cht_eqb, k, xs);
+  V stm_get_or(const K k, const V dflt) const {
+    std::optional<V> v = this->stm_get(k);
+    if (v.has_value()) {
+      V x = *v;
+      return x;
+    } else {
+      return dflt;
+    }
   }
-  std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>
-  bucket_of(const K k) const {
-    int i = this->CHT::cht_hash(k) % this->CHT::cht_nbuckets;
-    return this->CHT::cht_buckets.at(i);
+  void put(const K k, const V v) const {
+    return stm::atomically([&] { return this->stm_put(k, v); });
+  }
+  std::optional<V> get(const K k) const {
+    return stm::atomically([&] { return this->stm_get(k); });
+  }
+  std::optional<V> hash_delete(const K k) const {
+    return stm::atomically([&] { return this->stm_delete(k); });
+  }
+  template <MapsTo<V, std::optional<V>> F1>
+  V hash_update(const K k, F1 &&f) const {
+    return stm::atomically([&] { return this->stm_update(k, f); });
+  }
+  V get_or(const K k, const V dflt) const {
+    return stm::atomically([&] { return this->stm_get_or(k, dflt); });
   }
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
   static std::optional<T2>
