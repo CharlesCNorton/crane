@@ -92,6 +92,20 @@ Module Tokenizer.
 
 End Tokenizer.
 
+(*
+Module Tokenizer_Properties.
+
+  Theorem token_contains_no_delims (input soft hard : string_view)
+                                   (tok : string_view) :
+                                   fst (next_token input soft hard) = Some tok
+                                   -> (forall c, contains c soft -> ~ (contains c tok))
+                                   * (forall c, contains c hard -> ~ (contains c tok)).
+  Proof.
+
+  Qed.
+
+End Tokenizer_Properties.
+*)
 
 From Crane Require Extraction.
 From Crane Require Mapping.Std.
@@ -99,5 +113,4 @@ From Crane Require Mapping.Std.
 Crane Extraction TestCompile "tokenizer" ToString Tokenizer.
 
 (* TODO: most common traits in BDE
-         which monads needed most to make our code BDE
-         eta expand custom syntax/check when needed during translation *)
+         which monads needed most to make our code BDE *)
