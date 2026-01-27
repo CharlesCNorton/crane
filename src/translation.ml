@@ -641,7 +641,7 @@ let gen_instance_struct (name : GlobRef.t) (body : ml_ast) (ty : ml_type)
                     let stmts = gen_stmts env (fun x -> Sreturn x) inner_body in
                     (cpp_params, method_ret_ty, stmts)
                 in
-                Some (Fmethod (method_name, [], ret_ty, List.rev cpp_params, body_stmts, false, true), VPublic)
+                Some (Fmethod (method_name, [], ret_ty, cpp_params, body_stmts, false, true), VPublic)
           in
           (* Zip fields with their types from ind_packet *)
           let fields_with_types =

@@ -119,7 +119,7 @@ Definition test_compare_gt : Ordering := compare (A := nat) twenty ten.
 Definition test_show : string := to_string (A := nat) forty_two.
 
 (* Extract everything *)
-Crane Extraction "simpletype"
+Crane Extraction "eqordshow"
   Eq NatEq
   Ord NatOrd
   Show NatShow

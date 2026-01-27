@@ -1,11 +1,28 @@
-.PHONY: build install clean test test-verbose test-raw test-one test-list theories plugin all
+.PHONY: build install clean test test-verbose test-raw test-one test-list theories plugin all extract
 
 # Default target: build plugin and theories only (not tests)
 build: plugin theories
 
-# Build everything including tests
-all:
+# Build everything including tests (extract first to avoid race conditions)
+all: extract
 	dune build
+
+# Extract: build plugin/theories and generate all test C++ files (without compiling them)
+# Continues even if some extractions fail (pre-existing plugin bugs)
+extract: build
+	@echo "Extracting all tests..."
+	@vo_targets=""; \
+	for category in basics monadic regression wip; do \
+		for vfile in tests/$$category/*/*.v; do \
+			if [ -f "$$vfile" ]; then \
+				vo_target=$$(echo "$$vfile" | sed 's/\.v$$/.vo/'); \
+				vo_targets="$$vo_targets $$vo_target"; \
+			fi; \
+		done; \
+	done; \
+	if [ -n "$$vo_targets" ]; then \
+		dune build $$vo_targets 2>/dev/null || true; \
+	fi
 
 # Build just the plugin
 plugin:
@@ -22,6 +39,7 @@ install:
 
 # Build and run tests with formatted summary
 test:
+	@./scripts/check-dune-rules.sh
 	@./scripts/run-tests.sh
 
 # Build and run tests with verbose error output
@@ -81,26 +99,36 @@ test-list:
 		fi; \
 	done | sort
 
-# Clean build artifacts
+# Clean build artifacts and generated test files
 clean:
-	dune clean
+	@dune clean
+	@for category in basics monadic regression wip; do \
+		if [ -d "tests/$$category" ]; then \
+			for dir in tests/$$category/*/; do \
+				if [ -d "$$dir" ]; then \
+					name=$$(basename "$$dir"); \
+					rm -f "$$dir$$name.cpp" "$$dir$$name.h" "$$dir$$name.o" "$$dir$$name.t.exe"; \
+				fi; \
+			done; \
+		fi; \
+	done
+	@echo "Cleaned build artifacts and generated test files"
 
 # Help message
 help:
 	@echo "Crane build system"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make build              - Build plugin and theories (default)"
-	@echo "  make all                - Build everything including tests"
-	@echo "  make plugin             - Build just the plugin"
-	@echo "  make theories           - Build just the theories"
-	@echo "  make test               - Build and run all tests (formatted summary)"
+	@echo "  make                    - Build plugin and theories (default)"
+	@echo "  make extract            - Build + generate all test C++ files"
+	@echo "  make test               - Compile and run all tests"
 	@echo "  make test-verbose       - Run tests with error details"
 	@echo "  make test-raw           - Run tests with raw dune output"
 	@echo "  make test-one TEST=name - Run a single test (e.g., TEST=list)"
 	@echo "  make test-list          - List all available tests"
+	@echo "  make all                - Build everything including test executables"
 	@echo "  make install            - Install the plugin"
-	@echo "  make clean              - Clean build artifacts"
+	@echo "  make clean              - Clean build artifacts and generated test files"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make test-list                   # Show all available tests"

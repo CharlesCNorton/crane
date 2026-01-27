@@ -43,19 +43,15 @@ _build/
 result.html
 *.code-workspace
 /ignore
-/tests/*.cpp
-/tests/*.h
-/tests/*.o
+tests/**/*.o
+tests/**/*.t.exe
 *.install
 infer-out
 *.pch
 *.dSYM
 *.bak
 
-/tests/basics/top/benchmark
-/tests/basics/top_bde/benchmark
-*.exe
-/tests/basics/tokenizer/corpus
-/tests/basics/tokenizer/tokenizer.d.o.dSYM
-/src/rust.ml
-/src/rust.mli
+/tests/*/*/benchmark
+/tests/*/*/corpus
+/tests/*/*/*.dSYM
+CLAUDE.md

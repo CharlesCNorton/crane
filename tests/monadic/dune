@@ -11,27 +11,27 @@
 
 ; Test rules - compile C++ and run tests
 
-(subdir experiment
- (rule
-  (targets experiment.t.exe)
-  (deps Experiment.vo experiment.t.cpp (source_tree .))
-  (action
-   (run clang++ -std=c++23 -O2 -I . experiment.cpp experiment.t.cpp -o experiment.t.exe)))
- (rule
-  (alias runtest)
-  (deps experiment.t.exe)
-  (action (run ./experiment.t.exe))))
-
 (subdir free_monad
  (rule
   (targets free_monad.t.exe)
   (deps FreeMonad.vo free_monad.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . free_monad.cpp free_monad.t.cpp -o free_monad.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh free_monad.t.exe free_monad.cpp free_monad.t.cpp)))
  (rule
   (alias runtest)
   (deps free_monad.t.exe)
   (action (run ./free_monad.t.exe))))
+
+(subdir hash
+ (rule
+  (targets hash.t.exe)
+  (deps HashTable.vo hash.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh hash.t.exe hash.cpp hash.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps hash.t.exe)
+  (action (run ./hash.t.exe))))
 
 (subdir hash_bde
  (rule
@@ -44,23 +44,12 @@
   (deps hash_bde.t.exe)
   (action (run ./hash_bde.t.exe))))
 
-(subdir hash
- (rule
-  (targets hash.t.exe)
-  (deps HashTable.vo hash.t.cpp (source_tree .))
-  (action
-   (run clang++ -std=c++23 -O2 -I . hash.cpp hash.t.cpp -o hash.t.exe)))
- (rule
-  (alias runtest)
-  (deps hash.t.exe)
-  (action (run ./hash.t.exe))))
-
 (subdir io
  (rule
   (targets io.t.exe)
   (deps IOtest.vo io.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . io.cpp io.t.cpp -o io.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh io.t.exe io.cpp io.t.cpp)))
  (rule
   (alias runtest)
   (deps io.t.exe)
@@ -71,29 +60,18 @@
   (targets par.t.exe)
   (deps ParTest.vo par.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . par.cpp par.t.cpp -o par.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh par.t.exe par.cpp par.t.cpp)))
  (rule
   (alias runtest)
   (deps par.t.exe)
   (action (run ./par.t.exe))))
-
-(subdir simple_io
- (rule
-  (targets simple_io.t.exe)
-  (deps SimpleIO.vo simple_io.t.cpp (source_tree .))
-  (action
-   (run clang++ -std=c++23 -O2 -I . simple_io.cpp simple_io.t.cpp -o simple_io.t.exe)))
- (rule
-  (alias runtest)
-  (deps simple_io.t.exe)
-  (action (run ./simple_io.t.exe))))
 
 (subdir stm
  (rule
   (targets stm.t.exe)
   (deps STMtest.vo stm.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . stm.cpp stm.t.cpp -o stm.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh stm.t.exe stm.cpp stm.t.cpp)))
  (rule
   (alias runtest)
   (deps stm.t.exe)
@@ -104,7 +82,7 @@
   (targets thread.t.exe)
   (deps Threadtest.vo thread.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . thread.cpp thread.t.cpp -o thread.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh thread.t.exe thread.cpp thread.t.cpp)))
  (rule
   (alias runtest)
   (deps thread.t.exe)
@@ -115,8 +93,9 @@
   (targets vector.t.exe)
   (deps VecTest.vo vector.t.cpp (source_tree .))
   (action
-   (run clang++ -std=c++23 -O2 -I . vector.cpp vector.t.cpp -o vector.t.exe)))
+   (run %{project_root}/scripts/compile-std.sh vector.t.exe vector.cpp vector.t.cpp)))
  (rule
   (alias runtest)
   (deps vector.t.exe)
   (action (run ./vector.t.exe))))
+

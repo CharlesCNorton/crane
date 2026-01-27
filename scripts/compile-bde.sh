@@ -40,6 +40,11 @@ export PKG_CONFIG_PATH="$BDE_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
 BDE_CFLAGS=$(pkg-config --define-variable=prefix="$BDE_PREFIX" --cflags bdl 2>/dev/null || echo "-I$BDE_PREFIX/include")
 BDE_LIBS=$(pkg-config --define-variable=prefix="$BDE_PREFIX" --libs bdl --static 2>/dev/null || echo "-L$BDE_PREFIX/lib -lbdl -lbsl -linteldfp -lpcre2 -lryu")
 
+# On macOS, filter out -lrt (doesn't exist) and -lstdc++ (use libc++ instead)
+if [ "$(uname)" = "Darwin" ]; then
+    BDE_LIBS=$(echo "$BDE_LIBS" | sed 's/-lrt//g; s/-lstdc++//g')
+fi
+
 # Compile with C++20, BDE ABI compatibility, and suppress deprecation warnings
 exec clang++ \
     -std=c++20 \
