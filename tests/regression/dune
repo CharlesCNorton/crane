@@ -1,0 +1,12 @@
+(include_subdirs qualified)
+
+(env (_ (env-vars (INSIDE_DUNE "1"))))
+
+(coq.theory
+ (name CraneTestsRegression)
+ (synopsis "Tests for the rocq-crane plugin")
+ (modules :standard) ; automatically includes all .v files in this directory
+ (theories
+   Stdlib
+   Crane)
+ (flags (:standard -output-directory ../../tests/regression)))

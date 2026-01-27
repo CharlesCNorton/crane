@@ -1,0 +1,188 @@
+(include_subdirs qualified)
+
+(env (_ (env-vars (INSIDE_DUNE "1"))))
+
+(coq.theory
+ (name CraneTestsWIP)
+ (synopsis "Tests for the rocq-crane plugin")
+ (modules :standard) ; automatically includes all .v files in this directory
+ (theories
+   Stdlib
+   Crane)
+ (flags (:standard -output-directory ../../tests/wip)))
+
+(subdir args
+ (rule
+  (targets args.t.exe)
+  (deps Args.vo args.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh args.t.exe args.cpp args.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps args.t.exe)
+  (action (run ./args.t.exe))))
+
+(subdir colist
+ (rule
+  (targets colist.t.exe)
+  (deps Colist.vo colist.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh colist.t.exe colist.cpp colist.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps colist.t.exe)
+  (action (run ./colist.t.exe))))
+
+(subdir graph
+ (rule
+  (targets graph.t.exe)
+  (deps Graph.vo graph.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh graph.t.exe graph.cpp graph.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps graph.t.exe)
+  (action (run ./graph.t.exe))))
+
+(subdir ind_param
+ (rule
+  (targets ind_param.t.exe)
+  (deps IndParam.vo ind_param.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh ind_param.t.exe ind_param.cpp ind_param.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps ind_param.t.exe)
+  (action (run ./ind_param.t.exe))))
+
+(subdir isort
+ (rule
+  (targets isort.t.exe)
+  (deps Sort.vo isort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh isort.t.exe isort.cpp isort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps isort.t.exe)
+  (action (run ./isort.t.exe))))
+
+(subdir levenshtein
+ (rule
+  (targets levenshtein.t.exe)
+  (deps Levenshtein.vo levenshtein.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh levenshtein.t.exe levenshtein.cpp levenshtein.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps levenshtein.t.exe)
+  (action (run ./levenshtein.t.exe))))
+
+(subdir msort
+ (rule
+  (targets msort.t.exe)
+  (deps Sort.vo msort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh msort.t.exe msort.cpp msort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps msort.t.exe)
+  (action (run ./msort.t.exe))))
+
+(subdir nested_mod
+ (rule
+  (targets nested_mod.t.exe)
+  (deps NestedMod.vo nested_mod.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh nested_mod.t.exe nested_mod.cpp nested_mod.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps nested_mod.t.exe)
+  (action (run ./nested_mod.t.exe))))
+
+(subdir nested_tree
+ (rule
+  (targets nested_tree.t.exe)
+  (deps NestedTree.vo nested_tree.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh nested_tree.t.exe nested_tree.cpp nested_tree.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps nested_tree.t.exe)
+  (action (run ./nested_tree.t.exe))))
+
+(subdir psort
+ (rule
+  (targets psort.t.exe)
+  (deps Sort.vo psort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh psort.t.exe psort.cpp psort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps psort.t.exe)
+  (action (run ./psort.t.exe))))
+
+(subdir pstring
+ (rule
+  (targets pstring.t.exe)
+  (deps PString.vo pstring.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh pstring.t.exe pstring.cpp pstring.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pstring.t.exe)
+  (action (run ./pstring.t.exe))))
+
+(subdir qsort
+ (rule
+  (targets qsort.t.exe)
+  (deps Sort.vo qsort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh qsort.t.exe qsort.cpp qsort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps qsort.t.exe)
+  (action (run ./qsort.t.exe))))
+
+(subdir regexp
+ (rule
+  (targets regexp.t.exe)
+  (deps Regexp.vo regexp.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh regexp.t.exe regexp.cpp regexp.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps regexp.t.exe)
+  (action (run ./regexp.t.exe))))
+
+(subdir rev
+ (rule
+  (targets rev.t.exe)
+  (deps Rev.vo rev.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh rev.t.exe rev.cpp rev.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps rev.t.exe)
+  (action (run ./rev.t.exe))))
+
+(subdir vec
+ (rule
+  (targets vec.t.exe)
+  (deps Vec.vo vec.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh vec.t.exe vec.cpp vec.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps vec.t.exe)
+  (action (run ./vec.t.exe))))
+
+(subdir zip
+ (rule
+  (targets zip.t.exe)
+  (deps Zip.vo zip.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh zip.t.exe zip.cpp zip.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps zip.t.exe)
+  (action (run ./zip.t.exe))))

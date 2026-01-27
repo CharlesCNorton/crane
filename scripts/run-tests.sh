@@ -65,10 +65,22 @@ run_category() {
     done
 }
 
-# Run all categories
-run_category "basics"
-echo ""
-run_category "monadic"
+# Run all categories (discovered from tests/ subdirectories)
+first=true
+for category_dir in tests/*/; do
+    if [ -d "$category_dir" ]; then
+        category=$(basename "$category_dir")
+        # Skip if no test subdirectories
+        if ls "$category_dir"*/*.t.cpp >/dev/null 2>&1; then
+            if [ "$first" = true ]; then
+                first=false
+            else
+                echo ""
+            fi
+            run_category "$category"
+        fi
+    fi
+done
 
 # Print summary
 echo ""

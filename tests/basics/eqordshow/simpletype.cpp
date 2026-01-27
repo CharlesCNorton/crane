@@ -1,9 +1,0 @@
-#include <algorithm>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <optional>
-#include <simpletype.h>
-#include <string>
-#include <utility>
-#include <variant>

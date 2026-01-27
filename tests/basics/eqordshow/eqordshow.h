@@ -35,16 +35,16 @@ concept Show = requires(A a0) {
 };
 
 struct NatEq {
-  static bool eqb(unsigned int y, unsigned int x) { return (x == y); }
-  static bool neqb(unsigned int y, unsigned int x) { return !((x == y)); }
+  static bool eqb(unsigned int x, unsigned int y) { return (x == y); }
+  static bool neqb(unsigned int x, unsigned int y) { return !((x == y)); }
 };
 static_assert(Eq<NatEq, unsigned int>);
 
 struct NatOrd {
-  static bool lt(unsigned int y, unsigned int x) { return (x < y); }
-  static bool le(unsigned int y, unsigned int x) { return (x <= y); }
-  static bool gt(unsigned int y, unsigned int x) { return (y < x); }
-  static bool ge(unsigned int y, unsigned int x) { return (y <= x); }
+  static bool lt(unsigned int x, unsigned int y) { return (x < y); }
+  static bool le(unsigned int x, unsigned int y) { return (x <= y); }
+  static bool gt(unsigned int x, unsigned int y) { return (y < x); }
+  static bool ge(unsigned int x, unsigned int y) { return (y <= x); }
 };
 static_assert(Ord<NatOrd, unsigned int>);
 
@@ -54,22 +54,22 @@ struct NatShow {
 static_assert(Show<NatShow, unsigned int>);
 
 template <typename _tcI0, typename T1> bool is_equal(const T1 x, const T1 y) {
-  return _tcI0::eqb(y, x);
+  return _tcI0::eqb(x, y);
 }
 
 template <typename _tcI0, typename T1>
 bool is_different(const T1 x, const T1 y) {
-  return _tcI0::neqb(y, x);
+  return _tcI0::neqb(x, y);
 }
 
 template <typename _tcI0, typename _tcI1, typename T1>
 bool is_less_than(const T1 x, const T1 y) {
-  return _tcI0::lt(y, x);
+  return _tcI0::lt(x, y);
 }
 
 template <typename _tcI0, typename _tcI1, typename T1>
 bool is_less_or_equal(const T1 x, const T1 y) {
-  return _tcI0::le(y, x);
+  return _tcI0::le(x, y);
 }
 
 struct Ordering {
@@ -108,10 +108,10 @@ struct Ordering {
 
 template <typename _tcI0, typename _tcI1, typename T1>
 std::shared_ptr<Ordering::ordering> compare(const T1 x, const T1 y) {
-  if (_tcI0::lt(y, x)) {
+  if (_tcI0::lt(x, y)) {
     return Ordering::ordering::ctor::LT_();
   } else {
-    if (_tcI1::eqb(y, x)) {
+    if (_tcI1::eqb(x, y)) {
       return Ordering::ordering::ctor::EQ_();
     } else {
       return Ordering::ordering::ctor::GT_();
@@ -125,7 +125,7 @@ template <typename _tcI0, typename T1> std::string to_string(const T1 x) {
 
 template <typename _tcI0, typename _tcI1, typename T1>
 std::string show_if_equal(const T1 x, const T1 y) {
-  if (_tcI1::eqb(y, x)) {
+  if (_tcI1::eqb(x, y)) {
     return _tcI0::show(x);
   } else {
     return "not equal";
@@ -134,10 +134,10 @@ std::string show_if_equal(const T1 x, const T1 y) {
 
 template <typename _tcI0, typename _tcI1, typename _tcI2, typename T1>
 std::string show_comparison(const T1 x, const T1 y) {
-  if (_tcI1::lt(y, x)) {
+  if (_tcI1::lt(x, y)) {
     return _tcI0::show(x) + " < " + _tcI0::show(y);
   } else {
-    if (_tcI2::eqb(y, x)) {
+    if (_tcI2::eqb(x, y)) {
       return _tcI0::show(x) + " = " + _tcI0::show(y);
     } else {
       return _tcI0::show(x) + " > " + _tcI0::show(y);
