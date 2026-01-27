@@ -101,49 +101,44 @@ template <typename T1, typename T2>
 std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>
 better_zip(const std::shared_ptr<List::list<T1>> &la,
            const std::shared_ptr<List::list<T2>> &lb) {
-  std::function<std::shared_ptr<
-      List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>>(
-      std::shared_ptr<List::list<meta14>>, std::shared_ptr<List::list<meta23>>,
-      std::shared_ptr<List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>>)>
+  std::function<
+      std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>(
+          std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T2>>,
+          std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>)>
       go;
-  go = [&](std::shared_ptr<List::list<meta14>> la0,
-           std::shared_ptr<List::list<meta23>> lb0,
-           std::shared_ptr<
-               List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>>
-               acc)
-      -> std::shared_ptr<
-          List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>> {
+  go = [&](std::shared_ptr<List::list<T1>> la0,
+           std::shared_ptr<List::list<T2>> lb0,
+           std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>> acc)
+      -> std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
     return std::visit(
         Overloaded{
-            [&](const typename List::list<meta14>::nil _args)
+            [&](const typename List::list<T1>::nil _args)
                 -> std::shared_ptr<
-                    List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>> {
+                    List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
               return rev<std::shared_ptr<Prod::prod<T1, T2>>>(acc);
             },
-            [&](const typename List::list<meta14>::cons _args)
+            [&](const typename List::list<T1>::cons _args)
                 -> std::shared_ptr<
-                    List::list<std::shared_ptr<Prod::prod<meta14, meta23>>>> {
-              meta14 x = _args._a0;
-              std::shared_ptr<List::list<meta14>> xs = _args._a1;
+                    List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
+              T1 x = _args._a0;
+              std::shared_ptr<List::list<T1>> xs = _args._a1;
               return std::visit(
                   Overloaded{
-                      [&](const typename List::list<meta23>::nil _args)
-                          -> std::shared_ptr<List::list<
-                              std::shared_ptr<Prod::prod<meta14, meta23>>>> {
+                      [&](const typename List::list<T2>::nil _args)
+                          -> std::shared_ptr<
+                              List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
                         return rev<std::shared_ptr<Prod::prod<T1, T2>>>(acc);
                       },
-                      [&](const typename List::list<meta23>::cons _args)
-                          -> std::shared_ptr<List::list<
-                              std::shared_ptr<Prod::prod<meta14, meta23>>>> {
-                        meta23 y = _args._a0;
-                        std::shared_ptr<List::list<meta23>> ys = _args._a1;
+                      [&](const typename List::list<T2>::cons _args)
+                          -> std::shared_ptr<
+                              List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
+                        T2 y = _args._a0;
+                        std::shared_ptr<List::list<T2>> ys = _args._a1;
                         return go(
                             xs, ys,
-                            List::list<
-                                std::shared_ptr<Prod::prod<meta14, meta23>>>::
+                            List::list<std::shared_ptr<Prod::prod<T1, T2>>>::
                                 ctor::cons_(
-                                    Prod::prod<meta14, meta23>::ctor::pair_(x,
-                                                                            y),
+                                    Prod::prod<T1, T2>::ctor::pair_(x, y),
                                     acc));
                       }},
                   lb0->v());

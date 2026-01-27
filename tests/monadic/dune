@@ -99,3 +99,14 @@
   (deps vector.t.exe)
   (action (run ./vector.t.exe))))
 
+(subdir bind_return
+ (rule
+  (targets bind_return.t.exe)
+  (deps BindReturn.vo bind_return.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh bind_return.t.exe bind_return.cpp bind_return.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps bind_return.t.exe)
+  (action (run ./bind_return.t.exe))))
+

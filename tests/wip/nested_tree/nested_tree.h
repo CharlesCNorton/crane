@@ -207,35 +207,33 @@ struct NestedTree {
   template <typename T1>
   static std::shared_ptr<List::list<std::shared_ptr<List::list<T1>>>>
   flatten_tree(const std::shared_ptr<tree<T1>> &t) {
-    std::function<
-        std::shared_ptr<List::list<std::shared_ptr<List::list<meta25>>>>(
-            std::function<std::shared_ptr<List::list<meta25>>(meta24)>,
-            std::shared_ptr<tree<meta24>>)>
+    std::function<std::shared_ptr<List::list<std::shared_ptr<List::list<T2>>>>(
+        std::function<std::shared_ptr<List::list<T2>>(T1)>,
+        std::shared_ptr<tree<T1>>)>
         go;
-    go = [&](std::function<std::shared_ptr<List::list<meta25>>(meta24)> f,
-             std::shared_ptr<tree<meta24>> t0)
-        -> std::shared_ptr<List::list<std::shared_ptr<List::list<meta25>>>> {
+    go = [&](std::function<std::shared_ptr<List::list<T2>>(T1)> f,
+             std::shared_ptr<tree<T1>> t0)
+        -> std::shared_ptr<List::list<std::shared_ptr<List::list<T2>>>> {
       return std::visit(
-          Overloaded{[&](const typename tree<meta24>::leaf _args)
-                         -> std::shared_ptr<
-                             List::list<std::shared_ptr<List::list<meta25>>>> {
-                       return List::list<
-                           std::shared_ptr<List::list<meta25>>>::ctor::nil_();
-                     },
-                     [&](const typename tree<meta24>::node _args)
-                         -> std::shared_ptr<
-                             List::list<std::shared_ptr<List::list<meta25>>>> {
-                       meta24 a = _args._a0;
-                       std::shared_ptr<tree<std::pair<meta24, meta24>>> t1 =
-                           _args._a1;
-                       return List::list<std::shared_ptr<List::list<meta25>>>::
-                           ctor::cons_(f(a),
-                                       go(
-                                           [&](const std::pair<T4, T4> _x0) {
-                                             return lift<T4, T5>(f, _x0);
-                                           },
-                                           t1));
-                     }},
+          Overloaded{
+              [&](const typename tree<T1>::leaf _args)
+                  -> std::shared_ptr<
+                      List::list<std::shared_ptr<List::list<T2>>>> {
+                return List::list<
+                    std::shared_ptr<List::list<T2>>>::ctor::nil_();
+              },
+              [&](const typename tree<T1>::node _args)
+                  -> std::shared_ptr<
+                      List::list<std::shared_ptr<List::list<T2>>>> {
+                T1 a = _args._a0;
+                std::shared_ptr<tree<std::pair<T1, T1>>> t1 = _args._a1;
+                return List::list<std::shared_ptr<List::list<T2>>>::ctor::cons_(
+                    f(a), go(
+                              [&](const std::pair<T4, T4> _x0) {
+                                return lift<T4, T5>(f, _x0);
+                              },
+                              t1));
+              }},
           t0->v());
     };
     return go(

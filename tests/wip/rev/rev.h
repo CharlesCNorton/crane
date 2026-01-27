@@ -45,20 +45,20 @@ struct List {
 template <typename T1>
 std::shared_ptr<List::list<T1>>
 better_rev(const std::shared_ptr<List::list<T1>> &l) {
-  std::function<std::shared_ptr<List::list<meta8>>(
-      std::shared_ptr<List::list<meta8>>, std::shared_ptr<List::list<meta8>>)>
+  std::function<std::shared_ptr<List::list<T1>>(
+      std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T1>>)>
       go;
-  go = [&](std::shared_ptr<List::list<meta8>> l0,
-           std::shared_ptr<List::list<meta8>> acc)
-      -> std::shared_ptr<List::list<meta8>> {
+  go = [&](std::shared_ptr<List::list<T1>> l0,
+           std::shared_ptr<List::list<T1>> acc)
+      -> std::shared_ptr<List::list<T1>> {
     return std::visit(
-        Overloaded{[&](const typename List::list<meta8>::nil _args)
-                       -> std::shared_ptr<List::list<meta8>> { return acc; },
-                   [&](const typename List::list<meta8>::cons _args)
-                       -> std::shared_ptr<List::list<meta8>> {
-                     meta8 x = _args._a0;
-                     std::shared_ptr<List::list<meta8>> xs = _args._a1;
-                     return go(xs, List::list<meta8>::ctor::cons_(x, acc));
+        Overloaded{[&](const typename List::list<T1>::nil _args)
+                       -> std::shared_ptr<List::list<T1>> { return acc; },
+                   [&](const typename List::list<T1>::cons _args)
+                       -> std::shared_ptr<List::list<T1>> {
+                     T1 x = _args._a0;
+                     std::shared_ptr<List::list<T1>> xs = _args._a1;
+                     return go(xs, List::list<T1>::ctor::cons_(x, acc));
                    }},
         l0->v());
   };

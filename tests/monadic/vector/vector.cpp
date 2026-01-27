@@ -10,7 +10,7 @@
 #include <vector>
 
 int vectest::test1(const int _x) {
-  std::vector<meta117> v = {};
+  std::vector<int> v = {};
   v.push_back(3);
   v.push_back(2);
   v.push_back(7);

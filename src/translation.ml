@@ -102,8 +102,9 @@ let rec convert_ml_type_to_cpp_type env (ns : GlobRef.t list) (tvars : Id.t list
                               with Failure _ -> Tvar (i, None))
   | Tstring -> assert false (* TODO: get rid of Tstring in both ASTs *)
   | Tmeta {contents = Some t} -> convert_ml_type_to_cpp_type env ns tvars t
-  (* | _ -> Tunknown *)
-  | Tmeta {id = i} -> Tglob (GlobRef.VarRef (Id.of_string ("meta" ^ string_of_int i)), [], [])
+  | Tmeta {id = i} ->
+      (* Unresolved meta - generate a bogus type name for debugging *)
+      Tglob (GlobRef.VarRef (Id.of_string ("meta" ^ string_of_int i)), [], [])
   | Tdummy Ktype -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_type")), [], [])
   | Tdummy Kprop -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_prop")), [], [])
   | Tdummy (Kimplicit _) -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_implicit")), [], [])
@@ -444,6 +445,18 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
     Sdecl (x', convert_ml_type_to_cpp_type env [] [] t) :: asgn @ gen_stmts env' k b
   end
 | MLapp (MLfix (x, ids, funs), args) ->
+  (* Resolve unresolved metas in fix function types to Tvars using mgu.
+     Traverse types and assign Tvar 1, 2, ... to each unresolved meta. *)
+  let next_tvar = ref 1 in
+  let rec resolve_metas = function
+    | Miniml.Tmeta ({ contents = None } as m) ->
+        let idx = !next_tvar in next_tvar := idx + 1;
+        try_mgu (Miniml.Tmeta m) (Miniml.Tvar idx)
+    | Miniml.Tmeta { contents = Some t } -> resolve_metas t
+    | Miniml.Tarr (t1, t2) -> resolve_metas t1; resolve_metas t2
+    | Miniml.Tglob (_, args, _) -> List.iter resolve_metas args
+    | _ -> () in
+  Array.iter (fun (_, ty) -> resolve_metas ty) ids;
   let funs = Array.to_list (Array.map2 (gen_fix env) ids funs) in
   let ids = Array.to_list ids in
   let decls = List.map (fun (id, ty) -> Sdecl (id, convert_ml_type_to_cpp_type env [] [] ty)) ids in
@@ -455,10 +468,19 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
   decls @ defs @ [k (CPPfun_call (CPPvar (fst (List.nth ids x)), args))]
 (* | MLapp (MLglob (h, _), a1 :: a2 :: l) when is_hoist h ->
   gen_stmts env k (MLapp (a1, a2::[])) *)
-| MLapp (MLglob (r, _), a1 :: a2 :: l) when is_bind r ->
+| MLapp (MLglob (r, bind_tys), a1 :: a2 :: l) when is_bind r ->
   let (a, f) = Common.last_two (a1 :: a2 :: l) in
   let a = gen_expr env a in
   let ids',f = collect_lams f in
+  (* Resolve metas in continuation parameter types using bind's type arguments.
+     bind has type forall A B, IO A -> (A -> IO B) -> IO B
+     The first type argument is A, which is the type of the continuation parameter.
+     Use mgu to unify them, which mutably resolves metas. *)
+  let () = match bind_tys with
+    | elem_ty :: _ ->
+        List.iter (fun (_, ty) -> try_mgu ty elem_ty) ids'
+    | [] -> ()
+  in
   let ids,env = push_vars' (List.map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids') env in
   (match ids with
   | (x, ty) :: _ ->

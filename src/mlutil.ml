@@ -133,6 +133,11 @@ let rec mgu = function
   | Tstring, Tstring -> ()
   | _ -> raise Impossible
 
+(* Try to unify two types using mgu. Silently fails if unification is impossible.
+   This mutably sets the contents of metavariables when successful. *)
+let try_mgu t1 t2 =
+  try mgu (t1, t2) with Impossible -> ()
+
 let skip_typing () = is_extrcompute ()
 
 let needs_magic p =

@@ -24,6 +24,7 @@ val type_subst_vect : ml_type array -> ml_type -> ml_type
 
 val instantiation : ml_schema -> ml_type
 
+val try_mgu : ml_type -> ml_type -> unit
 val needs_magic : ml_type * ml_type -> bool
 val put_magic_if : bool -> ml_ast -> ml_ast
 val put_magic : ml_type * ml_type -> ml_ast -> ml_ast
