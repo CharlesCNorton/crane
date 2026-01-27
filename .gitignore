@@ -53,5 +53,5 @@ infer-out
 
 /tests/*/*/benchmark
 /tests/*/*/corpus
-/tests/*/*/tokenizer.d.o.dSYM
+/tests/*/*/*.dSYM
 CLAUDE.md
