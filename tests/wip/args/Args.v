@@ -1,5 +1,6 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
+From Stdlib Require Import Nat.
 From Crane Require Import Mapping.NatIntStd.
 Module Args.
 
@@ -20,4 +21,4 @@ Definition three : nat := r.(f) three zero.
 End Args.
 
 From Crane Require Extraction.
-Crane Extraction TestCompile "args" Args.
+Crane Extraction "args" Args.
