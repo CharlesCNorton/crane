@@ -1,3 +1,4 @@
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -23,7 +24,7 @@ struct Prod {
 
   private:
     variant_t v_;
-    explicit prod(pair x) : v_(std::move(x)) {}
+    explicit prod(pair _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -49,8 +50,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -82,11 +83,11 @@ struct List {
 
 template <typename T1>
 std::shared_ptr<List::list<T1>> rev(const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[&](const typename List::list<T1>::nil _args)
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
                                    -> std::shared_ptr<List::list<T1>> {
                                  return List::list<T1>::ctor::nil_();
                                },
-                               [&](const typename List::list<T1>::cons _args)
+                               [](const typename List::list<T1>::cons _args)
                                    -> std::shared_ptr<List::list<T1>> {
                                  T1 x = _args._a0;
                                  std::shared_ptr<List::list<T1>> l_ = _args._a1;

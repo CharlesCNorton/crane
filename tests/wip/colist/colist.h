@@ -1,3 +1,4 @@
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -23,8 +24,8 @@ struct Nat {
 
   private:
     variant_t v_;
-    explicit nat(O x) : v_(std::move(x)) {}
-    explicit nat(S x) : v_(std::move(x)) {}
+    explicit nat(O _v) : v_(std::move(_v)) {}
+    explicit nat(S _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -52,8 +53,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -82,8 +83,8 @@ struct Colist {
 
   private:
     variant_t v_;
-    explicit colist(conil x) : v_(std::move(x)) {}
-    explicit colist(cocons x) : v_(std::move(x)) {}
+    explicit colist(conil _v) : v_(std::move(_v)) {}
+    explicit colist(cocons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -100,7 +101,7 @@ struct Colist {
     std::shared_ptr<List::list<A>>
     list_of_colist(const std::shared_ptr<Nat::nat> &fuel) const {
       return std::visit(
-          Overloaded{[&](const typename Nat::nat::O _args)
+          Overloaded{[](const typename Nat::nat::O _args)
                          -> std::shared_ptr<List::list<A>> {
                        return List::list<A>::ctor::nil_();
                      },
@@ -109,7 +110,7 @@ struct Colist {
                        std::shared_ptr<Nat::nat> fuel_ = _args._a0;
                        return std::visit(
                            Overloaded{
-                               [&](const typename colist<A>::conil _args)
+                               [](const typename colist<A>::conil _args)
                                    -> std::shared_ptr<List::list<A>> {
                                  return List::list<A>::ctor::nil_();
                                },
@@ -126,7 +127,7 @@ struct Colist {
     }
     template <typename T2, MapsTo<T2, A> F0>
     std::shared_ptr<colist<T2>> comap(F0 &&f) const {
-      return std::visit(Overloaded{[&](const typename colist<A>::conil _args)
+      return std::visit(Overloaded{[](const typename colist<A>::conil _args)
                                        -> std::shared_ptr<colist<T2>> {
                                      return colist<T2>::ctor::conil_();
                                    },

@@ -1,3 +1,4 @@
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -25,8 +26,8 @@ struct Nat {
 
   private:
     variant_t v_;
-    explicit nat(O x) : v_(std::move(x)) {}
-    explicit nat(S x) : v_(std::move(x)) {}
+    explicit nat(O _v) : v_(std::move(_v)) {}
+    explicit nat(S _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -54,8 +55,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -82,7 +83,7 @@ struct PString {
                                     const std::shared_ptr<List::list<T1>> &l) {
     return std::visit(
         Overloaded{
-            [&](const typename List::list<T1>::nil _args) -> std::string {
+            [](const typename List::list<T1>::nil _args) -> std::string {
               return "[]";
             },
             [&](const typename List::list<T1>::cons _args) -> std::string {

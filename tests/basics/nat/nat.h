@@ -1,3 +1,4 @@
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -23,8 +24,8 @@ struct Nat {
 
   private:
     variant_t v_;
-    explicit nat(O x) : v_(std::move(x)) {}
-    explicit nat(S x) : v_(std::move(x)) {}
+    explicit nat(O _v) : v_(std::move(_v)) {}
+    explicit nat(S _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -70,8 +71,8 @@ struct Nat {
     }
     int nat_to_int() const {
       return std::visit(
-          Overloaded{[&](const typename nat::O _args) -> int { return 0; },
-                     [&](const typename nat::S _args) -> int {
+          Overloaded{[](const typename nat::O _args) -> int { return 0; },
+                     [](const typename nat::S _args) -> int {
                        std::shared_ptr<nat> n_ = _args._a0;
                        return 1 + n_->nat_to_int();
                      }},

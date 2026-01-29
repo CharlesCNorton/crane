@@ -35,12 +35,12 @@ struct Nat {
         using variant_t = bsl::variant<O, S>;
       private:
         variant_t v_;
-        explicit nat(O x)
-        : v_(bsl::move(x))
+        explicit nat(O _v)
+        : v_(bsl::move(_v))
         {
         }
-        explicit nat(S x)
-        : v_(bsl::move(x))
+        explicit nat(S _v)
+        : v_(bsl::move(_v))
         {
         }
       public:
@@ -98,14 +98,14 @@ struct Nat {
         int nat_to_int() const
         {
             return bsl::visit(
-                     bdlf::Overloaded{[&](const typename nat::O _args) -> int {
-                                          return 0;
-                                      },
-                                      [&](const typename nat::S _args) -> int {
-                                          bsl::shared_ptr<nat> n_ = _args._a0;
-                                          return 1 + n_->nat_to_int();
-                                      }},
-                     this->v());
+                      bdlf::Overloaded{[](const typename nat::O _args) -> int {
+                                           return 0;
+                                       },
+                                       [](const typename nat::S _args) -> int {
+                                           bsl::shared_ptr<nat> n_ = _args._a0;
+                                           return 1 + n_->nat_to_int();
+                                       }},
+                      this->v());
         }
     };
 };

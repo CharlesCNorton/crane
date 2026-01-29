@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -32,8 +33,8 @@ template <Elem E> struct Container {
 
   private:
     variant_t v_;
-    explicit maybe(Nothing x) : v_(std::move(x)) {}
-    explicit maybe(Just x) : v_(std::move(x)) {}
+    explicit maybe(Nothing _v) : v_(std::move(_v)) {}
+    explicit maybe(Just _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -81,8 +82,8 @@ template <Elem E> struct Container {
 
   private:
     variant_t v_;
-    explicit mlist(MNil x) : v_(std::move(x)) {}
-    explicit mlist(MCons x) : v_(std::move(x)) {}
+    explicit mlist(MNil _v) : v_(std::move(_v)) {}
+    explicit mlist(MCons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -136,8 +137,8 @@ template <Elem E> struct Container {
 
   private:
     variant_t v_;
-    explicit mtree(Leaf x) : v_(std::move(x)) {}
-    explicit mtree(Node x) : v_(std::move(x)) {}
+    explicit mtree(Leaf _v) : v_(std::move(_v)) {}
+    explicit mtree(Node _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -183,16 +184,16 @@ template <Elem E> struct Container {
   static bool is_nothing(const std::shared_ptr<maybe> &m) {
     return std::visit(
         Overloaded{
-            [&](const typename maybe::Nothing _args) -> bool { return true; },
-            [&](const typename maybe::Just _args) -> bool { return false; }},
+            [](const typename maybe::Nothing _args) -> bool { return true; },
+            [](const typename maybe::Just _args) -> bool { return false; }},
         m->v());
   }
 
   static unsigned int mlist_length(const std::shared_ptr<mlist> &l) {
     return std::visit(
         Overloaded{
-            [&](const typename mlist::MNil _args) -> unsigned int { return 0; },
-            [&](const typename mlist::MCons _args) -> unsigned int {
+            [](const typename mlist::MNil _args) -> unsigned int { return 0; },
+            [](const typename mlist::MCons _args) -> unsigned int {
               std::shared_ptr<mlist> rest = _args._a1;
               return (mlist_length(rest) + 1);
             }},
@@ -201,7 +202,7 @@ template <Elem E> struct Container {
 
   static unsigned int tree_size(const std::shared_ptr<mtree> &t0) {
     return std::visit(
-        Overloaded{[&](const typename mtree::Leaf _args) -> unsigned int {
+        Overloaded{[](const typename mtree::Leaf _args) -> unsigned int {
                      std::shared_ptr<maybe> m = _args._a0;
                      if (is_nothing(m)) {
                        return 0;
@@ -209,7 +210,7 @@ template <Elem E> struct Container {
                        return (0 + 1);
                      }
                    },
-                   [&](const typename mtree::Node _args) -> unsigned int {
+                   [](const typename mtree::Node _args) -> unsigned int {
                      std::shared_ptr<mlist> children = _args._a0;
                      return mlist_length(children);
                    }},

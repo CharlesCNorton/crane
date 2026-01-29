@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -32,9 +33,9 @@ struct Outer {
 
   private:
     variant_t v_;
-    explicit color(Red x) : v_(std::move(x)) {}
-    explicit color(Green x) : v_(std::move(x)) {}
-    explicit color(Blue x) : v_(std::move(x)) {}
+    explicit color(Red _v) : v_(std::move(_v)) {}
+    explicit color(Green _v) : v_(std::move(_v)) {}
+    explicit color(Blue _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -70,9 +71,9 @@ struct Outer {
 
     private:
       variant_t v_;
-      explicit shape(Circle x) : v_(std::move(x)) {}
-      explicit shape(Square x) : v_(std::move(x)) {}
-      explicit shape(Triangle x) : v_(std::move(x)) {}
+      explicit shape(Circle _v) : v_(std::move(_v)) {}
+      explicit shape(Square _v) : v_(std::move(_v)) {}
+      explicit shape(Triangle _v) : v_(std::move(_v)) {}
 
     public:
       struct ctor {
@@ -101,9 +102,9 @@ struct Outer {
 };
 
 const std::shared_ptr<Outer::Inner::shape> my_circle =
-    outer::Inner::shape::ctor::Circle_((((((0 + 1) + 1) + 1) + 1) + 1));
+    Outer::Inner::shape::ctor::Circle_((((((0 + 1) + 1) + 1) + 1) + 1));
 
-const std::shared_ptr<Outer::color> my_color = outer::color::ctor::Red_();
+const std::shared_ptr<Outer::color> my_color = Outer::color::ctor::Red_();
 
 const unsigned int test_area = Outer::Inner::area(my_circle);
 

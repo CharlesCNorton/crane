@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -27,8 +28,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -55,7 +56,7 @@ struct Sig0 {
 
   private:
     variant_t v_;
-    explicit sig0(exist x) : v_(std::move(x)) {}
+    explicit sig0(exist _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -80,7 +81,7 @@ split_pivot(F0 &&le_dec0, const T1 pivot,
             const std::shared_ptr<List::list<T1>> &l) {
   return std::visit(
       Overloaded{
-          [&](const typename List::list<T1>::nil _args)
+          [](const typename List::list<T1>::nil _args)
               -> std::pair<std::shared_ptr<List::list<T1>>,
                            std::shared_ptr<List::list<T1>>> {
             return std::make_pair(List::list<T1>::ctor::nil_(),

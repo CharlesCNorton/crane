@@ -86,11 +86,15 @@ let type_subst_list l t =
     | a -> a
   in subst t
 
-(* Simultaneous substitution of [[|Tvar 1; ... ; Tvar n|]] by [v] in a ML type. *)
+(* Simultaneous substitution of [[|Tvar 1; ... ; Tvar n|]] by [v] in a ML type.
+   Type variables with indices > n are left unchanged (these are per-constructor
+   existential type variables that should not be substituted). *)
 
 let type_subst_vect v t =
+  let n = Array.length v in
   let rec subst t = match t with
-    | Tvar j -> v.(j-1)
+    | Tvar j when j >= 1 && j <= n -> v.(j-1)
+    | Tvar _ -> t  (* Per-constructor type var, leave unchanged *)
     | Tmeta {contents=None} -> t
     | Tmeta {contents=Some u} -> subst u
     | Tarr (a,b) -> Tarr (subst a, subst b)
@@ -101,6 +105,21 @@ let type_subst_vect v t =
 (*s From a type schema to a type. All [Tvar] become fresh [Tmeta]. *)
 
 let instantiation (nb,t) = type_subst_vect (Array.init nb new_meta) t
+
+(*s Replace all [Tunknown] in a type with fresh [Tmeta].
+   This is used for existential type variables that were marked as Tunknown
+   during extraction. At use sites, we want fresh metas so they can unify
+   with concrete types. *)
+
+let instantiate_unknowns t =
+  let rec subst t = match t with
+    | Tunknown -> new_meta ()
+    | Tmeta {contents=None} -> t
+    | Tmeta {contents=Some u} -> subst u
+    | Tarr (a,b) -> Tarr (subst a, subst b)
+    | Tglob (r, l, a) -> Tglob (r, List.map subst l, a)
+    | a -> a
+  in subst t
 
 (*s Occur-check of a free meta in a type *)
 

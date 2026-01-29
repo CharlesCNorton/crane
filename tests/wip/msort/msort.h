@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -27,8 +28,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -45,10 +46,10 @@ struct List {
     unsigned int length() const {
       return std::visit(
           Overloaded{
-              [&](const typename List::list<A>::nil _args) -> unsigned int {
+              [](const typename List::list<A>::nil _args) -> unsigned int {
                 return 0;
               },
-              [&](const typename List::list<A>::cons _args) -> unsigned int {
+              [](const typename List::list<A>::cons _args) -> unsigned int {
                 std::shared_ptr<List::list<A>> l_ = _args._a1;
                 return (l_->length() + 1);
               }},
@@ -67,7 +68,7 @@ struct Sig0 {
 
   private:
     variant_t v_;
-    explicit sig0(exist x) : v_(std::move(x)) {}
+    explicit sig0(exist _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -117,13 +118,13 @@ template <typename T1>
 std::pair<std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T1>>>
 split(const std::shared_ptr<List::list<T1>> &ls) {
   return std::visit(
-      Overloaded{[&](const typename List::list<T1>::nil _args)
+      Overloaded{[](const typename List::list<T1>::nil _args)
                      -> std::pair<std::shared_ptr<List::list<T1>>,
                                   std::shared_ptr<List::list<T1>>> {
                    return std::make_pair(List::list<T1>::ctor::nil_(),
                                          List::list<T1>::ctor::nil_());
                  },
-                 [&](const typename List::list<T1>::cons _args)
+                 [](const typename List::list<T1>::cons _args)
                      -> std::pair<std::shared_ptr<List::list<T1>>,
                                   std::shared_ptr<List::list<T1>>> {
                    T1 h1 = _args._a0;

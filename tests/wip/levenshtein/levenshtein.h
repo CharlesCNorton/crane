@@ -1,3 +1,4 @@
+#include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -21,8 +22,8 @@ struct Bool0 {
 
   private:
     variant_t v_;
-    explicit bool0(true0 x) : v_(std::move(x)) {}
-    explicit bool0(false0 x) : v_(std::move(x)) {}
+    explicit bool0(true0 _v) : v_(std::move(_v)) {}
+    explicit bool0(false0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -49,8 +50,8 @@ struct Nat {
 
   private:
     variant_t v_;
-    explicit nat(O x) : v_(std::move(x)) {}
-    explicit nat(S x) : v_(std::move(x)) {}
+    explicit nat(O _v) : v_(std::move(_v)) {}
+    explicit nat(S _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -77,7 +78,7 @@ struct SigT {
 
   private:
     variant_t v_;
-    explicit sigT(existT x) : v_(std::move(x)) {}
+    explicit sigT(existT _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -90,7 +91,7 @@ struct SigT {
     const variant_t &v() const { return v_; }
     A projT1() const {
       return std::visit(
-          Overloaded{[&](const typename SigT::sigT<A, P>::existT _args) -> A {
+          Overloaded{[](const typename SigT::sigT<A, P>::existT _args) -> A {
             A a = _args._a0;
             return a;
           }},
@@ -108,8 +109,8 @@ struct Sumbool {
 
   private:
     variant_t v_;
-    explicit sumbool(left x) : v_(std::move(x)) {}
-    explicit sumbool(right x) : v_(std::move(x)) {}
+    explicit sumbool(left _v) : v_(std::move(_v)) {}
+    explicit sumbool(right _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -149,7 +150,7 @@ struct Ascii {
 
   private:
     variant_t v_;
-    explicit ascii(Ascii x) : v_(std::move(x)) {}
+    explicit ascii(Ascii _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -180,206 +181,199 @@ struct Ascii {
             std::shared_ptr<Bool0::bool0> b5 = _args._a5;
             std::shared_ptr<Bool0::bool0> b6 = _args._a6;
             std::shared_ptr<Bool0::bool0> b7 = _args._a7;
-            return std::visit(
-                Overloaded{[&](const typename Ascii::ascii::Ascii _args) -> std::
-                                                                             shared_ptr<
-                                                                                 Sumbool::
-                                                                                     sumbool> {
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b8 =
-                                                                                       _args
-                                                                                           ._a0;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b9 =
-                                                                                       _args
-                                                                                           ._a1;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b10 =
-                                                                                       _args
-                                                                                           ._a2;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b11 =
-                                                                                       _args
-                                                                                           ._a3;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b12 =
-                                                                                       _args
-                                                                                           ._a4;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b13 =
-                                                                                       _args
-                                                                                           ._a5;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b14 =
-                                                                                       _args
-                                                                                           ._a6;
-                                                                               std::shared_ptr<
-                                                                                   Bool0::
-                                                                                       bool0>
-                                                                                   b15 =
-                                                                                       _args
-                                                                                           ._a7;
-                                                                               return std::visit(
-                                                                                   Overloaded{
-                                                                                       [&](const typename Sumbool::
-                                                                                               sumbool::left
-                                                                                                   _args)
-                                                                                           -> T1 {
-                                                                                         return std::visit(
-                                                                                             Overloaded{
-                                                                                                 [&](const typename Sumbool::
-                                                                                                         sumbool::left
-                                                                                                             _args)
-                                                                                                     -> T1 {
-                                                                                                   return std::visit(
-                                                                                                       Overloaded{
-                                                                                                           [&](const typename Sumbool::
-                                                                                                                   sumbool::left
-                                                                                                                       _args)
-                                                                                                               -> T1 {
-                                                                                                             return std::visit(
-                                                                                                                 Overloaded{[&](const typename Sumbool::
-                                                                                                                                    sumbool::left
-                                                                                                                                        _args)
-                                                                                                                                -> T1 {
-                                                                                                                              return std::visit(
-                                                                                                                                  Overloaded{
-                                                                                                                                      [&](const typename Sumbool::
-                                                                                                                                              sumbool::left
-                                                                                                                                                  _args)
-                                                                                                                                          -> T1 {
-                                                                                                                                        return std::visit(
-                                                                                                                                            Overloaded{
-                                                                                                                                                [&](const typename Sumbool::sumbool::left _args) -> T1 {
-                                                                                                                                                  return std::
-                                                                                                                                                      visit(Overloaded{[&](const typename Sumbool::
-                                                                                                                                                                               sumbool::left
-                                                                                                                                                                                   _args)
-                                                                                                                                                                           -> T1 {
-                                                                                                                                                                         return std::
-                                                                                                                                                                             visit(Overloaded{[&](const typename Sumbool::
-                                                                                                                                                                                                      sumbool::left
-                                                                                                                                                                                                          _args)
-                                                                                                                                                                                                  -> T1 {
-                                                                                                                                                                                                return Sumbool::
-                                                                                                                                                                                                    sumbool::ctor::
-                                                                                                                                                                                                        left_();
-                                                                                                                                                                                              },
-                                                                                                                                                                                              [&](const typename Sumbool::
-                                                                                                                                                                                                      sumbool::right
-                                                                                                                                                                                                          _args)
-                                                                                                                                                                                                  -> T1 {
-                                                                                                                                                                                                return Sumbool::
-                                                                                                                                                                                                    sumbool::ctor::
-                                                                                                                                                                                                        right_();
-                                                                                                                                                                                              }},
-                                                                                                                                                                                   bool_dec(
-                                                                                                                                                                                       b7,
-                                                                                                                                                                                       b15)
-                                                                                                                                                                                       ->v());
-                                                                                                                                                                       },
-                                                                                                                                                                       [&](const typename Sumbool::sumbool::right _args) -> T1 {
-                                                                                                                                                                         return Sumbool::
-                                                                                                                                                                             sumbool::ctor::
-                                                                                                                                                                                 right_();
-                                                                                                                                                                       }},
-                                                                                                                                                            bool_dec(
-                                                                                                                                                                b6,
-                                                                                                                                                                b14)
-                                                                                                                                                                ->v());
-                                                                                                                                                },
-                                                                                                                                                [&](const typename Sumbool::
-                                                                                                                                                        sumbool::right
-                                                                                                                                                            _args)
-                                                                                                                                                    -> T1 {
-                                                                                                                                                  return Sumbool::
-                                                                                                                                                      sumbool::ctor::
-                                                                                                                                                          right_();
-                                                                                                                                                }},
-                                                                                                                                            bool_dec(
-                                                                                                                                                b5,
-                                                                                                                                                b13)
-                                                                                                                                                ->v());
-                                                                                                                                      },
-                                                                                                                                      [&](const typename Sumbool::
-                                                                                                                                              sumbool::right
-                                                                                                                                                  _args)
-                                                                                                                                          -> T1 {
-                                                                                                                                        return Sumbool::
-                                                                                                                                            sumbool::ctor::
-                                                                                                                                                right_();
-                                                                                                                                      }},
-                                                                                                                                  bool_dec(
-                                                                                                                                      b4,
-                                                                                                                                      b12)
-                                                                                                                                      ->v());
-                                                                                                                            },
-                                                                                                                            [&](const typename Sumbool::
-                                                                                                                                    sumbool::right
-                                                                                                                                        _args)
-                                                                                                                                -> T1 {
-                                                                                                                              return Sumbool::
-                                                                                                                                  sumbool::ctor::
-                                                                                                                                      right_();
-                                                                                                                            }},
-                                                                                                                 bool_dec(
-                                                                                                                     b3,
-                                                                                                                     b11)
-                                                                                                                     ->v());
-                                                                                                           },
-                                                                                                           [&](const typename Sumbool::
-                                                                                                                   sumbool::right
-                                                                                                                       _args) -> T1 {
-                                                                                                             return Sumbool::
-                                                                                                                 sumbool::ctor::
-                                                                                                                     right_();
-                                                                                                           }},
-                                                                                                       bool_dec(
-                                                                                                           b2,
-                                                                                                           b10)
-                                                                                                           ->v());
-                                                                                                 },
-                                                                                                 [&](const typename Sumbool::
-                                                                                                         sumbool::right
-                                                                                                             _args)
-                                                                                                     -> T1 {
-                                                                                                   return Sumbool::
-                                                                                                       sumbool::ctor::
-                                                                                                           right_();
-                                                                                                 }},
-                                                                                             bool_dec(
-                                                                                                 b1,
-                                                                                                 b9)
-                                                                                                 ->v());
-                                                                                       },
-                                                                                       [&](const typename Sumbool::
-                                                                                               sumbool::right
-                                                                                                   _args)
-                                                                                           -> T1 {
-                                                                                         return Sumbool::
-                                                                                             sumbool::ctor::
-                                                                                                 right_();
-                                                                                       }},
-                                                                                   bool_dec(
-                                                                                       b0,
-                                                                                       b8)
-                                                                                       ->v());
-                                                                             }},
-                b->v());
+            return std::
+                visit(Overloaded{[&](const typename Ascii::ascii::Ascii _args) -> std::
+                                                                                   shared_ptr<
+                                                                                       Sumbool::
+                                                                                           sumbool> {
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b8 =
+                                                                                             _args
+                                                                                                 ._a0;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b9 =
+                                                                                             _args
+                                                                                                 ._a1;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b10 =
+                                                                                             _args
+                                                                                                 ._a2;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b11 =
+                                                                                             _args
+                                                                                                 ._a3;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b12 =
+                                                                                             _args
+                                                                                                 ._a4;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b13 =
+                                                                                             _args
+                                                                                                 ._a5;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b14 =
+                                                                                             _args
+                                                                                                 ._a6;
+                                                                                     std::shared_ptr<
+                                                                                         Bool0::
+                                                                                             bool0>
+                                                                                         b15 =
+                                                                                             _args
+                                                                                                 ._a7;
+                                                                                     return std::visit(
+                                                                                         Overloaded{
+                                                                                             [&](const typename Sumbool::
+                                                                                                     sumbool::left
+                                                                                                         _args)
+                                                                                                 -> T1 {
+                                                                                               return std::visit(
+                                                                                                   Overloaded{
+                                                                                                       [&](const typename Sumbool::sumbool::
+                                                                                                               left _args) -> T1 {
+                                                                                                         return std::visit(
+                                                                                                             Overloaded{
+                                                                                                                 [&](const typename Sumbool::
+                                                                                                                         sumbool::left
+                                                                                                                             _args)
+                                                                                                                     -> T1 {
+                                                                                                                   return std::visit(
+                                                                                                                       Overloaded{[&](const typename Sumbool::
+                                                                                                                                          sumbool::left
+                                                                                                                                              _args)
+                                                                                                                                      -> T1 {
+                                                                                                                                    return std::visit(Overloaded{
+                                                                                                                                                          [&](const typename Sumbool::
+                                                                                                                                                                  sumbool::left
+                                                                                                                                                                      _args)
+                                                                                                                                                              -> T1 {
+                                                                                                                                                            return std::
+                                                                                                                                                                visit(Overloaded{
+                                                                                                                                                                          [&](const typename Sumbool::sumbool::left _args) -> T1 {
+                                                                                                                                                                            return std::visit(Overloaded{[&](const typename Sumbool::
+                                                                                                                                                                                                                 sumbool::left
+                                                                                                                                                                                                                     _args)
+                                                                                                                                                                                                             -> T1 {
+                                                                                                                                                                                                           return std::visit(
+                                                                                                                                                                                                               Overloaded{
+                                                                                                                                                                                                                   [](const typename Sumbool::
+                                                                                                                                                                                                                          sumbool::left
+                                                                                                                                                                                                                              _args)
+                                                                                                                                                                                                                       -> T1 {
+                                                                                                                                                                                                                     return Sumbool::
+                                                                                                                                                                                                                         sumbool::ctor::
+                                                                                                                                                                                                                             left_();
+                                                                                                                                                                                                                   },
+                                                                                                                                                                                                                   [](
+                                                                                                                                                                                                                       const typename Sumbool::sumbool::right
+                                                                                                                                                                                                                           _args) -> T1 {
+                                                                                                                                                                                                                     return Sumbool::
+                                                                                                                                                                                                                         sumbool::ctor::
+                                                                                                                                                                                                                             right_();
+                                                                                                                                                                                                                   }},
+                                                                                                                                                                                                               bool_dec(
+                                                                                                                                                                                                                   b7,
+                                                                                                                                                                                                                   b15)
+                                                                                                                                                                                                                   ->v());
+                                                                                                                                                                                                         },
+                                                                                                                                                                                                         [](const typename Sumbool::sumbool::right _args) -> T1 {
+                                                                                                                                                                                                           return Sumbool::
+                                                                                                                                                                                                               sumbool::ctor::
+                                                                                                                                                                                                                   right_();
+                                                                                                                                                                                                         }},
+                                                                                                                                                                                              bool_dec(
+                                                                                                                                                                                                  b6,
+                                                                                                                                                                                                  b14)
+                                                                                                                                                                                                  ->v());
+                                                                                                                                                                          },
+                                                                                                                                                                          [](const typename Sumbool::
+                                                                                                                                                                                 sumbool::right
+                                                                                                                                                                                     _args)
+                                                                                                                                                                              -> T1 {
+                                                                                                                                                                            return Sumbool::
+                                                                                                                                                                                sumbool::ctor::
+                                                                                                                                                                                    right_();
+                                                                                                                                                                          }},
+                                                                                                                                                                      bool_dec(
+                                                                                                                                                                          b5,
+                                                                                                                                                                          b13)
+                                                                                                                                                                          ->v());
+                                                                                                                                                          },
+                                                                                                                                                          [](const typename Sumbool::sumbool::right _args) -> T1 {
+                                                                                                                                                            return Sumbool::
+                                                                                                                                                                sumbool::ctor::
+                                                                                                                                                                    right_();
+                                                                                                                                                          }},
+                                                                                                                                                      bool_dec(
+                                                                                                                                                          b4,
+                                                                                                                                                          b12)
+                                                                                                                                                          ->v());
+                                                                                                                                  },
+                                                                                                                                  [](
+                                                                                                                                      const typename Sumbool::sumbool::right
+                                                                                                                                          _args) -> T1 {
+                                                                                                                                    return Sumbool::
+                                                                                                                                        sumbool::ctor::
+                                                                                                                                            right_();
+                                                                                                                                  }},
+                                                                                                                       bool_dec(
+                                                                                                                           b3,
+                                                                                                                           b11)
+                                                                                                                           ->v());
+                                                                                                                 },
+                                                                                                                 [](const typename Sumbool::
+                                                                                                                        sumbool::right
+                                                                                                                            _args)
+                                                                                                                     -> T1 {
+                                                                                                                   return Sumbool::
+                                                                                                                       sumbool::ctor::
+                                                                                                                           right_();
+                                                                                                                 }},
+                                                                                                             bool_dec(
+                                                                                                                 b2,
+                                                                                                                 b10)
+                                                                                                                 ->v());
+                                                                                                       },
+                                                                                                       [](const typename Sumbool::
+                                                                                                              sumbool::right
+                                                                                                                  _args)
+                                                                                                           -> T1 {
+                                                                                                         return Sumbool::
+                                                                                                             sumbool::ctor::
+                                                                                                                 right_();
+                                                                                                       }},
+                                                                                                   bool_dec(
+                                                                                                       b1,
+                                                                                                       b9)
+                                                                                                       ->v());
+                                                                                             },
+                                                                                             [](const typename Sumbool::
+                                                                                                    sumbool::right
+                                                                                                        _args)
+                                                                                                 -> T1 {
+                                                                                               return Sumbool::
+                                                                                                   sumbool::ctor::
+                                                                                                       right_();
+                                                                                             }},
+                                                                                         bool_dec(
+                                                                                             b0,
+                                                                                             b8)
+                                                                                             ->v());
+                                                                                   }},
+                      b->v());
           }},
           this->v());
     }
@@ -398,8 +392,8 @@ struct String {
 
   private:
     variant_t v_;
-    explicit string(EmptyString x) : v_(std::move(x)) {}
-    explicit string(String x) : v_(std::move(x)) {}
+    explicit string(EmptyString _v) : v_(std::move(_v)) {}
+    explicit string(String _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -419,9 +413,9 @@ struct String {
     std::shared_ptr<Nat::nat> length() const {
       return std::visit(
           Overloaded{
-              [&](const typename String::string::EmptyString _args)
+              [](const typename String::string::EmptyString _args)
                   -> std::shared_ptr<Nat::nat> { return Nat::nat::ctor::O_(); },
-              [&](const typename String::string::String _args)
+              [](const typename String::string::String _args)
                   -> std::shared_ptr<Nat::nat> {
                 std::shared_ptr<String::string> s_ = _args._a1;
                 return Nat::nat::ctor::S_(s_->length());
@@ -451,9 +445,9 @@ struct Edit {
 
   private:
     variant_t v_;
-    explicit edit(insertion x) : v_(std::move(x)) {}
-    explicit edit(deletion x) : v_(std::move(x)) {}
-    explicit edit(update x) : v_(std::move(x)) {}
+    explicit edit(insertion _v) : v_(std::move(_v)) {}
+    explicit edit(deletion _v) : v_(std::move(_v)) {}
+    explicit edit(update _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -502,9 +496,9 @@ struct Chain {
 
   private:
     variant_t v_;
-    explicit chain(empty x) : v_(std::move(x)) {}
-    explicit chain(skip x) : v_(std::move(x)) {}
-    explicit chain(change x) : v_(std::move(x)) {}
+    explicit chain(empty _v) : v_(std::move(_v)) {}
+    explicit chain(skip _v) : v_(std::move(_v)) {}
+    explicit chain(change _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <any>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -30,8 +31,8 @@ struct List {
 
   private:
     variant_t v_;
-    explicit list(nil x) : v_(std::move(x)) {}
-    explicit list(cons x) : v_(std::move(x)) {}
+    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
@@ -141,7 +142,7 @@ template <typename K, typename V> struct CHT {
   assoc_lookup(F0 &&eqb, const T1 k,
                const std::shared_ptr<List::list<std::pair<T1, T2>>> &xs) {
     return std::visit(
-        Overloaded{[&](const typename List::list<std::pair<T1, T2>>::nil _args)
+        Overloaded{[](const typename List::list<std::pair<T1, T2>>::nil _args)
                        -> std::optional<T2> { return std::nullopt; },
                    [&](const typename List::list<std::pair<T1, T2>>::cons _args)
                        -> std::optional<T2> {
