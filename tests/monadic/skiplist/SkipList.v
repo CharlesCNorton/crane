@@ -16,7 +16,7 @@
    shared_ptr-based nodes.
 *)
 
-From Stdlib Require Import List Bool Arith.
+From Stdlib Require Import List Bool Arith Program.Wf.
 From Crane Require Extraction.
 From Crane Require Import Mapping.Std Mapping.NatIntStd Monads.ITree Monads.IO Monads.STM.
 From Corelib Require Import PrimInt63.
@@ -111,6 +111,34 @@ Definition readNext {K V : Type} (n : NodeRef K V) (level : nat) : STM (option (
 Definition writeNext {K V : Type} (n : NodeRef K V) (level : nat) (next : option (NodeRef K V)) : STM void :=
   trigger (iwriteNext n level next).
 
+(* Find predecessor at a given level *)
+(* The function is defined with fuel for Rocq's termination checker. *)
+
+(* Sufficient fuel for any reasonable skip list traversal *)
+Definition findPredFuel : nat := 10000.
+Crane Extract Inlined Constant findPredFuel => "10000u".
+
+Fixpoint findPred_go {K V : Type} (ltK : K -> K -> bool)
+  (fuel : nat) (curr : NodeRef K V) (target : K) (level : nat)
+  : STM (NodeRef K V) :=
+  match fuel with
+  | O => Ret curr  (* Should never happen with sufficient fuel *)
+  | S fuel' =>
+      nextOpt <- readNext curr level ;;
+      match nextOpt with
+      | None => Ret curr
+      | Some next =>
+          if ltK (getKey next) target then
+            findPred_go ltK fuel' next target level
+          else
+            Ret curr
+      end
+  end.
+
+Definition findPred {K V : Type} (ltK : K -> K -> bool) (curr : NodeRef K V) (target : K) (level : nat)
+  : STM (NodeRef K V) :=
+  findPred_go ltK findPredFuel curr target level.
+
 (* Extraction rules for Node operations *)
 Crane Extract Inlined Constant NodeRef => "std::shared_ptr<SkipNode<%t0, %t1>>" From "skipnode.h".
 Crane Extract Inlined Constant newNode => "SkipNode<%t0, %t1>::create(%a0, %a1, %a2)".
@@ -146,46 +174,20 @@ Variable K V : Type.
 Variable ltK : K -> K -> bool.   (* less-than comparison on keys *)
 Variable eqK : K -> K -> bool.   (* equality on keys *)
 
-(* Search fuel - prevents infinite loops *)
-Definition searchFuel : nat := 1000.
-
-(* Find predecessor at a given level *)
-Fixpoint findPred_aux (fuel : nat) (curr : NodeRef K V) (target : K) (level : nat)
-  : STM (NodeRef K V) :=
-  match fuel with
-  | O => Ret curr
-  | S fuel' =>
-      nextOpt <- readNext curr level ;;
-      match nextOpt with
-      | None => Ret curr
-      | Some next =>
-          if ltK (getKey next) target then
-            findPred_aux fuel' next target level
-          else
-            Ret curr
-      end
-  end.
-
-Definition findPred (curr : NodeRef K V) (target : K) (level : nat) : STM (NodeRef K V) :=
-  findPred_aux searchFuel curr target level.
-
 (* Collect update path from current level down to 0 *)
-Fixpoint findPath_aux (fuel : nat) (curr : NodeRef K V) (target : K) (level : nat)
+(* Uses structural recursion on level - no fuel needed *)
+Fixpoint findPath_aux (curr : NodeRef K V) (target : K) (level : nat)
   (acc : list (NodeRef K V)) : STM (list (NodeRef K V)) :=
-  match fuel with
-  | O => Ret acc
-  | S fuel' =>
-      pred <- findPred curr target level ;;
-      let acc' := pred :: acc in
-      match level with
-      | O => Ret acc'
-      | S level' => findPath_aux fuel' pred target level' acc'
-      end
+  pred <- findPred ltK curr target level ;;
+  let acc' := pred :: acc in
+  match level with
+  | O => Ret acc'
+  | S level' => findPath_aux pred target level' acc'
   end.
 
 Definition findPath (sl : TSkipList K V) (target : K) : STM (list (NodeRef K V)) :=
   lvl <- readTVar (slLevel sl) ;;
-  findPath_aux searchFuel (slHead sl) target lvl [].
+  findPath_aux (slHead sl) target lvl [].
 
 (* ------------------------------------------------------------------------ *)
 (*                              lookup                                      *)
