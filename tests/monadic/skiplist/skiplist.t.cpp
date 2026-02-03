@@ -23,7 +23,7 @@ struct RandomInit {
 
 int main() {
     unsigned int passed = 0;
-    unsigned int total = 12;
+    unsigned int total = 13;
 
     // Original tests
     bool r1 = skiplist_test::test_insert_lookup();
@@ -74,6 +74,10 @@ int main() {
     bool r12 = skiplist_test::test_removeAll();
     std::cout << "test_removeAll: " << (r12 ? "PASS" : "FAIL") << std::endl;
     if (r12) passed++;
+
+    bool r13 = skiplist_test::test_bde_api();
+    std::cout << "test_bde_api: " << (r13 ? "PASS" : "FAIL") << std::endl;
+    if (r13) passed++;
 
     std::cout << "SkipList tests passed: " << passed << "/" << total << std::endl;
 

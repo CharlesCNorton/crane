@@ -32,7 +32,7 @@ Module SkipList.
 (* ========================================================================= *)
 
 (* Maximum number of levels - supports up to 2^16 elements efficiently *)
-Definition maxLevels : nat := 16.
+Definition maxLevels : nat := sixteen.
 
 (* ========================================================================= *)
 (*                         Random Level Generation                           *)
@@ -687,6 +687,280 @@ Definition data (pair : Pair K V) : STM V := readValue pair.
 End Operations.
 
 (* ========================================================================= *)
+(*                    BDE-Compatible Type Signatures                         *)
+(* ========================================================================= *)
+
+(* Status codes matching bdlcc::SkipList *)
+Definition e_SUCCESS   : nat := zero.
+Definition e_NOT_FOUND : nat := one.
+Definition e_DUPLICATE : nat := two.
+Definition e_INVALID   : nat := three.
+
+(* These operations match BDE's type signatures as closely as possible:
+   - Return status codes (nat) instead of option types
+   - Return pairs (status, result) to simulate output parameters
+   - Include newFrontFlag where BDE has it
+*)
+
+Section BDECompatible.
+
+Variable K V : Type.
+Variable ltK : K -> K -> bool.
+Variable eqK : K -> K -> bool.
+
+(* ------------------------------------------------------------------------ *)
+(*  int add(PairHandle *result, const KEY& key, const DATA& data,           *)
+(*          bool *newFrontFlag = 0);                                        *)
+(*  Returns: (result, newFrontFlag)                                         *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_add (key : K) (data : V) (sl : TSkipList K V) (level : nat)
+  : STM (Pair K V * bool) :=
+  path <- findPath ltK sl key ;;
+  let fullPath := extendPath path (slHead sl) (S level) in
+  (* Check if this will be at front *)
+  curFront <- readNext (slHead sl) 0 ;;
+  let isNewFront := match curFront with
+                    | None => true
+                    | Some frontNode => ltK key (getKey frontNode)
+                    end in
+  match fullPath with
+  | [] =>
+      (* Should not happen - create dummy node *)
+      newN <- newNode key data level ;;
+      Ret (newN, true)
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | Some existing =>
+          if eqK (getKey existing) key then
+            writeValue existing data ;;
+            Ret (existing, false)  (* Update existing, not new front *)
+          else
+            newN <- newNode key data level ;;
+            linkNode fullPath newN ;;
+            curLvl <- readTVar (slLevel sl) ;;
+            (if Nat.ltb curLvl level then
+              writeTVar (slLevel sl) level
+            else
+              Ret ghost) ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (S len) ;;
+            Ret (newN, isNewFront)
+      | None =>
+          newN <- newNode key data level ;;
+          linkNode fullPath newN ;;
+          curLvl <- readTVar (slLevel sl) ;;
+          (if Nat.ltb curLvl level then
+            writeTVar (slLevel sl) level
+          else
+            Ret ghost) ;;
+          len <- readTVar (slLength sl) ;;
+          writeTVar (slLength sl) (S len) ;;
+          Ret (newN, isNewFront)
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int addUnique(PairHandle *result, const KEY& key, const DATA& data,     *)
+(*                bool *newFrontFlag = 0);                                  *)
+(*  Returns: (status, result_opt, newFrontFlag)                             *)
+(*  status = e_SUCCESS (0) or e_DUPLICATE (2)                               *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_addUnique (key : K) (data : V) (sl : TSkipList K V) (level : nat)
+  : STM (nat * option (Pair K V) * bool) :=
+  path <- findPath ltK sl key ;;
+  let fullPath := extendPath path (slHead sl) (S level) in
+  curFront <- readNext (slHead sl) 0 ;;
+  let isNewFront := match curFront with
+                    | None => true
+                    | Some frontNode => ltK key (getKey frontNode)
+                    end in
+  match fullPath with
+  | [] => Ret (e_INVALID, None, false)
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | Some existing =>
+          if eqK (getKey existing) key then
+            Ret (e_DUPLICATE, None, false)
+          else
+            newN <- newNode key data level ;;
+            linkNode fullPath newN ;;
+            curLvl <- readTVar (slLevel sl) ;;
+            (if Nat.ltb curLvl level then
+              writeTVar (slLevel sl) level
+            else
+              Ret ghost) ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (S len) ;;
+            Ret (e_SUCCESS, Some newN, isNewFront)
+      | None =>
+          newN <- newNode key data level ;;
+          linkNode fullPath newN ;;
+          curLvl <- readTVar (slLevel sl) ;;
+          (if Nat.ltb curLvl level then
+            writeTVar (slLevel sl) level
+          else
+            Ret ghost) ;;
+          len <- readTVar (slLength sl) ;;
+          writeTVar (slLength sl) (S len) ;;
+          Ret (e_SUCCESS, Some newN, isNewFront)
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int find(PairHandle *item, const KEY& key) const;                       *)
+(*  Returns: (status, item_opt)                                             *)
+(*  status = e_SUCCESS (0) or e_NOT_FOUND (1)                               *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_find (key : K) (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  path <- findPath ltK sl key ;;
+  match path with
+  | [] => Ret (e_NOT_FOUND, None)
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | None => Ret (e_NOT_FOUND, None)
+      | Some node =>
+          if eqK (getKey node) key then
+            Ret (e_SUCCESS, Some node)
+          else
+            Ret (e_NOT_FOUND, None)
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int front(PairHandle *front) const;                                     *)
+(*  Returns: (status, front_opt)                                            *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_front (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  frontOpt <- readNext (slHead sl) 0 ;;
+  match frontOpt with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int back(PairHandle *back) const;                                       *)
+(*  Returns: (status, back_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_back (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  backOpt <- back sl ;;
+  match backOpt with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int popFront(PairHandle *item = 0);                                     *)
+(*  Returns: (status, item_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_popFront (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  firstOpt <- readNext (slHead sl) 0 ;;
+  match firstOpt with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node =>
+      unlinkFirstFromHead (slHead sl) node (getLevel node) (maxLevels - 1) ;;
+      len <- readTVar (slLength sl) ;;
+      writeTVar (slLength sl) (len - 1) ;;
+      Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int remove(const Pair *reference);                                      *)
+(*  Returns: status                                                         *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_remove (pair : Pair K V) (sl : TSkipList K V) : STM nat :=
+  result <- removePair ltK eqK pair sl ;;
+  if result then Ret e_SUCCESS else Ret e_NOT_FOUND.
+
+(* ------------------------------------------------------------------------ *)
+(*  int removeAll();                                                        *)
+(*  Returns: count of removed items                                         *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_removeAll (sl : TSkipList K V) : STM nat :=
+  removeAll sl.
+
+(* ------------------------------------------------------------------------ *)
+(*  bool exists(const KEY& key) const;                                      *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_exists (key : K) (sl : TSkipList K V) : STM bool :=
+  member ltK eqK key sl.
+
+(* ------------------------------------------------------------------------ *)
+(*  bool isEmpty() const;                                                   *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_isEmpty (sl : TSkipList K V) : STM bool :=
+  isEmpty sl.
+
+(* ------------------------------------------------------------------------ *)
+(*  int length() const;                                                     *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_length (sl : TSkipList K V) : STM nat :=
+  length sl.
+
+(* ------------------------------------------------------------------------ *)
+(*  int next(PairHandle *next, const Pair *reference) const;                *)
+(*  Returns: (status, next_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_next (pair : Pair K V) : STM (nat * option (Pair K V)) :=
+  nextOpt <- next pair ;;
+  match nextOpt with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int previous(PairHandle *prevPair, const Pair *reference) const;        *)
+(*  Returns: (status, prev_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_previous (pair : Pair K V) (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  prevOpt <- previous eqK pair sl ;;
+  match prevOpt with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int findLowerBound(PairHandle *item, const KEY& key) const;             *)
+(*  Returns: (status, item_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_findLowerBound (key : K) (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  result <- findLowerBound ltK key sl ;;
+  match result with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*  int findUpperBound(PairHandle *item, const KEY& key) const;             *)
+(*  Returns: (status, item_opt)                                             *)
+(* ------------------------------------------------------------------------ *)
+
+Definition bde_findUpperBound (key : K) (sl : TSkipList K V) : STM (nat * option (Pair K V)) :=
+  result <- findUpperBound ltK eqK key sl ;;
+  match result with
+  | None => Ret (e_NOT_FOUND, None)
+  | Some node => Ret (e_SUCCESS, Some node)
+  end.
+
+End BDECompatible.
+
+(* ========================================================================= *)
 (*                            Construction                                   *)
 (* ========================================================================= *)
 
@@ -715,21 +989,21 @@ Definition nat_eq (x y : nat) : bool := Nat.eqb x y.
 Definition stm_test_insert_lookup (_ : void) : STM bool :=
   sl <- create 0 0 ;;
   (* Use multiple levels to test skip list structure *)
-  insert nat_lt nat_eq 5 50 sl 2 ;;
-  insert nat_lt nat_eq 3 30 sl 1 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
-  insert nat_lt nat_eq 1 10 sl 1 ;;
+  insert nat_lt nat_eq five fifty sl two ;;
+  insert nat_lt nat_eq three thirty sl one  ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
+  insert nat_lt nat_eq one ten sl one  ;;
 
-  v5 <- lookup nat_lt nat_eq 5 sl ;;
-  v3 <- lookup nat_lt nat_eq 3 sl ;;
-  v7 <- lookup nat_lt nat_eq 7 sl ;;
-  v1 <- lookup nat_lt nat_eq 1 sl ;;
-  v9 <- lookup nat_lt nat_eq 9 sl ;;
+  v5 <- lookup nat_lt nat_eq five sl ;;
+  v3 <- lookup nat_lt nat_eq three sl ;;
+  v7 <- lookup nat_lt nat_eq seven sl ;;
+  v1 <- lookup nat_lt nat_eq one  sl ;;
+  v9 <- lookup nat_lt nat_eq nine sl ;;
 
-  let c1 := match v5 with Some 50 => true | _ => false end in
-  let c2 := match v3 with Some 30 => true | _ => false end in
-  let c3 := match v7 with Some 70 => true | _ => false end in
-  let c4 := match v1 with Some 10 => true | _ => false end in
+  let c1 := match v5 with Some n => Nat.eqb n fifty | _ => false end in
+  let c2 := match v3 with Some n => Nat.eqb n thirty | _ => false end in
+  let c3 := match v7 with Some n => Nat.eqb n seventy | _ => false end in
+  let c4 := match v1 with Some n => Nat.eqb n ten | _ => false end in
   let c5 := match v9 with None => true | _ => false end in
 
   Ret (andb c1 (andb c2 (andb c3 (andb c4 c5)))).
@@ -737,40 +1011,43 @@ Definition stm_test_insert_lookup (_ : void) : STM bool :=
 Definition stm_test_delete (_ : void) : STM bool :=
   sl <- create 0 0 ;;
   (* Use multiple levels for delete test too *)
-  insert nat_lt nat_eq 5 50 sl 2 ;;
-  insert nat_lt nat_eq 3 30 sl 1 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl two ;;
+  insert nat_lt nat_eq three thirty sl one ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
 
   (* Delete node at level 2 *)
-  remove nat_lt nat_eq 5 sl ;;
+  remove nat_lt nat_eq five sl ;;
 
-  v5 <- lookup nat_lt nat_eq 5 sl ;;
-  v3 <- lookup nat_lt nat_eq 3 sl ;;
-  v7 <- lookup nat_lt nat_eq 7 sl ;;
+  v5 <- lookup nat_lt nat_eq five sl ;;
+  v3 <- lookup nat_lt nat_eq three sl ;;
+  v7 <- lookup nat_lt nat_eq seven sl ;;
 
   let c1 := match v5 with None => true | _ => false end in
-  let c2 := match v3 with Some 30 => true | _ => false end in
-  let c3 := match v7 with Some 70 => true | _ => false end in
+  let c2 := match v3 with Some n => Nat.eqb n thirty | _ => false end in
+  let c3 := match v7 with Some n => Nat.eqb n seventy | _ => false end in
 
   Ret (andb c1 (andb c2 c3)).
 
+Definition fivehundred : nat := 500.
+Crane Extract Inlined Constant fivehundred => "500u".
+
 Definition stm_test_update (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 5 500 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq five fivehundred  sl 0 ;;
 
-  v <- lookup nat_lt nat_eq 5 sl ;;
-  Ret (match v with Some 500 => true | _ => false end).
+  v <- lookup nat_lt nat_eq five sl ;;
+  Ret (match v with Some n => Nat.eqb n fivehundred | _ => false end).
 
 Definition stm_test_minimum (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
 
   minOpt <- minimum sl ;;
   Ret (match minOpt with
-       | Some (3, 30) => true
+       | Some (k, v) => andb (Nat.eqb k three) (Nat.eqb v thirty)
        | _ => false
        end).
 
@@ -780,21 +1057,21 @@ Definition stm_test_length_isEmpty (_ : void) : STM bool :=
   sl <- create 0 0 ;;
   empty1 <- isEmpty sl ;;
   len1 <- length sl ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
   empty2 <- isEmpty sl ;;
   len2 <- length sl ;;
   let c1 := empty1 in
   let c2 := Nat.eqb len1 0 in
   let c3 := negb empty2 in
-  let c4 := Nat.eqb len2 2 in
+  let c4 := Nat.eqb len2 two in
   Ret (andb c1 (andb c2 (andb c3 c4))).
 
 Definition stm_test_front_back (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
   frontOpt <- front sl ;;
   backOpt <- back sl ;;
   let c1 := match frontOpt with
@@ -809,41 +1086,41 @@ Definition stm_test_front_back (_ : void) : STM bool :=
 
 Definition stm_test_popFront (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
   pop1 <- popFront sl ;;
   pop2 <- popFront sl ;;
   len <- length sl ;;
-  let c1 := match pop1 with Some (3, 30) => true | _ => false end in
-  let c2 := match pop2 with Some (5, 50) => true | _ => false end in
-  let c3 := Nat.eqb len 1 in
+  let c1 := match pop1 with Some (k, v) => andb (Nat.eqb k three) (Nat.eqb v thirty) | _ => false end in
+  let c2 := match pop2 with Some (k, v) => andb (Nat.eqb k five) (Nat.eqb v fifty) | _ => false end in
+  let c3 := Nat.eqb len one  in
   Ret (andb c1 (andb c2 c3)).
 
 Definition stm_test_addUnique (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  r1 <- addUnique nat_lt nat_eq 5 50 sl 0 ;;
-  r2 <- addUnique nat_lt nat_eq 5 500 sl 0 ;;  (* Should fail - key exists *)
-  r3 <- addUnique nat_lt nat_eq 3 30 sl 0 ;;
-  v5 <- lookup nat_lt nat_eq 5 sl ;;
+  r1 <- addUnique nat_lt nat_eq five fifty sl 0 ;;
+  r2 <- addUnique nat_lt nat_eq five fivehundred  sl 0 ;;  (* Should fail - key exists *)
+  r3 <- addUnique nat_lt nat_eq three thirty sl 0 ;;
+  v5 <- lookup nat_lt nat_eq five sl ;;
   len <- length sl ;;
   let c1 := r1 in
   let c2 := negb r2 in
   let c3 := r3 in
-  let c4 := match v5 with Some 50 => true | _ => false end in (* Value unchanged *)
-  let c5 := Nat.eqb len 2 in
+  let c4 := match v5 with Some n => Nat.eqb n fifty | _ => false end in (* Value unchanged *)
+  let c5 := Nat.eqb len two in
   Ret (andb c1 (andb c2 (andb c3 (andb c4 c5)))).
 
 Definition stm_test_find (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  pairOpt <- find nat_lt nat_eq 5 sl ;;
-  noneOpt <- find nat_lt nat_eq 9 sl ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  pairOpt <- find nat_lt nat_eq five sl ;;
+  noneOpt <- find nat_lt nat_eq nine sl ;;
   let c1 := match pairOpt with
             | Some p =>
                 let k := key p in
-                Nat.eqb k 5
+                Nat.eqb k five
             | None => false
             end in
   let c2 := match noneOpt with None => true | _ => false end in
@@ -851,9 +1128,9 @@ Definition stm_test_find (_ : void) : STM bool :=
 
 Definition stm_test_navigation (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 1 10 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq one ten sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
   frontOpt <- front sl ;;
   match frontOpt with
   | None => Ret false
@@ -863,10 +1140,10 @@ Definition stm_test_navigation (_ : void) : STM bool :=
       | None => Ret false
       | Some second =>
           prevOpt <- previous nat_eq second sl ;;
-          let c1 := Nat.eqb (key first) 1 in
-          let c2 := Nat.eqb (key second) 3 in
+          let c1 := Nat.eqb (key first) one in
+          let c2 := Nat.eqb (key second) three in
           let c3 := match prevOpt with
-                    | Some p => Nat.eqb (key p) 1
+                    | Some p => Nat.eqb (key p) one
                     | None => false
                     end in
           Ret (andb c1 (andb c2 c3))
@@ -875,32 +1152,84 @@ Definition stm_test_navigation (_ : void) : STM bool :=
 
 Definition stm_test_bounds (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 2 20 sl 0 ;;
-  insert nat_lt nat_eq 4 40 sl 0 ;;
-  insert nat_lt nat_eq 6 60 sl 0 ;;
-  (* findLowerBound 3 should return 4 (first >= 3) *)
-  lb3 <- findLowerBound nat_lt 3 sl ;;
+  insert nat_lt nat_eq two twenty sl 0 ;;
+  insert nat_lt nat_eq four forty sl 0 ;;
+  insert nat_lt nat_eq six sixty sl 0 ;;
+  (* findLowerBound three should return 4 (first >= 3) *)
+  lb3 <- findLowerBound nat_lt three sl ;;
   (* findLowerBound 4 should return 4 (first >= 4) *)
-  lb4 <- findLowerBound nat_lt 4 sl ;;
+  lb4 <- findLowerBound nat_lt four sl ;;
   (* findUpperBound 4 should return 6 (first > 4) *)
-  ub4 <- findUpperBound nat_lt nat_eq 4 sl ;;
-  let c1 := match lb3 with Some p => Nat.eqb (key p) 4 | None => false end in
-  let c2 := match lb4 with Some p => Nat.eqb (key p) 4 | None => false end in
-  let c3 := match ub4 with Some p => Nat.eqb (key p) 6 | None => false end in
+  ub4 <- findUpperBound nat_lt nat_eq four sl ;;
+  let c1 := match lb3 with Some p => Nat.eqb (key p) four | None => false end in
+  let c2 := match lb4 with Some p => Nat.eqb (key p) four | None => false end in
+  let c3 := match ub4 with Some p => Nat.eqb (key p) six | None => false end in
   Ret (andb c1 (andb c2 c3)).
 
 Definition stm_test_removeAll (_ : void) : STM bool :=
   sl <- create 0 0 ;;
-  insert nat_lt nat_eq 5 50 sl 0 ;;
-  insert nat_lt nat_eq 3 30 sl 0 ;;
-  insert nat_lt nat_eq 7 70 sl 0 ;;
+  insert nat_lt nat_eq five fifty sl 0 ;;
+  insert nat_lt nat_eq three thirty sl 0 ;;
+  insert nat_lt nat_eq seven seventy sl 0 ;;
   count <- removeAll sl ;;
   empty <- isEmpty sl ;;
   len <- length sl ;;
-  let c1 := Nat.eqb count 3 in
+  let c1 := Nat.eqb count three in
   let c2 := empty in
   let c3 := Nat.eqb len 0 in
   Ret (andb c1 (andb c2 c3)).
+
+(* BDE-compatible API test *)
+Definition stm_test_bde_api (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+
+  (* Test bde_add with newFrontFlag *)
+  result1 <- bde_add nat_lt nat_eq five fifty sl 0 ;;
+  let '(pair1, front1) := result1 in
+
+  result2 <- bde_add nat_lt nat_eq three thirty sl 0 ;;
+  let '(pair2, front2) := result2 in
+
+  result3 <- bde_add nat_lt nat_eq seven seventy sl 0 ;;
+  let '(pair3, front3) := result3 in
+
+  (* First insert should be front, second should also be front (3 < 5), third not *)
+  let c1 := front1 in
+  let c2 := front2 in
+  let c3 := negb front3 in
+
+  (* Test bde_find with status codes *)
+  findResult <- bde_find nat_lt nat_eq five sl ;;
+  let '(status1, item1) := findResult in
+  let c4 := Nat.eqb status1 e_SUCCESS in
+
+  findResult2 <- bde_find nat_lt nat_eq nine sl ;;
+  let '(status2, item2) := findResult2 in
+  let c5 := Nat.eqb status2 e_NOT_FOUND in
+
+  (* Test bde_addUnique with duplicate detection *)
+  uniqueResult <- bde_addUnique nat_lt nat_eq five fivehundred sl 0 ;;
+  let '(status3, _, _) := uniqueResult in
+  let c6 := Nat.eqb status3 e_DUPLICATE in
+
+  (* Test bde_front/bde_back - these don't use ltK/eqK *)
+  frontResult <- bde_front sl ;;
+  let '(status4, frontItem) := frontResult in
+  let c7 := Nat.eqb status4 e_SUCCESS in
+  let c8 := match frontItem with
+            | Some p => Nat.eqb (key p) three
+            | None => false
+            end in
+
+  backResult <- bde_back sl ;;
+  let '(status5, backItem) := backResult in
+  let c9 := Nat.eqb status5 e_SUCCESS in
+  let c10 := match backItem with
+             | Some p => Nat.eqb (key p) seven
+             | None => false
+             end in
+
+  Ret (andb c1 (andb c2 (andb c3 (andb c4 (andb c5 (andb c6 (andb c7 (andb c8 (andb c9 c10))))))))).
 
 (* IO wrappers *)
 Definition test_insert_lookup (_ : void) : IO bool :=
@@ -939,6 +1268,9 @@ Definition test_bounds (_ : void) : IO bool :=
 Definition test_removeAll (_ : void) : IO bool :=
   atomically (stm_test_removeAll ghost).
 
+Definition test_bde_api (_ : void) : IO bool :=
+  atomically (stm_test_bde_api ghost).
+
 Definition run_tests : IO nat :=
   r1 <- test_insert_lookup ghost ;;
   r2 <- test_delete ghost ;;
@@ -952,18 +1284,20 @@ Definition run_tests : IO nat :=
   r10 <- test_navigation ghost ;;
   r11 <- test_bounds ghost ;;
   r12 <- test_removeAll ghost ;;
-  let passed := (if r1 then 1 else 0) +
-                (if r2 then 1 else 0) +
-                (if r3 then 1 else 0) +
-                (if r4 then 1 else 0) +
-                (if r5 then 1 else 0) +
-                (if r6 then 1 else 0) +
-                (if r7 then 1 else 0) +
-                (if r8 then 1 else 0) +
-                (if r9 then 1 else 0) +
-                (if r10 then 1 else 0) +
-                (if r11 then 1 else 0) +
-                (if r12 then 1 else 0) in
+  r13 <- test_bde_api ghost ;;
+  let passed := (if r1 then one else zero) +
+                (if r2 then one else zero) +
+                (if r3 then one else zero) +
+                (if r4 then one else zero) +
+                (if r5 then one else zero) +
+                (if r6 then one else zero) +
+                (if r7 then one else zero) +
+                (if r8 then one else zero) +
+                (if r9 then one else zero) +
+                (if r10 then one else zero) +
+                (if r11 then one else zero) +
+                (if r12 then one else zero) +
+                (if r13 then one else zero) in
   Ret passed.
 
 End skiplist_test.
