@@ -48,7 +48,7 @@ struct List {
       }
     };
     const variant_t &v() const { return v_; }
-    unsigned int length() const {
+    unsigned int length0() const {
       return std::visit(
           Overloaded{
               [](const typename List::list<A>::nil _args) -> unsigned int {
@@ -56,7 +56,7 @@ struct List {
               },
               [](const typename List::list<A>::cons _args) -> unsigned int {
                 std::shared_ptr<List::list<A>> l_ = _args._a1;
-                return (l_->length() + 1);
+                return (l_->length0() + 1);
               }},
           this->v());
     }
@@ -159,9 +159,9 @@ struct SkipList {
           stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
               curr->forward[level]);
       if (nextOpt.has_value()) {
-        std::shared_ptr<SkipNode<T1, T2>> next = *nextOpt;
-        if (ltK(next->key, target)) {
-          return findPred_go<T1, T2>(ltK, fuel_, next, target, level);
+        std::shared_ptr<SkipNode<T1, T2>> next0 = *nextOpt;
+        if (ltK(next0->key, target)) {
+          return findPred_go<T1, T2>(ltK, fuel_, next0, target, level);
         } else {
           return curr;
         }
@@ -178,10 +178,14 @@ struct SkipList {
     return findPred_go<T1, T2>(ltK, 10000u, curr, target, level);
   }
 
+  template <typename k, typename v>
+  using Pair = std::shared_ptr<SkipNode<k, v>>;
+
   template <typename K, typename V> struct TSkipList {
     std::shared_ptr<SkipNode<K, V>> slHead;
     unsigned int slMaxLevel;
     std::shared_ptr<stm::TVar<unsigned int>> slLevel;
+    std::shared_ptr<stm::TVar<unsigned int>> slLength;
   };
 
   template <typename T1, typename T2>
@@ -194,6 +198,12 @@ struct SkipList {
   static std::shared_ptr<stm::TVar<unsigned int>>
   slLevel(const std::shared_ptr<TSkipList<T1, T2>> &t) {
     return t->slLevel;
+  }
+
+  template <typename T1, typename T2>
+  static std::shared_ptr<stm::TVar<unsigned int>>
+  slLength(const std::shared_ptr<TSkipList<T1, T2>> &t) {
+    return t->slLength;
   }
 
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
@@ -304,7 +314,7 @@ struct SkipList {
       const std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>>
           &path,
       const std::shared_ptr<SkipNode<T1, T2>> head, const unsigned int needed) {
-    unsigned int have = path->length();
+    unsigned int have = path->length0();
     if (Nat::leb(needed, have)) {
       return path;
     } else {
@@ -351,27 +361,36 @@ struct SkipList {
                 if (eqK(existing->key, k)) {
                   return stm::writeTVar<T2>(existing->value, v);
                 } else {
-                  std::shared_ptr<SkipNode<T1, T2>> newNode =
+                  std::shared_ptr<SkipNode<T1, T2>> newN =
                       SkipNode<T1, T2>::create(k, v, newLevel);
-                  linkNode<T1, T2>(fullPath, newNode);
+                  linkNode<T1, T2>(fullPath, newN);
                   unsigned int curLvl =
                       stm::readTVar<unsigned int>(sl->slLevel);
+                  [&](void) {
+                    if (Nat::ltb(curLvl, newLevel)) {
+                      return stm::writeTVar<unsigned int>(sl->slLevel,
+                                                          newLevel);
+                    } else {
+                      return;
+                    }
+                  }();
+                  unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+                  return stm::writeTVar<unsigned int>(sl->slLength, (len + 1));
+                }
+              } else {
+                std::shared_ptr<SkipNode<T1, T2>> newN =
+                    SkipNode<T1, T2>::create(k, v, newLevel);
+                linkNode<T1, T2>(fullPath, newN);
+                unsigned int curLvl = stm::readTVar<unsigned int>(sl->slLevel);
+                [&](void) {
                   if (Nat::ltb(curLvl, newLevel)) {
                     return stm::writeTVar<unsigned int>(sl->slLevel, newLevel);
                   } else {
                     return;
                   }
-                }
-              } else {
-                std::shared_ptr<SkipNode<T1, T2>> newNode =
-                    SkipNode<T1, T2>::create(k, v, newLevel);
-                linkNode<T1, T2>(fullPath, newNode);
-                unsigned int curLvl = stm::readTVar<unsigned int>(sl->slLevel);
-                if (Nat::ltb(curLvl, newLevel)) {
-                  return stm::writeTVar<unsigned int>(sl->slLevel, newLevel);
-                } else {
-                  return;
-                }
+                }();
+                unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+                return stm::writeTVar<unsigned int>(sl->slLength, (len + 1));
               }
             }},
         fullPath->v());
@@ -450,7 +469,11 @@ struct SkipList {
                   std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>>
                       fullPath = extendPath<T1, T2>(path, sl->slHead,
                                                     (node->level + 1));
-                  return unlinkNode<T1, T2>(fullPath, node);
+                  unlinkNode<T1, T2>(fullPath, node);
+                  unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+                  return stm::writeTVar<unsigned int>(
+                      sl->slLength,
+                      (((len - (0 + 1)) > len ? 0 : (len - (0 + 1)))));
                 } else {
                   return;
                 }
@@ -478,6 +501,400 @@ struct SkipList {
   }
 
   template <typename T1, typename T2>
+  static bool isEmpty(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+    return Nat::eqb(len, 0);
+  }
+
+  template <typename T1, typename T2>
+  static unsigned int length(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    return stm::readTVar<unsigned int>(sl->slLength);
+  }
+
+  template <typename T1, typename T2>
+  static std::optional<Pair<T1, T2>>
+  front(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    return stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+        sl->slHead->forward[0]);
+  }
+
+  template <typename T1, typename T2>
+  static std::optional<std::shared_ptr<SkipNode<T1, T2>>>
+  findLast_aux(const unsigned int fuel,
+               const std::shared_ptr<SkipNode<T1, T2>> curr) {
+    if (fuel <= 0) {
+      return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(curr);
+    } else {
+      unsigned int fuel_ = fuel - 1;
+      std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+          stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+              curr->forward[0]);
+      if (nextOpt.has_value()) {
+        std::shared_ptr<SkipNode<T1, T2>> next0 = *nextOpt;
+        return findLast_aux<T1, T2>(fuel_, next0);
+      } else {
+        return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(curr);
+      }
+    }
+  }
+
+  template <typename T1, typename T2>
+  static std::optional<Pair<T1, T2>>
+  back(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::optional<std::shared_ptr<SkipNode<T1, T2>>> firstOpt =
+        stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+            sl->slHead->forward[0]);
+    if (firstOpt.has_value()) {
+      std::shared_ptr<SkipNode<T1, T2>> first = *firstOpt;
+      return findLast_aux<T1, T2>(10000u, first);
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  template <typename T1, typename T2>
+  static void unlinkFirstFromHead(const std::shared_ptr<SkipNode<T1, T2>> head,
+                                  const std::shared_ptr<SkipNode<T1, T2>> node,
+                                  const unsigned int nodeLevel,
+                                  const unsigned int lvl) {
+    if (lvl <= 0) {
+      std::optional<std::shared_ptr<SkipNode<T1, T2>>> nodeNext =
+          stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+              node->forward[0]);
+      return stm::writeTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+          head->forward[0], nodeNext);
+    } else {
+      unsigned int lvl_ = lvl - 1;
+      std::optional<std::shared_ptr<SkipNode<T1, T2>>> headNext =
+          stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+              head->forward[lvl]);
+      [&](void) {
+        if (headNext.has_value()) {
+          std::shared_ptr<SkipNode<T1, T2>> _x = *headNext;
+          if (Nat::leb(lvl, nodeLevel)) {
+            std::optional<std::shared_ptr<SkipNode<T1, T2>>> nodeNext =
+                stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                    node->forward[lvl]);
+            return stm::writeTVar<
+                std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                head->forward[lvl], nodeNext);
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
+      }();
+      return unlinkFirstFromHead<T1, T2>(head, node, nodeLevel, lvl_);
+    }
+  }
+
+  template <typename T1, typename T2>
+  static std::optional<std::pair<T1, T2>>
+  popFront(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::optional<std::shared_ptr<SkipNode<T1, T2>>> firstOpt =
+        stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+            sl->slHead->forward[0]);
+    if (firstOpt.has_value()) {
+      std::shared_ptr<SkipNode<T1, T2>> node = *firstOpt;
+      unlinkFirstFromHead<T1, T2>(
+          sl->slHead, node, node->level,
+          (((maxLevels - (0 + 1)) > maxLevels ? 0 : (maxLevels - (0 + 1)))));
+      unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+      stm::writeTVar<unsigned int>(
+          sl->slLength, (((len - (0 + 1)) > len ? 0 : (len - (0 + 1)))));
+      T2 v = stm::readTVar<T2>(node->value);
+      return std::make_optional<std::pair<T1, T2>>(
+          std::make_pair(node->key, v));
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  template <typename T1, typename T2>
+  static void
+  unlinkNodeAtAllLevels(const std::shared_ptr<SkipNode<T1, T2>> head,
+                        const std::shared_ptr<SkipNode<T1, T2>> node,
+                        const unsigned int lvl) {
+    std::optional<std::shared_ptr<SkipNode<T1, T2>>> headNext =
+        stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+            head->forward[lvl]);
+    [&](void) {
+      if (headNext.has_value()) {
+        std::shared_ptr<SkipNode<T1, T2>> _x = *headNext;
+        std::optional<std::shared_ptr<SkipNode<T1, T2>>> nodeNext =
+            stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                node->forward[lvl]);
+        return stm::writeTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+            head->forward[lvl], nodeNext);
+      } else {
+        return;
+      }
+    }();
+    if (lvl <= 0) {
+      return;
+    } else {
+      unsigned int lvl_ = lvl - 1;
+      return unlinkNodeAtAllLevels<T1, T2>(head, node, lvl_);
+    }
+  }
+
+  template <typename T1, typename T2>
+  static unsigned int
+  removeAll_aux(const unsigned int fuel,
+                const std::shared_ptr<SkipNode<T1, T2>> head,
+                const unsigned int maxLvl) {
+    if (fuel <= 0) {
+      return 0;
+    } else {
+      unsigned int fuel_ = fuel - 1;
+      std::optional<std::shared_ptr<SkipNode<T1, T2>>> firstOpt =
+          stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+              head->forward[0]);
+      if (firstOpt.has_value()) {
+        std::shared_ptr<SkipNode<T1, T2>> node = *firstOpt;
+        unlinkNodeAtAllLevels<T1, T2>(head, node, maxLvl);
+        unsigned int rest = removeAll_aux<T1, T2>(fuel_, head, maxLvl);
+        return (rest + 1);
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  template <typename T1, typename T2>
+  static unsigned int removeAll(const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    unsigned int count = removeAll_aux<T1, T2>(
+        10000u, sl->slHead,
+        (((maxLevels - (0 + 1)) > maxLevels ? 0 : (maxLevels - (0 + 1)))));
+    stm::writeTVar<unsigned int>(sl->slLength, 0);
+    stm::writeTVar<unsigned int>(sl->slLevel, 0);
+    return count;
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0,
+            MapsTo<bool, T1, T1> F1>
+  static bool addUnique(F0 &&ltK, F1 &&eqK, const T1 k, const T2 v,
+                        const std::shared_ptr<TSkipList<T1, T2>> &sl,
+                        const unsigned int newLevel) {
+    std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>> path =
+        findPath<T1, T2>(ltK, sl, k);
+    std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>> fullPath =
+        extendPath<T1, T2>(path, sl->slHead, (newLevel + 1));
+    return std::visit(
+        Overloaded{
+            [](const typename List::list<std::shared_ptr<SkipNode<T1, T2>>>::nil
+                   _args) -> bool { return false; },
+            [&](const typename List::list<
+                std::shared_ptr<SkipNode<T1, T2>>>::cons _args) -> bool {
+              std::shared_ptr<SkipNode<T1, T2>> pred0 = _args._a0;
+              std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+                  stm::readTVar<
+                      std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                      pred0->forward[0]);
+              if (nextOpt.has_value()) {
+                std::shared_ptr<SkipNode<T1, T2>> existing = *nextOpt;
+                if (eqK(existing->key, k)) {
+                  return false;
+                } else {
+                  std::shared_ptr<SkipNode<T1, T2>> newN =
+                      SkipNode<T1, T2>::create(k, v, newLevel);
+                  linkNode<T1, T2>(fullPath, newN);
+                  unsigned int curLvl =
+                      stm::readTVar<unsigned int>(sl->slLevel);
+                  [&](void) {
+                    if (Nat::ltb(curLvl, newLevel)) {
+                      return stm::writeTVar<unsigned int>(sl->slLevel,
+                                                          newLevel);
+                    } else {
+                      return;
+                    }
+                  }();
+                  unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+                  stm::writeTVar<unsigned int>(sl->slLength, (len + 1));
+                  return true;
+                }
+              } else {
+                std::shared_ptr<SkipNode<T1, T2>> newN =
+                    SkipNode<T1, T2>::create(k, v, newLevel);
+                linkNode<T1, T2>(fullPath, newN);
+                unsigned int curLvl = stm::readTVar<unsigned int>(sl->slLevel);
+                [&](void) {
+                  if (Nat::ltb(curLvl, newLevel)) {
+                    return stm::writeTVar<unsigned int>(sl->slLevel, newLevel);
+                  } else {
+                    return;
+                  }
+                }();
+                unsigned int len = stm::readTVar<unsigned int>(sl->slLength);
+                stm::writeTVar<unsigned int>(sl->slLength, (len + 1));
+                return true;
+              }
+            }},
+        fullPath->v());
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0,
+            MapsTo<bool, T1, T1> F1>
+  static std::optional<Pair<T1, T2>>
+  find(F0 &&ltK, F1 &&eqK, const T1 k,
+       const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>> path =
+        findPath<T1, T2>(ltK, sl, k);
+    return std::visit(
+        Overloaded{
+            [](const typename List::list<std::shared_ptr<SkipNode<T1, T2>>>::nil
+                   _args) -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              return std::nullopt;
+            },
+            [&](const typename List::list<
+                std::shared_ptr<SkipNode<T1, T2>>>::cons _args)
+                -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              std::shared_ptr<SkipNode<T1, T2>> pred0 = _args._a0;
+              std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+                  stm::readTVar<
+                      std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                      pred0->forward[0]);
+              if (nextOpt.has_value()) {
+                std::shared_ptr<SkipNode<T1, T2>> node = *nextOpt;
+                if (eqK(node->key, k)) {
+                  return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(
+                      node);
+                } else {
+                  return std::nullopt;
+                }
+              } else {
+                return std::nullopt;
+              }
+            }},
+        path->v());
+  }
+
+  template <typename T1, typename T2>
+  static std::optional<Pair<T1, T2>>
+  next(const std::shared_ptr<SkipNode<T1, T2>> pair) {
+    return stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+        pair->forward[0]);
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
+  static std::optional<std::shared_ptr<SkipNode<T1, T2>>>
+  findPrev_aux(F0 &&eqK, const unsigned int fuel,
+               const std::shared_ptr<SkipNode<T1, T2>> curr,
+               const std::shared_ptr<SkipNode<T1, T2>> _x, const T1 target) {
+    if (fuel <= 0) {
+      return std::nullopt;
+    } else {
+      unsigned int fuel_ = fuel - 1;
+      std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+          stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+              curr->forward[0]);
+      if (nextOpt.has_value()) {
+        std::shared_ptr<SkipNode<T1, T2>> next0 = *nextOpt;
+        if (eqK(next0->key, target)) {
+          return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(curr);
+        } else {
+          return findPrev_aux<T1, T2>(eqK, fuel_, next0, curr, target);
+        }
+      } else {
+        return std::nullopt;
+      }
+    }
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
+  static std::optional<Pair<T1, T2>>
+  previous(F0 &&eqK, const std::shared_ptr<SkipNode<T1, T2>> pair,
+           const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::optional<std::shared_ptr<SkipNode<T1, T2>>> firstOpt =
+        stm::readTVar<std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+            sl->slHead->forward[0]);
+    if (firstOpt.has_value()) {
+      std::shared_ptr<SkipNode<T1, T2>> first = *firstOpt;
+      if (eqK(first->key, pair->key)) {
+        return std::nullopt;
+      } else {
+        return findPrev_aux<T1, T2>(eqK, 10000u, first, sl->slHead, pair->key);
+      }
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
+  static std::optional<Pair<T1, T2>>
+  findLowerBound(F0 &&ltK, const T1 k,
+                 const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>> path =
+        findPath<T1, T2>(ltK, sl, k);
+    return std::visit(
+        Overloaded{
+            [](const typename List::list<std::shared_ptr<SkipNode<T1, T2>>>::nil
+                   _args) -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              return std::nullopt;
+            },
+            [](const typename List::list<
+                std::shared_ptr<SkipNode<T1, T2>>>::cons _args)
+                -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              std::shared_ptr<SkipNode<T1, T2>> pred0 = _args._a0;
+              std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+                  stm::readTVar<
+                      std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                      pred0->forward[0]);
+              if (nextOpt.has_value()) {
+                std::shared_ptr<SkipNode<T1, T2>> node = *nextOpt;
+                return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(
+                    node);
+              } else {
+                return std::nullopt;
+              }
+            }},
+        path->v());
+  }
+
+  template <typename T1, typename T2, MapsTo<bool, T1, T1> F0,
+            MapsTo<bool, T1, T1> F1>
+  static std::optional<Pair<T1, T2>>
+  findUpperBound(F0 &&ltK, F1 &&eqK, const T1 k,
+                 const std::shared_ptr<TSkipList<T1, T2>> &sl) {
+    std::shared_ptr<List::list<std::shared_ptr<SkipNode<T1, T2>>>> path =
+        findPath<T1, T2>(ltK, sl, k);
+    return std::visit(
+        Overloaded{
+            [](const typename List::list<std::shared_ptr<SkipNode<T1, T2>>>::nil
+                   _args) -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              return std::nullopt;
+            },
+            [&](const typename List::list<
+                std::shared_ptr<SkipNode<T1, T2>>>::cons _args)
+                -> std::optional<std::shared_ptr<SkipNode<T1, T2>>> {
+              std::shared_ptr<SkipNode<T1, T2>> pred0 = _args._a0;
+              std::optional<std::shared_ptr<SkipNode<T1, T2>>> nextOpt =
+                  stm::readTVar<
+                      std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                      pred0->forward[0]);
+              if (nextOpt.has_value()) {
+                std::shared_ptr<SkipNode<T1, T2>> node = *nextOpt;
+                if (eqK(node->key, k)) {
+                  return stm::readTVar<
+                      std::optional<std::shared_ptr<SkipNode<T1, T2>>>>(
+                      node->forward[0]);
+                } else {
+                  return std::make_optional<std::shared_ptr<SkipNode<T1, T2>>>(
+                      node);
+                }
+              } else {
+                return std::nullopt;
+              }
+            }},
+        path->v());
+  }
+
+  template <typename T1, typename T2> static T1 key(const Pair<T1, T2> _x0) {
+    return _x0->key;
+  }
+
+  template <typename T1, typename T2>
   static std::shared_ptr<TSkipList<T1, T2>> create(const T1 dummyKey,
                                                    const T2 dummyVal) {
     std::shared_ptr<SkipNode<T1, T2>> headNode = SkipNode<T1, T2>::create(
@@ -485,8 +902,10 @@ struct SkipList {
         (((maxLevels - (0 + 1)) > maxLevels ? 0 : (maxLevels - (0 + 1)))));
     std::shared_ptr<stm::TVar<unsigned int>> lvlTV =
         stm::newTVar<unsigned int>(0);
+    std::shared_ptr<stm::TVar<unsigned int>> lenTV =
+        stm::newTVar<unsigned int>(0);
     return std::make_shared<TSkipList<T1, T2>>(
-        TSkipList<T1, T2>{headNode, maxLevels, lvlTV});
+        TSkipList<T1, T2>{headNode, maxLevels, lvlTV, lenTV});
   }
 };
 
@@ -503,6 +922,22 @@ struct skiplist_test {
 
   static bool stm_test_minimum();
 
+  static bool stm_test_length_isEmpty();
+
+  static bool stm_test_front_back();
+
+  static bool stm_test_popFront();
+
+  static bool stm_test_addUnique();
+
+  static bool stm_test_find();
+
+  static bool stm_test_navigation();
+
+  static bool stm_test_bounds();
+
+  static bool stm_test_removeAll();
+
   static bool test_insert_lookup();
 
   static bool test_delete();
@@ -510,6 +945,22 @@ struct skiplist_test {
   static bool test_update();
 
   static bool test_minimum();
+
+  static bool test_length_isEmpty();
+
+  static bool test_front_back();
+
+  static bool test_popFront();
+
+  static bool test_addUnique();
+
+  static bool test_find();
+
+  static bool test_navigation();
+
+  static bool test_bounds();
+
+  static bool test_removeAll();
 
   static unsigned int run_tests();
 };

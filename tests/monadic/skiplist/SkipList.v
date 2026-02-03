@@ -153,16 +153,22 @@ Crane Extract Inlined Constant writeNext => "stm::writeTVar<std::optional<std::s
 (*                            Skip List Structure                            *)
 (* ========================================================================= *)
 
+(* Pair/PairHandle - reference to a node in the list (matches BDE's SkipListPair) *)
+(* In our STM context, NodeRef (shared_ptr) serves as the pair reference *)
+Definition Pair (K V : Type) := NodeRef K V.
+
 Record TSkipList (K V : Type) := mkTSkipList {
   slHead     : NodeRef K V;      (* Sentinel head node *)
   slMaxLevel : nat;              (* Maximum allowed levels *)
-  slLevel    : TVar nat          (* Current highest level in use *)
+  slLevel    : TVar nat;         (* Current highest level in use *)
+  slLength   : TVar nat          (* Number of elements in the list *)
 }.
 
-Arguments mkTSkipList {K V} _ _ _.
+Arguments mkTSkipList {K V} _ _ _ _.
 Arguments slHead {K V} _.
 Arguments slMaxLevel {K V} _.
 Arguments slLevel {K V} _.
+Arguments slLength {K V} _.
 
 (* ========================================================================= *)
 (*                           Core Operations                                 *)
@@ -257,21 +263,25 @@ Definition insert (k : K) (v : V) (sl : TSkipList K V) (newLevel : nat) : STM vo
           if eqK (getKey existing) k then
             writeValue existing v
           else
-            newNode <- newNode k v newLevel ;;
-            linkNode fullPath newNode ;;
+            newN <- newNode k v newLevel ;;
+            linkNode fullPath newN ;;
             curLvl <- readTVar (slLevel sl) ;;
-            if Nat.ltb curLvl newLevel then
+            (if Nat.ltb curLvl newLevel then
               writeTVar (slLevel sl) newLevel
             else
-              Ret ghost
+              Ret ghost) ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (S len)
       | None =>
-          newNode <- newNode k v newLevel ;;
-          linkNode fullPath newNode ;;
+          newN <- newNode k v newLevel ;;
+          linkNode fullPath newN ;;
           curLvl <- readTVar (slLevel sl) ;;
-          if Nat.ltb curLvl newLevel then
+          (if Nat.ltb curLvl newLevel then
             writeTVar (slLevel sl) newLevel
           else
-            Ret ghost
+            Ret ghost) ;;
+          len <- readTVar (slLength sl) ;;
+          writeTVar (slLength sl) (S len)
       end
   end.
 
@@ -309,7 +319,9 @@ Definition remove (k : K) (sl : TSkipList K V) : STM void :=
           if eqK (getKey node) k then
             (* Extend path for the target node's level *)
             let fullPath := extendPath path (slHead sl) (S (getLevel node)) in
-            unlinkNode fullPath node
+            unlinkNode fullPath node ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (len - 1)
           else
             Ret ghost
       | None => Ret ghost
@@ -337,6 +349,341 @@ Definition member (k : K) (sl : TSkipList K V) : STM bool :=
   result <- lookup k sl ;;
   Ret (match result with Some _ => true | None => false end).
 
+(* ========================================================================= *)
+(*                     BDE-Compatible Operations                             *)
+(* ========================================================================= *)
+
+(* ------------------------------------------------------------------------ *)
+(*                         isEmpty / length                                  *)
+(* ------------------------------------------------------------------------ *)
+
+Definition isEmpty (sl : TSkipList K V) : STM bool :=
+  len <- readTVar (slLength sl) ;;
+  Ret (Nat.eqb len 0).
+
+Definition length (sl : TSkipList K V) : STM nat :=
+  readTVar (slLength sl).
+
+(* ------------------------------------------------------------------------ *)
+(*                    exists (BDE naming for member)                         *)
+(* ------------------------------------------------------------------------ *)
+
+Definition exists_ (k : K) (sl : TSkipList K V) : STM bool :=
+  member k sl.
+
+(* ------------------------------------------------------------------------ *)
+(*                         front / back                                      *)
+(* ------------------------------------------------------------------------ *)
+
+(* front - Load reference to first item. Returns None if empty. *)
+Definition front (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  readNext (slHead sl) 0.
+
+(* back - Load reference to last item. Requires traversing the list. *)
+(* Uses fuel-based traversal to find the last element *)
+Fixpoint findLast_aux (fuel : nat) (curr : NodeRef K V) : STM (option (NodeRef K V)) :=
+  match fuel with
+  | O => Ret (Some curr)
+  | S fuel' =>
+      nextOpt <- readNext curr 0 ;;
+      match nextOpt with
+      | None => Ret (Some curr)
+      | Some next => findLast_aux fuel' next
+      end
+  end.
+
+Definition back (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  firstOpt <- readNext (slHead sl) 0 ;;
+  match firstOpt with
+  | None => Ret None
+  | Some first => findLast_aux findPredFuel first
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                              popFront                                     *)
+(* ------------------------------------------------------------------------ *)
+
+(* Helper to unlink first node from head at all levels *)
+Fixpoint unlinkFirstFromHead (head node : NodeRef K V) (nodeLevel : nat) (lvl : nat) : STM void :=
+  match lvl with
+  | O =>
+      nodeNext <- readNext node 0 ;;
+      writeNext head 0 nodeNext
+  | S lvl' =>
+      headNext <- readNext head lvl ;;
+      (match headNext with
+      | Some _ =>
+          if Nat.leb lvl nodeLevel then
+            nodeNext <- readNext node lvl ;;
+            writeNext head lvl nodeNext
+          else
+            Ret ghost
+      | None => Ret ghost
+      end) ;;
+      unlinkFirstFromHead head node nodeLevel lvl'
+  end.
+
+(* Remove and return the first item from the list *)
+Definition popFront (sl : TSkipList K V) : STM (option (K * V)) :=
+  firstOpt <- readNext (slHead sl) 0 ;;
+  match firstOpt with
+  | None => Ret None
+  | Some node =>
+      unlinkFirstFromHead (slHead sl) node (getLevel node) (maxLevels - 1) ;;
+      len <- readTVar (slLength sl) ;;
+      writeTVar (slLength sl) (len - 1) ;;
+      v <- readValue node ;;
+      Ret (Some (getKey node, v))
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                              removeAll                                    *)
+(* ------------------------------------------------------------------------ *)
+
+(* Helper to unlink a node at all levels from head *)
+Fixpoint unlinkNodeAtAllLevels (head node : NodeRef K V) (lvl : nat) : STM void :=
+  headNext <- readNext head lvl ;;
+  (match headNext with
+  | Some _ =>
+      nodeNext <- readNext node lvl ;;
+      writeNext head lvl nodeNext
+  | None => Ret ghost
+  end) ;;
+  match lvl with
+  | O => Ret ghost
+  | S lvl' => unlinkNodeAtAllLevels head node lvl'
+  end.
+
+(* Remove all items from the list *)
+Fixpoint removeAll_aux (fuel : nat) (head : NodeRef K V) (maxLvl : nat) : STM nat :=
+  match fuel with
+  | O => Ret 0
+  | S fuel' =>
+      firstOpt <- readNext head 0 ;;
+      match firstOpt with
+      | None => Ret 0
+      | Some node =>
+          unlinkNodeAtAllLevels head node maxLvl ;;
+          rest <- removeAll_aux fuel' head maxLvl ;;
+          Ret (S rest)
+      end
+  end.
+
+Definition removeAll (sl : TSkipList K V) : STM nat :=
+  count <- removeAll_aux findPredFuel (slHead sl) (maxLevels - 1) ;;
+  writeTVar (slLength sl) 0 ;;
+  writeTVar (slLevel sl) 0 ;;
+  Ret count.
+
+(* ------------------------------------------------------------------------ *)
+(*                              add / addUnique                              *)
+(* ------------------------------------------------------------------------ *)
+
+(* add - Add key/data pair to the list (allows duplicates) - renamed from insert *)
+Definition add (k : K) (v : V) (sl : TSkipList K V) (newLevel : nat) : STM void :=
+  path <- findPath sl k ;;
+  let fullPath := extendPath path (slHead sl) (S newLevel) in
+  match fullPath with
+  | [] => Ret ghost
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | Some existing =>
+          if eqK (getKey existing) k then
+            (* Update existing value *)
+            writeValue existing v
+          else
+            newN <- newNode k v newLevel ;;
+            linkNode fullPath newN ;;
+            curLvl <- readTVar (slLevel sl) ;;
+            (if Nat.ltb curLvl newLevel then
+              writeTVar (slLevel sl) newLevel
+            else
+              Ret ghost) ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (S len)
+      | None =>
+          newN <- newNode k v newLevel ;;
+          linkNode fullPath newN ;;
+          curLvl <- readTVar (slLevel sl) ;;
+          (if Nat.ltb curLvl newLevel then
+            writeTVar (slLevel sl) newLevel
+          else
+            Ret ghost) ;;
+          len <- readTVar (slLength sl) ;;
+          writeTVar (slLength sl) (S len)
+      end
+  end.
+
+(* addUnique - Add only if key doesn't already exist. Returns true on success. *)
+Definition addUnique (k : K) (v : V) (sl : TSkipList K V) (newLevel : nat) : STM bool :=
+  path <- findPath sl k ;;
+  let fullPath := extendPath path (slHead sl) (S newLevel) in
+  match fullPath with
+  | [] => Ret false
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | Some existing =>
+          if eqK (getKey existing) k then
+            Ret false  (* Key already exists *)
+          else
+            newN <- newNode k v newLevel ;;
+            linkNode fullPath newN ;;
+            curLvl <- readTVar (slLevel sl) ;;
+            (if Nat.ltb curLvl newLevel then
+              writeTVar (slLevel sl) newLevel
+            else
+              Ret ghost) ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (S len) ;;
+            Ret true
+      | None =>
+          newN <- newNode k v newLevel ;;
+          linkNode fullPath newN ;;
+          curLvl <- readTVar (slLevel sl) ;;
+          (if Nat.ltb curLvl newLevel then
+            writeTVar (slLevel sl) newLevel
+          else
+            Ret ghost) ;;
+          len <- readTVar (slLength sl) ;;
+          writeTVar (slLength sl) (S len) ;;
+          Ret true
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                              find                                         *)
+(* ------------------------------------------------------------------------ *)
+
+(* find - Find element by key and return reference to the pair *)
+Definition find (k : K) (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  path <- findPath sl k ;;
+  match path with
+  | [] => Ret None
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | None => Ret None
+      | Some node =>
+          if eqK (getKey node) k then
+            Ret (Some node)
+          else
+            Ret None
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                          next / previous                                  *)
+(* ------------------------------------------------------------------------ *)
+
+(* next - Get the next element after the given pair *)
+Definition next (pair : Pair K V) : STM (option (Pair K V)) :=
+  readNext pair 0.
+
+(* previous - Get the previous element before the given pair *)
+(* Note: This requires traversing from the head, as skip lists don't have back pointers *)
+Fixpoint findPrev_aux (fuel : nat) (curr prev : NodeRef K V) (target : K) : STM (option (NodeRef K V)) :=
+  match fuel with
+  | O => Ret None
+  | S fuel' =>
+      nextOpt <- readNext curr 0 ;;
+      match nextOpt with
+      | None => Ret None
+      | Some next =>
+          if eqK (getKey next) target then
+            Ret (Some curr)
+          else
+            findPrev_aux fuel' next curr target
+      end
+  end.
+
+Definition previous (pair : Pair K V) (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  (* Check if pair is the first element *)
+  firstOpt <- readNext (slHead sl) 0 ;;
+  match firstOpt with
+  | None => Ret None
+  | Some first =>
+      if eqK (getKey first) (getKey pair) then
+        Ret None  (* pair is at front, no previous *)
+      else
+        findPrev_aux findPredFuel first (slHead sl) (getKey pair)
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                    findLowerBound / findUpperBound                        *)
+(* ------------------------------------------------------------------------ *)
+
+(* findLowerBound - Find first element whose key is not less than given key *)
+Definition findLowerBound (k : K) (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  path <- findPath sl k ;;
+  match path with
+  | [] => Ret None
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | None => Ret None
+      | Some node =>
+          (* node's key is >= k (since pred's key < k and node is next) *)
+          Ret (Some node)
+      end
+  end.
+
+(* findUpperBound - Find first element whose key is greater than given key *)
+Definition findUpperBound (k : K) (sl : TSkipList K V) : STM (option (Pair K V)) :=
+  path <- findPath sl k ;;
+  match path with
+  | [] => Ret None
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | None => Ret None
+      | Some node =>
+          if eqK (getKey node) k then
+            (* Key matches, need to get the next one *)
+            readNext node 0
+          else
+            (* Key is already greater *)
+            Ret (Some node)
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                            remove (by pair)                               *)
+(* ------------------------------------------------------------------------ *)
+
+(* removePair - Remove element identified by a Pair reference *)
+Definition removePair (pair : Pair K V) (sl : TSkipList K V) : STM bool :=
+  let k := getKey pair in
+  path <- findPath sl k ;;
+  match path with
+  | [] => Ret false
+  | pred0 :: _ =>
+      nextOpt <- readNext pred0 0 ;;
+      match nextOpt with
+      | Some node =>
+          if eqK (getKey node) k then
+            let fullPath := extendPath path (slHead sl) (S (getLevel node)) in
+            unlinkNode fullPath node ;;
+            len <- readTVar (slLength sl) ;;
+            writeTVar (slLength sl) (len - 1) ;;
+            Ret true
+          else
+            Ret false
+      | None => Ret false
+      end
+  end.
+
+(* ------------------------------------------------------------------------ *)
+(*                          Pair accessors                                   *)
+(* ------------------------------------------------------------------------ *)
+
+(* key - Get the key from a pair *)
+Definition key (pair : Pair K V) : K := getKey pair.
+
+(* data - Get the data from a pair *)
+Definition data (pair : Pair K V) : STM V := readValue pair.
+
 End Operations.
 
 (* ========================================================================= *)
@@ -346,7 +693,8 @@ End Operations.
 Definition create {K V : Type} (dummyKey : K) (dummyVal : V) : STM (TSkipList K V) :=
   headNode <- newNode dummyKey dummyVal (maxLevels - 1) ;;
   lvlTV <- newTVar 0 ;;
-  Ret (mkTSkipList headNode maxLevels lvlTV).
+  lenTV <- newTVar 0 ;;
+  Ret (mkTSkipList headNode maxLevels lvlTV lenTV).
 
 Definition createIO {K V : Type} (dummyKey : K) (dummyVal : V) : IO (TSkipList K V) :=
   atomically (create dummyKey dummyVal).
@@ -426,6 +774,134 @@ Definition stm_test_minimum (_ : void) : STM bool :=
        | _ => false
        end).
 
+(* BDE-compatible operation tests *)
+
+Definition stm_test_length_isEmpty (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  empty1 <- isEmpty sl ;;
+  len1 <- length sl ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  empty2 <- isEmpty sl ;;
+  len2 <- length sl ;;
+  let c1 := empty1 in
+  let c2 := Nat.eqb len1 0 in
+  let c3 := negb empty2 in
+  let c4 := Nat.eqb len2 2 in
+  Ret (andb c1 (andb c2 (andb c3 c4))).
+
+Definition stm_test_front_back (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  insert nat_lt nat_eq 7 70 sl 0 ;;
+  frontOpt <- front sl ;;
+  backOpt <- back sl ;;
+  let c1 := match frontOpt with
+            | Some p => Nat.eqb (key p) 3
+            | None => false
+            end in
+  let c2 := match backOpt with
+            | Some p => Nat.eqb (key p) 7
+            | None => false
+            end in
+  Ret (andb c1 c2).
+
+Definition stm_test_popFront (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  insert nat_lt nat_eq 7 70 sl 0 ;;
+  pop1 <- popFront sl ;;
+  pop2 <- popFront sl ;;
+  len <- length sl ;;
+  let c1 := match pop1 with Some (3, 30) => true | _ => false end in
+  let c2 := match pop2 with Some (5, 50) => true | _ => false end in
+  let c3 := Nat.eqb len 1 in
+  Ret (andb c1 (andb c2 c3)).
+
+Definition stm_test_addUnique (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  r1 <- addUnique nat_lt nat_eq 5 50 sl 0 ;;
+  r2 <- addUnique nat_lt nat_eq 5 500 sl 0 ;;  (* Should fail - key exists *)
+  r3 <- addUnique nat_lt nat_eq 3 30 sl 0 ;;
+  v5 <- lookup nat_lt nat_eq 5 sl ;;
+  len <- length sl ;;
+  let c1 := r1 in
+  let c2 := negb r2 in
+  let c3 := r3 in
+  let c4 := match v5 with Some 50 => true | _ => false end in (* Value unchanged *)
+  let c5 := Nat.eqb len 2 in
+  Ret (andb c1 (andb c2 (andb c3 (andb c4 c5)))).
+
+Definition stm_test_find (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  pairOpt <- find nat_lt nat_eq 5 sl ;;
+  noneOpt <- find nat_lt nat_eq 9 sl ;;
+  let c1 := match pairOpt with
+            | Some p =>
+                let k := key p in
+                Nat.eqb k 5
+            | None => false
+            end in
+  let c2 := match noneOpt with None => true | _ => false end in
+  Ret (andb c1 c2).
+
+Definition stm_test_navigation (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 1 10 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  frontOpt <- front sl ;;
+  match frontOpt with
+  | None => Ret false
+  | Some first =>
+      nextOpt <- next first ;;
+      match nextOpt with
+      | None => Ret false
+      | Some second =>
+          prevOpt <- previous nat_eq second sl ;;
+          let c1 := Nat.eqb (key first) 1 in
+          let c2 := Nat.eqb (key second) 3 in
+          let c3 := match prevOpt with
+                    | Some p => Nat.eqb (key p) 1
+                    | None => false
+                    end in
+          Ret (andb c1 (andb c2 c3))
+      end
+  end.
+
+Definition stm_test_bounds (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 2 20 sl 0 ;;
+  insert nat_lt nat_eq 4 40 sl 0 ;;
+  insert nat_lt nat_eq 6 60 sl 0 ;;
+  (* findLowerBound 3 should return 4 (first >= 3) *)
+  lb3 <- findLowerBound nat_lt 3 sl ;;
+  (* findLowerBound 4 should return 4 (first >= 4) *)
+  lb4 <- findLowerBound nat_lt 4 sl ;;
+  (* findUpperBound 4 should return 6 (first > 4) *)
+  ub4 <- findUpperBound nat_lt nat_eq 4 sl ;;
+  let c1 := match lb3 with Some p => Nat.eqb (key p) 4 | None => false end in
+  let c2 := match lb4 with Some p => Nat.eqb (key p) 4 | None => false end in
+  let c3 := match ub4 with Some p => Nat.eqb (key p) 6 | None => false end in
+  Ret (andb c1 (andb c2 c3)).
+
+Definition stm_test_removeAll (_ : void) : STM bool :=
+  sl <- create 0 0 ;;
+  insert nat_lt nat_eq 5 50 sl 0 ;;
+  insert nat_lt nat_eq 3 30 sl 0 ;;
+  insert nat_lt nat_eq 7 70 sl 0 ;;
+  count <- removeAll sl ;;
+  empty <- isEmpty sl ;;
+  len <- length sl ;;
+  let c1 := Nat.eqb count 3 in
+  let c2 := empty in
+  let c3 := Nat.eqb len 0 in
+  Ret (andb c1 (andb c2 c3)).
+
 (* IO wrappers *)
 Definition test_insert_lookup (_ : void) : IO bool :=
   atomically (stm_test_insert_lookup ghost).
@@ -439,15 +915,55 @@ Definition test_update (_ : void) : IO bool :=
 Definition test_minimum (_ : void) : IO bool :=
   atomically (stm_test_minimum ghost).
 
+Definition test_length_isEmpty (_ : void) : IO bool :=
+  atomically (stm_test_length_isEmpty ghost).
+
+Definition test_front_back (_ : void) : IO bool :=
+  atomically (stm_test_front_back ghost).
+
+Definition test_popFront (_ : void) : IO bool :=
+  atomically (stm_test_popFront ghost).
+
+Definition test_addUnique (_ : void) : IO bool :=
+  atomically (stm_test_addUnique ghost).
+
+Definition test_find (_ : void) : IO bool :=
+  atomically (stm_test_find ghost).
+
+Definition test_navigation (_ : void) : IO bool :=
+  atomically (stm_test_navigation ghost).
+
+Definition test_bounds (_ : void) : IO bool :=
+  atomically (stm_test_bounds ghost).
+
+Definition test_removeAll (_ : void) : IO bool :=
+  atomically (stm_test_removeAll ghost).
+
 Definition run_tests : IO nat :=
   r1 <- test_insert_lookup ghost ;;
   r2 <- test_delete ghost ;;
   r3 <- test_update ghost ;;
   r4 <- test_minimum ghost ;;
+  r5 <- test_length_isEmpty ghost ;;
+  r6 <- test_front_back ghost ;;
+  r7 <- test_popFront ghost ;;
+  r8 <- test_addUnique ghost ;;
+  r9 <- test_find ghost ;;
+  r10 <- test_navigation ghost ;;
+  r11 <- test_bounds ghost ;;
+  r12 <- test_removeAll ghost ;;
   let passed := (if r1 then 1 else 0) +
                 (if r2 then 1 else 0) +
                 (if r3 then 1 else 0) +
-                (if r4 then 1 else 0) in
+                (if r4 then 1 else 0) +
+                (if r5 then 1 else 0) +
+                (if r6 then 1 else 0) +
+                (if r7 then 1 else 0) +
+                (if r8 then 1 else 0) +
+                (if r9 then 1 else 0) +
+                (if r10 then 1 else 0) +
+                (if r11 then 1 else 0) +
+                (if r12 then 1 else 0) in
   Ret passed.
 
 End skiplist_test.

@@ -6983,6 +6983,1509 @@ bool skiplist_test::stm_test_minimum() {
  }();
 }
 
+bool skiplist_test::stm_test_length_isEmpty() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+  bool empty1 = SkipList::isEmpty<unsigned int, unsigned int>(sl);
+  unsigned int len1 = SkipList::length<unsigned int, unsigned int>(sl);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ SkipList::insert<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ bool empty2 = SkipList::isEmpty<unsigned int, unsigned int>(sl);
+ unsigned int len2 = SkipList::length<unsigned int, unsigned int>(sl);
+ bool c2 = Nat::eqb(len1, 0);
+ bool c3 = !(empty2);
+ bool c4 = Nat::eqb(len2, ((0 + 1) + 1));
+ return (empty1 && (c2 && (c3 && c4)));
+}
+
+bool skiplist_test::stm_test_front_back() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ SkipList::insert<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> frontOpt =
+     SkipList::front<unsigned int, unsigned int>(sl);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> backOpt =
+     SkipList::back<unsigned int, unsigned int>(sl);
+ bool c1;
+ if (frontOpt.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *frontOpt;
+   c1 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p),
+                 (((0 + 1) + 1) + 1));
+ } else {
+   c1 = false;
+ }
+ bool c2;
+ if (backOpt.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *backOpt;
+   c2 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p),
+                 (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+ } else {
+   c2 = false;
+ }
+ return (c1 && c2);
+}
+
+bool skiplist_test::stm_test_popFront() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ SkipList::insert<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ std::optional<std::pair<unsigned int, unsigned int>> pop1 =
+     SkipList::popFront<unsigned int, unsigned int>(sl);
+ std::optional<std::pair<unsigned int, unsigned int>> pop2 =
+     SkipList::popFront<unsigned int, unsigned int>(sl);
+ unsigned int len = SkipList::length<unsigned int, unsigned int>(sl);
+ bool c1;
+ if (pop1.has_value()) {
+   std::pair<unsigned int, unsigned int> p = *pop1;
+   unsigned int n = p.first;
+   unsigned int n0 = p.second;
+   if (n <= 0) {
+     c1 = false;
+   } else {
+     unsigned int n1 = n - 1;
+     if (n1 <= 0) {
+       c1 = false;
+     } else {
+       unsigned int n2 = n1 - 1;
+       if (n2 <= 0) {
+         c1 = false;
+       } else {
+         unsigned int n3 = n2 - 1;
+         if (n3 <= 0) {
+           if (n0 <= 0) {
+             c1 = false;
+           } else {
+             unsigned int n4 = n0 - 1;
+             if (n4 <= 0) {
+               c1 = false;
+             } else {
+               unsigned int n5 = n4 - 1;
+               if (n5 <= 0) {
+                 c1 = false;
+               } else {
+                 unsigned int n6 = n5 - 1;
+                 if (n6 <= 0) {
+                   c1 = false;
+                 } else {
+                   unsigned int n7 = n6 - 1;
+                   if (n7 <= 0) {
+                     c1 = false;
+                   } else {
+                     unsigned int n8 = n7 - 1;
+                     if (n8 <= 0) {
+                       c1 = false;
+                     } else {
+                       unsigned int n9 = n8 - 1;
+                       if (n9 <= 0) {
+                         c1 = false;
+                       } else {
+                         unsigned int n10 = n9 - 1;
+                         if (n10 <= 0) {
+                           c1 = false;
+                         } else {
+                           unsigned int n11 = n10 - 1;
+                           if (n11 <= 0) {
+                             c1 = false;
+                           } else {
+                             unsigned int n12 = n11 - 1;
+                             if (n12 <= 0) {
+                               c1 = false;
+                             } else {
+                               unsigned int n13 = n12 - 1;
+                               if (n13 <= 0) {
+                                 c1 = false;
+                               } else {
+                                 unsigned int n14 = n13 - 1;
+                                 if (n14 <= 0) {
+                                   c1 = false;
+                                 } else {
+                                   unsigned int n15 = n14 - 1;
+                                   if (n15 <= 0) {
+                                     c1 = false;
+                                   } else {
+                                     unsigned int n16 = n15 - 1;
+                                     if (n16 <= 0) {
+                                       c1 = false;
+                                     } else {
+                                       unsigned int n17 = n16 - 1;
+                                       if (n17 <= 0) {
+                                         c1 = false;
+                                       } else {
+                                         unsigned int n18 = n17 - 1;
+                                         if (n18 <= 0) {
+                                           c1 = false;
+                                         } else {
+                                           unsigned int n19 = n18 - 1;
+                                           if (n19 <= 0) {
+                                             c1 = false;
+                                           } else {
+                                             unsigned int n20 = n19 - 1;
+                                             if (n20 <= 0) {
+                                               c1 = false;
+                                             } else {
+                                               unsigned int n21 = n20 - 1;
+                                               if (n21 <= 0) {
+                                                 c1 = false;
+                                               } else {
+                                                 unsigned int n22 = n21 - 1;
+                                                 if (n22 <= 0) {
+                                                   c1 = false;
+                                                 } else {
+                                                   unsigned int n23 = n22 - 1;
+                                                   if (n23 <= 0) {
+                                                     c1 = false;
+                                                   } else {
+                                                     unsigned int n24 = n23 - 1;
+                                                     if (n24 <= 0) {
+                                                       c1 = false;
+                                                     } else {
+                                                       unsigned int n25 =
+                                                           n24 - 1;
+                                                       if (n25 <= 0) {
+                                                         c1 = false;
+                                                       } else {
+                                                         unsigned int n26 =
+                                                             n25 - 1;
+                                                         if (n26 <= 0) {
+                                                           c1 = false;
+                                                         } else {
+                                                           unsigned int n27 =
+                                                               n26 - 1;
+                                                           if (n27 <= 0) {
+                                                             c1 = false;
+                                                           } else {
+                                                             unsigned int n28 =
+                                                                 n27 - 1;
+                                                             if (n28 <= 0) {
+                                                               c1 = false;
+                                                             } else {
+                                                               unsigned int
+                                                                   n29 =
+                                                                       n28 - 1;
+                                                               if (n29 <= 0) {
+                                                                 c1 = false;
+                                                               } else {
+                                                                 unsigned int
+                                                                     n30 = n29 -
+                                                                           1;
+                                                                 if (n30 <= 0) {
+                                                                   c1 = false;
+                                                                 } else {
+                                                                   unsigned int
+                                                                       n31 =
+                                                                           n30 -
+                                                                           1;
+                                                                   if (n31 <=
+                                                                       0) {
+                                                                     c1 = false;
+                                                                   } else {
+                                                                     unsigned int
+                                                                         n32 =
+                                                                             n31 -
+                                                                             1;
+                                                                     if (n32 <=
+                                                                         0) {
+                                                                       c1 =
+                                                                           false;
+                                                                     } else {
+                                                                       unsigned int
+                                                                           n33 =
+                                                                               n32 -
+                                                                               1;
+                                                                       if (n33 <=
+                                                                           0) {
+                                                                         c1 =
+                                                                             true;
+                                                                       } else {
+                                                                         unsigned int
+                                                                             _x3 =
+                                                                                 n33 -
+                                                                                 1;
+                                                                         c1 =
+                                                                             false;
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+                                                             }
+                                                           }
+                                                         }
+                                                       }
+                                                     }
+                                                   }
+                                                 }
+                                               }
+                                             }
+                                           }
+                                         }
+                                       }
+                                     }
+                                   }
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           }
+         } else {
+           unsigned int _x3 = n3 - 1;
+           c1 = false;
+         }
+       }
+     }
+   }
+ } else {
+   c1 = false;
+ }
+ bool c2;
+ if (pop2.has_value()) {
+   std::pair<unsigned int, unsigned int> p = *pop2;
+   unsigned int n = p.first;
+   unsigned int n0 = p.second;
+   if (n <= 0) {
+     c2 = false;
+   } else {
+     unsigned int n1 = n - 1;
+     if (n1 <= 0) {
+       c2 = false;
+     } else {
+       unsigned int n2 = n1 - 1;
+       if (n2 <= 0) {
+         c2 = false;
+       } else {
+         unsigned int n3 = n2 - 1;
+         if (n3 <= 0) {
+           c2 = false;
+         } else {
+           unsigned int n4 = n3 - 1;
+           if (n4 <= 0) {
+             c2 = false;
+           } else {
+             unsigned int n5 = n4 - 1;
+             if (n5 <= 0) {
+               if (n0 <= 0) {
+                 c2 = false;
+               } else {
+                 unsigned int n6 = n0 - 1;
+                 if (n6 <= 0) {
+                   c2 = false;
+                 } else {
+                   unsigned int n7 = n6 - 1;
+                   if (n7 <= 0) {
+                     c2 = false;
+                   } else {
+                     unsigned int n8 = n7 - 1;
+                     if (n8 <= 0) {
+                       c2 = false;
+                     } else {
+                       unsigned int n9 = n8 - 1;
+                       if (n9 <= 0) {
+                         c2 = false;
+                       } else {
+                         unsigned int n10 = n9 - 1;
+                         if (n10 <= 0) {
+                           c2 = false;
+                         } else {
+                           unsigned int n11 = n10 - 1;
+                           if (n11 <= 0) {
+                             c2 = false;
+                           } else {
+                             unsigned int n12 = n11 - 1;
+                             if (n12 <= 0) {
+                               c2 = false;
+                             } else {
+                               unsigned int n13 = n12 - 1;
+                               if (n13 <= 0) {
+                                 c2 = false;
+                               } else {
+                                 unsigned int n14 = n13 - 1;
+                                 if (n14 <= 0) {
+                                   c2 = false;
+                                 } else {
+                                   unsigned int n15 = n14 - 1;
+                                   if (n15 <= 0) {
+                                     c2 = false;
+                                   } else {
+                                     unsigned int n16 = n15 - 1;
+                                     if (n16 <= 0) {
+                                       c2 = false;
+                                     } else {
+                                       unsigned int n17 = n16 - 1;
+                                       if (n17 <= 0) {
+                                         c2 = false;
+                                       } else {
+                                         unsigned int n18 = n17 - 1;
+                                         if (n18 <= 0) {
+                                           c2 = false;
+                                         } else {
+                                           unsigned int n19 = n18 - 1;
+                                           if (n19 <= 0) {
+                                             c2 = false;
+                                           } else {
+                                             unsigned int n20 = n19 - 1;
+                                             if (n20 <= 0) {
+                                               c2 = false;
+                                             } else {
+                                               unsigned int n21 = n20 - 1;
+                                               if (n21 <= 0) {
+                                                 c2 = false;
+                                               } else {
+                                                 unsigned int n22 = n21 - 1;
+                                                 if (n22 <= 0) {
+                                                   c2 = false;
+                                                 } else {
+                                                   unsigned int n23 = n22 - 1;
+                                                   if (n23 <= 0) {
+                                                     c2 = false;
+                                                   } else {
+                                                     unsigned int n24 = n23 - 1;
+                                                     if (n24 <= 0) {
+                                                       c2 = false;
+                                                     } else {
+                                                       unsigned int n25 =
+                                                           n24 - 1;
+                                                       if (n25 <= 0) {
+                                                         c2 = false;
+                                                       } else {
+                                                         unsigned int n26 =
+                                                             n25 - 1;
+                                                         if (n26 <= 0) {
+                                                           c2 = false;
+                                                         } else {
+                                                           unsigned int n27 =
+                                                               n26 - 1;
+                                                           if (n27 <= 0) {
+                                                             c2 = false;
+                                                           } else {
+                                                             unsigned int n28 =
+                                                                 n27 - 1;
+                                                             if (n28 <= 0) {
+                                                               c2 = false;
+                                                             } else {
+                                                               unsigned int
+                                                                   n29 =
+                                                                       n28 - 1;
+                                                               if (n29 <= 0) {
+                                                                 c2 = false;
+                                                               } else {
+                                                                 unsigned int
+                                                                     n30 = n29 -
+                                                                           1;
+                                                                 if (n30 <= 0) {
+                                                                   c2 = false;
+                                                                 } else {
+                                                                   unsigned int
+                                                                       n31 =
+                                                                           n30 -
+                                                                           1;
+                                                                   if (n31 <=
+                                                                       0) {
+                                                                     c2 = false;
+                                                                   } else {
+                                                                     unsigned int
+                                                                         n32 =
+                                                                             n31 -
+                                                                             1;
+                                                                     if (n32 <=
+                                                                         0) {
+                                                                       c2 =
+                                                                           false;
+                                                                     } else {
+                                                                       unsigned int
+                                                                           n33 =
+                                                                               n32 -
+                                                                               1;
+                                                                       if (n33 <=
+                                                                           0) {
+                                                                         c2 =
+                                                                             false;
+                                                                       } else {
+                                                                         unsigned int
+                                                                             n34 =
+                                                                                 n33 -
+                                                                                 1;
+                                                                         if (n34 <=
+                                                                             0) {
+                                                                           c2 =
+                                                                               false;
+                                                                         } else {
+                                                                           unsigned int
+                                                                               n35 =
+                                                                                   n34 -
+                                                                                   1;
+                                                                           if (n35 <=
+                                                                               0) {
+                                                                             c2 =
+                                                                                 false;
+                                                                           } else {
+                                                                             unsigned int
+                                                                                 n36 =
+                                                                                     n35 -
+                                                                                     1;
+                                                                             if (n36 <=
+                                                                                 0) {
+                                                                               c2 =
+                                                                                   false;
+                                                                             } else {
+                                                                               unsigned int
+                                                                                   n37 =
+                                                                                       n36 -
+                                                                                       1;
+                                                                               if (n37 <=
+                                                                                   0) {
+                                                                                 c2 =
+                                                                                     false;
+                                                                               } else {
+                                                                                 unsigned int
+                                                                                     n38 =
+                                                                                         n37 -
+                                                                                         1;
+                                                                                 if (n38 <=
+                                                                                     0) {
+                                                                                   c2 =
+                                                                                       false;
+                                                                                 } else {
+                                                                                   unsigned int
+                                                                                       n39 =
+                                                                                           n38 -
+                                                                                           1;
+                                                                                   if (n39 <=
+                                                                                       0) {
+                                                                                     c2 =
+                                                                                         false;
+                                                                                   } else {
+                                                                                     unsigned int
+                                                                                         n40 =
+                                                                                             n39 -
+                                                                                             1;
+                                                                                     if (n40 <=
+                                                                                         0) {
+                                                                                       c2 =
+                                                                                           false;
+                                                                                     } else {
+                                                                                       unsigned int
+                                                                                           n41 =
+                                                                                               n40 -
+                                                                                               1;
+                                                                                       if (n41 <=
+                                                                                           0) {
+                                                                                         c2 =
+                                                                                             false;
+                                                                                       } else {
+                                                                                         unsigned int
+                                                                                             n42 =
+                                                                                                 n41 -
+                                                                                                 1;
+                                                                                         if (n42 <=
+                                                                                             0) {
+                                                                                           c2 =
+                                                                                               false;
+                                                                                         } else {
+                                                                                           unsigned int
+                                                                                               n43 =
+                                                                                                   n42 -
+                                                                                                   1;
+                                                                                           if (n43 <=
+                                                                                               0) {
+                                                                                             c2 =
+                                                                                                 false;
+                                                                                           } else {
+                                                                                             unsigned int
+                                                                                                 n44 =
+                                                                                                     n43 -
+                                                                                                     1;
+                                                                                             if (n44 <=
+                                                                                                 0) {
+                                                                                               c2 =
+                                                                                                   false;
+                                                                                             } else {
+                                                                                               unsigned int
+                                                                                                   n45 =
+                                                                                                       n44 -
+                                                                                                       1;
+                                                                                               if (n45 <=
+                                                                                                   0) {
+                                                                                                 c2 =
+                                                                                                     false;
+                                                                                               } else {
+                                                                                                 unsigned int
+                                                                                                     n46 =
+                                                                                                         n45 -
+                                                                                                         1;
+                                                                                                 if (n46 <=
+                                                                                                     0) {
+                                                                                                   c2 =
+                                                                                                       false;
+                                                                                                 } else {
+                                                                                                   unsigned int
+                                                                                                       n47 =
+                                                                                                           n46 -
+                                                                                                           1;
+                                                                                                   if (n47 <=
+                                                                                                       0) {
+                                                                                                     c2 =
+                                                                                                         false;
+                                                                                                   } else {
+                                                                                                     unsigned int
+                                                                                                         n48 =
+                                                                                                             n47 -
+                                                                                                             1;
+                                                                                                     if (n48 <=
+                                                                                                         0) {
+                                                                                                       c2 =
+                                                                                                           false;
+                                                                                                     } else {
+                                                                                                       unsigned int
+                                                                                                           n49 =
+                                                                                                               n48 -
+                                                                                                               1;
+                                                                                                       if (n49 <=
+                                                                                                           0) {
+                                                                                                         c2 =
+                                                                                                             false;
+                                                                                                       } else {
+                                                                                                         unsigned int
+                                                                                                             n50 =
+                                                                                                                 n49 -
+                                                                                                                 1;
+                                                                                                         if (n50 <=
+                                                                                                             0) {
+                                                                                                           c2 =
+                                                                                                               false;
+                                                                                                         } else {
+                                                                                                           unsigned int
+                                                                                                               n51 =
+                                                                                                                   n50 -
+                                                                                                                   1;
+                                                                                                           if (n51 <=
+                                                                                                               0) {
+                                                                                                             c2 =
+                                                                                                                 false;
+                                                                                                           } else {
+                                                                                                             unsigned int
+                                                                                                                 n52 =
+                                                                                                                     n51 -
+                                                                                                                     1;
+                                                                                                             if (n52 <=
+                                                                                                                 0) {
+                                                                                                               c2 =
+                                                                                                                   false;
+                                                                                                             } else {
+                                                                                                               unsigned int
+                                                                                                                   n53 =
+                                                                                                                       n52 -
+                                                                                                                       1;
+                                                                                                               if (n53 <=
+                                                                                                                   0) {
+                                                                                                                 c2 =
+                                                                                                                     false;
+                                                                                                               } else {
+                                                                                                                 unsigned int
+                                                                                                                     n54 =
+                                                                                                                         n53 -
+                                                                                                                         1;
+                                                                                                                 if (n54 <=
+                                                                                                                     0) {
+                                                                                                                   c2 =
+                                                                                                                       false;
+                                                                                                                 } else {
+                                                                                                                   unsigned int
+                                                                                                                       n55 =
+                                                                                                                           n54 -
+                                                                                                                           1;
+                                                                                                                   if (n55 <=
+                                                                                                                       0) {
+                                                                                                                     c2 =
+                                                                                                                         true;
+                                                                                                                   } else {
+                                                                                                                     unsigned int
+                                                                                                                         _x3 =
+                                                                                                                             n55 -
+                                                                                                                             1;
+                                                                                                                     c2 =
+                                                                                                                         false;
+                                                                                                                   }
+                                                                                                                 }
+                                                                                                               }
+                                                                                                             }
+                                                                                                           }
+                                                                                                         }
+                                                                                                       }
+                                                                                                     }
+                                                                                                   }
+                                                                                                 }
+                                                                                               }
+                                                                                             }
+                                                                                           }
+                                                                                         }
+                                                                                       }
+                                                                                     }
+                                                                                   }
+                                                                                 }
+                                                                               }
+                                                                             }
+                                                                           }
+                                                                         }
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+                                                             }
+                                                           }
+                                                         }
+                                                       }
+                                                     }
+                                                   }
+                                                 }
+                                               }
+                                             }
+                                           }
+                                         }
+                                       }
+                                     }
+                                   }
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             } else {
+               unsigned int _x3 = n5 - 1;
+               c2 = false;
+             }
+           }
+         }
+       }
+     }
+   }
+ } else {
+   c2 = false;
+ }
+ bool c3 = Nat::eqb(len, (0 + 1));
+ return (c1 && (c2 && c3));
+}
+
+bool skiplist_test::stm_test_addUnique() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+ bool r1 = SkipList::addUnique<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ bool r2 = SkipList::addUnique<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ bool r3 = SkipList::addUnique<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ std::optional<unsigned int> v5 = SkipList::lookup<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((((0 + 1) + 1) + 1) + 1) + 1), sl);
+ unsigned int len = SkipList::length<unsigned int, unsigned int>(sl);
+ bool c2 = !(r2);
+ bool c4;
+ if (v5.has_value()) {
+   unsigned int n = *v5;
+   if (n <= 0) {
+     c4 = false;
+   } else {
+     unsigned int n0 = n - 1;
+     if (n0 <= 0) {
+       c4 = false;
+     } else {
+       unsigned int n1 = n0 - 1;
+       if (n1 <= 0) {
+         c4 = false;
+       } else {
+         unsigned int n2 = n1 - 1;
+         if (n2 <= 0) {
+           c4 = false;
+         } else {
+           unsigned int n3 = n2 - 1;
+           if (n3 <= 0) {
+             c4 = false;
+           } else {
+             unsigned int n4 = n3 - 1;
+             if (n4 <= 0) {
+               c4 = false;
+             } else {
+               unsigned int n5 = n4 - 1;
+               if (n5 <= 0) {
+                 c4 = false;
+               } else {
+                 unsigned int n6 = n5 - 1;
+                 if (n6 <= 0) {
+                   c4 = false;
+                 } else {
+                   unsigned int n7 = n6 - 1;
+                   if (n7 <= 0) {
+                     c4 = false;
+                   } else {
+                     unsigned int n8 = n7 - 1;
+                     if (n8 <= 0) {
+                       c4 = false;
+                     } else {
+                       unsigned int n9 = n8 - 1;
+                       if (n9 <= 0) {
+                         c4 = false;
+                       } else {
+                         unsigned int n10 = n9 - 1;
+                         if (n10 <= 0) {
+                           c4 = false;
+                         } else {
+                           unsigned int n11 = n10 - 1;
+                           if (n11 <= 0) {
+                             c4 = false;
+                           } else {
+                             unsigned int n12 = n11 - 1;
+                             if (n12 <= 0) {
+                               c4 = false;
+                             } else {
+                               unsigned int n13 = n12 - 1;
+                               if (n13 <= 0) {
+                                 c4 = false;
+                               } else {
+                                 unsigned int n14 = n13 - 1;
+                                 if (n14 <= 0) {
+                                   c4 = false;
+                                 } else {
+                                   unsigned int n15 = n14 - 1;
+                                   if (n15 <= 0) {
+                                     c4 = false;
+                                   } else {
+                                     unsigned int n16 = n15 - 1;
+                                     if (n16 <= 0) {
+                                       c4 = false;
+                                     } else {
+                                       unsigned int n17 = n16 - 1;
+                                       if (n17 <= 0) {
+                                         c4 = false;
+                                       } else {
+                                         unsigned int n18 = n17 - 1;
+                                         if (n18 <= 0) {
+                                           c4 = false;
+                                         } else {
+                                           unsigned int n19 = n18 - 1;
+                                           if (n19 <= 0) {
+                                             c4 = false;
+                                           } else {
+                                             unsigned int n20 = n19 - 1;
+                                             if (n20 <= 0) {
+                                               c4 = false;
+                                             } else {
+                                               unsigned int n21 = n20 - 1;
+                                               if (n21 <= 0) {
+                                                 c4 = false;
+                                               } else {
+                                                 unsigned int n22 = n21 - 1;
+                                                 if (n22 <= 0) {
+                                                   c4 = false;
+                                                 } else {
+                                                   unsigned int n23 = n22 - 1;
+                                                   if (n23 <= 0) {
+                                                     c4 = false;
+                                                   } else {
+                                                     unsigned int n24 = n23 - 1;
+                                                     if (n24 <= 0) {
+                                                       c4 = false;
+                                                     } else {
+                                                       unsigned int n25 =
+                                                           n24 - 1;
+                                                       if (n25 <= 0) {
+                                                         c4 = false;
+                                                       } else {
+                                                         unsigned int n26 =
+                                                             n25 - 1;
+                                                         if (n26 <= 0) {
+                                                           c4 = false;
+                                                         } else {
+                                                           unsigned int n27 =
+                                                               n26 - 1;
+                                                           if (n27 <= 0) {
+                                                             c4 = false;
+                                                           } else {
+                                                             unsigned int n28 =
+                                                                 n27 - 1;
+                                                             if (n28 <= 0) {
+                                                               c4 = false;
+                                                             } else {
+                                                               unsigned int
+                                                                   n29 =
+                                                                       n28 - 1;
+                                                               if (n29 <= 0) {
+                                                                 c4 = false;
+                                                               } else {
+                                                                 unsigned int
+                                                                     n30 = n29 -
+                                                                           1;
+                                                                 if (n30 <= 0) {
+                                                                   c4 = false;
+                                                                 } else {
+                                                                   unsigned int
+                                                                       n31 =
+                                                                           n30 -
+                                                                           1;
+                                                                   if (n31 <=
+                                                                       0) {
+                                                                     c4 = false;
+                                                                   } else {
+                                                                     unsigned int
+                                                                         n32 =
+                                                                             n31 -
+                                                                             1;
+                                                                     if (n32 <=
+                                                                         0) {
+                                                                       c4 =
+                                                                           false;
+                                                                     } else {
+                                                                       unsigned int
+                                                                           n33 =
+                                                                               n32 -
+                                                                               1;
+                                                                       if (n33 <=
+                                                                           0) {
+                                                                         c4 =
+                                                                             false;
+                                                                       } else {
+                                                                         unsigned int
+                                                                             n34 =
+                                                                                 n33 -
+                                                                                 1;
+                                                                         if (n34 <=
+                                                                             0) {
+                                                                           c4 =
+                                                                               false;
+                                                                         } else {
+                                                                           unsigned int
+                                                                               n35 =
+                                                                                   n34 -
+                                                                                   1;
+                                                                           if (n35 <=
+                                                                               0) {
+                                                                             c4 =
+                                                                                 false;
+                                                                           } else {
+                                                                             unsigned int
+                                                                                 n36 =
+                                                                                     n35 -
+                                                                                     1;
+                                                                             if (n36 <=
+                                                                                 0) {
+                                                                               c4 =
+                                                                                   false;
+                                                                             } else {
+                                                                               unsigned int
+                                                                                   n37 =
+                                                                                       n36 -
+                                                                                       1;
+                                                                               if (n37 <=
+                                                                                   0) {
+                                                                                 c4 =
+                                                                                     false;
+                                                                               } else {
+                                                                                 unsigned int
+                                                                                     n38 =
+                                                                                         n37 -
+                                                                                         1;
+                                                                                 if (n38 <=
+                                                                                     0) {
+                                                                                   c4 =
+                                                                                       false;
+                                                                                 } else {
+                                                                                   unsigned int
+                                                                                       n39 =
+                                                                                           n38 -
+                                                                                           1;
+                                                                                   if (n39 <=
+                                                                                       0) {
+                                                                                     c4 =
+                                                                                         false;
+                                                                                   } else {
+                                                                                     unsigned int
+                                                                                         n40 =
+                                                                                             n39 -
+                                                                                             1;
+                                                                                     if (n40 <=
+                                                                                         0) {
+                                                                                       c4 =
+                                                                                           false;
+                                                                                     } else {
+                                                                                       unsigned int
+                                                                                           n41 =
+                                                                                               n40 -
+                                                                                               1;
+                                                                                       if (n41 <=
+                                                                                           0) {
+                                                                                         c4 =
+                                                                                             false;
+                                                                                       } else {
+                                                                                         unsigned int
+                                                                                             n42 =
+                                                                                                 n41 -
+                                                                                                 1;
+                                                                                         if (n42 <=
+                                                                                             0) {
+                                                                                           c4 =
+                                                                                               false;
+                                                                                         } else {
+                                                                                           unsigned int
+                                                                                               n43 =
+                                                                                                   n42 -
+                                                                                                   1;
+                                                                                           if (n43 <=
+                                                                                               0) {
+                                                                                             c4 =
+                                                                                                 false;
+                                                                                           } else {
+                                                                                             unsigned int
+                                                                                                 n44 =
+                                                                                                     n43 -
+                                                                                                     1;
+                                                                                             if (n44 <=
+                                                                                                 0) {
+                                                                                               c4 =
+                                                                                                   false;
+                                                                                             } else {
+                                                                                               unsigned int
+                                                                                                   n45 =
+                                                                                                       n44 -
+                                                                                                       1;
+                                                                                               if (n45 <=
+                                                                                                   0) {
+                                                                                                 c4 =
+                                                                                                     false;
+                                                                                               } else {
+                                                                                                 unsigned int
+                                                                                                     n46 =
+                                                                                                         n45 -
+                                                                                                         1;
+                                                                                                 if (n46 <=
+                                                                                                     0) {
+                                                                                                   c4 =
+                                                                                                       false;
+                                                                                                 } else {
+                                                                                                   unsigned int
+                                                                                                       n47 =
+                                                                                                           n46 -
+                                                                                                           1;
+                                                                                                   if (n47 <=
+                                                                                                       0) {
+                                                                                                     c4 =
+                                                                                                         false;
+                                                                                                   } else {
+                                                                                                     unsigned int
+                                                                                                         n48 =
+                                                                                                             n47 -
+                                                                                                             1;
+                                                                                                     if (n48 <=
+                                                                                                         0) {
+                                                                                                       c4 =
+                                                                                                           false;
+                                                                                                     } else {
+                                                                                                       unsigned int
+                                                                                                           n49 =
+                                                                                                               n48 -
+                                                                                                               1;
+                                                                                                       if (n49 <=
+                                                                                                           0) {
+                                                                                                         c4 =
+                                                                                                             true;
+                                                                                                       } else {
+                                                                                                         unsigned int
+                                                                                                             _x0 =
+                                                                                                                 n49 -
+                                                                                                                 1;
+                                                                                                         c4 =
+                                                                                                             false;
+                                                                                                       }
+                                                                                                     }
+                                                                                                   }
+                                                                                                 }
+                                                                                               }
+                                                                                             }
+                                                                                           }
+                                                                                         }
+                                                                                       }
+                                                                                     }
+                                                                                   }
+                                                                                 }
+                                                                               }
+                                                                             }
+                                                                           }
+                                                                         }
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 }
+                                                               }
+                                                             }
+                                                           }
+                                                         }
+                                                       }
+                                                     }
+                                                   }
+                                                 }
+                                               }
+                                             }
+                                           }
+                                         }
+                                       }
+                                     }
+                                   }
+                                 }
+                               }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+           }
+         }
+       }
+     }
+   }
+ } else {
+   c4 = false;
+ }
+ bool c5 = Nat::eqb(len, ((0 + 1) + 1));
+ return (r1 && (c2 && (r3 && (c4 && c5))));
+}
+
+bool skiplist_test::stm_test_find() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ SkipList::insert<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> pairOpt =
+     SkipList::find<unsigned int, unsigned int>(
+         nat_lt, nat_eq, (((((0 + 1) + 1) + 1) + 1) + 1), sl);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> noneOpt =
+     SkipList::find<unsigned int, unsigned int>(
+         nat_lt, nat_eq,
+         (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), sl);
+ bool c1;
+ if (pairOpt.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *pairOpt;
+   unsigned int k = SkipList::key<unsigned int, unsigned int>(p);
+   c1 = Nat::eqb(k, (((((0 + 1) + 1) + 1) + 1) + 1));
+ } else {
+   c1 = false;
+ }
+ bool c2;
+ if (noneOpt.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> _x2 = *noneOpt;
+   c2 = false;
+ } else {
+   c2 = true;
+ }
+ return (c1 && c2);
+}
+
+bool skiplist_test::stm_test_navigation() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+  SkipList::insert<unsigned int, unsigned int>(
+      nat_lt, nat_eq, (0 + 1),
+      ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), sl, 0);
+  SkipList::insert<unsigned int, unsigned int>(
+      nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+      ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1),
+      sl, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> frontOpt =
+     SkipList::front<unsigned int, unsigned int>(sl);
+ if (frontOpt.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> first = *frontOpt;
+   std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>>
+       nextOpt = SkipList::next<unsigned int, unsigned int>(first);
+   if (nextOpt.has_value()) {
+     std::shared_ptr<SkipNode<unsigned int, unsigned int>> second = *nextOpt;
+     std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>>
+         prevOpt =
+             SkipList::previous<unsigned int, unsigned int>(nat_eq, second, sl);
+     bool c1 =
+         Nat::eqb(SkipList::key<unsigned int, unsigned int>(first), (0 + 1));
+     bool c2 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(second),
+                        (((0 + 1) + 1) + 1));
+     bool c3;
+     if (prevOpt.has_value()) {
+       std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *prevOpt;
+       c3 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p), (0 + 1));
+     } else {
+       c3 = false;
+     }
+     return (c1 && (c2 && c3));
+   } else {
+     return false;
+   }
+ } else {
+   return false;
+ }
+}
+
+bool skiplist_test::stm_test_bounds() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+  SkipList::insert<unsigned int, unsigned int>(
+      nat_lt, nat_eq, ((0 + 1) + 1),
+      ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1),
+      sl, 0);
+  SkipList::insert<unsigned int, unsigned int>(
+      nat_lt, nat_eq, ((((0 + 1) + 1) + 1) + 1),
+      ((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1),
+      sl, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> lb3 =
+     SkipList::findLowerBound<unsigned int, unsigned int>(
+         nat_lt, (((0 + 1) + 1) + 1), sl);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> lb4 =
+     SkipList::findLowerBound<unsigned int, unsigned int>(
+         nat_lt, ((((0 + 1) + 1) + 1) + 1), sl);
+ std::optional<std::shared_ptr<SkipNode<unsigned int, unsigned int>>> ub4 =
+     SkipList::findUpperBound<unsigned int, unsigned int>(
+         nat_lt, nat_eq, ((((0 + 1) + 1) + 1) + 1), sl);
+ bool c1;
+ if (lb3.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *lb3;
+   c1 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p),
+                 ((((0 + 1) + 1) + 1) + 1));
+ } else {
+   c1 = false;
+ }
+ bool c2;
+ if (lb4.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *lb4;
+   c2 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p),
+                 ((((0 + 1) + 1) + 1) + 1));
+ } else {
+   c2 = false;
+ }
+ bool c3;
+ if (ub4.has_value()) {
+   std::shared_ptr<SkipNode<unsigned int, unsigned int>> p = *ub4;
+   c3 = Nat::eqb(SkipList::key<unsigned int, unsigned int>(p),
+                 ((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
+ } else {
+   c3 = false;
+ }
+ return (c1 && (c2 && c3));
+}
+
+bool skiplist_test::stm_test_removeAll() {
+  std::shared_ptr<SkipList::TSkipList<unsigned int, unsigned int>> sl =
+      SkipList::create<unsigned int, unsigned int>(0, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((0 + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ SkipList::insert<unsigned int, unsigned int>(
+     nat_lt, nat_eq, (((0 + 1) + 1) + 1),
+     ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1),
+     sl, 0);
+ SkipList::insert<unsigned int,
+ unsigned int>(nat_lt,
+ nat_eq,
+ (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+ sl,
+ 0);
+ unsigned int count = SkipList::removeAll<unsigned int, unsigned int>(sl);
+ bool empty = SkipList::isEmpty<unsigned int, unsigned int>(sl);
+ unsigned int len = SkipList::length<unsigned int, unsigned int>(sl);
+ bool c1 = Nat::eqb(count, (((0 + 1) + 1) + 1));
+ bool c3 = Nat::eqb(len, 0);
+ return (c1 && (empty && c3));
+}
+
 bool skiplist_test::test_insert_lookup() {
   return stm::atomically([&] { return stm_test_insert_lookup(); });
 }
@@ -6999,34 +8502,130 @@ bool skiplist_test::test_minimum() {
   return stm::atomically([&] { return stm_test_minimum(); });
 }
 
+bool skiplist_test::test_length_isEmpty() {
+  return stm::atomically([&] { return stm_test_length_isEmpty(); });
+}
+
+bool skiplist_test::test_front_back() {
+  return stm::atomically([&] { return stm_test_front_back(); });
+}
+
+bool skiplist_test::test_popFront() {
+  return stm::atomically([&] { return stm_test_popFront(); });
+}
+
+bool skiplist_test::test_addUnique() {
+  return stm::atomically([&] { return stm_test_addUnique(); });
+}
+
+bool skiplist_test::test_find() {
+  return stm::atomically([&] { return stm_test_find(); });
+}
+
+bool skiplist_test::test_navigation() {
+  return stm::atomically([&] { return stm_test_navigation(); });
+}
+
+bool skiplist_test::test_bounds() {
+  return stm::atomically([&] { return stm_test_bounds(); });
+}
+
+bool skiplist_test::test_removeAll() {
+  return stm::atomically([&] { return stm_test_removeAll(); });
+}
+
 unsigned int skiplist_test::run_tests() {
   bool r1 = test_insert_lookup();
   bool r2 = test_delete();
   bool r3 = test_update();
   bool r4 = test_minimum();
-  unsigned int passed = ((([&](void) {
-                            if (r1) {
-                              return (0 + 1);
-                            } else {
-                              return 0;
-                            }
-                          }() +
+  bool r5 = test_length_isEmpty();
+  bool r6 = test_front_back();
+  bool r7 = test_popFront();
+  bool r8 = test_addUnique();
+  bool r9 = test_find();
+  bool r10 = test_navigation();
+  bool r11 = test_bounds();
+  bool r12 = test_removeAll();
+  unsigned int passed = ((((((((((([&](void) {
+                                    if (r1) {
+                                      return (0 + 1);
+                                    } else {
+                                      return 0;
+                                    }
+                                  }() +
+                                   [&](void) {
+                                     if (r2) {
+                                       return (0 + 1);
+                                     } else {
+                                       return 0;
+                                     }
+                                   }()) +
+                                  [&](void) {
+                                    if (r3) {
+                                      return (0 + 1);
+                                    } else {
+                                      return 0;
+                                    }
+                                  }()) +
+                                 [&](void) {
+                                   if (r4) {
+                                     return (0 + 1);
+                                   } else {
+                                     return 0;
+                                   }
+                                 }()) +
+                                [&](void) {
+                                  if (r5) {
+                                    return (0 + 1);
+                                  } else {
+                                    return 0;
+                                  }
+                                }()) +
+                               [&](void) {
+                                 if (r6) {
+                                   return (0 + 1);
+                                 } else {
+                                   return 0;
+                                 }
+                               }()) +
+                              [&](void) {
+                                if (r7) {
+                                  return (0 + 1);
+                                } else {
+                                  return 0;
+                                }
+                              }()) +
+                             [&](void) {
+                               if (r8) {
+                                 return (0 + 1);
+                               } else {
+                                 return 0;
+                               }
+                             }()) +
+                            [&](void) {
+                              if (r9) {
+                                return (0 + 1);
+                              } else {
+                                return 0;
+                              }
+                            }()) +
                            [&](void) {
-                             if (r2) {
+                             if (r10) {
                                return (0 + 1);
                              } else {
                                return 0;
                              }
                            }()) +
                           [&](void) {
-                            if (r3) {
+                            if (r11) {
                               return (0 + 1);
                             } else {
                               return 0;
                             }
                           }()) +
                          [&](void) {
-                           if (r4) {
+                           if (r12) {
                              return (0 + 1);
                            } else {
                              return 0;
