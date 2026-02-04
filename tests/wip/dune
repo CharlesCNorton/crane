@@ -110,17 +110,6 @@
   (deps psort.t.exe)
   (action (run ./psort.t.exe))))
 
-(subdir pstring
- (rule
-  (targets pstring.t.exe)
-  (deps PString.vo pstring.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pstring.t.exe pstring.cpp pstring.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pstring.t.exe)
-  (action (run ./pstring.t.exe))))
-
 (subdir qsort
  (rule
   (targets qsort.t.exe)
@@ -132,17 +121,6 @@
   (deps qsort.t.exe)
   (action (run ./qsort.t.exe))))
 
-(subdir regexp
- (rule
-  (targets regexp.t.exe)
-  (deps Regexp.vo regexp.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} regexp.t.exe regexp.cpp regexp.t.cpp)))
- (rule
-  (alias runtest)
-  (deps regexp.t.exe)
-  (action (run ./regexp.t.exe))))
-
 (subdir vec
  (rule
   (targets vec.t.exe)
@@ -153,17 +131,6 @@
   (alias runtest)
   (deps vec.t.exe)
   (action (run ./vec.t.exe))))
-
-(subdir comparison
- (rule
-  (targets comparison.t.exe)
-  (deps Comparison.vo comparison.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} comparison.t.exe comparison.cpp comparison.t.cpp)))
- (rule
-  (alias runtest)
-  (deps comparison.t.exe)
-  (action (run ./comparison.t.exe))))
 
 (subdir mutual_recursion
  (rule
@@ -198,13 +165,3 @@
   (deps singleton_record.t.exe)
   (action (run ./singleton_record.t.exe))))
 
-(subdir sum
- (rule
-  (targets sum.t.exe)
-  (deps Sum.vo sum.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} sum.t.exe sum.cpp sum.t.cpp)))
- (rule
-  (alias runtest)
-  (deps sum.t.exe)
-  (action (run ./sum.t.exe))))

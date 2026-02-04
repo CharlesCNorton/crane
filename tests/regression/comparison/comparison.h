@@ -3,8 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>
@@ -14,32 +16,6 @@ template <class... Ts> struct Overloaded : Ts... {
   using Ts::operator()...;
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
-
-struct Bool0 {
-  struct bool0 {
-  public:
-    struct true0 {};
-    struct false0 {};
-    using variant_t = std::variant<true0, false0>;
-
-  private:
-    variant_t v_;
-    explicit bool0(true0 _v) : v_(std::move(_v)) {}
-    explicit bool0(false0 _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Bool0::bool0> true0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(true0{}));
-      }
-      static std::shared_ptr<Bool0::bool0> false0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(false0{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
 
 struct Comparison {
   struct cmp {

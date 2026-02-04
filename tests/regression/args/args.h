@@ -3,8 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>

@@ -3,9 +3,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unit_type.h>
+#include <utility>
 #include <variant>
 
 std::shared_ptr<Unit::unit> UnitType::return_unit(const unsigned int _x) {

@@ -3,8 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>
@@ -14,32 +16,6 @@ template <class... Ts> struct Overloaded : Ts... {
   using Ts::operator()...;
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
-
-struct Bool0 {
-  struct bool0 {
-  public:
-    struct true0 {};
-    struct false0 {};
-    using variant_t = std::variant<true0, false0>;
-
-  private:
-    variant_t v_;
-    explicit bool0(true0 _v) : v_(std::move(_v)) {}
-    explicit bool0(false0 _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Bool0::bool0> true0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(true0{}));
-      }
-      static std::shared_ptr<Bool0::bool0> false0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(false0{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
 
 struct ImplicitArgs {
   template <typename T1> static T1 id(const T1 x) { return x; }
@@ -134,8 +110,7 @@ struct ImplicitArgs {
   static inline const unsigned int explicit_id = id<unsigned int>(5u);
 
   static inline const unsigned int explicit_fst =
-      fst_of<unsigned int, std::shared_ptr<Bool0::bool0>>(
-          3u, Bool0::bool0::ctor::true0_());
+      fst_of<unsigned int, bool>(3u, true);
 
   static unsigned int add_one(const unsigned int);
 
@@ -207,14 +182,14 @@ struct ImplicitArgs {
 
   static inline const unsigned int use_nested = nested_implicits(1u, 2u, 3u);
 
-  static unsigned int choose_branch(const std::shared_ptr<Bool0::bool0> &flag,
-                                    const unsigned int t, const unsigned int f);
+  static unsigned int choose_branch(const bool flag, const unsigned int t,
+                                    const unsigned int f);
 
   static inline const unsigned int use_choose_true =
-      choose_branch(Bool0::bool0::ctor::true0_(), 7u, 3u);
+      choose_branch(true, 7u, 3u);
 
   static inline const unsigned int use_choose_false =
-      choose_branch(Bool0::bool0::ctor::false0_(), 7u, 3u);
+      choose_branch(false, 7u, 3u);
 
   static inline const unsigned int test_id = id<unsigned int>(5u);
 

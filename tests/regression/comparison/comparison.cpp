@@ -4,8 +4,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int Comparison::cmp_to_nat(const std::shared_ptr<Comparison::cmp> &c) {
@@ -25,25 +27,15 @@ unsigned int Comparison::cmp_to_nat(const std::shared_ptr<Comparison::cmp> &c) {
 
 std::shared_ptr<Comparison::cmp>
 Comparison::compare_nats(const unsigned int a, const unsigned int b) {
-  return std::visit(
-      Overloaded{[](const typename Bool0::bool0::true0 _args)
-                     -> std::shared_ptr<Comparison::cmp> {
-                   return cmp::ctor::CmpLt_();
-                 },
-                 [&](const typename Bool0::bool0::false0 _args)
-                     -> std::shared_ptr<Comparison::cmp> {
-                   return std::visit(
-                       Overloaded{[](const typename Bool0::bool0::true0 _args)
-                                      -> std::shared_ptr<Comparison::cmp> {
-                                    return cmp::ctor::CmpEq_();
-                                  },
-                                  [](const typename Bool0::bool0::false0 _args)
-                                      -> std::shared_ptr<Comparison::cmp> {
-                                    return cmp::ctor::CmpGt_();
-                                  }},
-                       (a == b)->v());
-                 }},
-      (a < b)->v());
+  if ((a < b)) {
+    return cmp::ctor::CmpLt_();
+  } else {
+    if ((a == b)) {
+      return cmp::ctor::CmpEq_();
+    } else {
+      return cmp::ctor::CmpGt_();
+    }
+  }
 }
 
 unsigned int Comparison::max_nat(const unsigned int a, const unsigned int b) {

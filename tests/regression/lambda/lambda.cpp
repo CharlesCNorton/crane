@@ -4,8 +4,10 @@
 #include <iostream>
 #include <lambda.h>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int Lambda::simple_lambda(const unsigned int x) { return x; }

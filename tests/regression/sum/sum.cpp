@@ -3,9 +3,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <sum.h>
+#include <utility>
 #include <variant>
 
 unsigned int Sum::either_to_nat(

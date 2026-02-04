@@ -177,3 +177,36 @@
   (alias runtest)
   (deps anon_fixpoint.t.exe)
   (action (run ./anon_fixpoint.t.exe))))
+
+(subdir comparison
+ (rule
+  (targets comparison.t.exe)
+  (deps Comparison.vo comparison.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} comparison.t.exe comparison.cpp comparison.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps comparison.t.exe)
+  (action (run ./comparison.t.exe))))
+
+(subdir sum
+ (rule
+  (targets sum.t.exe)
+  (deps Sum.vo sum.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sum.t.exe sum.cpp sum.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sum.t.exe)
+  (action (run ./sum.t.exe))))
+
+(subdir pstring
+ (rule
+  (targets pstring.t.exe)
+  (deps PString.vo pstring.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pstring.t.exe pstring.cpp pstring.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pstring.t.exe)
+  (action (run ./pstring.t.exe))))

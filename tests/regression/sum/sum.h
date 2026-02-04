@@ -3,8 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>
@@ -14,32 +16,6 @@ template <class... Ts> struct Overloaded : Ts... {
   using Ts::operator()...;
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
-
-struct Bool0 {
-  struct bool0 {
-  public:
-    struct true0 {};
-    struct false0 {};
-    using variant_t = std::variant<true0, false0>;
-
-  private:
-    variant_t v_;
-    explicit bool0(true0 _v) : v_(std::move(_v)) {}
-    explicit bool0(false0 _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Bool0::bool0> true0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(true0{}));
-      }
-      static std::shared_ptr<Bool0::bool0> false0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(false0{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
 
 struct Sum {
   template <typename A, typename B> struct either {
@@ -102,32 +78,25 @@ struct Sum {
         e->v());
   }
 
-  static inline const std::shared_ptr<
-      either<unsigned int, std::shared_ptr<Bool0::bool0>>>
-      left_val =
-          either<unsigned int, std::shared_ptr<Bool0::bool0>>::ctor::Left_(5u);
+  static inline const std::shared_ptr<either<unsigned int, bool>> left_val =
+      either<unsigned int, bool>::ctor::Left_(5u);
 
-  static inline const std::shared_ptr<
-      either<unsigned int, std::shared_ptr<Bool0::bool0>>>
-      right_val =
-          either<unsigned int, std::shared_ptr<Bool0::bool0>>::ctor::Right_(
-              Bool0::bool0::ctor::true0_());
+  static inline const std::shared_ptr<either<unsigned int, bool>> right_val =
+      either<unsigned int, bool>::ctor::Right_(true);
 
   static unsigned int
   either_to_nat(const std::shared_ptr<either<unsigned int, unsigned int>> &e);
 
   template <typename T1, typename T2>
-  static std::shared_ptr<Bool0::bool0>
-  is_left(const std::shared_ptr<either<T1, T2>> &e) {
-    return std::visit(Overloaded{[](const typename either<T1, T2>::Left _args)
-                                     -> std::shared_ptr<Bool0::bool0> {
-                                   return Bool0::bool0::ctor::true0_();
-                                 },
-                                 [](const typename either<T1, T2>::Right _args)
-                                     -> std::shared_ptr<Bool0::bool0> {
-                                   return Bool0::bool0::ctor::false0_();
-                                 }},
-                      e->v());
+  static bool is_left(const std::shared_ptr<either<T1, T2>> &e) {
+    return std::visit(
+        Overloaded{[](const typename either<T1, T2>::Left _args) -> bool {
+                     return true;
+                   },
+                   [](const typename either<T1, T2>::Right _args) -> bool {
+                     return false;
+                   }},
+        e->v());
   }
 
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1> F0>
@@ -238,17 +207,13 @@ struct Sum {
         t->v());
   }
 
-  static inline const std::shared_ptr<
-      triple<unsigned int, std::shared_ptr<Bool0::bool0>, unsigned int>>
+  static inline const std::shared_ptr<triple<unsigned int, bool, unsigned int>>
       triple_test =
-          triple<unsigned int, std::shared_ptr<Bool0::bool0>,
-                 unsigned int>::ctor::Second_(Bool0::bool0::ctor::true0_());
+          triple<unsigned int, bool, unsigned int>::ctor::Second_(true);
 
-  static inline const std::shared_ptr<Bool0::bool0> test_left =
-      is_left<unsigned int, std::shared_ptr<Bool0::bool0>>(left_val);
+  static inline const bool test_left = is_left<unsigned int, bool>(left_val);
 
-  static inline const std::shared_ptr<Bool0::bool0> test_right =
-      is_left<unsigned int, std::shared_ptr<Bool0::bool0>>(right_val);
+  static inline const bool test_right = is_left<unsigned int, bool>(right_val);
 
   static inline const unsigned int test_either =
       either_to_nat(either<unsigned int, unsigned int>::ctor::Left_(3u));

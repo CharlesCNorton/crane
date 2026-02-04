@@ -3,9 +3,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <singleton_record.h>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int

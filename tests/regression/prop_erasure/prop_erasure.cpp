@@ -3,9 +3,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <prop_erasure.h>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int PropErasure::with_proof_arg(const unsigned int n) { return n; }

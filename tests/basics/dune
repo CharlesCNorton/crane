@@ -231,3 +231,14 @@
   (alias runtest)
   (deps eval_expr.t.exe)
   (action (run ./eval_expr.t.exe))))
+
+(subdir regexp
+ (rule
+  (targets regexp.t.exe)
+  (deps Regexp.vo regexp.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} regexp.t.exe regexp.cpp regexp.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps regexp.t.exe)
+  (action (run ./regexp.t.exe))))

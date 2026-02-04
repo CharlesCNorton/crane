@@ -4,8 +4,10 @@
 #include <higher_order.h>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int HigherOrder::adder(const unsigned int _x0,

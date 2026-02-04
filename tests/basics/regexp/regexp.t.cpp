@@ -32,9 +32,9 @@ void aSsErT(bool condition, const char *message, int line)
     aSsErT(!(X), #X, __LINE__);
 
 int main() {
-  std::cout << parse_bool(r1, s1) << std::endl;
-  std::cout << parse_bool(r1, s2) << std::endl;
-  std::cout << parse_bool(r1, s3) << std::endl;
-  std::cout << parse_bool(r1, s4) << std::endl;
+  std::cout << Matcher::parse_bool(Matcher::r1, Matcher::s1) << std::endl;
+  std::cout << Matcher::parse_bool(Matcher::r1, Matcher::s2) << std::endl;
+  std::cout << Matcher::parse_bool(Matcher::r1, Matcher::s3) << std::endl;
+  std::cout << Matcher::parse_bool(Matcher::r1, Matcher::s4) << std::endl;
   return 0;
 }

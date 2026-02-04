@@ -38,13 +38,13 @@ int main() {
     ASSERT(Sum::test_either == 3u);
 
     // Test left_val is Left
-    ASSERT(std::holds_alternative<Sum::Left<unsigned int, bool>>(Sum::left_val));
+    ASSERT((std::holds_alternative<Sum::either<unsigned int, bool>::Left>(Sum::left_val->v())));
 
     // Test right_val is Right
-    ASSERT(std::holds_alternative<Sum::Right<unsigned int, bool>>(Sum::right_val));
+    ASSERT((std::holds_alternative<Sum::either<unsigned int, bool>::Right>(Sum::right_val->v())));
 
     // Test triple
-    ASSERT(std::holds_alternative<Sum::Second<unsigned int, bool, unsigned int>>(Sum::triple_test));
+    ASSERT((std::holds_alternative<Sum::triple<unsigned int, bool, unsigned int>::Second>(Sum::triple_test->v())));
 
     return testStatus;
 }

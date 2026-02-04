@@ -4,6 +4,8 @@
 #include <iostream>
 #include <list.h>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>

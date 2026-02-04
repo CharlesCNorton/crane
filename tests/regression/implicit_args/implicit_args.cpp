@@ -4,8 +4,10 @@
 #include <implicit_args.h>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int ImplicitArgs::add_one(const unsigned int _x0) {
@@ -65,14 +67,11 @@ unsigned int ImplicitArgs::nested_implicits(const unsigned int a,
   return (a + (b + c));
 }
 
-unsigned int
-ImplicitArgs::choose_branch(const std::shared_ptr<Bool0::bool0> &flag,
-                            const unsigned int t, const unsigned int f) {
-  return std::visit(
-      Overloaded{[&](const typename Bool0::bool0::true0 _args) -> unsigned int {
-                   return t;
-                 },
-                 [&](const typename Bool0::bool0::false0 _args)
-                     -> unsigned int { return f; }},
-      flag->v());
+unsigned int ImplicitArgs::choose_branch(const bool flag, const unsigned int t,
+                                         const unsigned int f) {
+  if (flag) {
+    return t;
+  } else {
+    return f;
+  }
 }

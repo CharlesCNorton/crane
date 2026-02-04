@@ -4,8 +4,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 unsigned int AnonFixpoint::sum_to(const unsigned int n) {

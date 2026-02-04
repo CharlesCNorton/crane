@@ -1,6 +1,7 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 From Crane Require Extraction.
+From Crane Require Export Mapping.Std.
 
 (** Disclaimer: trying to obtain efficient certified programs
     by extracting [nat] into [int] is definitively *not* a good idea:

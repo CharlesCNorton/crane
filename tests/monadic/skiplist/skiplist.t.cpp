@@ -24,7 +24,15 @@
 
 // Thread-safe random number generator
 static int thread_safe_rand() {
-    thread_local std::mt19937 gen(std::random_device{}());
+    static std::atomic<unsigned int> seed_counter{0};
+    thread_local std::mt19937 gen([]() {
+        // Combine random_device, time, and a counter for better seeding
+        std::random_device rd;
+        auto t = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
+        auto counter = seed_counter.fetch_add(1, std::memory_order_relaxed);
+        return static_cast<unsigned int>(rd() ^ t ^ tid ^ counter);
+    }());
     thread_local std::uniform_int_distribution<int> dist(0, RAND_MAX);
     return dist(gen);
 }
@@ -203,18 +211,25 @@ bool test_concurrent_producer_consumer() {
                 std::this_thread::yield();
             }
         }
-        producer_done = true;
+        producer_done.store(true, std::memory_order_release);
     });
 
     // Consumer thread
     std::thread consumer([&]() {
-        while (!producer_done || consumed < NUM_ITEMS) {
+        while (true) {
+            // Check exit condition with explicit atomic loads
+            int current_consumed = consumed.load(std::memory_order_acquire);
+            bool prod_done = producer_done.load(std::memory_order_acquire);
+            if (prod_done && current_consumed >= NUM_ITEMS) {
+                break;
+            }
+
             try {
                 auto result = stm::atomically([&]() -> std::optional<std::pair<unsigned int, unsigned int>> {
                     return sl->popFront();
                 });
                 if (result.has_value()) {
-                    consumed++;
+                    consumed.fetch_add(1, std::memory_order_release);
                 } else {
                     std::this_thread::yield();
                 }
