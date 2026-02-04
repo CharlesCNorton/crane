@@ -32,6 +32,9 @@ jobs:
             startGroup "Print opam config"
               opam config list; opam repo list; opam list
             endGroup
+            startGroup "Fix permissions"
+              sudo chown -R coq:coq .
+            endGroup
           before_script: |
             startGroup "Install clang-19 for C++23 support"
               # Use LLVM's automatic install script which detects the distro
@@ -49,10 +52,11 @@ jobs:
             endGroup
           custom_script: |
             startGroup "Build project"
-              opam exec -- dune build -p rocq-crane && dune install
+              opam exec -- dune build -p rocq-crane && opam exec -- dune install
             endGroup
             startGroup "Run tests (excluding tests/wip)"
-              # Run tests for basics, monadic, and regression directories
-              # Tests in tests/wip are allowed to fail and are not run in CI
-              opam exec -- dune runtest tests/basics tests/monadic tests/regression
+              # Dynamically find all test directories except wip
+              TEST_DIRS=$(find tests -maxdepth 1 -mindepth 1 -type d ! -name wip | sort)
+              echo "Running tests in: $TEST_DIRS"
+              opam exec -- dune runtest $TEST_DIRS
             endGroup
