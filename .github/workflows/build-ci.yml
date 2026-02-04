@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Compiling Code
+      - name: Build and Test
         uses: coq-community/docker-coq-action@v1
         with:
           opam_file: 'rocq-crane.opam'
@@ -32,7 +32,27 @@ jobs:
             startGroup "Print opam config"
               opam config list; opam repo list; opam list
             endGroup
+          before_script: |
+            startGroup "Install clang-19 for C++23 support"
+              # Use LLVM's automatic install script which detects the distro
+              sudo apt-get update
+              sudo apt-get install -y wget lsb-release software-properties-common gnupg
+              wget https://apt.llvm.org/llvm.sh
+              chmod +x llvm.sh
+              sudo ./llvm.sh 19
+              # Install libc++ for the STM threading tests
+              sudo apt-get install -y libc++-19-dev libc++abi-19-dev
+              # Make clang-19 the default
+              sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
+              sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
+              clang++ --version
+            endGroup
           custom_script: |
             startGroup "Build project"
               opam exec -- dune build -p rocq-crane && dune install
+            endGroup
+            startGroup "Run tests (excluding tests/wip)"
+              # Run tests for basics, monadic, and regression directories
+              # Tests in tests/wip are allowed to fail and are not run in CI
+              opam exec -- dune runtest tests/basics tests/monadic tests/regression
             endGroup
