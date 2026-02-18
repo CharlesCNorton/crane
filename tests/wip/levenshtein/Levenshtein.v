@@ -4,6 +4,8 @@
 (* Intrinsically proven sound Levenshtein distance implementation *)
 From Stdlib Require Import String Ascii Nat Lia.
 From Stdlib Require Import Program.Equality.
+From Stdlib Require Import Arith.Wf_nat.
+From Stdlib Require Import Logic.ClassicalDescription Logic.Classical_Prop.
 
 Open Scope string_scope.
 Infix "::" := String (at level 60, right associativity) : string_scope.
@@ -204,7 +206,176 @@ Fixpoint levenshtein_chain (s : string)  :=
         end
     end) (eq_refl s) (eq_refl t).
 
+Definition chain_inhabited (s t : string) (n : nat) : Prop :=
+  exists c : chain s t n, True.
+
+Lemma chain_inhabited_dec : forall s t n, chain_inhabited s t n \/ ~ chain_inhabited s t n.
+Proof.
+  intros s t n.
+  destruct (classic (chain_inhabited s t n)); auto.
+Qed.
+
+Lemma chain_inhabited_ex : forall s t, exists n, chain_inhabited s t n.
+Proof.
+  intros s t.
+  destruct (levenshtein_chain s t) as [n c].
+  exists n.
+  exists c.
+  exact I.
+Qed.
+
+Definition levenshtein_witness (s t : string) :
+    {n : nat | chain_inhabited s t n /\ forall m, chain_inhabited s t m -> n <= m }.
+Proof.
+  apply constructive_definite_description.
+  apply dec_inh_nat_subset_has_unique_least_element.
+  - intro n. apply chain_inhabited_dec.
+  - apply chain_inhabited_ex.
+Defined.
+
+Definition levenshtein (s t : string) : nat :=
+  proj1_sig (levenshtein_witness s t).
+
+Definition levenshtein_computed (s t : string) : nat :=
+  projT1 (levenshtein_chain s t).
+
+Lemma levenshtein_is_least :
+  forall s t n, chain_inhabited s t n -> levenshtein s t <= n.
+Proof.
+  intros s t n Hn.
+  unfold levenshtein.
+  destruct (levenshtein_witness s t) as [m [Hm Hleast]]; simpl.
+  apply Hleast.
+  exact Hn.
+Qed.
+
+Lemma levenshtein_le_computed : forall s t, levenshtein s t <= projT1 (levenshtein_chain s t).
+Proof.
+  intros s t.
+  apply (levenshtein_is_least s t (projT1 (levenshtein_chain s t))).
+  destruct (levenshtein_chain s t) as [n c].
+  simpl.
+  exists c.
+  exact I.
+Qed.
+
+Lemma levenshtein_computed_skip_eq : forall a s t,
+    levenshtein_computed (a :: s) (a :: t) = levenshtein_computed s t.
+Proof.
+  intros a s t.
+  unfold levenshtein_computed.
+  cbn.
+  destruct (ascii_dec a a) as [Haa|Haa].
+  - dependent destruction Haa.
+    destruct (levenshtein_chain s t) as [n c].
+    cbn.
+    reflexivity.
+  - exfalso.
+    apply Haa.
+    reflexivity.
+Qed.
+
+Lemma levenshtein_computed_mismatch_upper_insert : forall a b s t,
+    a <> b ->
+    levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed (a :: s) t).
+Proof.
+  intros a b s t Hneq.
+  unfold levenshtein_computed.
+  cbn.
+  destruct (ascii_dec a b) as [Heq|Hneqab].
+  - exfalso.
+    apply Hneq.
+    exact Heq.
+  - match goal with
+    | |- context [let (n1, r1) := ?p in _] => remember p as p1
+    end.
+    remember (levenshtein_chain s (b :: t)) as p2.
+    remember (levenshtein_chain s t) as p3.
+    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
+    cbn.
+    pose proof (min3_app_pf
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
+              (insert_chain b (a :: s) t n1 r1))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
+              (delete_chain a s (b :: t) n2 r2))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
+              (update_chain a b s t n3 Hneqab r3))
+      (fun p => projT1 p)) as [H _].
+    cbn in H.
+    exact H.
+Qed.
+
+Lemma levenshtein_computed_mismatch_upper_delete : forall a b s t,
+    a <> b ->
+    levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed s (b :: t)).
+Proof.
+  intros a b s t Hneq.
+  unfold levenshtein_computed.
+  cbn.
+  destruct (ascii_dec a b) as [Heq|Hneqab].
+  - exfalso.
+    apply Hneq.
+    exact Heq.
+  - match goal with
+    | |- context [let (n1, r1) := ?p in _] => remember p as p1
+    end.
+    remember (levenshtein_chain s (b :: t)) as p2.
+    remember (levenshtein_chain s t) as p3.
+    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
+    cbn.
+    pose proof (min3_app_pf
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
+              (insert_chain b (a :: s) t n1 r1))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
+              (delete_chain a s (b :: t) n2 r2))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
+              (update_chain a b s t n3 Hneqab r3))
+      (fun p => projT1 p)) as [_ [H _]].
+    cbn in H.
+    exact H.
+Qed.
+
+Lemma levenshtein_computed_mismatch_upper_update : forall a b s t,
+    a <> b ->
+    levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed s t).
+Proof.
+  intros a b s t Hneq.
+  unfold levenshtein_computed.
+  cbn.
+  destruct (ascii_dec a b) as [Heq|Hneqab].
+  - exfalso.
+    apply Hneq.
+    exact Heq.
+  - match goal with
+    | |- context [let (n1, r1) := ?p in _] => remember p as p1
+    end.
+    remember (levenshtein_chain s (b :: t)) as p2.
+    remember (levenshtein_chain s t) as p3.
+    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
+    cbn.
+    pose proof (min3_app_pf
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
+              (insert_chain b (a :: s) t n1 r1))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
+              (delete_chain a s (b :: t) n2 r2))
+      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
+              (update_chain a b s t n3 Hneqab r3))
+      (fun p => projT1 p)) as [_ [_ H]].
+    cbn in H.
+    exact H.
+Qed.
+
+Theorem levensthein_is_minimal (s t : string) :
+  forall (n : nat) (c : chain s t n), levenshtein s t <= n.
+Proof.
+  intros n c.
+  apply (levenshtein_is_least s t n).
+  exists c.
+  exact I.
+Qed.
+
 (* Eval compute in (levenshtein_chain "pascal" "haskell"). *)
 
 Require Crane.Extraction.
 Crane Extraction "levenshtein" levenshtein_chain.
+
