@@ -207,7 +207,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       let args,env = push_vars' (List.map (fun (x, y) -> (id_of_mlid x, y)) args) env in
       let args = List.filter (fun (_,ty) -> not (isTdummy ty)) args in (* TODO: this could cause issues. TEST. *)
       let args = List.map (fun (id, ty) -> (convert_ml_type_to_cpp_type env [] [] ty, Some id)) args in
-      let f = CPPlambda (args, None, gen_stmts env (fun x -> Sreturn x) a) in
+      let f = CPPlambda (args, None, gen_stmts env (fun x -> Sreturn x) a, false) in
       (match args with
       | [] -> CPPfun_call (f, [])
       | _ -> f)
@@ -287,7 +287,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       nstempmod (List.map (gen_expr env) ts))
   | MLcase (typ, t, pv) when is_custom_match pv ->
     let cexp = gen_custom_cpp_case env (fun x -> Sreturn x) typ t pv in
-    CPPfun_call (CPPlambda([], None, [cexp]), [])
+    CPPfun_call (CPPlambda([], None, [cexp], false), [])
   (* TODO: SLOPPY and incomplete *)
   | MLcase (typ, t, pv) when not (record_fields_of_type typ == []) && Array.length pv == 1 ->
     let (ids,r,pat,body) = pv.(0) in
@@ -323,12 +323,12 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
           | Some fld -> make_field_access (gen_expr env t) fld
           | _ -> CPPstring (Pstring.unsafe_of_string "TODOrecordProj")) in
         Sasgn (remove_prime_id (id_of_mlid id), Some (convert_ml_type_to_cpp_type env [] [] ty), e)) ids in
-      CPPfun_call (CPPlambda([], None, asgns @ gen_stmts env' (fun x -> Sreturn x) body), []))
+      CPPfun_call (CPPlambda([], None, asgns @ gen_stmts env' (fun x -> Sreturn x) body, false), []))
       (* TODO: ugly. should better attempt when generating statements! *)
       (* TODO: we don't currently support the fancy thing of pattern matching on record fields at the same time *)
   | MLcase (typ, t, pv) when lang () == Cpp -> gen_cpp_case typ t env pv
   (* | MLcase (typ, t, pv) when lang () == Rust -> gen_rust_case typ t env pv *)
-  | MLletin (_, ty, _, _) as a -> CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a), [])
+  | MLletin (_, ty, _, _) as a -> CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), [])
   (*| MLfix _ -> CPPvar (Id.of_string "FIX")*)
   | MLstring s -> CPPstring s
   | MLuint x -> CPPuint x
@@ -412,7 +412,7 @@ and eta_fun env f args =
       let eta_args = List.mapi (fun i ty -> (Tmod (TMconst, ty), Some (Id.of_string ("_x" ^ string_of_int i)))) missing_args in
       let call_args = args @
          List.mapi (fun i _ -> (CPPvar (Id.of_string ("_x" ^ string_of_int i)))) eta_args in
-      CPPlambda (List.rev eta_args, None,[Sreturn (CPPfun_call (cglob, List.rev call_args))])
+      CPPlambda (List.rev eta_args, None,[Sreturn (CPPfun_call (cglob, List.rev call_args))], false)
     | _ ->
       (* print_endline ("NOT A FUN" ^ Pp.string_of_ppcmds (GlobRef.print id) ^ string_of_int (List.length args)) ; *)
       CPPfun_call (cglob, args))
@@ -503,7 +503,8 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
   CPPlambda(
         [(Tmod (TMconst, constr), Some sname)],
         Some ret,
-        asgns @ gen_stmts env (fun x -> Sreturn x) body)
+        asgns @ gen_stmts env (fun x -> Sreturn x) body,
+        false)
 
 and gen_cpp_case (typ : ml_type) t env pv =
   (* When scrutinee is a parameter reference, use parameter's concrete type if available.
@@ -591,7 +592,7 @@ and gen_custom_cpp_case env k (typ : ml_type) t pv =
   Scustom_case (typ, t, temps, gen_cases (Array.to_list pv), cmatch)
 
 and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
-| MLletin (_, _, MLfix (x, ids, funs), b) ->
+| MLletin (_, _, MLfix (x, ids, funs, _is_cofix), b) ->
   (* Special case for let-fix: the let binding name is the fix function name *)
   (* Resolve unresolved metas in fix function types to Tvars using mgu. *)
   let next_tvar = ref 1 in
@@ -628,7 +629,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
     | _ -> None) in
   (* Use renamed ids for definitions *)
   let defs = List.map2 (fun (id, fty) (args, body) ->
-    Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) args, ret_ty fty, body))) renamed_ids funs_with_params in
+    Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) args, ret_ty fty, body, false))) renamed_ids funs_with_params in
   (* Add renamed ids to environment for processing body *)
   let _, env_with_fix = push_vars' renamed_ids env in
   decls @ defs @ gen_stmts env_with_fix k b
@@ -645,7 +646,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
   | _ ->
     Sdecl (x', convert_ml_type_to_cpp_type env [] tvars t) :: asgn @ gen_stmts env' k b
   end
-| MLapp (MLfix (x, ids, funs), args) ->
+| MLapp (MLfix (x, ids, funs, _is_cofix), args) ->
   (* Resolve unresolved metas in fix function types to Tvars using mgu.
      Traverse types and assign Tvar 1, 2, ... to each unresolved meta. *)
   let next_tvar = ref 1 in
@@ -681,11 +682,11 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
         | Minicpp.Tvar (_, None) -> None
         | _ -> Some t)
     | _ -> None) in
-  let defs = List.map2 (fun (id, fty) (params, body) -> Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) params, ret_ty fty, body))) renamed_ids funs_with_params in
+  let defs = List.map2 (fun (id, fty) (params, body) -> Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) params, ret_ty fty, body, false))) renamed_ids funs_with_params in
   (* Args are in the outer scope, so process with original env *)
   let args = List.rev_map (gen_expr env) args in
   decls @ defs @ [k (CPPfun_call (CPPvar (fst (List.nth renamed_ids x)), args))]
-| MLfix (x, ids, funs) ->
+| MLfix (x, ids, funs, _is_cofix) ->
   (* Standalone fixpoint (not immediately applied) - e.g., in let binding *)
   (* Resolve unresolved metas in fix function types to Tvars using mgu. *)
   let next_tvar = ref 1 in
@@ -719,7 +720,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) = function
         | Minicpp.Tvar (_, None) -> None
         | _ -> Some t)
     | _ -> None) in
-  let defs = List.map2 (fun (id, fty) (params, body) -> Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) params, ret_ty fty, body))) renamed_ids funs_with_params in
+  let defs = List.map2 (fun (id, fty) (params, body) -> Sasgn (id, None, CPPlambda (List.map (fun (id, ty) -> convert_ml_type_to_cpp_type env [] tvars ty, Some id) params, ret_ty fty, body, false))) renamed_ids funs_with_params in
   (* Return the fix function itself (for use in let bindings etc.) *)
   decls @ defs @ [k (CPPvar (fst (List.nth renamed_ids x)))]
 (* | MLapp (MLglob (h, _), a1 :: a2 :: l) when is_hoist h ->
@@ -981,7 +982,7 @@ match e2 with
   | CPPfun_call (f, args) -> CPPfun_call (glob_subst_expr id e1 f, List.map (glob_subst_expr id e1) args)
   | CPPderef e' -> CPPderef (glob_subst_expr id e1 e')
   | CPPmove e' -> CPPmove (glob_subst_expr id e1 e')
-  | CPPlambda (args, ty, b) -> CPPlambda (args, ty, List.map (glob_subst_stmt id e1) b)
+  | CPPlambda (args, ty, b, cbv) -> CPPlambda (args, ty, List.map (glob_subst_stmt id e1) b, cbv)
   | CPPoverloaded cases -> CPPoverloaded (List.map (glob_subst_expr id e1) cases)
   | CPPstructmk (id', tys, args) -> CPPstructmk (id', tys, List.map (glob_subst_expr id e1) args)
   | CPPstruct (id', tys, args) -> CPPstruct (id', tys, List.map (glob_subst_expr id e1) args)
@@ -1006,7 +1007,7 @@ match e2 with
   | CPPfun_call (f, args) -> CPPfun_call (var_subst_expr id e1 f, List.map (var_subst_expr id e1) args)
   | CPPderef e' -> CPPderef (var_subst_expr id e1 e')
   | CPPmove e' -> CPPmove (var_subst_expr id e1 e')
-  | CPPlambda (args, ty, b) -> CPPlambda (args, ty, List.map (var_subst_stmt id e1) b)
+  | CPPlambda (args, ty, b, cbv) -> CPPlambda (args, ty, List.map (var_subst_stmt id e1) b, cbv)
   | CPPoverloaded cases -> CPPoverloaded (List.map (var_subst_expr id e1) cases)
   | CPPstructmk (id', tys, args) -> CPPstructmk (id', tys, List.map (var_subst_expr id e1) args)
   | CPPstruct (id', tys, args) -> CPPstruct (id', tys, List.map (var_subst_expr id e1) args)
@@ -1062,10 +1063,10 @@ let rec tvar_subst_expr (tvars : Id.t list) (e : cpp_expr) : cpp_expr =
   | CPPfun_call (f, args) -> CPPfun_call (subst_e f, List.map subst_e args)
   | CPPderef e' -> CPPderef (subst_e e')
   | CPPmove e' -> CPPmove (subst_e e')
-  | CPPlambda (params, ret, body) ->
+  | CPPlambda (params, ret, body, cbv) ->
       let params' = List.map (fun (ty, id) -> (subst_ty ty, id)) params in
       let ret' = Option.map subst_ty ret in
-      CPPlambda (params', ret', List.map (tvar_subst_stmt tvars) body)
+      CPPlambda (params', ret', List.map (tvar_subst_stmt tvars) body, cbv)
   | CPPoverloaded cases -> CPPoverloaded (List.map subst_e cases)
   | CPPstructmk (r, tys, args) -> CPPstructmk (r, List.map subst_ty tys, List.map subst_e args)
   | CPPstruct (r, tys, args) -> CPPstruct (r, List.map subst_ty tys, List.map subst_e args)
@@ -1211,9 +1212,36 @@ let gen_dfun n b dom cod ty temps =
     match tt with TTtypename -> Some id | _ -> None) temps in
   set_current_type_vars type_var_ids;
   set_current_param_types all_ids;
+  (* Check if the return type is coinductive - if so, wrap body in lazy thunk *)
+  let rec get_ml_return_type = function
+    | Miniml.Tarr (_, t2) -> get_ml_return_type t2
+    | t -> t in
+  let ml_ret = get_ml_return_type ty in
+  let is_cofix_return = Table.is_coinductive_type ml_ret in
+  (* For cofixpoints, wrap the return expression in Type::ctor::lazy_([=]() -> ret_ty { ... }) *)
+  let cofix_wrap x =
+    if is_cofix_return then
+      let ret_cpp = cod in  (* cod is already the C++ return type *)
+      (* Get the coinductive type ref for generating qualified ctor::lazy_ *)
+      let coind_ref = match ml_ret with
+        | Miniml.Tglob (r, _, _) -> r
+        | _ -> assert false in
+      let type_args = match ml_ret with
+        | Miniml.Tglob (_, args, _) ->
+          List.map (fun t -> convert_ml_type_to_cpp_type env [] type_var_ids t) args
+        | _ -> [] in
+      (* Generate: Type::ctor::lazy_([=]() -> ret_type { return <x>; }) *)
+      let lazy_factory = CPPqualified (
+        CPPqualified (CPPglob (coind_ref, type_args), Id.of_string "ctor"),
+        Id.of_string "lazy_") in
+      let thunk = CPPlambda ([], Some ret_cpp,
+        [Sreturn x], true) in
+      Sreturn (CPPfun_call (lazy_factory, [thunk]))
+    else
+      Sreturn x in
   let inner =
     if missing == [] then
-      let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env (fun x -> Sreturn x) b) in
+      let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap b) in
       (* let b = List.map forward_fun_args b in *)
       clear_current_type_vars ();
       clear_current_param_types ();
@@ -1232,7 +1260,7 @@ let gen_dfun n b dom cod ty temps =
       let k = List.length missing in
       let lifted_b = ast_lift k b in
       let args = List.rev (List.mapi (fun i _ -> MLrel (i + 1)) missing) in
-      let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env (fun x -> Sreturn x) (MLapp (lifted_b, args))) in
+      let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap (MLapp (lifted_b, args))) in
       (* let b = List.map forward_fun_args b in *)
       clear_current_type_vars ();
       clear_current_param_types ();
@@ -1453,8 +1481,27 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
     (id, wrapped)
   ) params_with_idx in
 
+  (* For coinductive return types, wrap return in lazy thunk *)
+  let is_cofix_method = Table.is_coinductive_type ret_ty in
+  let method_k x =
+    if is_cofix_method then
+      let type_args = match ret_ty with
+        | Miniml.Tglob (_, args, _) ->
+          List.map (fun t -> convert_ml_type_to_cpp_type (empty_env ()) [name] vars t) args
+        | _ -> [] in
+      let coind_ref = match ret_ty with
+        | Miniml.Tglob (r, _, _) -> r
+        | _ -> assert false in
+      let lazy_factory = CPPqualified (
+        CPPqualified (CPPglob (coind_ref, type_args), Id.of_string "ctor"),
+        Id.of_string "lazy_") in
+      let thunk = CPPlambda ([], Some ret_cpp,
+        [Sreturn x], true) in
+      Sreturn (CPPfun_call (lazy_factory, [thunk]))
+    else
+      Sreturn x in
   (* Generate method body *)
-  let stmts = gen_stmts env (fun x -> Sreturn x) inner_body in
+  let stmts = gen_stmts env method_k inner_body in
   let stmts = match this_arg_id with
     | Some id -> List.map (var_subst_stmt id CPPthis) stmts
     | None -> stmts
@@ -1481,7 +1528,8 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
      };
    };
 *)
-let gen_ind_header_v2 vars name cnames tys method_candidates =
+let gen_ind_header_v2 vars name cnames tys method_candidates ind_kind =
+  let is_coinductive = ind_kind = Coinductive in
   let templates = List.map (fun n -> (TTtypename, n)) vars in
   let ty_vars = List.mapi (fun i x -> Tvar (i, Some x)) vars in
   let add_templates d = match templates with
@@ -1537,8 +1585,12 @@ let gen_ind_header_v2 vars name cnames tys method_candidates =
     ) cnames)) in
   let variant_using = (Fnested_using (Id.of_string "variant_t", variant_ty), VPublic) in
 
-  (* 3. Private variant member v_ *)
-  let variant_member = (Fvar (Id.of_string "v_", Tid (Id.of_string "variant_t", [])), VPrivate) in
+  (* 3. Private variant member: v_ for inductive, lazy_v_ for coinductive *)
+  let variant_member_name = if is_coinductive then "lazy_v_" else "v_" in
+  let variant_member_ty = if is_coinductive
+    then Tid (Id.of_string_soft "crane::lazy", [Tid (Id.of_string "variant_t", [])])
+    else Tid (Id.of_string "variant_t", []) in
+  let variant_member = (Fvar (Id.of_string variant_member_name, variant_member_ty), VPrivate) in
 
   (* 4. Private explicit constructors for each alternative *)
   (* Note: nested struct types don't need template args - they inherit from parent *)
@@ -1550,10 +1602,28 @@ let gen_ind_header_v2 vars name cnames tys method_candidates =
       in
       let param_name = Id.of_string "_v" in
       let param_ty = Tid (cname, []) in
-      (* Initializer: v_(std::move(_v)) *)
-      let init_list = [(Id.of_string "v_", CPPmove (CPPvar param_name))] in
-      (Fconstructor ([(param_name, param_ty)], init_list, true), VPrivate)
+      if is_coinductive then
+        (* For coinductive: lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) *)
+        let init_expr = CPPfun_call (CPPvar (Id.of_string_soft "crane::lazy<variant_t>"),
+          [CPPfun_call (CPPvar (Id.of_string "variant_t"), [CPPmove (CPPvar param_name)])]) in
+        let init_list = [(Id.of_string "lazy_v_", init_expr)] in
+        (Fconstructor ([(param_name, param_ty)], init_list, true), VPrivate)
+      else
+        (* For inductive: v_(std::move(_v)) *)
+        let init_list = [(Id.of_string "v_", CPPmove (CPPvar param_name))] in
+        (Fconstructor ([(param_name, param_ty)], init_list, true), VPrivate)
     ) cnames) in
+
+  (* For coinductive types, add private constructor accepting std::function<variant_t()> *)
+  let lazy_ctor = if is_coinductive then
+    let param_name = Id.of_string "_thunk" in
+    let variant_t_ty = Tid (Id.of_string "variant_t", []) in
+    let param_ty = Tfun ([], variant_t_ty) in  (* std::function<variant_t()> *)
+    let init_expr = CPPfun_call (CPPvar (Id.of_string_soft "crane::lazy<variant_t>"),
+      [CPPmove (CPPvar param_name)]) in
+    let init_list = [(Id.of_string "lazy_v_", init_expr)] in
+    [(Fconstructor ([(param_name, param_ty)], init_list, true), VPrivate)]
+  else [] in
 
   (* 5. Public ctor struct with factory methods *)
   let factory_methods = Array.to_list (Array.mapi
@@ -1588,21 +1658,64 @@ let gen_ind_header_v2 vars name cnames tys method_candidates =
       (Ffundef (factory_name, Tmod (TMstatic, self_ty), params, body), VPublic)
     ) tys) in
 
+  (* For coinductive types, add lazy_ factory method.
+     lazy_ accepts std::function<shared_ptr<T>()> and adapts it to
+     std::function<variant_t()> for the lazy constructor. *)
+  let lazy_factory = if is_coinductive then
+    let lazy_name = Id.of_string "lazy_" in
+    let thunk_param_ty = Tfun ([], self_ty) in  (* std::function<shared_ptr<T>()> *)
+    let params = [(Id.of_string "thunk", thunk_param_ty)] in
+    let variant_t_ty = Tid (Id.of_string "variant_t", []) in
+    (* Build the adapter lambda that converts shared_ptr-returning thunk
+       to variant_t-returning thunk:
+       [thunk = std::move(thunk)]() -> variant_t {
+         auto _tmp = thunk();
+         return std::move(const_cast<variant_t&>(_tmp->v()));
+       } *)
+    let adapter_lambda = CPPlambda (
+      [],
+      Some variant_t_ty,
+      [Sasgn (Id.of_string "_tmp", Some self_ty, CPPfun_call (CPPvar (Id.of_string "thunk"), []));
+       Sreturn (CPPfun_call (CPPvar (Id.of_string_soft "std::move"),
+         [CPPfun_call (CPPvar (Id.of_string_soft "const_cast<variant_t&>"),
+           [CPPmethod_call (CPPvar (Id.of_string "_tmp"), Id.of_string "v", [])])]))]
+      , true) in
+    (* new T(std::function<variant_t()>(adapter_lambda)) *)
+    let new_expr = CPPnew (Tglob (name, ty_vars, []),
+      [CPPfun_call (CPPvar (Id.of_string_soft "std::function<variant_t()>"),
+        [adapter_lambda])]) in
+    let shared_ptr_expr = CPPshared_ptr_ctor (Tglob (name, ty_vars, []), new_expr) in
+    let body = [Sreturn shared_ptr_expr] in
+    [(Ffundef (lazy_name, Tmod (TMstatic, self_ty), params, body), VPublic)]
+  else [] in
+
   (* Add deleted default constructor to ctor struct *)
-  let ctor_struct_fields = (Fdeleted_ctor, VPublic) :: factory_methods in
+  let ctor_struct_fields = (Fdeleted_ctor, VPublic) :: factory_methods @ lazy_factory in
   let ctor_struct = (Fnested_struct (Id.of_string "ctor", ctor_struct_fields), VPublic) in
 
   (* Add public accessor for v_ to enable pattern matching from outside *)
-  (* const variant_t& v() const { return v_; } *)
-  let v_accessor = (Fmethod (
-    Id.of_string "v",
-    [],  (* no template params *)
-    Tmod (TMconst, Tref (Tid (Id.of_string "variant_t", []))),
-    [],
-    [Sreturn (CPPvar (Id.of_string "v_"))],
-    true, (* is_const *)
-    false (* is_static *)
-  ), VPublic) in
+  let v_accessor = if is_coinductive then
+    (* For coinductive: const variant_t& v() const { return lazy_v_.force(); } *)
+    (Fmethod (
+      Id.of_string "v",
+      [],  (* no template params *)
+      Tmod (TMconst, Tref (Tid (Id.of_string "variant_t", []))),
+      [],
+      [Sreturn (CPPfun_call (CPPmember (CPPvar (Id.of_string "lazy_v_"), Id.of_string "force"), []))],
+      true, (* is_const *)
+      false (* is_static *)
+    ), VPublic)
+  else
+    (* For inductive: const variant_t& v() const { return v_; } *)
+    (Fmethod (
+      Id.of_string "v",
+      [],  (* no template params *)
+      Tmod (TMconst, Tref (Tid (Id.of_string "variant_t", []))),
+      [],
+      [Sreturn (CPPvar (Id.of_string "v_"))],
+      true, (* is_const *)
+      false (* is_static *)
+    ), VPublic) in
 
   (* 6. Generate methods from method candidates using shared helper *)
   let method_fields = List.map (gen_single_method name vars) method_candidates in
@@ -1621,6 +1734,7 @@ let gen_ind_header_v2 vars name cnames tys method_candidates =
     [variant_using] @
     [variant_member] @
     private_ctors @
+    lazy_ctor @
     [ctor_struct] @
     [v_accessor] @
     method_fields

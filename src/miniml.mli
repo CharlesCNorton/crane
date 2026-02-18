@@ -120,7 +120,7 @@ and ml_ast =
   | MLcons   of ml_type * GlobRef.t * ml_ast list
   | MLtuple  of ml_ast list
   | MLcase   of ml_type * ml_ast * ml_branch array
-  | MLfix    of int * (Id.t * ml_type) array * ml_ast array
+  | MLfix    of int * (Id.t * ml_type) array * ml_ast array * bool (* is_cofix *)
   | MLexn    of string
   | MLdummy  of kill_reason
   | MLaxiom  of string

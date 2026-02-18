@@ -86,6 +86,7 @@ val get_ind_num_param_vars_opt : MutInd.t -> int option
 
 val add_inductive_kind : MutInd.t -> inductive_kind -> unit
 val is_coinductive : GlobRef.t -> bool
+val has_any_coinductive : unit -> bool
 val is_coinductive_type : ml_type -> bool
 (* What are the fields of a record (empty for a non-record) *)
 val get_record_fields :

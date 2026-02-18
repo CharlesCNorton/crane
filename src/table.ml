@@ -173,13 +173,14 @@ let init_inductive_kinds () = inductive_kinds := Mindmap_env.empty
 let add_inductive_kind kn k =
     inductive_kinds := Mindmap_env.add kn k !inductive_kinds
 let is_coinductive r =
-  let kn = let open GlobRef in match r with
-    | ConstructRef ((kn,_),_) -> kn
-    | IndRef (kn,_) -> kn
-    | _ -> assert false
-  in
-  try Mindmap_env.find kn !inductive_kinds == Coinductive
-  with Not_found -> false
+  let open GlobRef in match r with
+    | ConstructRef ((kn,_),_) | IndRef (kn,_) ->
+      (try Mindmap_env.find kn !inductive_kinds == Coinductive
+       with Not_found -> false)
+    | ConstRef _ | VarRef _ -> false
+
+let has_any_coinductive () =
+  Mindmap_env.exists (fun _ kind -> kind == Coinductive) !inductive_kinds
 
 let is_coinductive_type = function
   | Tglob (r,_,_) -> is_coinductive r

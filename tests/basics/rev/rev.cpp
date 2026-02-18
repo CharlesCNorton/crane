@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <rev.h>
 #include <stdexcept>
 #include <string>

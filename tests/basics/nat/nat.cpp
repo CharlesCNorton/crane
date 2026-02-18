@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <nat.h>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>

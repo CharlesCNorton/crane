@@ -1,8 +1,10 @@
+#include "lazy.h"
 #include <algorithm>
 #include <any>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -84,9 +86,13 @@ struct Colist {
     using variant_t = std::variant<conil, cocons>;
 
   private:
-    variant_t v_;
-    explicit colist(conil _v) : v_(std::move(_v)) {}
-    explicit colist(cocons _v) : v_(std::move(_v)) {}
+    crane::lazy<variant_t> lazy_v_;
+    explicit colist(conil _v)
+        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+    explicit colist(cocons _v)
+        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+    explicit colist(std::function<variant_t()> _thunk)
+        : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     struct ctor {
@@ -98,8 +104,16 @@ struct Colist {
       cocons_(A a0, const std::shared_ptr<colist<A>> &a1) {
         return std::shared_ptr<colist<A>>(new colist<A>(cocons{a0, a1}));
       }
+      static std::shared_ptr<colist<A>>
+      lazy_(std::function<std::shared_ptr<colist<A>>()> thunk) {
+        return std::shared_ptr<colist<A>>(
+            new colist<A>(std::function<variant_t()>([=](void) -> variant_t {
+              std::shared_ptr<colist<A>> _tmp = thunk();
+              return std::move(const_cast<variant_t &>(_tmp->v()));
+            })));
+      }
     };
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return lazy_v_.force(); }
     std::shared_ptr<List::list<A>>
     list_of_colist(const std::shared_ptr<Nat::nat> &fuel) const {
       return std::visit(
@@ -129,18 +143,20 @@ struct Colist {
     }
     template <typename T2, MapsTo<T2, A> F0>
     std::shared_ptr<colist<T2>> comap(F0 &&f) const {
-      return std::visit(Overloaded{[](const typename colist<A>::conil _args)
-                                       -> std::shared_ptr<colist<T2>> {
-                                     return colist<T2>::ctor::conil_();
-                                   },
-                                   [&](const typename colist<A>::cocons _args)
-                                       -> std::shared_ptr<colist<T2>> {
-                                     A x = _args._a0;
-                                     std::shared_ptr<colist<A>> xs = _args._a1;
-                                     return colist<T2>::ctor::cocons_(
-                                         f(x), xs->comap(f));
-                                   }},
-                        this->v());
+      return colist<T2>::ctor::lazy_([=](void) -> std::shared_ptr<colist<T2>> {
+        return std::visit(
+            Overloaded{[](const typename colist<A>::conil _args)
+                           -> std::shared_ptr<colist<T2>> {
+                         return colist<T2>::ctor::conil_();
+                       },
+                       [&](const typename colist<A>::cocons _args)
+                           -> std::shared_ptr<colist<T2>> {
+                         A x = _args._a0;
+                         std::shared_ptr<colist<A>> xs = _args._a1;
+                         return colist<T2>::ctor::cocons_(f(x), xs->comap(f));
+                       }},
+            this->v());
+      });
     }
   };
 

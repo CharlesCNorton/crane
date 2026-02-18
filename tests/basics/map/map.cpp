@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map.h>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>

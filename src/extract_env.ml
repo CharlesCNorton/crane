@@ -490,7 +490,7 @@ let descr () = match lang () with
 
 let default_id = Id.of_string "Main"
 
-let header_imports = ["algorithm";"any";"functional";"iostream";"memory";"stdexcept";"string";"variant"]
+let header_imports = ["algorithm";"any";"functional";"iostream";"memory";"optional";"stdexcept";"string";"variant"]
 
 let header_imports_bsl = ["bdlf_overloaded.h";"bsl_concepts.h";"bsl_functional.h";"bsl_iostream.h";"bsl_memory.h";"bsl_stdexcept.h";"bsl_string.h";"bsl_type_traits.h";"bsl_variant.h"]
 
@@ -509,10 +509,15 @@ let header fn () =
   then h ++ fnl2() ++ str "namespace BloombergLP {" ++ fnl2() ++ str "}"
   else h ++ fnl2 ()
 
+let mk_include_quoted s = str ("#include \"" ^ s ^ "\"")
+
 let spec_header () =
   let imps = get_custom_imports () in
   let himports = if Table.std_lib () = "BDE" then header_imports_bsl else header_imports in
   let h = List.fold_left (fun p s -> p ++ mk_include s ++ fnl ()) (str "") (himports @ imps) in
+  let h = if Table.has_any_coinductive () then
+            h ++ mk_include_quoted "lazy.h" ++ fnl ()
+          else h in
   (* let fun_concept = "template <typename F, typename Out, typename... In>\nconcept MapsTo = requires (const F &f, const In&... args) {\n{ f(args...) } -> std::same_as<Out>;\n};" in *)
   let fun_concept = if Table.std_lib () = "BDE"
  then "template <class From, class To>\nconcept convertible_to = bsl::is_convertible<From, To>::value;\n\ntemplate <class T, class U>\nconcept same_as = bsl::is_same<T, U>::value && bsl::is_same<U, T>::value;\n\ntemplate <class F, class R, class... Args>\nconcept MapsTo =\n requires (F& f, Args&... a) {\n { bsl::invoke(static_cast<F&>(f), static_cast<Args&>(a)...) }\n -> convertible_to<R>;\n };"

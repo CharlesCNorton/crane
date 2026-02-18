@@ -561,7 +561,7 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
     | CPPderef e' -> collect_from_expr (refs, decls) e'
     | CPPmove e' -> collect_from_expr (refs, decls) e'
     | CPPforward (_, e') -> collect_from_expr (refs, decls) e'
-    | CPPlambda (inner_params, _, inner_body) ->
+    | CPPlambda (inner_params, _, inner_body, _) ->
         (* For nested lambdas, don't count their parameters or local vars as our refs.
            But DO check if the nested lambda itself captures from OUR scope. *)
         let inner_param_names = List.fold_left (fun acc (_, id_opt) ->
@@ -627,7 +627,7 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
 and expr_contains_capturing_lambda (e : Minicpp.cpp_expr) : bool =
   let open Minicpp in
   match e with
-  | CPPlambda (params, _, body) ->
+  | CPPlambda (params, _, body, _) ->
       (* Check if this lambda needs capture, OR if any nested lambdas need capture *)
       lambda_needs_capture params body ||
       List.exists stmt_contains_capturing_lambda body
@@ -1034,10 +1034,10 @@ and pp_cpp_expr env args t =
       if Table.std_lib () = "BDE"
         then str "bsl::forward<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
         else str "std::forward<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
-  | CPPlambda (params, ret_ty, body) ->
-      (* Use [] for closed lambdas (no captured variables), [&] otherwise *)
+  | CPPlambda (params, ret_ty, body, capture_by_value) ->
+      (* Use [] for closed lambdas (no captured variables), [&] for ref capture, [=] for value capture *)
       let needs_capture = lambda_needs_capture params body in
-      let capture_str = if needs_capture then str "[&](" else str "[](" in
+      let capture_str = if not needs_capture then str "[](" else if capture_by_value then str "[=](" else str "[&](" in
       let (params_s, capture) =
         (match params with
         | [] -> str "void", capture_str
@@ -1819,7 +1819,7 @@ let pp_cpp_ind_header kn ind =
             if Translation.type_is_erased ret_cpp then
               register_method_returns_any r
           ) methods;
-          let decl = gen_ind_header_v2 param_vars names.(i) cnames.(i) p.ip_types (List.rev methods) in
+          let decl = gen_ind_header_v2 param_vars names.(i) cnames.(i) p.ip_types (List.rev methods) ind.ind_kind in
           (* DESIGN: Contextual wrapping for inductive definitions
              - If inside a struct/module: generate the inductive directly (no namespace wrapper)
              - If at module scope: wrap in a namespace struct (which becomes a struct via Dnspace)

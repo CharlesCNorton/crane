@@ -11,17 +11,6 @@
    Crane)
  (flags (:standard -output-directory ../../tests/wip)))
 
-(subdir colist
- (rule
-  (targets colist.t.exe)
-  (deps Colist.vo colist.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} colist.t.exe colist.cpp colist.t.cpp)))
- (rule
-  (alias runtest)
-  (deps colist.t.exe)
-  (action (run ./colist.t.exe))))
-
 (subdir graph
  (rule
   (targets graph.t.exe)

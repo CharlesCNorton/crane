@@ -761,9 +761,9 @@ and extract_term env sg mle mlt c args =
         let ip = ci.ci_ind in
         extract_app env sg mle mlt (extract_case env sg mle (ip,c0,br)) args
     | Fix ((_,i),recd) ->
-        extract_app env sg mle mlt (extract_fix env sg mle i recd) args
+        extract_app env sg mle mlt (extract_fix env sg mle i recd false) args
     | CoFix (i,recd) ->
-        extract_app env sg mle mlt (extract_fix env sg mle i recd) args
+        extract_app env sg mle mlt (extract_fix env sg mle i recd true) args
     | Cast (c,_,_) -> extract_term env sg mle mlt c args
     | Evar _ | Meta _ -> MLaxiom "evar"
     | Var v ->
@@ -1012,13 +1012,13 @@ and extract_case env sg mle ((kn,i) as ip,c,br) mlt =  (* EDIT HERE: Add type in
 
 (*s Extraction of a (co)-fixpoint. *)
 
-and extract_fix env sg mle i (fi,ti,ci as recd) mlt =
+and extract_fix env sg mle i (fi,ti,ci as recd) is_cofix mlt =
   let env = push_rec_types recd env in
   let metas = Array.map new_meta fi in
   metas.(i) <- mlt;
   let mle = Array.fold_left Mlenv.push_type mle metas in
   let ei = Array.map2 (extract_maybe_term env sg mle) metas ci in
-  MLfix (i, Array.mapi (fun i x -> id_of_name x.binder_name, metas.(i)) fi, ei)
+  MLfix (i, Array.mapi (fun i x -> id_of_name x.binder_name, metas.(i)) fi, ei, is_cofix)
 
 (*S ML declarations. *)
 

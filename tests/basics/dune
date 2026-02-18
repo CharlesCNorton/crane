@@ -33,6 +33,17 @@
   (deps binom.t.exe)
   (action (run ./binom.t.exe))))
 
+(subdir colist
+ (rule
+  (targets colist.t.exe)
+  (deps Colist.vo colist.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} colist.t.exe colist.cpp colist.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps colist.t.exe)
+  (action (run ./colist.t.exe))))
+
 (subdir eqordshow
  (rule
   (targets eqordshow.t.exe)
@@ -242,3 +253,16 @@
   (alias runtest)
   (deps regexp.t.exe)
   (action (run ./regexp.t.exe))))
+
+(subdir stream
+ (rule
+  (targets stream.t.exe)
+  (deps Stream.vo stream.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} stream.t.exe stream.cpp stream.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps stream.t.exe)
+  (action (run ./stream.t.exe))))
+
+

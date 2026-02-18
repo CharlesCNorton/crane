@@ -52,7 +52,7 @@ and cpp_expr =
   | CPPderef of cpp_expr
   | CPPmove of cpp_expr
   | CPPforward of cpp_type * cpp_expr
-  | CPPlambda of (cpp_type * Id.t option) list * cpp_type option * cpp_stmt list
+  | CPPlambda of (cpp_type * Id.t option) list * cpp_type option * cpp_stmt list * bool (* capture_by_value *)
   | CPPvisit
   | CPPmk_shared of cpp_type
   | CPPoverloaded of cpp_expr list (* cpp_expressions in list should only be lambdas. TODO: enforce in the AST? split up to a funcall *)
