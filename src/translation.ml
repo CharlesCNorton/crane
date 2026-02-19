@@ -1656,6 +1656,7 @@ and tvar_subst_stmt (tvars : Id.t list) (s : cpp_stmt) : cpp_stmt =
   | Sthrow msg -> Sthrow msg  (* throw statements don't need substitution *)
   | Sswitch (scrut, ind, brs) -> Sswitch (subst_e scrut, ind,
     List.map (fun (ctor, stmts) -> (ctor, List.map subst_s stmts)) brs)
+  | Sassert _ as s -> s  (* raw strings don't need type var substitution *)
 
 (* TODO: CLEANUP: dom and cod are redundant with ty *)
 let gen_dfun n b dom cod ty temps =
@@ -1798,13 +1799,54 @@ let gen_dfun n b dom cod ty temps =
       Sreturn (CPPfun_call (lazy_factory, [thunk]))
     else
       Sreturn x in
+  (* Generate sigma type precondition assertions *)
+  let sigma_asserts =
+    let assertions = Table.get_sigma_assertions n in
+    if assertions = [] then []
+    else
+      let all_id_arr = Array.of_list (List.rev all_ids) in  (* outermost param first *)
+      (* Substitute %0, %1, ... placeholders with actual parameter names *)
+      let subst_placeholders template =
+        let result = ref template in
+        Array.iteri (fun i (id, _) ->
+          let placeholder = Printf.sprintf "%%%d" i in
+          let replacement = Id.to_string id in
+          let buf = Buffer.create (String.length !result) in
+          let s = !result in
+          let len = String.length s in
+          let plen = String.length placeholder in
+          let j = ref 0 in
+          while !j < len do
+            if !j <= len - plen && String.sub s !j plen = placeholder then begin
+              Buffer.add_string buf replacement;
+              j := !j + plen
+            end else begin
+              Buffer.add_char buf s.[!j];
+              j := !j + 1
+            end
+          done;
+          result := Buffer.contents buf
+        ) all_id_arr;
+        !result
+      in
+      List.filter_map (fun (param_idx, assertion) ->
+        if param_idx >= Array.length all_id_arr then None
+        else
+          match assertion with
+          | Table.AssertExpr template ->
+            let expr_str = subst_placeholders template in
+            Some (Sassert (expr_str, Some expr_str))
+          | Table.AssertComment comment ->
+            Some (Sassert ("true", Some comment))
+      ) assertions
+  in
   let inner =
     if missing == [] then
       let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap b) in
       (* let b = List.map forward_fun_args b in *)
       clear_current_type_vars ();
       clear_current_param_types ();
-      Dfundef ([n, []], cod, ids, b)
+      Dfundef ([n, []], cod, ids, sigma_asserts @ b)
     else
       (* Eta-expansion: the body 'b' references original params starting at MLrel 1.
          After adding k=|missing| new params to the environment, the original params
@@ -1823,7 +1865,7 @@ let gen_dfun n b dom cod ty temps =
       (* let b = List.map forward_fun_args b in *)
       clear_current_type_vars ();
       clear_current_param_types ();
-      Dfundef ([n, []], cod, ids, b) in
+      Dfundef ([n, []], cod, ids, sigma_asserts @ b) in
   current_outer_function_name := saved_outer_name;
   (match temps with
     | [] -> inner, env

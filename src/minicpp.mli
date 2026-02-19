@@ -42,6 +42,7 @@ and cpp_stmt =
   | Scustom_case of cpp_type * cpp_expr * cpp_type list * ((Id.t * cpp_type) list * cpp_type * cpp_stmt list) list * string
   | Sthrow of string  (* throw statement for unreachable/absurd cases *)
   | Sswitch of cpp_expr * GlobRef.t * (Id.t * cpp_stmt list) list  (* switch on enum: scrutinee, enum type, branches *)
+  | Sassert of string * string option  (* runtime assert: C++ expression string, optional Rocq predicate comment *)
 
 (* add something for (mutual) fixpoints? *)
 and cpp_expr =

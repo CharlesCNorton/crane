@@ -232,3 +232,14 @@
   (alias runtest)
   (deps polymorphic_helper.t.exe)
   (action (run ./polymorphic_helper.t.exe))))
+
+(subdir sigma_assert
+ (rule
+  (targets sigma_assert.t.exe)
+  (deps SigmaAssert.vo sigma_assert.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sigma_assert.t.exe sigma_assert.cpp sigma_assert.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sigma_assert.t.exe)
+  (action (run ./sigma_assert.t.exe))))

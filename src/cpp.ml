@@ -621,6 +621,7 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
         List.fold_left (fun a (_, stmts) ->
           List.fold_left collect_from_stmt a stmts
         ) acc branches
+    | Sassert _ -> (refs, decls)  (* raw string, no refs to collect *)
   in
 
   let (all_refs, local_decls) = List.fold_left collect_from_stmt (IdSet.empty, IdSet.empty) body in
@@ -677,6 +678,7 @@ and stmt_contains_capturing_lambda (s : Minicpp.cpp_stmt) : bool =
   | Sswitch (scrut, _, branches) ->
       expr_contains_capturing_lambda scrut ||
       List.exists (fun (_, stmts) -> List.exists stmt_contains_capturing_lambda stmts) branches
+  | Sassert _ -> false  (* raw string, no lambdas *)
 
 (* pretty printing c++ syntax *)
 let try_cpp c o =
@@ -1199,6 +1201,11 @@ and pp_cpp_stmt env args = function
     str "switch (" ++ pp_cpp_expr env args scrut ++ str ") {" ++ fnl () ++
     prlist_with_sep fnl pp_branch branches ++ fnl () ++
     str "}"
+| Sassert (expr_str, comment_opt) ->
+    (match comment_opt with
+     | Some c -> str "// Precondition: " ++ str c ++ fnl () ++
+                 str "assert(" ++ str expr_str ++ str ");"
+     | None -> str "assert(" ++ str expr_str ++ str ");")
 | Scustom_case (typ,t,tyargs,cases,cmatch) ->
   let cmds = parse_custom_fixed "scrut" CCscrut cmatch in
   let cmds = List.fold_left
