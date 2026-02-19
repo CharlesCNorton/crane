@@ -16,26 +16,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Unit {
-  struct unit {
-  public:
-    struct tt {};
-    using variant_t = std::variant<tt>;
-
-  private:
-    variant_t v_;
-    explicit unit(tt _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Unit::unit> tt_() {
-        return std::shared_ptr<Unit::unit>(new Unit::unit(tt{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
+enum class unit { tt };
 
 struct FreeMonad {
   struct iO {
@@ -140,6 +121,5 @@ struct FreeMonad {
         i->v());
   }
 
-  static inline const std::shared_ptr<iO> test =
-      iO::ctor::pure_(Unit::unit::ctor::tt_());
+  static inline const std::shared_ptr<iO> test = iO::ctor::pure_(unit::tt);
 };

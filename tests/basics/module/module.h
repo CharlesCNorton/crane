@@ -17,42 +17,9 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Comparison {
-  struct comparison {
-  public:
-    struct Eq {};
-    struct Lt {};
-    struct Gt {};
-    using variant_t = std::variant<Eq, Lt, Gt>;
+enum class comparison { Eq, Lt, Gt };
 
-  private:
-    variant_t v_;
-    explicit comparison(Eq _v) : v_(std::move(_v)) {}
-    explicit comparison(Lt _v) : v_(std::move(_v)) {}
-    explicit comparison(Gt _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Comparison::comparison> Eq_() {
-        return std::shared_ptr<Comparison::comparison>(
-            new Comparison::comparison(Eq{}));
-      }
-      static std::shared_ptr<Comparison::comparison> Lt_() {
-        return std::shared_ptr<Comparison::comparison>(
-            new Comparison::comparison(Lt{}));
-      }
-      static std::shared_ptr<Comparison::comparison> Gt_() {
-        return std::shared_ptr<Comparison::comparison>(
-            new Comparison::comparison(Gt{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
-
-std::shared_ptr<Comparison::comparison> compare(const unsigned int n,
-                                                const unsigned int m);
+comparison compare(const unsigned int n, const unsigned int m);
 
 template <typename M>
 concept BaseType = requires { typename M::t; };
@@ -62,7 +29,7 @@ concept OrderedType = requires {
   typename M::t;
   {
     M::compare(std::declval<typename M::t>(), std::declval<typename M::t>())
-  } -> std::same_as<std::shared_ptr<Comparison::comparison>>;
+  } -> std::same_as<comparison>;
 };
 
 template <typename M>
@@ -133,21 +100,19 @@ template <OrderedType K, BaseType V> struct MakeMap {
               typename K::t k_ = _args._a1;
               typename V::t v_ = _args._a2;
               std::shared_ptr<tree> r = _args._a3;
-              return std::visit(
-                  Overloaded{
-                      [&](const typename Comparison::comparison::Eq _args)
-                          -> std::shared_ptr<tree> {
-                        return tree::ctor::Node_(l, k, v, r);
-                      },
-                      [&](const typename Comparison::comparison::Lt _args)
-                          -> std::shared_ptr<tree> {
-                        return tree::ctor::Node_(add(k, v, l), k_, v_, r);
-                      },
-                      [&](const typename Comparison::comparison::Gt _args)
-                          -> std::shared_ptr<tree> {
-                        return tree::ctor::Node_(l, k_, v_, add(k, v, r));
-                      }},
-                  K::compare(k, k_)->v());
+              return [&](void) {
+                switch (K::compare(k, k_)) {
+                case comparison::Eq: {
+                  return tree::ctor::Node_(l, k, v, r);
+                }
+                case comparison::Lt: {
+                  return tree::ctor::Node_(add(k, v, l), k_, v_, r);
+                }
+                case comparison::Gt: {
+                  return tree::ctor::Node_(l, k_, v_, add(k, v, r));
+                }
+                }
+              }();
             }},
         m->v());
   }
@@ -155,31 +120,28 @@ template <OrderedType K, BaseType V> struct MakeMap {
   static std::optional<value> find(const typename K::t k,
                                    const std::shared_ptr<tree> &m) {
     return std::visit(
-        Overloaded{
-            [](const typename tree::Empty _args)
-                -> std::optional<typename V::t> { return std::nullopt; },
-            [&](const typename tree::Node _args)
-                -> std::optional<typename V::t> {
-              std::shared_ptr<tree> l = _args._a0;
-              typename K::t k_ = _args._a1;
-              typename V::t v_ = _args._a2;
-              std::shared_ptr<tree> r = _args._a3;
-              return std::visit(
-                  Overloaded{
-                      [&](const typename Comparison::comparison::Eq _args)
-                          -> std::optional<typename V::t> {
-                        return std::make_optional<typename V::t>(v_);
-                      },
-                      [&](const typename Comparison::comparison::Lt _args)
-                          -> std::optional<typename V::t> {
-                        return find(k, l);
-                      },
-                      [&](const typename Comparison::comparison::Gt _args)
-                          -> std::optional<typename V::t> {
-                        return find(k, r);
-                      }},
-                  K::compare(k, k_)->v());
-            }},
+        Overloaded{[](const typename tree::Empty _args)
+                       -> std::optional<typename V::t> { return std::nullopt; },
+                   [&](const typename tree::Node _args)
+                       -> std::optional<typename V::t> {
+                     std::shared_ptr<tree> l = _args._a0;
+                     typename K::t k_ = _args._a1;
+                     typename V::t v_ = _args._a2;
+                     std::shared_ptr<tree> r = _args._a3;
+                     return [&](void) {
+                       switch (K::compare(k, k_)) {
+                       case comparison::Eq: {
+                         return std::make_optional<typename V::t>(v_);
+                       }
+                       case comparison::Lt: {
+                         return find(k, l);
+                       }
+                       case comparison::Gt: {
+                         return find(k, r);
+                       }
+                       }
+                     }();
+                   }},
         m->v());
   }
 };
@@ -192,8 +154,7 @@ static_assert(BaseType<NatBase>);
 struct NatOrdered {
   using t = unsigned int;
 
-  static std::shared_ptr<Comparison::comparison> compare(const unsigned int,
-                                                         const unsigned int);
+  static comparison compare(const unsigned int, const unsigned int);
 };
 static_assert(OrderedType<NatOrdered>);
 

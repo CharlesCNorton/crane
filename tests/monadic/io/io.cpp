@@ -13,9 +13,9 @@
 
 void iotest::test1(const std::string _x) { return; }
 
-std::shared_ptr<Unit::unit> iotest::test2(const std::string s) {
+unit iotest::test2(const std::string s) {
   std::cout << s;
-  return Unit::unit::ctor::tt_();
+  return unit::tt;
 }
 
 void iotest::test3(const std::string s) {

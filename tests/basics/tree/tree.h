@@ -16,31 +16,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Bool0 {
-  struct bool0 {
-  public:
-    struct true0 {};
-    struct false0 {};
-    using variant_t = std::variant<true0, false0>;
-
-  private:
-    variant_t v_;
-    explicit bool0(true0 _v) : v_(std::move(_v)) {}
-    explicit bool0(false0 _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Bool0::bool0> true0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(true0{}));
-      }
-      static std::shared_ptr<Bool0::bool0> false0_() {
-        return std::shared_ptr<Bool0::bool0>(new Bool0::bool0(false0{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
-};
+enum class bool0 { true0, false0 };
 
 struct Nat {
   struct nat {
@@ -179,16 +155,15 @@ struct Tree {
               }},
           this->v());
     }
-    std::shared_ptr<Bool0::bool0> is_leaf() const {
-      return std::visit(Overloaded{[](const typename tree<A>::leaf _args)
-                                       -> std::shared_ptr<Bool0::bool0> {
-                                     return Bool0::bool0::ctor::true0_();
-                                   },
-                                   [](const typename tree<A>::node _args)
-                                       -> std::shared_ptr<Bool0::bool0> {
-                                     return Bool0::bool0::ctor::false0_();
-                                   }},
-                        this->v());
+    bool0 is_leaf() const {
+      return std::visit(
+          Overloaded{[](const typename tree<A>::leaf _args) -> bool0 {
+                       return bool0::true0;
+                     },
+                     [](const typename tree<A>::node _args) -> bool0 {
+                       return bool0::false0;
+                     }},
+          this->v());
     }
     std::shared_ptr<Nat::nat> size() const {
       return std::visit(

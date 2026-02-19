@@ -25,34 +25,7 @@ std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
 unsigned int div(const unsigned int x, const unsigned int y);
 
 struct Outer {
-  struct color {
-  public:
-    struct Red {};
-    struct Green {};
-    struct Blue {};
-    using variant_t = std::variant<Red, Green, Blue>;
-
-  private:
-    variant_t v_;
-    explicit color(Red _v) : v_(std::move(_v)) {}
-    explicit color(Green _v) : v_(std::move(_v)) {}
-    explicit color(Blue _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<color> Red_() {
-        return std::shared_ptr<color>(new color(Red{}));
-      }
-      static std::shared_ptr<color> Green_() {
-        return std::shared_ptr<color>(new color(Green{}));
-      }
-      static std::shared_ptr<color> Blue_() {
-        return std::shared_ptr<color>(new color(Blue{}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-  };
+  enum class color { Red, Green, Blue };
 
   struct Inner {
     struct shape {
@@ -97,15 +70,15 @@ struct Outer {
   };
 
   static unsigned int shape_with_color(const std::shared_ptr<Inner::shape> &s,
-                                       const std::shared_ptr<color> &c);
+                                       const color c);
 
-  static unsigned int color_code(const std::shared_ptr<color> &c);
+  static unsigned int color_code(const color c);
 };
 
 const std::shared_ptr<Outer::Inner::shape> my_circle =
     Outer::Inner::shape::ctor::Circle_((((((0 + 1) + 1) + 1) + 1) + 1));
 
-const std::shared_ptr<Outer::color> my_color = Outer::color::ctor::Red_();
+const outer::color my_color = color::Red;
 
 const unsigned int test_area = Outer::Inner::area(my_circle);
 

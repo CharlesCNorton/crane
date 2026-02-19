@@ -39,14 +39,14 @@ int main() {
   // Test 1: Simple natural number literal
   // eval (ENat 42) = 42
   auto e1 = Expr::expr::ctor::ENat_(42);
-  auto r1 = e1->eval(Ty::ty::ctor::TNat_());
+  auto r1 = e1->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r1) == 42);
   std::cout << "Test 1 passed: ENat 42 evaluates to 42\n";
 
   // Test 2: Simple boolean literal
   // eval (EBool true) = true
   auto e2 = Expr::expr::ctor::EBool_(true);
-  auto r2 = e2->eval(Ty::ty::ctor::TBool_());
+  auto r2 = e2->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r2) == true);
   std::cout << "Test 2 passed: EBool true evaluates to true\n";
 
@@ -56,7 +56,7 @@ int main() {
     Expr::expr::ctor::ENat_(10),
     Expr::expr::ctor::ENat_(32)
   );
-  auto r3 = e3->eval(Ty::ty::ctor::TNat_());
+  auto r3 = e3->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r3) == 42);
   std::cout << "Test 3 passed: 10 + 32 = 42\n";
 
@@ -66,7 +66,7 @@ int main() {
     Expr::expr::ctor::ENat_(5),
     Expr::expr::ctor::ENat_(5)
   );
-  auto r4 = e4->eval(Ty::ty::ctor::TBool_());
+  auto r4 = e4->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r4) == true);
   std::cout << "Test 4 passed: 5 == 5 is true\n";
 
@@ -76,38 +76,38 @@ int main() {
     Expr::expr::ctor::ENat_(3),
     Expr::expr::ctor::ENat_(7)
   );
-  auto r5 = e5->eval(Ty::ty::ctor::TBool_());
+  auto r5 = e5->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r5) == false);
   std::cout << "Test 5 passed: 3 == 7 is false\n";
 
   // Test 6: If-then-else (true branch)
   // eval (EIf TNat (EBool true) (ENat 100) (ENat 200)) = 100
   auto e6 = Expr::expr::ctor::EIf_(
-    Ty::ty::ctor::TNat_(),
+    ty::TNat,
     Expr::expr::ctor::EBool_(true),
     Expr::expr::ctor::ENat_(100),
     Expr::expr::ctor::ENat_(200)
   );
-  auto r6 = e6->eval(Ty::ty::ctor::TNat_());
+  auto r6 = e6->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r6) == 100);
   std::cout << "Test 6 passed: if true then 100 else 200 = 100\n";
 
   // Test 7: If-then-else (false branch)
   // eval (EIf TNat (EBool false) (ENat 100) (ENat 200)) = 200
   auto e7 = Expr::expr::ctor::EIf_(
-    Ty::ty::ctor::TNat_(),
+    ty::TNat,
     Expr::expr::ctor::EBool_(false),
     Expr::expr::ctor::ENat_(100),
     Expr::expr::ctor::ENat_(200)
   );
-  auto r7 = e7->eval(Ty::ty::ctor::TNat_());
+  auto r7 = e7->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r7) == 200);
   std::cout << "Test 7 passed: if false then 100 else 200 = 200\n";
 
   // Test 8: Complex expression combining multiple operations
   // eval (EIf TNat (EEq (EAdd (ENat 2) (ENat 3)) (ENat 5)) (ENat 42) (ENat 0)) = 42
   auto e8 = Expr::expr::ctor::EIf_(
-    Ty::ty::ctor::TNat_(),
+    ty::TNat,
     Expr::expr::ctor::EEq_(
       Expr::expr::ctor::EAdd_(
         Expr::expr::ctor::ENat_(2),
@@ -118,19 +118,19 @@ int main() {
     Expr::expr::ctor::ENat_(42),
     Expr::expr::ctor::ENat_(0)
   );
-  auto r8 = e8->eval(Ty::ty::ctor::TNat_());
+  auto r8 = e8->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r8) == 42);
   std::cout << "Test 8 passed: if (2 + 3 == 5) then 42 else 0 = 42\n";
 
   // Test 9: Nested conditionals
   // eval (EIf TBool (EBool true) (EBool false) (EBool true)) = false
   auto e9 = Expr::expr::ctor::EIf_(
-    Ty::ty::ctor::TBool_(),
+    ty::TBool,
     Expr::expr::ctor::EBool_(true),
     Expr::expr::ctor::EBool_(false),
     Expr::expr::ctor::EBool_(true)
   );
-  auto r9 = e9->eval(Ty::ty::ctor::TBool_());
+  auto r9 = e9->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r9) == false);
   std::cout << "Test 9 passed: if true then false else true = false\n";
 
