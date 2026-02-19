@@ -1055,10 +1055,157 @@ let add_tvars n t = t (*
 let type_expunge env = type_expunge (mlt_env env)
 and type_expunge_from_sign env = type_expunge_from_sign (mlt_env env)
 
+(* Sigma type precondition detection.
+   For functions taking {x : A | P x}, detect P and translate to C++ assertions. *)
+
+let try_ref name =
+  try Some (Rocqlib.lib_ref name) with _ -> None
+
+let is_ref name gr =
+  try Environ.QGlobRef.equal Environ.empty_env gr (Rocqlib.lib_ref name)
+  with _ -> false
+
+(* Check if a term's head is a specific global reference *)
+let head_is_ref sg name t =
+  let hd = fst (EConstr.decompose_app sg t) in
+  match EConstr.kind sg hd with
+  | Ind (ind, _) -> is_ref name (GlobRef.IndRef ind)
+  | Const (c, _) -> is_ref name (GlobRef.ConstRef c)
+  | _ -> false
+
+(* Try to extract a Peano natural number from a term.
+   Returns Some n for S(S(...O)) terms, None otherwise. *)
+let rec try_peano_nat env sg t =
+  match EConstr.kind sg (whd_all env sg t) with
+  | Construct ((ind, _), _) when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+    Some 0
+  | App (hd, args) when Array.length args = 1 ->
+    (match EConstr.kind sg hd with
+     | Construct ((ind, _), _) when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+       (* Confirmed this is a nat constructor; with 1 arg it must be S *)
+       Option.map (fun n -> n + 1) (try_peano_nat env sg args.(0))
+     | _ -> None)
+  | _ -> None
+
+(* Translate a predicate body (under a lambda binder) to a C++ assertion template.
+   body has Rel 1 bound to the witness variable.
+   Returns AssertExpr or AssertComment. *)
+let translate_predicate_body env sg body =
+  let open Table in
+  let body = whd_all env sg body in
+  match EConstr.kind sg body with
+  (* Pattern: @eq T x y -> False  ~~>  neq *)
+  | Prod (_, eq_app, conclusion) when head_is_ref sg "core.False.type" (whd_all env sg conclusion) ->
+    let eq_app = whd_all env sg eq_app in
+    (match EConstr.kind sg eq_app with
+    | App (hd, args) when head_is_ref sg "core.eq.type" eq_app && Array.length args = 3 ->
+      let lhs = args.(1) and rhs = args.(2) in
+      (match EConstr.kind sg lhs, EConstr.kind sg rhs with
+      | Rel 1, Construct ((ind, _), _) when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+        AssertExpr "%0 != 0"
+      | Rel 1, Rel n ->
+        AssertExpr (Printf.sprintf "%%0 != %%%d" (n - 1))
+      | Rel n, Rel 1 ->
+        AssertExpr (Printf.sprintf "%%%d != %%0" (n - 1))
+      | _ ->
+        AssertComment (Printf.sprintf "%s != %s"
+          (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg lhs))
+          (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg rhs))))
+    | _ ->
+      AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+  (* Pattern: @eq T x y  ~~>  eq *)
+  | App (hd, args) when head_is_ref sg "core.eq.type" body && Array.length args = 3 ->
+    let lhs = args.(1) and rhs = args.(2) in
+    (match EConstr.kind sg lhs, EConstr.kind sg rhs with
+    | Rel 1, Construct ((ind, _), _) when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+      AssertExpr "%0 == 0"
+    | Rel 1, Rel 1 ->
+      AssertComment "x = x"  (* tautology, skip assert *)
+    | Rel 1, Rel n ->
+      AssertExpr (Printf.sprintf "%%0 == %%%d" (n - 1))
+    | _ ->
+      AssertComment (Printf.sprintf "%s == %s"
+        (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg lhs))
+        (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg rhs))))
+  (* Pattern: le n m  ~~>  n <= m *)
+  | App (hd, args) when head_is_ref sg "num.nat.le" body && Array.length args >= 2 ->
+    let lhs = args.(0) and rhs = args.(1) in
+    (match EConstr.kind sg lhs, EConstr.kind sg rhs with
+    | Construct ((ind, _), _), Rel 1 when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+      AssertComment "0 <= n"  (* tautology for nat *)
+    | Rel 1, Rel n ->
+      AssertExpr (Printf.sprintf "%%0 <= %%%d" (n - 1))
+    | _, Rel 1 ->
+      (match try_peano_nat env sg lhs with
+       | Some n_val -> AssertExpr (Printf.sprintf "%%0 >= %d" n_val)
+       | None -> AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+    | Rel 1, _ ->
+      (match try_peano_nat env sg rhs with
+       | Some n_val -> AssertExpr (Printf.sprintf "%%0 <= %d" n_val)
+       | None -> AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+    | _ ->
+      AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+  (* Pattern: lt n m = le (S n) m  ~~>  n < m *)
+  | App (hd, args) when head_is_ref sg "num.nat.lt" body && Array.length args >= 2 ->
+    let lhs = args.(0) and rhs = args.(1) in
+    (match EConstr.kind sg lhs, EConstr.kind sg rhs with
+    | Construct ((ind, _), _), Rel 1 when is_ref "num.nat.O" (GlobRef.ConstructRef (ind, 1)) ->
+      AssertExpr "%0 > 0"
+    | Rel 1, Rel n ->
+      AssertExpr (Printf.sprintf "%%0 < %%%d" (n - 1))
+    | _, Rel 1 ->
+      (match try_peano_nat env sg lhs with
+       | Some n_val -> AssertExpr (Printf.sprintf "%%0 > %d" n_val)
+       | None -> AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+    | Rel 1, _ ->
+      (match try_peano_nat env sg rhs with
+       | Some n_val -> AssertExpr (Printf.sprintf "%%0 < %d" n_val)
+       | None -> AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+    | _ ->
+      AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body)))
+  (* Fallback: emit as comment *)
+  | _ ->
+    AssertComment (Pp.string_of_ppcmds (Printer.pr_econstr_env env sg body))
+
+(* Walk a function type, detect sigma-typed parameters, and register assertions.
+   info_idx counts only informative (Keep) parameters — matching C++ param indices. *)
+let detect_sigma_assertions env sg kn typ =
+  let func_ref = GlobRef.ConstRef kn in
+  let rec walk env info_idx typ =
+    match EConstr.kind sg (whd_all env sg typ) with
+    | Prod (n, t, d) ->
+      let is_info = is_info_scheme env sg t in
+      let t_whnf = whd_all env sg t in
+      (* Check if t is @sig A P — check regardless of is_info since sig
+         is sometimes classified as non-informative due to its Prop component *)
+      (match EConstr.kind sg t_whnf with
+        | App (hd, args) when head_is_ref sg "core.sig.type" t_whnf && Array.length args >= 2 ->
+          let pred = args.(1) in  (* P : A -> Prop *)
+          let pred_whnf = whd_all env sg pred in
+          (match EConstr.kind sg pred_whnf with
+          | Lambda (x, x_ty, body) ->
+            let env' = EConstr.push_rel (Context.Rel.Declaration.LocalAssum (x, x_ty)) env in
+            let assertion = translate_predicate_body env' sg body in
+            Table.add_sigma_assertion func_ref info_idx assertion
+          | _ ->
+            let s = Pp.string_of_ppcmds (Printer.pr_econstr_env env sg pred) in
+            Table.add_sigma_assertion func_ref info_idx (Table.AssertComment s))
+        | _ -> ()
+      );
+      (* sig types may be classified as non-informative but still kept as params *)
+      let is_sig_type = head_is_ref sg "core.sig.type" t_whnf in
+      let next_info = if is_info || is_sig_type then info_idx + 1 else info_idx in
+      walk (push_rel_assum (n, t) env) next_info d
+    | _ -> ()
+  in
+  walk env 0 typ
+
 let extract_std_constant env sg kn body typ =
   reset_meta_count ();
   (* The short type [t] (i.e. possibly with abbreviations). *)
   let numtvars, t = record_constant_type env sg kn (Some typ) in
+  (* Detect sigma type preconditions and register assertions *)
+  (try detect_sigma_assertions env sg kn typ with _ -> ());
   (* The real type [t']: without head products, expanded, *)
   (* and with [Tvar] translated to [Tvar'] (not instantiable). *)
   let l,t' = type_decomp (expand env (var2var' t)) in

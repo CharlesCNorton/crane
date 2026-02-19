@@ -238,6 +238,28 @@ let rec is_typeclass_type_cpp = function
   | Minicpp.Tshared_ptr t -> is_typeclass_type_cpp t (* Unwrap shared_ptr *)
   | _ -> false
 
+(*s Enum inductives table. *)
+
+let enum_inductives = ref Refset'.empty
+let init_enum_inductives () = enum_inductives := Refset'.empty
+let add_enum_inductive r = enum_inductives := Refset'.add r !enum_inductives
+let is_enum_inductive r = Refset'.mem r !enum_inductives
+
+(*s Sigma assertion table. *)
+
+type sigma_assertion =
+  | AssertExpr of string    (* translatable: C++ expression template, %0 = param name *)
+  | AssertComment of string (* untranslatable: Rocq predicate as comment *)
+
+(* Maps function GlobRef to list of (param_index, assertion) *)
+let sigma_assertions : (int * sigma_assertion) list Refmap'.t ref = ref Refmap'.empty
+let init_sigma_assertions () = sigma_assertions := Refmap'.empty
+let add_sigma_assertion r idx a =
+  let existing = try Refmap'.find r !sigma_assertions with Not_found -> [] in
+  sigma_assertions := Refmap'.add r ((idx, a) :: existing) !sigma_assertions
+let get_sigma_assertions r =
+  try Refmap'.find r !sigma_assertions with Not_found -> []
+
 (*s Recursors table. *)
 
 (* NB: here we can use the equivalence between canonical
@@ -1296,6 +1318,6 @@ let extract_skip_or_module q =
 
 let reset_tables () =
   init_typedefs (); init_cst_types (); init_inductives ();
-  init_inductive_kinds (); init_recursors ();
+  init_inductive_kinds (); init_enum_inductives (); init_sigma_assertions (); init_recursors ();
   init_projs (); init_axioms (); init_opaques (); reset_modfile ();
   init_glob_tys ()

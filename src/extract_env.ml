@@ -490,7 +490,7 @@ let descr () = match lang () with
 
 let default_id = Id.of_string "Main"
 
-let header_imports = ["algorithm";"any";"functional";"iostream";"memory";"optional";"stdexcept";"string";"variant"]
+let header_imports = ["algorithm";"any";"cassert";"functional";"iostream";"memory";"optional";"stdexcept";"string";"variant"]
 
 let header_imports_bsl = ["bdlf_overloaded.h";"bsl_concepts.h";"bsl_functional.h";"bsl_iostream.h";"bsl_memory.h";"bsl_stdexcept.h";"bsl_string.h";"bsl_type_traits.h";"bsl_variant.h"]
 
