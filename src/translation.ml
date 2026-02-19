@@ -1121,27 +1121,28 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     add_lifted_decl lifted_decl;
 
     (* 10. Compile the continuation body b, substituting calls to x' with calls to the lifted function *)
-    let _, env' = push_vars' [x', t] env in
-    push_env_types [x', t];
+    let ids_renamed2, env' = push_vars' [x', t] env in
+    let x_renamed2 = fst (List.hd ids_renamed2) in
+    push_env_types [x_renamed2, t];
     let cont = gen_stmts env' k b in
     (* Build the free variable argument expressions *)
     let free_var_cpps = List.map (fun (name, _, _) -> CPPvar name) free_vars in
-    List.map (subst_lifted_call_stmt x' lifted_ref free_var_cpps) cont
+    List.map (subst_lifted_call_stmt x_renamed2 lifted_ref free_var_cpps) cont
     end
   end
 | MLletin (x, t, a, b) ->
   let x' = remove_prime_id (id_of_mlid x) in
-  let _,env' = push_vars' [x', t] env in
-  push_env_types [x', t];
+  let ids_renamed, env' = push_vars' [x', t] env in
+  let x_renamed = fst (List.hd ids_renamed) in
+  push_env_types [x_renamed, t];
   if x == Dummy then gen_stmts env' k b else
-  let afun v = Sasgn (x', None, v) in
-  (* Sasgn (x', Some (convert_ml_type_to_cpp_type env [] [] t), (gen_expr env a)) :: gen_stmts env' k b *)
+  let afun v = Sasgn (x_renamed, None, v) in
   let asgn = gen_stmts env afun a in
   let tvars = get_current_type_vars () in
   begin match asgn with
-  | [ Sasgn (x', None, e) ] -> Sasgn (x', Some (convert_ml_type_to_cpp_type env [] tvars t), e) :: gen_stmts env' k b
+  | [ Sasgn (_, None, e) ] -> Sasgn (x_renamed, Some (convert_ml_type_to_cpp_type env [] tvars t), e) :: gen_stmts env' k b
   | _ ->
-    Sdecl (x', convert_ml_type_to_cpp_type env [] tvars t) :: asgn @ gen_stmts env' k b
+    Sdecl (x_renamed, convert_ml_type_to_cpp_type env [] tvars t) :: asgn @ gen_stmts env' k b
   end
 | MLapp (MLfix (x, ids, funs, _), args) ->
   (* Resolve unresolved metas in fix function types to Tvars using mgu.

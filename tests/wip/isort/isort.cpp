@@ -45,7 +45,7 @@ sort_cons_prog(const unsigned int a,
             std::shared_ptr<
                 Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
                 s = sort_cons_prog(a, l, l);
-            bool s = le_lt_dec(a, y);
+            bool s0 = le_lt_dec(a, y);
             if (s0) {
               return List::list<unsigned int>::ctor::cons_(
                   a, List::list<unsigned int>::ctor::cons_(y, l));
