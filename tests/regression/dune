@@ -82,7 +82,7 @@
 (subdir let_in
  (rule
   (targets let_in.t.exe)
-  (deps LetIn.vo let_in.t.cpp (source_tree .))
+  (deps BenchLetIn.vo let_in.t.cpp (source_tree .))
   (action
    (run %{project_root}/scripts/compile-std.sh %{project_root} let_in.t.exe let_in.cpp let_in.t.cpp)))
  (rule
