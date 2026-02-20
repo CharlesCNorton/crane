@@ -130,10 +130,13 @@ let analyze body =
   let safe = ref [] in
   let rec walk depth = function
     | MLletin (id, ty, _rhs, cont) ->
-        (* Check if this binding is a unique_ptr candidate *)
+        (* Check if this binding is a unique_ptr candidate.
+           The RHS must be a constructor application (MLcons) — function calls
+           return shared_ptr and cannot be rewritten to unique_ptr. *)
         let is_not_dummy = id <> Dummy in
         let is_sptr_ty = is_shared_ptr_type ty in
-        if is_not_dummy && is_sptr_ty then begin
+        let is_ctor_rhs = match _rhs with MLcons _ -> true | MLmagic (MLcons _) -> true | _ -> false in
+        if is_not_dummy && is_sptr_ty && is_ctor_rhs then begin
           let occ = nb_occur_match 1 cont in
           let esc = escapes 1 cont in
           if occ <= 1 && not esc then
