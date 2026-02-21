@@ -205,26 +205,26 @@ Proof.
   unfold min3_app.
   destruct (Nat.leb (f x) (f y)) eqn:Hxy.
   - destruct (Nat.leb (f x) (f z)) eqn:Hxz.
-    + apply Nat.leb_le in Hxy.
-      apply Nat.leb_le in Hxz.
-      rewrite Nat.min_l by lia.
-      rewrite Nat.min_l by lia.
+    + apply PeanoNat.Nat.leb_le in Hxy.
+      apply PeanoNat.Nat.leb_le in Hxz.
+      rewrite (PeanoNat.Nat.min_l (f x) (Nat.min (f y) (f z))).
+      2:{ apply PeanoNat.Nat.min_glb; lia. }
       reflexivity.
-    + apply Nat.leb_le in Hxy.
-      apply Nat.leb_gt in Hxz.
-      rewrite Nat.min_l by lia.
-      rewrite Nat.min_r by lia.
+    + apply PeanoNat.Nat.leb_le in Hxy.
+      apply PeanoNat.Nat.leb_gt in Hxz.
+      rewrite (PeanoNat.Nat.min_r (f y) (f z)) by lia.
+      rewrite (PeanoNat.Nat.min_r (f x) (f z)) by lia.
       reflexivity.
   - destruct (Nat.leb (f y) (f z)) eqn:Hyz.
-    + apply Nat.leb_gt in Hxy.
-      apply Nat.leb_le in Hyz.
-      rewrite Nat.min_r by lia.
-      rewrite Nat.min_l by lia.
+    + apply PeanoNat.Nat.leb_gt in Hxy.
+      apply PeanoNat.Nat.leb_le in Hyz.
+      rewrite (PeanoNat.Nat.min_l (f y) (f z)) by lia.
+      rewrite (PeanoNat.Nat.min_r (f x) (f y)) by lia.
       reflexivity.
-    + apply Nat.leb_gt in Hxy.
-      apply Nat.leb_gt in Hyz.
-      rewrite Nat.min_r by lia.
-      rewrite Nat.min_r by lia.
+    + apply PeanoNat.Nat.leb_gt in Hxy.
+      apply PeanoNat.Nat.leb_gt in Hyz.
+      rewrite (PeanoNat.Nat.min_r (f y) (f z)) by lia.
+      rewrite (PeanoNat.Nat.min_r (f x) (f z)) by lia.
       reflexivity.
 Qed.
 
@@ -274,8 +274,35 @@ Fixpoint levenshtein_chain (s : string)  :=
 Definition levenshtein_computed (s t : string) : nat :=
   projT1 (levenshtein_chain s t).
 
+Lemma levenshtein_computed_of_chain :
+  forall s t n (c : chain s t n),
+    levenshtein_chain s t = existT (fun k : nat => chain s t k) n c ->
+    levenshtein_computed s t = n.
+Proof.
+  intros s t n c Hc.
+  unfold levenshtein_computed.
+  rewrite Hc.
+  reflexivity.
+Qed.
+
 Definition levenshtein (s t : string) : nat :=
   levenshtein_computed s t.
+
+Lemma levenshtein_computed_nil_l :
+  forall t, levenshtein_computed EmptyString t = length t.
+Proof.
+  intros t.
+  unfold levenshtein_computed.
+  destruct t as [|a t']; cbn; reflexivity.
+Qed.
+
+Lemma levenshtein_computed_nil_r :
+  forall s, levenshtein_computed s EmptyString = length s.
+Proof.
+  intros s.
+  unfold levenshtein_computed.
+  destruct s as [|a s']; cbn; reflexivity.
+Qed.
 
 Lemma levenshtein_computed_length_bounds :
   forall s t,
@@ -312,9 +339,13 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma levenshtein_computed_mismatch_upper_insert : forall a b s t,
+Lemma levenshtein_computed_cons_neq :
+  forall a b s t,
     a <> b ->
-    levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed (a :: s) t).
+    levenshtein_computed (a :: s) (b :: t) =
+      Nat.min (S (levenshtein_computed (a :: s) t))
+              (Nat.min (S (levenshtein_computed s (b :: t)))
+                       (S (levenshtein_computed s t))).
 Proof.
   intros a b s t Hneq.
   unfold levenshtein_computed.
@@ -323,23 +354,57 @@ Proof.
   - exfalso.
     apply Hneq.
     exact Heq.
-  - match goal with
-    | |- context [let (n1, r1) := ?p in _] => remember p as p1
-    end.
+  - remember (levenshtein_chain (a :: s) t) as p1.
     remember (levenshtein_chain s (b :: t)) as p2.
     remember (levenshtein_chain s t) as p3.
-    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
+    destruct p1 as [n1 c1], p2 as [n2 c2], p3 as [n3 c3].
     cbn.
-    pose proof (min3_app_pf
+    try match goal with
+    | |- context [let (_, _) := ?p in _] =>
+        change p with (levenshtein_chain (a :: s) t)
+    end.
+    try rewrite <- Heqp1.
+    cbn.
+    try match goal with
+    | |- context [let (_, _) := ?p in _] =>
+        change p with (levenshtein_chain s (b :: t))
+    end.
+    try rewrite <- Heqp2.
+    cbn.
+    try match goal with
+    | |- context [let (_, _) := ?p in _] =>
+        change p with (levenshtein_chain s t)
+    end.
+    try rewrite <- Heqp3.
+    cbn.
+    rewrite (min3_app_value
       (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
-              (insert_chain b (a :: s) t n1 r1))
+              (insert_chain b (a :: s) t n1 c1))
       (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
-              (delete_chain a s (b :: t) n2 r2))
+              (delete_chain a s (b :: t) n2 c2))
       (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
-              (update_chain a b s t n3 Hneqab r3))
-      (fun p => projT1 p)) as [H _].
-    cbn in H.
-    exact H.
+              (update_chain a b s t n3 Hneqab c3))
+      (fun p => projT1 p)).
+    pose proof
+      (levenshtein_computed_of_chain (a :: s) t n1 c1 (eq_sym Heqp1))
+      as Hp1.
+    pose proof
+      (levenshtein_computed_of_chain s (b :: t) n2 c2 (eq_sym Heqp2))
+      as Hp2.
+    pose proof
+      (levenshtein_computed_of_chain s t n3 c3 (eq_sym Heqp3))
+      as Hp3.
+    cbn.
+    reflexivity.
+Qed.
+
+Lemma levenshtein_computed_mismatch_upper_insert : forall a b s t,
+    a <> b ->
+    levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed (a :: s) t).
+Proof.
+  intros a b s t Hneq.
+  rewrite levenshtein_computed_cons_neq by exact Hneq.
+  lia.
 Qed.
 
 Lemma levenshtein_computed_mismatch_upper_delete : forall a b s t,
@@ -347,29 +412,8 @@ Lemma levenshtein_computed_mismatch_upper_delete : forall a b s t,
     levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed s (b :: t)).
 Proof.
   intros a b s t Hneq.
-  unfold levenshtein_computed.
-  cbn.
-  destruct (ascii_dec a b) as [Heq|Hneqab].
-  - exfalso.
-    apply Hneq.
-    exact Heq.
-  - match goal with
-    | |- context [let (n1, r1) := ?p in _] => remember p as p1
-    end.
-    remember (levenshtein_chain s (b :: t)) as p2.
-    remember (levenshtein_chain s t) as p3.
-    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
-    cbn.
-    pose proof (min3_app_pf
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
-              (insert_chain b (a :: s) t n1 r1))
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
-              (delete_chain a s (b :: t) n2 r2))
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
-              (update_chain a b s t n3 Hneqab r3))
-      (fun p => projT1 p)) as [_ [H _]].
-    cbn in H.
-    exact H.
+  rewrite levenshtein_computed_cons_neq by exact Hneq.
+  lia.
 Qed.
 
 Lemma levenshtein_computed_mismatch_upper_update : forall a b s t,
@@ -377,29 +421,8 @@ Lemma levenshtein_computed_mismatch_upper_update : forall a b s t,
     levenshtein_computed (a :: s) (b :: t) <= S (levenshtein_computed s t).
 Proof.
   intros a b s t Hneq.
-  unfold levenshtein_computed.
-  cbn.
-  destruct (ascii_dec a b) as [Heq|Hneqab].
-  - exfalso.
-    apply Hneq.
-    exact Heq.
-  - match goal with
-    | |- context [let (n1, r1) := ?p in _] => remember p as p1
-    end.
-    remember (levenshtein_chain s (b :: t)) as p2.
-    remember (levenshtein_chain s t) as p3.
-    destruct p1 as [n1 r1], p2 as [n2 r2], p3 as [n3 r3].
-    cbn.
-    pose proof (min3_app_pf
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n1)
-              (insert_chain b (a :: s) t n1 r1))
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n2)
-              (delete_chain a s (b :: t) n2 r2))
-      (existT (fun n : nat => chain (a :: s) (b :: t) n) (S n3)
-              (update_chain a b s t n3 Hneqab r3))
-      (fun p => projT1 p)) as [_ [_ H]].
-    cbn in H.
-    exact H.
+  rewrite levenshtein_computed_cons_neq by exact Hneq.
+  lia.
 Qed.
 
 Lemma levenshtein_computed_insert_lower :
@@ -418,7 +441,8 @@ Proof.
       a0 s0 t0 eq_refl).
   intros m IH a s t Hm.
   destruct s as [|x xs], t as [|y ys].
-  - simpl. lia.
+  - rewrite levenshtein_computed_nil_l, levenshtein_computed_nil_r.
+    simpl. lia.
   - assert (Hlen :
         length ys <= levenshtein_computed (a :: "") (y :: ys)).
     {
@@ -426,9 +450,10 @@ Proof.
       simpl in H1.
       lia.
     }
-    simpl.
-    lia.
-  - simpl. lia.
+    rewrite levenshtein_computed_nil_l.
+    simpl. lia.
+  - rewrite !levenshtein_computed_nil_r.
+    simpl. lia.
   - destruct (ascii_dec x y) as [Hxy|Hxy].
     + subst y.
       rewrite levenshtein_computed_skip_eq.
@@ -464,8 +489,10 @@ Proof.
             - simpl in Hm. lia.
             - reflexivity.
           }
-          rewrite Heqp3 in Hrec.
-          cbn in Hrec.
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) ys n3 r3 (eq_sym Heqp3))
+            as Hc3.
+          rewrite Hc3 in Hrec.
           exact Hrec.
         }
         assert (H1 :
@@ -474,9 +501,19 @@ Proof.
           assert (Hxys :
             levenshtein_computed (x :: xs) ys <= S n1).
           {
-            apply (IH (S (length xs) + length ys)).
-            - simpl in Hm. lia.
-            - rewrite Heqp1. reflexivity.
+            assert (Htmp :
+              levenshtein_computed (x :: xs) ys <=
+              S (levenshtein_computed (a :: x :: xs) ys)).
+            {
+              apply (IH (S (length xs) + length ys)).
+              - simpl in Hm. lia.
+              - reflexivity.
+            }
+            pose proof
+              (levenshtein_computed_of_chain (a :: x :: xs) ys n1 r1 (eq_sym Heqp1))
+              as Hc1.
+            rewrite Hc1 in Htmp.
+            exact Htmp.
           }
           assert (Hrec :
             levenshtein_computed xs ys <=
@@ -491,11 +528,30 @@ Proof.
         assert (H2 :
           levenshtein_computed xs ys <= S (S n2)).
         {
-          rewrite Heqp2.
-          cbn.
-          rewrite levenshtein_computed_skip_eq.
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) (x :: ys) n2 r2 (eq_sym Heqp2))
+            as Hc2.
+          rewrite levenshtein_computed_skip_eq in Hc2.
           lia.
         }
+        match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (a :: x :: xs) ys)
+        end.
+        try rewrite <- Heqp1.
+        cbn.
+        match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) (x :: ys))
+        end.
+        rewrite <- Heqp2.
+        cbn.
+        match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) ys)
+        end.
+        rewrite <- Heqp3.
+        cbn.
         eapply (min3_app_cases
           (existT (fun n : nat => chain (a :: x :: xs) (x :: ys) n) (S n1)
                   (insert_chain x (a :: x :: xs) ys n1 r1))
@@ -507,7 +563,7 @@ Proof.
           (fun p => levenshtein_computed xs ys <= S (projT1 p))).
         -- exact H1.
         -- exact H2.
-        -- exact H3.
+        -- cbn. lia.
     + unfold levenshtein_computed.
       cbn.
       remember (levenshtein_chain (x :: xs) ys) as q1.
@@ -525,11 +581,30 @@ Proof.
         (fun p => projT1 p)) as [HL1 [HL2 HL3]].
       destruct (ascii_dec a y) as [Hay|Hay].
       * subst a.
-        rewrite levenshtein_computed_skip_eq.
         assert (Hq1 :
           levenshtein_computed (x :: xs) ys = l1).
-        { rewrite Heqq1. reflexivity. }
-        lia.
+        {
+          exact (levenshtein_computed_of_chain (x :: xs) ys l1 c1 (eq_sym Heqq1)).
+        }
+        destruct (ascii_dec x y) as [Hcontra|Hxy'].
+        { exfalso. apply Hxy. exact Hcontra. }
+        cbn.
+        match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) ys)
+        end.
+        rewrite <- Heqq1.
+        cbn.
+        pose proof (min3_app_pf
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l1)
+                  (insert_chain y (x :: xs) ys l1 c1))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l2)
+                  (delete_chain x xs (y :: ys) l2 c2))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
+                  (update_chain x y xs ys l3 Hxy' c3))
+          (fun p => projT1 p)) as [HL1' _].
+        cbn in HL1'.
+        exact HL1'.
       * unfold levenshtein_computed.
         cbn.
         destruct (ascii_dec a y) as [Hcontra|Hnay].
@@ -569,9 +644,18 @@ Proof.
             - simpl in Hm. lia.
             - reflexivity.
           }
-          rewrite Heqq1 in Hc1.
-          rewrite Heqp1 in Hrec.
-          cbn in Hc1, Hrec.
+          assert (Hl1n3 : l1 = n3).
+          { inversion Heqq1. reflexivity. }
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) ys n3 r3 (eq_sym Heqp3))
+            as Hq3.
+          pose proof
+            (levenshtein_computed_of_chain (a :: x :: xs) ys n1 r1 (eq_sym Heqp1))
+            as Hp1.
+          rewrite Hq3 in Hrec.
+          rewrite Hp1 in Hrec.
+          assert (Hl1le : l1 <= S n1).
+          { rewrite Hl1n3. exact Hrec. }
           lia.
         }
         assert (H2 :
@@ -583,7 +667,27 @@ Proof.
             (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
                     (update_chain x y xs ys l3 Hxy c3))
             (fun p => projT1 p)) <= S (S n2)).
-        { lia. }
+        {
+          assert (Hrec2 :
+            levenshtein_computed xs (y :: ys) <=
+            S (levenshtein_computed (x :: xs) (y :: ys))).
+          {
+            apply (IH (length xs + S (length ys))).
+            - simpl in Hm. lia.
+            - reflexivity.
+          }
+          pose proof
+            (levenshtein_computed_of_chain xs (y :: ys) l2 c2 (eq_sym Heqq2))
+            as Hq2.
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) (y :: ys) n2 r2 (eq_sym Heqp2))
+            as Hp2.
+          rewrite Hq2 in Hrec2.
+          rewrite Hp2 in Hrec2.
+          eapply PeanoNat.Nat.le_trans.
+          - exact HL2.
+          - cbn. lia.
+        }
         assert (H3 :
           projT1 (min3_app
             (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l1)
@@ -593,28 +697,119 @@ Proof.
             (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
                     (update_chain x y xs ys l3 Hxy c3))
             (fun p => projT1 p)) <= S (S n3)).
-        { lia. }
+        {
+          assert (Hrec3 :
+            levenshtein_computed xs ys <=
+            S (levenshtein_computed (x :: xs) ys)).
+          {
+            apply (IH (length xs + length ys)).
+            - simpl in Hm. lia.
+            - reflexivity.
+          }
+          pose proof
+            (levenshtein_computed_of_chain xs ys l3 c3 (eq_sym Heqq3))
+            as Hq3'.
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) ys n3 r3 (eq_sym Heqp3))
+            as Hp3.
+          rewrite Hq3' in Hrec3.
+          rewrite Hp3 in Hrec3.
+          eapply PeanoNat.Nat.le_trans.
+          - exact HL3.
+          - cbn. lia.
+        }
+        destruct (ascii_dec x y) as [Hcontra|Hxy'].
+        { exfalso. apply Hxy. exact Hcontra. }
+        cbn.
+        assert (Hn3n1 : n3 <= S n1).
+        {
+          assert (Hrecx :
+            levenshtein_computed (x :: xs) ys <=
+            S (levenshtein_computed (a :: x :: xs) ys)).
+          {
+            apply (IH (S (length xs) + length ys)).
+            - simpl in Hm. lia.
+            - reflexivity.
+          }
+          pose proof
+            (levenshtein_computed_of_chain (x :: xs) ys n3 r3 (eq_sym Heqp3))
+            as Hp3.
+          pose proof
+            (levenshtein_computed_of_chain (a :: x :: xs) ys n1 r1 (eq_sym Heqp1))
+            as Hp1.
+          rewrite Hp3 in Hrecx.
+          rewrite Hp1 in Hrecx.
+          exact Hrecx.
+        }
+        remember (min3_app
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S n3)
+                  (insert_chain y (x :: xs) ys n3 r3))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l2)
+                  (delete_chain x xs (y :: ys) l2 c2))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
+                  (update_chain x y xs ys l3 Hxy' c3))
+          (fun p => projT1 p)) as q2.
+        destruct q2 as [m2 c2'].
+        cbn.
+        pose proof (min3_app_pf
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S n3)
+                  (insert_chain y (x :: xs) ys n3 r3))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l2)
+                  (delete_chain x xs (y :: ys) l2 c2))
+          (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
+                  (update_chain x y xs ys l3 Hxy' c3))
+          (fun p => projT1 p)) as [Hm2_1 [Hm2_2 Hm2_3]].
+        cbn in Hm2_1, Hm2_2, Hm2_3.
+        assert (Hm2_1' : m2 <= S n3).
+        {
+          change m2 with
+            (projT1
+               (existT (fun n : nat => chain (x :: xs) (y :: ys) n) m2 c2')).
+          rewrite Heqq0.
+          exact Hm2_1.
+        }
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) ys)
+        end.
+        rewrite <- Heqp3.
+        cbn.
+        try rewrite <- Heqq0.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (a :: x :: xs) ys)
+        end.
+        try rewrite <- Heqp1.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) (y :: ys))
+        end.
+        try rewrite <- Heqq0.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (x :: xs) ys)
+        end.
+        try rewrite <- Heqp3.
+        cbn.
         eapply (min3_app_cases
           (existT (fun n : nat => chain (a :: x :: xs) (y :: ys) n) (S n1)
                   (insert_chain y (a :: x :: xs) ys n1 r1))
-          (existT (fun n : nat => chain (a :: x :: xs) (y :: ys) n) (S n2)
-                  (delete_chain a (x :: xs) (y :: ys) n2 r2))
+          (existT (fun n : nat => chain (a :: x :: xs) (y :: ys) n) (S m2)
+                  (delete_chain a (x :: xs) (y :: ys) m2 c2'))
           (existT (fun n : nat => chain (a :: x :: xs) (y :: ys) n) (S n3)
-                  (update_chain a y (x :: xs) ys n3 Hnay r3))
+                  (update_chain a y (x :: xs) ys n3 Hay r3))
           (fun p => projT1 p)
-          (fun p =>
-             projT1 (min3_app
-               (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l1)
-                       (insert_chain y (x :: xs) ys l1 c1))
-               (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l2)
-                       (delete_chain x xs (y :: ys) l2 c2))
-               (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S l3)
-                       (update_chain x y xs ys l3 Hxy c3))
-               (fun p0 => projT1 p0))
-             <= S (projT1 p))).
-        -- exact H1.
-        -- exact H2.
-        -- exact H3.
+          (fun p => m2 <= S (projT1 p))).
+        -- eapply PeanoNat.Nat.le_trans.
+           ++ exact Hm2_1'.
+           ++ cbn. lia.
+        -- cbn. lia.
+        -- eapply PeanoNat.Nat.le_trans.
+           ++ exact Hm2_1'.
+           ++ cbn. lia.
 Qed.
 
 Lemma levenshtein_computed_sym :
@@ -640,8 +835,8 @@ Proof.
       rewrite levenshtein_computed_skip_eq.
       rewrite (levenshtein_computed_skip_eq x ys xs).
       apply (IH (length xs + length ys)).
-      simpl in Hm.
-      lia.
+      { simpl in Hm. lia. }
+      { reflexivity. }
     + unfold levenshtein_computed.
       cbn.
       destruct (ascii_dec x y) as [Hcontra|Hnxy].
@@ -664,12 +859,17 @@ Proof.
           levenshtein_computed ys (x :: xs)).
         {
           apply (IH (S (length xs) + length ys)).
-          simpl in Hm.
-          lia.
+          { simpl in Hm. lia. }
+          { reflexivity. }
         }
-        rewrite Heqp1 in Hrec.
-        rewrite Heqq2 in Hrec.
-        cbn in Hrec.
+        pose proof
+          (levenshtein_computed_of_chain (x :: xs) ys n1 c1 (eq_sym Heqp1))
+          as Hp1.
+        pose proof
+          (levenshtein_computed_of_chain ys (x :: xs) m2 c5 (eq_sym Heqq2))
+          as Hq2.
+        rewrite Hp1 in Hrec.
+        rewrite Hq2 in Hrec.
         exact Hrec.
       }
       assert (H21 : n2 = m1).
@@ -679,12 +879,17 @@ Proof.
           levenshtein_computed (y :: ys) xs).
         {
           apply (IH (length xs + S (length ys))).
-          simpl in Hm.
-          lia.
+          { simpl in Hm. lia. }
+          { reflexivity. }
         }
-        rewrite Heqp2 in Hrec.
-        rewrite Heqq1 in Hrec.
-        cbn in Hrec.
+        pose proof
+          (levenshtein_computed_of_chain xs (y :: ys) n2 c2 (eq_sym Heqp2))
+          as Hp2.
+        pose proof
+          (levenshtein_computed_of_chain (y :: ys) xs m1 c4 (eq_sym Heqq1))
+          as Hq1.
+        rewrite Hp2 in Hrec.
+        rewrite Hq1 in Hrec.
         exact Hrec.
       }
       assert (H33 : n3 = m3).
@@ -694,14 +899,55 @@ Proof.
           levenshtein_computed ys xs).
         {
           apply (IH (length xs + length ys)).
-          simpl in Hm.
-          lia.
+          { simpl in Hm. lia. }
+          { reflexivity. }
         }
-        rewrite Heqp3 in Hrec.
-        rewrite Heqq3 in Hrec.
-        cbn in Hrec.
+        pose proof
+          (levenshtein_computed_of_chain xs ys n3 c3 (eq_sym Heqp3))
+          as Hp3.
+        pose proof
+          (levenshtein_computed_of_chain ys xs m3 c6 (eq_sym Heqq3))
+          as Hq3.
+        rewrite Hp3 in Hrec.
+        rewrite Hq3 in Hrec.
         exact Hrec.
       }
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain (x :: xs) ys)
+      end.
+      try rewrite <- Heqp1.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain xs (y :: ys))
+      end.
+      try rewrite <- Heqp2.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain xs ys)
+      end.
+      try rewrite <- Heqp3.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain (y :: ys) xs)
+      end.
+      try rewrite <- Heqq1.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain ys (x :: xs))
+      end.
+      try rewrite <- Heqq2.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain ys xs)
+      end.
+      try rewrite <- Heqq3.
+      cbn.
       rewrite (min3_app_value
         (existT (fun n : nat => chain (x :: xs) (y :: ys) n) (S n1)
                 (insert_chain y (x :: xs) ys n1 c1))
@@ -720,6 +966,7 @@ Proof.
         (fun p => projT1 p)).
       cbn.
       rewrite <- H12, <- H21, <- H33.
+      f_equal.
       apply min3_comm12.
 Qed.
 
@@ -736,10 +983,11 @@ Qed.
 Lemma levenshtein_computed_delete_upper :
   forall a s t,
     levenshtein_computed (a :: s) t <= S (levenshtein_computed s t).
-Proof.
+  Proof.
   intros a s t.
   destruct t as [|b ys].
-  - simpl. lia.
+  - rewrite !levenshtein_computed_nil_r.
+    simpl. lia.
   - destruct (ascii_dec a b) as [Hab|Hab].
     + subst b.
       rewrite levenshtein_computed_skip_eq.
@@ -767,7 +1015,8 @@ Proof.
       a0 a'0 s0 t0 Hneq0 eq_refl).
   intros m IH a a' s t Hneq Hm.
   destruct t as [|b ys].
-  - simpl. lia.
+  - rewrite !levenshtein_computed_nil_r.
+    simpl. lia.
   - destruct (ascii_dec a' b) as [Ha'b|Ha'b].
     + subst b.
       rewrite levenshtein_computed_skip_eq.
@@ -784,20 +1033,52 @@ Proof.
       {
         assert (Hrec : levenshtein_computed s ys <= S (levenshtein_computed (a :: s) ys)).
         { apply levenshtein_computed_insert_lower. }
-        rewrite Heqp1 in Hrec.
-        cbn in Hrec.
+        pose proof
+          (levenshtein_computed_of_chain (a :: s) ys n1 r1 (eq_sym Heqp1))
+          as Hp1.
+        rewrite Hp1 in Hrec.
         lia.
       }
       assert (H2 : levenshtein_computed s ys <= S (S n2)).
       {
         assert (Hrec : levenshtein_computed s ys <= S (levenshtein_computed s (a' :: ys))).
         { apply levenshtein_computed_insert_lower_r. }
-        rewrite Heqp2 in Hrec.
-        cbn in Hrec.
+        pose proof
+          (levenshtein_computed_of_chain s (a' :: ys) n2 r2 (eq_sym Heqp2))
+          as Hp2.
+        rewrite Hp2 in Hrec.
         lia.
       }
       assert (H3 : levenshtein_computed s ys <= S (S n3)).
-      { lia. }
+      {
+        pose proof
+          (levenshtein_computed_of_chain s ys n3 r3 (eq_sym Heqp3))
+          as Hp3.
+        rewrite Hp3.
+        lia.
+      }
+      pose proof
+        (levenshtein_computed_of_chain s ys n3 r3 (eq_sym Heqp3))
+        as Hs.
+      try rewrite <- Hs.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain (a :: s) ys)
+      end.
+      try rewrite <- Heqp1.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain s (a' :: ys))
+      end.
+      try rewrite <- Heqp2.
+      cbn.
+      try match goal with
+      | |- context [let (_, _) := ?p in _] =>
+          change p with (levenshtein_chain s ys)
+      end.
+      try rewrite <- Heqp3.
+      cbn.
       eapply (min3_app_cases
         (existT (fun n : nat => chain (a :: s) (a' :: ys) n) (S n1)
                 (insert_chain a' (a :: s) ys n1 r1))
@@ -806,10 +1087,10 @@ Proof.
         (existT (fun n : nat => chain (a :: s) (a' :: ys) n) (S n3)
                 (update_chain a a' s ys n3 Hna r3))
         (fun p => projT1 p)
-        (fun p => levenshtein_computed s ys <= S (projT1 p))).
-      * exact H1.
-      * exact H2.
-      * exact H3.
+        (fun p => n3 <= S (projT1 p))).
+      * rewrite Hs in H1. exact H1.
+      * rewrite Hs in H2. exact H2.
+      * rewrite Hs in H3. exact H3.
     + unfold levenshtein_computed.
       cbn.
       destruct (ascii_dec a' b) as [Hcontra|Hna'b].
@@ -829,10 +1110,25 @@ Proof.
         (fun p => projT1 p)) as [HL1 [HL2 HL3]].
       destruct (ascii_dec a b) as [Hab|Hab].
       * subst b.
-        rewrite levenshtein_computed_skip_eq.
-        assert (Hq3 : levenshtein_computed s ys = l3).
-        { rewrite Heqq3. reflexivity. }
-        lia.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (a' :: s) ys)
+        end.
+        try rewrite <- Heqq1.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s (a :: ys))
+        end.
+        try rewrite <- Heqq2.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s ys)
+        end.
+        try rewrite <- Heqq3.
+        cbn.
+        exact HL3.
       * unfold levenshtein_computed.
         cbn.
         destruct (ascii_dec a b) as [Hcontra2|Hnab].
@@ -852,19 +1148,30 @@ Proof.
                     (update_chain a' b s ys l3 Hna'b c3))
             (fun p => projT1 p)) <= S (S n1)).
         {
-          assert (Hrec :
-            levenshtein_computed (a' :: s) ys <=
-            S (levenshtein_computed (a :: s) ys)).
+          assert (Hl1n1 : l1 <= S n1).
           {
-            apply (IH (length s + length ys)).
-            - simpl in Hm. lia.
-            - exact Hneq.
-            - reflexivity.
+            assert (Hrec :
+              levenshtein_computed (a' :: s) ys <=
+              S (levenshtein_computed (a :: s) ys)).
+            {
+              apply (IH (length s + length ys)).
+              - simpl in Hm. lia.
+              - exact Hneq.
+              - reflexivity.
+            }
+            pose proof
+              (levenshtein_computed_of_chain (a' :: s) ys l1 c1 (eq_sym Heqq1))
+              as Hq1.
+            pose proof
+              (levenshtein_computed_of_chain (a :: s) ys n1 r1 (eq_sym Heqp1))
+              as Hp1.
+            rewrite Hq1 in Hrec.
+            rewrite Hp1 in Hrec.
+            exact Hrec.
           }
-          rewrite Heqq1 in HL1.
-          rewrite Heqp1 in Hrec.
-          cbn in HL1, Hrec.
-          lia.
+          eapply PeanoNat.Nat.le_trans.
+          - exact HL1.
+          - cbn. lia.
         }
         assert (H2 :
           projT1 (min3_app
@@ -875,7 +1182,16 @@ Proof.
             (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l3)
                     (update_chain a' b s ys l3 Hna'b c3))
             (fun p => projT1 p)) <= S (S n2)).
-        { lia. }
+        {
+          assert (Hl2n2 : l2 = n2).
+          {
+            inversion Heqq2.
+            reflexivity.
+          }
+          eapply PeanoNat.Nat.le_trans.
+          - exact HL2.
+          - cbn. lia.
+        }
         assert (H3 :
           projT1 (min3_app
             (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l1)
@@ -885,28 +1201,93 @@ Proof.
             (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l3)
                     (update_chain a' b s ys l3 Hna'b c3))
             (fun p => projT1 p)) <= S (S n3)).
-        { lia. }
+        {
+          assert (Hl3n3 : l3 = n3).
+          {
+            inversion Heqq3.
+            reflexivity.
+          }
+          eapply PeanoNat.Nat.le_trans.
+          - exact HL3.
+          - cbn. lia.
+        }
+        assert (Heq2' :
+          existT (fun n : nat => chain s (b :: ys) n) l2 c2 =
+          levenshtein_chain s (b :: ys)).
+        {
+          rewrite Heqq2.
+          exact Heqp2.
+        }
+        assert (Heq3' :
+          existT (fun n : nat => chain s ys n) l3 c3 =
+          levenshtein_chain s ys).
+        {
+          rewrite Heqq3.
+          exact Heqp3.
+        }
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (a' :: s) ys)
+        end.
+        try rewrite <- Heqq1.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s (b :: ys))
+        end.
+        try rewrite <- Heq2'.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s ys)
+        end.
+        try rewrite <- Heq3'.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain (a :: s) ys)
+        end.
+        try rewrite <- Heqp1.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s (b :: ys))
+        end.
+        try rewrite <- Heqp2.
+        cbn.
+        try match goal with
+        | |- context [let (_, _) := ?p in _] =>
+            change p with (levenshtein_chain s ys)
+        end.
+        try rewrite <- Heqp3.
+        cbn.
         eapply (min3_app_cases
           (existT (fun n : nat => chain (a :: s) (b :: ys) n) (S n1)
                   (insert_chain b (a :: s) ys n1 r1))
-          (existT (fun n : nat => chain (a :: s) (b :: ys) n) (S n2)
-                  (delete_chain a s (b :: ys) n2 r2))
-          (existT (fun n : nat => chain (a :: s) (b :: ys) n) (S n3)
-                  (update_chain a b s ys n3 Hnab r3))
+          (existT (fun n : nat => chain (a :: s) (b :: ys) n) (S l2)
+                  (delete_chain a s (b :: ys) l2 c2))
+          (existT (fun n : nat => chain (a :: s) (b :: ys) n) (S l3)
+                  (update_chain a b s ys l3 Hab c3))
           (fun p => projT1 p)
           (fun p =>
              projT1 (min3_app
-               (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l1)
+                (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l1)
                        (insert_chain b (a' :: s) ys l1 c1))
                (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l2)
                        (delete_chain a' s (b :: ys) l2 c2))
                (existT (fun n : nat => chain (a' :: s) (b :: ys) n) (S l3)
-                       (update_chain a' b s ys l3 Hna'b c3))
-               (fun p0 => projT1 p0))
-             <= S (projT1 p))).
+                        (update_chain a' b s ys l3 Hna'b c3))
+                (fun p0 => projT1 p0))
+              <= S (projT1 p))).
         -- exact H1.
-        -- exact H2.
-        -- exact H3.
+        -- assert (Hn2l2 : n2 = l2).
+           { inversion Heqq2. reflexivity. }
+           rewrite Hn2l2 in H2.
+           exact H2.
+        -- assert (Hn3l3 : n3 = l3).
+           { inversion Heqq3. reflexivity. }
+           rewrite Hn3l3 in H3.
+           exact H3.
 Qed.
 
 Theorem levenshtein_computed_is_minimal :
@@ -919,16 +1300,19 @@ Proof.
   - rewrite levenshtein_computed_skip_eq.
     exact IHc.
   - destruct e.
-    + eapply Nat.le_trans.
-      * apply levenshtein_computed_insert_lower.
-      * lia.
-    + eapply Nat.le_trans.
-      * apply levenshtein_computed_delete_upper.
-      * lia.
-    + eapply Nat.le_trans.
-      * apply levenshtein_computed_update_upper.
+    + eapply PeanoNat.Nat.le_trans.
+      * apply (levenshtein_computed_insert_lower a s u).
+      * apply (proj1 (PeanoNat.Nat.succ_le_mono _ _)).
+        exact IHc.
+    + eapply PeanoNat.Nat.le_trans.
+      * apply (levenshtein_computed_delete_upper a s u).
+      * apply (proj1 (PeanoNat.Nat.succ_le_mono _ _)).
+        exact IHc.
+    + eapply PeanoNat.Nat.le_trans.
+      * apply (levenshtein_computed_update_upper a a' s u).
         exact neq.
-      * lia.
+      * apply (proj1 (PeanoNat.Nat.succ_le_mono _ _)).
+        exact IHc.
 Qed.
 
 Theorem levenshtein_eq_computed : forall s t, levenshtein s t = projT1 (levenshtein_chain s t).
