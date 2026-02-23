@@ -230,3 +230,91 @@
   (alias runtest)
   (deps typeclasses.t.exe)
   (action (run ./typeclasses.t.exe))))
+
+(subdir binary_nums
+ (rule
+  (targets binary_nums.t.exe)
+  (deps BinaryNums.vo binary_nums.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} binary_nums.t.exe binary_nums.cpp binary_nums.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps binary_nums.t.exe)
+  (action (run ./binary_nums.t.exe))))
+
+(subdir int63_arith
+ (rule
+  (targets int63_arith.t.exe)
+  (deps Int63Arith.vo int63_arith.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} int63_arith.t.exe int63_arith.cpp int63_arith.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps int63_arith.t.exe)
+  (action (run ./int63_arith.t.exe))))
+
+(subdir coercions
+ (rule
+  (targets coercions.t.exe)
+  (deps Coercions.vo coercions.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} coercions.t.exe coercions.cpp coercions.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps coercions.t.exe)
+  (action (run ./coercions.t.exe))))
+
+(subdir universe_poly
+ (rule
+  (targets universe_poly.t.exe)
+  (deps UniversePoly.vo universe_poly.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} universe_poly.t.exe universe_poly.cpp universe_poly.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps universe_poly.t.exe)
+  (action (run ./universe_poly.t.exe))))
+
+(subdir mutual_coind
+ (rule
+  (targets mutual_coind.t.exe)
+  (deps MutualCoind.vo mutual_coind.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_coind.t.exe mutual_coind.cpp mutual_coind.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_coind.t.exe)
+  (action (run ./mutual_coind.t.exe))))
+
+(subdir large_enum
+ (rule
+  (targets large_enum.t.exe)
+  (deps LargeEnum.vo large_enum.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} large_enum.t.exe large_enum.cpp large_enum.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps large_enum.t.exe)
+  (action (run ./large_enum.t.exe))))
+
+(subdir dep_elim
+ (rule
+  (targets dep_elim.t.exe)
+  (deps DepElim.vo dep_elim.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} dep_elim.t.exe dep_elim.cpp dep_elim.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps dep_elim.t.exe)
+  (action (run ./dep_elim.t.exe))))
+
+(subdir opaque
+ (rule
+  (targets opaque.t.exe)
+  (deps Opaque.vo opaque.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} opaque.t.exe opaque.cpp opaque.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps opaque.t.exe)
+  (action (run ./opaque.t.exe))))
