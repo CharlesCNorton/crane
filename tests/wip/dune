@@ -307,3 +307,25 @@
   (alias runtest)
   (deps opaque.t.exe)
   (action (run ./opaque.t.exe))))
+
+(subdir poly_inductive
+ (rule
+  (targets poly_inductive.t.exe)
+  (deps PolyInductive.vo poly_inductive.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} poly_inductive.t.exe poly_inductive.cpp poly_inductive.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps poly_inductive.t.exe)
+  (action (run ./poly_inductive.t.exe))))
+
+(subdir prim_rec_tc
+ (rule
+  (targets prim_rec_tc.t.exe)
+  (deps PrimRecTc.vo prim_rec_tc.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_rec_tc.t.exe prim_rec_tc.cpp prim_rec_tc.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_rec_tc.t.exe)
+  (action (run ./prim_rec_tc.t.exe))))
