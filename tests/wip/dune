@@ -208,3 +208,14 @@
   (alias runtest)
   (deps cotree.t.exe)
   (action (run ./cotree.t.exe))))
+
+(subdir nested_ind
+ (rule
+  (targets nested_ind.t.exe)
+  (deps NestedInd.vo nested_ind.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} nested_ind.t.exe nested_ind.cpp nested_ind.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps nested_ind.t.exe)
+  (action (run ./nested_ind.t.exe))))
