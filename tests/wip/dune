@@ -66,6 +66,17 @@
   (deps msort.t.exe)
   (action (run ./msort.t.exe))))
 
+(subdir function_vernac
+ (rule
+  (targets func_vernac.t.exe)
+  (deps FuncVernac.vo func_vernac.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} func_vernac.t.exe func_vernac.cpp func_vernac.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps func_vernac.t.exe)
+  (action (run ./func_vernac.t.exe))))
+
 (subdir prim_proj
  (rule
   (targets prim_proj.t.exe)
