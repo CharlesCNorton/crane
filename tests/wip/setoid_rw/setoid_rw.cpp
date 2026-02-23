@@ -1,0 +1,32 @@
+#include <algorithm>
+#include <any>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <setoid_rw.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <variant>
+
+unsigned int mod3(const unsigned int n) { return (n % (((0 + 1) + 1) + 1)); }
+
+unsigned int classify_mod3(const unsigned int n) {
+  if (mod3(n) <= 0) {
+    return 0;
+  } else {
+    unsigned int n0 = mod3(n) - 1;
+    if (n0 <= 0) {
+      return (0 + 1);
+    } else {
+      unsigned int _x = n0 - 1;
+      return ((0 + 1) + 1);
+    }
+  }
+}
+
+unsigned int add_mod3(const unsigned int x, const unsigned int y) {
+  return mod3((x + y));
+}
