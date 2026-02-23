@@ -66,6 +66,17 @@
   (deps msort.t.exe)
   (action (run ./msort.t.exe))))
 
+(subdir fuel_msort
+ (rule
+  (targets msort.t.exe)
+  (deps MergeSort.vo msort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} msort.t.exe msort.cpp msort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps msort.t.exe)
+  (action (run ./msort.t.exe))))
+
 (subdir nested_mod
  (rule
   (targets nested_mod.t.exe)
