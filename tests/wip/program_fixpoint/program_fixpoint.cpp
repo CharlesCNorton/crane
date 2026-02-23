@@ -1,0 +1,84 @@
+#include <algorithm>
+#include <any>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <program_fixpoint.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <variant>
+
+std::shared_ptr<List::list<unsigned int>> interleave_func(
+    const std::shared_ptr<SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                                     std::shared_ptr<List::list<unsigned int>>>>
+        &_x0) {
+  return [&](const T1 _x0) {
+    return Fix_sub<
+        std::shared_ptr<SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                                   std::shared_ptr<List::list<unsigned int>>>>>(
+        [&](std::shared_ptr<
+                SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                           std::shared_ptr<List::list<unsigned int>>>>
+                recarg,
+            std::function<std::shared_ptr<List::list<unsigned int>>(
+                std::shared_ptr<Sig0::sig0<std::shared_ptr<
+                    SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                               std::shared_ptr<List::list<unsigned int>>>>>>)>
+                interleave_) {
+          std::shared_ptr<List::list<unsigned int>> l1 = recarg->projT1();
+          std::shared_ptr<List::list<unsigned int>> l2 = recarg->projT2();
+          std::function<std::shared_ptr<List::list<unsigned int>>(
+              std::shared_ptr<List::list<unsigned int>>,
+              std::shared_ptr<List::list<unsigned int>>)>
+              interleave = [&](std::shared_ptr<List::list<unsigned int>> l3,
+                               std::shared_ptr<List::list<unsigned int>> l4) {
+                return interleave_(
+                    SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                               std::shared_ptr<List::list<unsigned int>>>::
+                        ctor::existT_(l3, l4));
+              };
+          return [&](void) {
+            if (std::move(l1).use_count() == 1 &&
+                std::move(l1)->v().index() == 1) {
+              auto &_rf = std::get<1>(std::move(l1)->v_mut());
+              std::shared_ptr<List::list<unsigned int>> xs = std::move(_rf._a0);
+              unsigned int x = std::move(_rf._a1);
+              _rf._a0 = std::move(x);
+              _rf._a1 = std::move(interleave0)(l2, xs);
+              return std::move(l1);
+            } else {
+              return std::visit(
+                  Overloaded{
+                      [&](const typename List::list<unsigned int>::nil _args)
+                          -> std::function<std::shared_ptr<
+                              List::list<unsigned int>>(dummy_prop)> {
+                        return std::move(l2);
+                      },
+                      [&](const typename List::list<unsigned int>::cons _args)
+                          -> std::function<std::shared_ptr<
+                              List::list<unsigned int>>(dummy_prop)> {
+                        unsigned int x = _args._a0;
+                        std::shared_ptr<List::list<unsigned int>> xs =
+                            _args._a1;
+                        return List::list<unsigned int>::ctor::cons_(
+                            std::move(x),
+                            interleave0(std::move(l2), std::move(xs)));
+                      }},
+                  std::move(l1)->v());
+            }
+          }();
+        },
+        _x0);
+  }(_x0);
+}
+
+std::shared_ptr<List::list<unsigned int>>
+interleave(std::shared_ptr<List::list<unsigned int>> l1,
+           std::shared_ptr<List::list<unsigned int>> l2) {
+  return interleave_func(SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                                    std::shared_ptr<List::list<unsigned int>>>::
+                             ctor::existT_(std::move(l1), std::move(l2)));
+}
