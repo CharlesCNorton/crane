@@ -58,7 +58,7 @@
 (subdir msort
  (rule
   (targets msort.t.exe)
-  (deps Sort.vo msort.t.cpp (source_tree .))
+  (deps MergeSort.vo msort.t.cpp (source_tree .))
   (action
    (run %{project_root}/scripts/compile-std.sh %{project_root} msort.t.exe msort.cpp msort.t.cpp)))
  (rule
