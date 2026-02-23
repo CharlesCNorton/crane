@@ -307,3 +307,102 @@
   (alias runtest)
   (deps opaque.t.exe)
   (action (run ./opaque.t.exe))))
+
+(subdir monadic
+ (rule
+  (targets monadic.t.exe)
+  (deps Monadic.vo monadic.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} monadic.t.exe monadic.cpp monadic.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps monadic.t.exe)
+  (action (run ./monadic.t.exe))))
+
+(subdir partial_apply
+ (rule
+  (targets partial_apply.t.exe)
+  (deps PartialApply.vo partial_apply.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} partial_apply.t.exe partial_apply.cpp partial_apply.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps partial_apply.t.exe)
+  (action (run ./partial_apply.t.exe))))
+
+(subdir let_fix
+ (rule
+  (targets let_fix.t.exe)
+  (deps LetFix.vo let_fix.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} let_fix.t.exe let_fix.cpp let_fix.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps let_fix.t.exe)
+  (action (run ./let_fix.t.exe))))
+
+(subdir sigma_compute
+ (rule
+  (targets sigma_compute.t.exe)
+  (deps SigmaCompute.vo sigma_compute.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sigma_compute.t.exe sigma_compute.cpp sigma_compute.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sigma_compute.t.exe)
+  (action (run ./sigma_compute.t.exe))))
+
+(subdir mutual_record
+ (rule
+  (targets mutual_record.t.exe)
+  (deps MutualRecord.vo mutual_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_record.t.exe mutual_record.cpp mutual_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_record.t.exe)
+  (action (run ./mutual_record.t.exe))))
+
+(subdir closures_in_data
+ (rule
+  (targets closures_in_data.t.exe)
+  (deps ClosuresInData.vo closures_in_data.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} closures_in_data.t.exe closures_in_data.cpp closures_in_data.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps closures_in_data.t.exe)
+  (action (run ./closures_in_data.t.exe))))
+
+(subdir cps
+ (rule
+  (targets cps.t.exe)
+  (deps CPS.vo cps.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} cps.t.exe cps.cpp cps.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps cps.t.exe)
+  (action (run ./cps.t.exe))))
+
+(subdir extract_directives
+ (rule
+  (targets extract_directives.t.exe)
+  (deps ExtractDirectives.vo extract_directives.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} extract_directives.t.exe extract_directives.cpp extract_directives.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps extract_directives.t.exe)
+  (action (run ./extract_directives.t.exe))))
+
+(subdir deep_patterns
+ (rule
+  (targets deep_patterns.t.exe)
+  (deps DeepPatterns.vo deep_patterns.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} deep_patterns.t.exe deep_patterns.cpp deep_patterns.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps deep_patterns.t.exe)
+  (action (run ./deep_patterns.t.exe))))
