@@ -77,6 +77,16 @@
   (deps prim_proj.t.exe)
   (action (run ./prim_proj.t.exe))))
 
+(subdir canon_struct
+ (rule
+  (targets canon_struct.t.exe)
+  (deps CanonStruct.vo canon_struct.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} canon_struct.t.exe canon_struct.cpp canon_struct.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps canon_struct.t.exe)
+  (action (run ./canon_struct.t.exe))))
 (subdir nested_mod
  (rule
   (targets nested_mod.t.exe)
