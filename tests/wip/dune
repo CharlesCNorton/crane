@@ -198,6 +198,17 @@
   (deps singleton_record.t.exe)
   (action (run ./singleton_record.t.exe))))
 
+(subdir cotree
+ (rule
+  (targets cotree.t.exe)
+  (deps Cotree.vo cotree.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} cotree.t.exe cotree.cpp cotree.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps cotree.t.exe)
+  (action (run ./cotree.t.exe))))
+
 (subdir nested_ind
  (rule
   (targets nested_ind.t.exe)
