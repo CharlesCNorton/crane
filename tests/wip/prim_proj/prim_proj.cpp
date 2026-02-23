@@ -12,6 +12,7 @@
 #include <variant>
 
 std::shared_ptr<point> translate(const unsigned int dx, const unsigned int dy,
-                                 const std::shared_ptr<point> &p) {
-  return std::make_shared<point>(point{(p->px + dx), (p->py + dy)});
+                                 std::shared_ptr<point> p) {
+  return std::make_shared<point>(
+      point{(p->px + std::move(dx)), (p->py + std::move(dy))});
 }

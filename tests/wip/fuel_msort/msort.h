@@ -52,6 +52,7 @@ struct List {
       }
     };
     const variant_t &v() const { return v_; }
+    variant_t &v_mut() { return v_; }
     unsigned int length() const {
       return std::visit(
           Overloaded{
@@ -60,7 +61,7 @@ struct List {
               },
               [](const typename List::list<A>::cons _args) -> unsigned int {
                 std::shared_ptr<List::list<A>> l_ = _args._a1;
-                return (l_->length() + 1);
+                return (std::move(l_)->length() + 1);
               }},
           this->v());
     }
@@ -74,12 +75,11 @@ std::pair<std::shared_ptr<List::list<unsigned int>>,
 split(const std::shared_ptr<List::list<unsigned int>> &l);
 
 std::shared_ptr<List::list<unsigned int>>
-merge(const std::shared_ptr<List::list<unsigned int>> &l1,
+merge(std::shared_ptr<List::list<unsigned int>> l1,
       const std::shared_ptr<List::list<unsigned int>> &l2);
 
 std::shared_ptr<List::list<unsigned int>>
-msort_go(const unsigned int fuel,
-         const std::shared_ptr<List::list<unsigned int>> &l);
+msort_go(const unsigned int fuel, std::shared_ptr<List::list<unsigned int>> l);
 
 std::shared_ptr<List::list<unsigned int>>
 msort(const std::shared_ptr<List::list<unsigned int>> &l);

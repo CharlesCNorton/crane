@@ -26,4 +26,4 @@ struct point {
 const std::shared_ptr<point> origin = std::make_shared<point>(point{0, 0});
 
 std::shared_ptr<point> translate(const unsigned int dx, const unsigned int dy,
-                                 const std::shared_ptr<point> &p);
+                                 std::shared_ptr<point> p);
