@@ -66,6 +66,17 @@
   (deps msort.t.exe)
   (action (run ./msort.t.exe))))
 
+(subdir prim_proj
+ (rule
+  (targets prim_proj.t.exe)
+  (deps PrimProj.vo prim_proj.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_proj.t.exe prim_proj.cpp prim_proj.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_proj.t.exe)
+  (action (run ./prim_proj.t.exe))))
+
 (subdir fuel_msort
  (rule
   (targets msort.t.exe)
