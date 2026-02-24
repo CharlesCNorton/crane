@@ -36,7 +36,7 @@ Definition isEmptySTM  {A} (v : vector A) : STM bool := trigger (iisEmptySTM v).
 
 Crane Extract Monad STM [ bind := bind , ret := Ret ] => "%t0".
 Crane Extract Inlined Constant atomically => "stm::atomically([&] { return %a0; })".
-(* Should this be incorported into the c++? *)
+(* Should this be incorporated into the c++? *)
 Crane Extract Inlined Constant retry => "stm::retry<%t0>()".
 Crane Extract Inlined Constant orElse => "stm::orElse<%t0>(%a0, %a1)".
 

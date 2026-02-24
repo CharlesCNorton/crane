@@ -621,7 +621,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       let ty = find_type x in
       let ty = convert_ml_type_to_cpp_type env [] tvars ty in
       (match ty with
-      | Tfun (dom, cod) -> eta_fun env (MLglob (x, tys)) [] (* TODO: cound be only if contains '%' *)
+      | Tfun (dom, cod) -> eta_fun env (MLglob (x, tys)) [] (* TODO: could be only if contains '%' *)
       | _ -> CPPglob (x, List.map (convert_ml_type_to_cpp_type env [] tvars) tys))
   | MLglob (x, tys) ->
       let tvars = get_current_type_vars () in
@@ -2194,7 +2194,7 @@ let gen_dfun n b dom cod ty temps =
       |  (Tmod (TMconst, Tfun (dom, cod))) ->
         (x, Tref (Tref (Tvar (0, Some (Id.of_string ("F" ^ (string_of_int ((List.length ids) - i - 1))))))))
       | _ -> (x, ty)) ids in
-  (* TODO: below is needed for lambdas in recursive positiions, but is badddddd. *)
+  (* TODO: below is needed for lambdas in recursive positions, but is badddddd. *)
   (* let rec_fun_tys = List.map (fun (_,t, _) ->
     match t with
     | TTfun (dom, cod) -> Tref (Tmod (TMconst, Tfun (dom, cod)))

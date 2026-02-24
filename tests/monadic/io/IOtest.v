@@ -21,7 +21,7 @@ Module iotest.
     print_endline "what is your name?" ;;
     s2 <- get_line ;;
     print_endline (cat "hello " s2) ;;
-    Ret (cat "I read the name " (cat s2 " frome the command line!")).
+    Ret (cat "I read the name " (cat s2 " from the command line!")).
 
   Definition test5 : IO void :=
     s <- read "file.txt" ;;

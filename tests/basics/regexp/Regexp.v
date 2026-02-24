@@ -450,7 +450,7 @@ Crane Extraction "regexp" Matcher.
 
 - An alternative to our derivative-based matcher is to build one based
   on the list monad.  That is, define an interp function of type
-  [regexp -> list int -> list (list int)] with the intution
+  [regexp -> list int -> list (list int)] with the intuition
   that:
 
    cs2 is in (interp r) (cs1 ++ cs2) iff [[r]] cs1

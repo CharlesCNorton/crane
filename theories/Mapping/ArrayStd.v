@@ -15,7 +15,7 @@ Local Notation "[ ]" := (nil _) (format "[ ]").
 Local Notation "h :: t" := (cons _ h _ t) (at level 60, right associativity).
 
 (* fix unfolding issue by making it one-constructor inductive type?
-   (i.e. force explicit coersions) *)
+   (i.e. force explicit coercions) *)
 Definition array (A : Type) (x : int) : Type := vec A (nat_of_int x).
 
 Definition length {A : Type} {x : int} (v : array A x) : int := x.

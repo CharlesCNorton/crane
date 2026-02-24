@@ -138,7 +138,7 @@ and ml_pattern =
   | Pusual  of GlobRef.t (** Shortcut for Pcons (r,[Prel n;...;Prel 1]) **)
 
 (* ML type schema.
-   The integer is the number of variable in the schema. *)
+   The integer is the number of variables in the schema. *)
 
 type ml_schema = int * ml_type
 
