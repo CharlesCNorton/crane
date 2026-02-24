@@ -9,20 +9,21 @@ all: extract
 
 # Extract: build plugin/theories and generate all test C++ files (without compiling them)
 # Continues even if some extractions fail (pre-existing plugin bugs)
+# Builds one category at a time to avoid exceeding dune's argument limit
 extract: build
 	@echo "Extracting all tests..."
-	@vo_targets=""; \
-	for category in basics monadic regression wip; do \
+	@for category in basics monadic regression wip; do \
+		vo_targets=""; \
 		for vfile in tests/$$category/*/*.v; do \
 			if [ -f "$$vfile" ]; then \
 				vo_target=$$(echo "$$vfile" | sed 's/\.v$$/.vo/'); \
 				vo_targets="$$vo_targets $$vo_target"; \
 			fi; \
 		done; \
-	done; \
-	if [ -n "$$vo_targets" ]; then \
-		dune build $$vo_targets 2>/dev/null || true; \
-	fi
+		if [ -n "$$vo_targets" ]; then \
+			dune build $$vo_targets 2>/dev/null || true; \
+		fi; \
+	done
 
 # Build just the plugin
 plugin:

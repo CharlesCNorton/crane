@@ -39,12 +39,8 @@ let run_executable test_dir exe_name =
     (passed, Buffer.contents buffer, end_time -. start_time)
   end
 
-let build_all_tests _config tests =
-  (* Build all test executables in one dune command *)
-  let exe_targets = List.map (fun t ->
-    Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name
-  ) tests in
-  let args = "build" :: exe_targets in
+let build_batch targets =
+  let args = "build" :: targets in
   let pid = Unix.fork () in
   if pid = 0 then begin
     let dev_null = Unix.openfile "/dev/null" [Unix.O_WRONLY] 0 in
@@ -59,6 +55,27 @@ let build_all_tests _config tests =
     | Unix.WEXITED 0 -> true
     | _ -> false
   end
+
+let build_all_tests _config tests =
+  (* Build test executables in batches to avoid exceeding dune's argument limit *)
+  let exe_targets = List.map (fun t ->
+    Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name
+  ) tests in
+  let batch_size = 30 in
+  let rec take n acc = function
+    | [] -> (List.rev acc, [])
+    | rest when n = 0 -> (List.rev acc, rest)
+    | x :: xs -> take (n - 1) (x :: acc) xs
+  in
+  let rec build_batches targets =
+    match targets with
+    | [] -> ()
+    | _ ->
+      let batch, rest = take batch_size [] targets in
+      ignore (build_batch batch);
+      build_batches rest
+  in
+  build_batches exe_targets
 
 let run_test config test =
   let test_dir = Printf.sprintf "%s/_build/default/tests/%s/%s" config.project_root test.category test.name in

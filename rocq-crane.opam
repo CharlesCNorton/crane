@@ -2,7 +2,7 @@ opam-version: "2.0"
 synopsis: "Extraction of Rocq code to BDE-flavored C++ code"
 description: "This project provides extraction of Rocq code to BDE-flavored C++ code, implemented as a Rocq plugin. It extracts Rocq into valid, performant, and memory-safe C++17 code. The generated code avoids garbage collection and does not need a separate runtime system, relying instead on `shared_ptr` for reference counting."
 homepage: "https://github.com/bloomberg/crane"
-license: "Apache-2.0"
+license: "LGPL-2.1"
 bug-reports: "https://github.com/bloomberg/crane/issues"
 depends: [
   "ocaml"
