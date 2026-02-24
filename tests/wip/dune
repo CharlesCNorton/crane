@@ -307,3 +307,80 @@
   (alias runtest)
   (deps opaque.t.exe)
   (action (run ./opaque.t.exe))))
+
+(subdir acc_rect
+ (rule
+  (targets acc_rect.t.exe)
+  (deps AccRect.vo acc_rect.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} acc_rect.t.exe acc_rect.cpp acc_rect.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps acc_rect.t.exe)
+  (action (run ./acc_rect.t.exe))))
+
+(subdir dep_record
+ (rule
+  (targets dep_record.t.exe)
+  (deps DepRecord.vo dep_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} dep_record.t.exe dep_record.cpp dep_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps dep_record.t.exe)
+  (action (run ./dep_record.t.exe))))
+
+(subdir higher_kinded
+ (rule
+  (targets higher_kinded.t.exe)
+  (deps HigherKinded.vo higher_kinded.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} higher_kinded.t.exe higher_kinded.cpp higher_kinded.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps higher_kinded.t.exe)
+  (action (run ./higher_kinded.t.exe))))
+
+(subdir large_mutual
+ (rule
+  (targets large_mutual.t.exe)
+  (deps LargeMutual.vo large_mutual.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} large_mutual.t.exe large_mutual.cpp large_mutual.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps large_mutual.t.exe)
+  (action (run ./large_mutual.t.exe))))
+
+(subdir rec_record
+ (rule
+  (targets rec_record.t.exe)
+  (deps RecRecord.vo rec_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} rec_record.t.exe rec_record.cpp rec_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps rec_record.t.exe)
+  (action (run ./rec_record.t.exe))))
+
+(subdir sprop
+ (rule
+  (targets sprop.t.exe)
+  (deps SProp.vo sprop.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sprop.t.exe sprop.cpp sprop.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sprop.t.exe)
+  (action (run ./sprop.t.exe))))
+
+(subdir string_match
+ (rule
+  (targets string_match.t.exe)
+  (deps StringMatch.vo string_match.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} string_match.t.exe string_match.cpp string_match.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps string_match.t.exe)
+  (action (run ./string_match.t.exe))))
