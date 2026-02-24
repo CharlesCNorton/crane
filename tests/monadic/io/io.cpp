@@ -32,7 +32,7 @@ std::string iotest::test4() {
     return s;
   }();
   std::cout << "hello " + s2 << '\n';
-  return "I read the name " + s2 + " frome the command line!";
+  return "I read the name " + s2 + " from the command line!";
 }
 
 void iotest::test5() {

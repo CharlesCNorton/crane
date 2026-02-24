@@ -384,3 +384,212 @@
   (alias runtest)
   (deps string_match.t.exe)
   (action (run ./string_match.t.exe))))
+
+(subdir closures_in_data
+ (rule
+  (targets closures_in_data.t.exe)
+  (deps ClosuresInData.vo closures_in_data.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} closures_in_data.t.exe closures_in_data.cpp closures_in_data.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps closures_in_data.t.exe)
+  (action (run ./closures_in_data.t.exe))))
+
+(subdir coind_guard
+ (rule
+  (targets coind_guard.t.exe)
+  (deps CoindGuard.vo coind_guard.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} coind_guard.t.exe coind_guard.cpp coind_guard.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps coind_guard.t.exe)
+  (action (run ./coind_guard.t.exe))))
+
+(subdir comp_proof
+ (rule
+  (targets comp_proof.t.exe)
+  (deps CompProof.vo comp_proof.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} comp_proof.t.exe comp_proof.cpp comp_proof.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps comp_proof.t.exe)
+  (action (run ./comp_proof.t.exe))))
+
+(subdir constrained_poly
+ (rule
+  (targets constrained_poly.t.exe)
+  (deps ConstrainedPoly.vo constrained_poly.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} constrained_poly.t.exe constrained_poly.cpp constrained_poly.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps constrained_poly.t.exe)
+  (action (run ./constrained_poly.t.exe))))
+
+(subdir cps
+ (rule
+  (targets cps.t.exe)
+  (deps CPS.vo cps.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} cps.t.exe cps.cpp cps.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps cps.t.exe)
+  (action (run ./cps.t.exe))))
+
+(subdir deep_patterns
+ (rule
+  (targets deep_patterns.t.exe)
+  (deps DeepPatterns.vo deep_patterns.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} deep_patterns.t.exe deep_patterns.cpp deep_patterns.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps deep_patterns.t.exe)
+  (action (run ./deep_patterns.t.exe))))
+
+(subdir extract_directives
+ (rule
+  (targets extract_directives.t.exe)
+  (deps ExtractDirectives.vo extract_directives.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} extract_directives.t.exe extract_directives.cpp extract_directives.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps extract_directives.t.exe)
+  (action (run ./extract_directives.t.exe))))
+
+(subdir functor_comp
+ (rule
+  (targets functor_comp.t.exe)
+  (deps FunctorComp.vo functor_comp.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} functor_comp.t.exe functor_comp.cpp functor_comp.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps functor_comp.t.exe)
+  (action (run ./functor_comp.t.exe))))
+
+(subdir let_fix
+ (rule
+  (targets let_fix.t.exe)
+  (deps LetFix.vo let_fix.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} let_fix.t.exe let_fix.cpp let_fix.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps let_fix.t.exe)
+  (action (run ./let_fix.t.exe))))
+
+(subdir monadic
+ (rule
+  (targets monadic.t.exe)
+  (deps Monadic.vo monadic.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} monadic.t.exe monadic.cpp monadic.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps monadic.t.exe)
+  (action (run ./monadic.t.exe))))
+
+(subdir mutual_indexed
+ (rule
+  (targets mutual_indexed.t.exe)
+  (deps MutualIndexed.vo mutual_indexed.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_indexed.t.exe mutual_indexed.cpp mutual_indexed.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_indexed.t.exe)
+  (action (run ./mutual_indexed.t.exe))))
+
+(subdir mutual_record
+ (rule
+  (targets mutual_record.t.exe)
+  (deps MutualRecord.vo mutual_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_record.t.exe mutual_record.cpp mutual_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_record.t.exe)
+  (action (run ./mutual_record.t.exe))))
+
+(subdir partial_apply
+ (rule
+  (targets partial_apply.t.exe)
+  (deps PartialApply.vo partial_apply.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} partial_apply.t.exe partial_apply.cpp partial_apply.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps partial_apply.t.exe)
+  (action (run ./partial_apply.t.exe))))
+
+(subdir poly_inductive
+ (rule
+  (targets poly_inductive.t.exe)
+  (deps PolyInductive.vo poly_inductive.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} poly_inductive.t.exe poly_inductive.cpp poly_inductive.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps poly_inductive.t.exe)
+  (action (run ./poly_inductive.t.exe))))
+
+(subdir prim_rec_tc
+ (rule
+  (targets prim_rec_tc.t.exe)
+  (deps PrimRecTc.vo prim_rec_tc.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_rec_tc.t.exe prim_rec_tc.cpp prim_rec_tc.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_rec_tc.t.exe)
+  (action (run ./prim_rec_tc.t.exe))))
+
+(subdir record_defaults
+ (rule
+  (targets record_defaults.t.exe)
+  (deps RecordDefaults.vo record_defaults.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} record_defaults.t.exe record_defaults.cpp record_defaults.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps record_defaults.t.exe)
+  (action (run ./record_defaults.t.exe))))
+
+(subdir setoid_rw
+ (rule
+  (targets setoid_rw.t.exe)
+  (deps SetoidRw.vo setoid_rw.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} setoid_rw.t.exe setoid_rw.cpp setoid_rw.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps setoid_rw.t.exe)
+  (action (run ./setoid_rw.t.exe))))
+
+(subdir sigma_compute
+ (rule
+  (targets sigma_compute.t.exe)
+  (deps SigmaCompute.vo sigma_compute.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sigma_compute.t.exe sigma_compute.cpp sigma_compute.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sigma_compute.t.exe)
+  (action (run ./sigma_compute.t.exe))))
+
+(subdir where_clause
+ (rule
+  (targets where_clause.t.exe)
+  (deps WhereClause.vo where_clause.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} where_clause.t.exe where_clause.cpp where_clause.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps where_clause.t.exe)
+  (action (run ./where_clause.t.exe))))
