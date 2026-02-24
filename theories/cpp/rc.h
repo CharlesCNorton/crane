@@ -173,7 +173,7 @@ rc<T> make_rc(Args&&... args) {
     return rc<T>(ctrl);
 }
 
-} // namespace mini_rc
+} // namespace crane
 
 /*
 Usage example:

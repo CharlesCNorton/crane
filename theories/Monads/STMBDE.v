@@ -34,7 +34,7 @@ Definition getSTM {A} (v : vector A) (i : int) : STM A := trigger (igetSTM v i).
 Definition isEmptySTM  {A} (v : vector A) : STM bool := trigger (iisEmptySTM v).
 
 Crane Extract Inlined Constant STM => "%t0".
-Crane Extract Inlined Constant atomically => "stm::atomically([&] { return %a0; })". (* Should this be incorported into the c++? *)
+Crane Extract Inlined Constant atomically => "stm::atomically([&] { return %a0; })". (* Should this be incorporated into the c++? *)
 Crane Extract Inlined Constant retry => "stm::retry<%t0>()".
 (* Crane Extract Inlined Constant orElse => "stm::orElse<%t0>(%a0, %a1)". *)
 

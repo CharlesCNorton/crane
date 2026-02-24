@@ -935,7 +935,7 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem levensthein_is_minimal (s t : string) :
+Theorem levenshtein_is_minimal (s t : string) :
   forall (n : nat) (c : chain s t n), levenshtein s t <= n.
 Proof.
   intros n c.

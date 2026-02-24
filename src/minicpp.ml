@@ -77,7 +77,7 @@ and cpp_expr =
   | CPPstring of Pstring.t
   | CPPuint   of Uint63.t
   | CPPparray of cpp_expr array * cpp_expr
-(*| CPPnamespace of Id.t * cpp_expr    should we do this for namespace acces (in general, as is not just cpp_expressions)? *)
+(*| CPPnamespace of Id.t * cpp_expr    should we do this for namespace access (in general, as is not just cpp_expressions)? *)
   | CPPrequires of (cpp_type * Id.t) list * (cpp_expr * cpp_constraint) list
   (* requires (T a, T b) { { eqb(a, b) } -> std::same_as<bool> } *)
   | CPPnew of cpp_type * cpp_expr list  (* new Type(args) or new Type{args} *)
@@ -124,7 +124,7 @@ and cpp_field =
   | Fdeleted_ctor
 
 (* C++ type schema.
-   The integer is the number of variable in the schema. *)
+   The integer is the number of variables in the schema. *)
 
 type cpp_schema = int * cpp_type
 

@@ -74,7 +74,7 @@ let struct_iter do_decl do_spec do_mp s =
   List.iter
     (function (_,sel) -> List.iter (se_iter do_decl do_spec do_mp) sel) s
 
-(*s Apply some fonctions upon all references in [ml_type], [ml_ast],
+(*s Apply some functions upon all references in [ml_type], [ml_ast],
   [ml_decl], [ml_spec] and [ml_structure]. *)
 
 type do_ref = GlobRef.t -> unit

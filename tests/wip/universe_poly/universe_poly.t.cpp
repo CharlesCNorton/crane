@@ -43,7 +43,7 @@ int main() {
     // Test 3: poly_length
     {
         ASSERT(test_length == 3);
-        std::cout << "Test 5 (poly_length): PASSED" << std::endl;
+        std::cout << "Test 3 (poly_length): PASSED" << std::endl;
     }
 
     if (testStatus == 0) {

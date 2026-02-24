@@ -294,8 +294,8 @@ struct Node {
 int main(){
     bslma::Allocator* alloc = bslma::Default::allocator(0);
 
-    rc<Node> root = make_rcA<Node>(alloc, 1);
-    root->left = make_rcA<Node>(alloc, 2);
+    rc<Node> root = make_rc<Node>(alloc, 1);
+    root->left = make_rc<Node>(alloc, 2);
     root->left->parent = root.downgrade();
 
     bsl::cout << root.useCount() << "\n"; // 1

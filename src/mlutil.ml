@@ -208,7 +208,7 @@ module Mlenv = struct
     | Tglob (_,l,_) -> List.fold_left find_free set l
     | _ -> set
 
-  (* The [free] set of an environment can be outdate after
+  (* The [free] set of an environment can be outdated after
      some unifications. [clean_free] takes care of that. *)
 
   let clean_free mle =
@@ -454,7 +454,7 @@ and eq_ml_branch (id1, _, p1, t1) (id2, _, p2, t2) =
   eq_ml_ast t1 t2
 
 (*s [ast_iter_rel f t] applies [f] on every [MLrel] in t. It takes care
-   of the number of bingings crossed before reaching the [MLrel]. *)
+   of the number of bindings crossed before reaching the [MLrel]. *)
 
 let ast_iter_rel f =
   let rec iter n = function
@@ -676,7 +676,7 @@ let ast_subst e =
 
 (*s Generalized substitution.
    [gen_subst v d t] applies to [t] the substitution coded in the
-   [v] array: [(Rel i)] becomes [v.(i-1)]. [d] is the correction applies
+   [v] array: [(Rel i)] becomes [v.(i-1)]. [d] is the correction applied
    to [Rel] greater than [Array.length v]. *)
 
 let gen_subst v d t =
@@ -1222,7 +1222,7 @@ let rec select_via_bl l args = match l,args with
   | _ -> assert false
 
 (*s [kill_some_lams] removes some head lambdas according to the signature [bl].
-   This list is build on the identifier list model: outermost lambda
+   This list is built on the identifier list model: outermost lambda
    is on the right.
    [Rels] corresponding to removed lambdas are not supposed to occur
    (except maybe in the case of Kimplicit), and
