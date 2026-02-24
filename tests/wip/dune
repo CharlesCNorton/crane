@@ -308,90 +308,79 @@
   (deps opaque.t.exe)
   (action (run ./opaque.t.exe))))
 
-(subdir mutual_indexed
+(subdir acc_rect
  (rule
-  (targets mutual_indexed.t.exe)
-  (deps MutualIndexed.vo mutual_indexed.t.cpp (source_tree .))
+  (targets acc_rect.t.exe)
+  (deps AccRect.vo acc_rect.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_indexed.t.exe mutual_indexed.cpp mutual_indexed.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} acc_rect.t.exe acc_rect.cpp acc_rect.t.cpp)))
  (rule
   (alias runtest)
-  (deps mutual_indexed.t.exe)
-  (action (run ./mutual_indexed.t.exe))))
+  (deps acc_rect.t.exe)
+  (action (run ./acc_rect.t.exe))))
 
-(subdir coind_guard
+(subdir dep_record
  (rule
-  (targets coind_guard.t.exe)
-  (deps CoindGuard.vo coind_guard.t.cpp (source_tree .))
+  (targets dep_record.t.exe)
+  (deps DepRecord.vo dep_record.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} coind_guard.t.exe coind_guard.cpp coind_guard.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} dep_record.t.exe dep_record.cpp dep_record.t.cpp)))
  (rule
   (alias runtest)
-  (deps coind_guard.t.exe)
-  (action (run ./coind_guard.t.exe))))
+  (deps dep_record.t.exe)
+  (action (run ./dep_record.t.exe))))
 
-(subdir constrained_poly
+(subdir higher_kinded
  (rule
-  (targets constrained_poly.t.exe)
-  (deps ConstrainedPoly.vo constrained_poly.t.cpp (source_tree .))
+  (targets higher_kinded.t.exe)
+  (deps HigherKinded.vo higher_kinded.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} constrained_poly.t.exe constrained_poly.cpp constrained_poly.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} higher_kinded.t.exe higher_kinded.cpp higher_kinded.t.cpp)))
  (rule
   (alias runtest)
-  (deps constrained_poly.t.exe)
-  (action (run ./constrained_poly.t.exe))))
+  (deps higher_kinded.t.exe)
+  (action (run ./higher_kinded.t.exe))))
 
-(subdir comp_proof
+(subdir large_mutual
  (rule
-  (targets comp_proof.t.exe)
-  (deps CompProof.vo comp_proof.t.cpp (source_tree .))
+  (targets large_mutual.t.exe)
+  (deps LargeMutual.vo large_mutual.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} comp_proof.t.exe comp_proof.cpp comp_proof.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} large_mutual.t.exe large_mutual.cpp large_mutual.t.cpp)))
  (rule
   (alias runtest)
-  (deps comp_proof.t.exe)
-  (action (run ./comp_proof.t.exe))))
+  (deps large_mutual.t.exe)
+  (action (run ./large_mutual.t.exe))))
 
-(subdir setoid_rw
+(subdir rec_record
  (rule
-  (targets setoid_rw.t.exe)
-  (deps SetoidRw.vo setoid_rw.t.cpp (source_tree .))
+  (targets rec_record.t.exe)
+  (deps RecRecord.vo rec_record.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} setoid_rw.t.exe setoid_rw.cpp setoid_rw.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} rec_record.t.exe rec_record.cpp rec_record.t.cpp)))
  (rule
   (alias runtest)
-  (deps setoid_rw.t.exe)
-  (action (run ./setoid_rw.t.exe))))
+  (deps rec_record.t.exe)
+  (action (run ./rec_record.t.exe))))
 
-(subdir functor_comp
+(subdir sprop
  (rule
-  (targets functor_comp.t.exe)
-  (deps FunctorComp.vo functor_comp.t.cpp (source_tree .))
+  (targets sprop.t.exe)
+  (deps SProp.vo sprop.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} functor_comp.t.exe functor_comp.cpp functor_comp.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sprop.t.exe sprop.cpp sprop.t.cpp)))
  (rule
   (alias runtest)
-  (deps functor_comp.t.exe)
-  (action (run ./functor_comp.t.exe))))
+  (deps sprop.t.exe)
+  (action (run ./sprop.t.exe))))
 
-(subdir record_defaults
+(subdir string_match
  (rule
-  (targets record_defaults.t.exe)
-  (deps RecordDefaults.vo record_defaults.t.cpp (source_tree .))
+  (targets string_match.t.exe)
+  (deps StringMatch.vo string_match.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} record_defaults.t.exe record_defaults.cpp record_defaults.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} string_match.t.exe string_match.cpp string_match.t.cpp)))
  (rule
   (alias runtest)
-  (deps record_defaults.t.exe)
-  (action (run ./record_defaults.t.exe))))
-
-(subdir where_clause
- (rule
-  (targets where_clause.t.exe)
-  (deps WhereClause.vo where_clause.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} where_clause.t.exe where_clause.cpp where_clause.t.cpp)))
- (rule
-  (alias runtest)
-  (deps where_clause.t.exe)
-  (action (run ./where_clause.t.exe))))
+  (deps string_match.t.exe)
+  (action (run ./string_match.t.exe))))
