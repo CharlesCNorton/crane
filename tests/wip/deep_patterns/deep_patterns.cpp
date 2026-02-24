@@ -1,0 +1,145 @@
+#include <algorithm>
+#include <any>
+#include <cassert>
+#include <deep_patterns.h>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <variant>
+
+unsigned int
+deep_option(const std::optional<std::optional<std::optional<unsigned int>>> x) {
+  if (x.has_value()) {
+    std::optional<std::optional<unsigned int>> o = *x;
+    if (o.has_value()) {
+      std::optional<unsigned int> o0 = *o;
+      if (o0.has_value()) {
+        unsigned int n = *o0;
+        return n;
+      } else {
+        return (0 + 1);
+      }
+    } else {
+      return ((0 + 1) + 1);
+    }
+  } else {
+    return (((0 + 1) + 1) + 1);
+  }
+}
+
+unsigned int deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
+                                       std::pair<unsigned int, unsigned int>>
+                           p) {
+  std::pair<unsigned int, unsigned int> p0 = p.first;
+  std::pair<unsigned int, unsigned int> p1 = p.second;
+  unsigned int a = p0.first;
+  unsigned int b = p0.second;
+  unsigned int c = p1.first;
+  unsigned int d = p1.second;
+  return (((a + b) + c) + d);
+}
+
+unsigned int list_shape(const std::shared_ptr<List::list<unsigned int>> &l) {
+  return std::visit(
+      Overloaded{
+          [](const typename List::list<unsigned int>::nil _args)
+              -> unsigned int { return 0; },
+          [](const typename List::list<unsigned int>::cons _args)
+              -> unsigned int {
+            unsigned int x = _args._a0;
+            std::shared_ptr<List::list<unsigned int>> l0 = _args._a1;
+            return std::visit(
+                Overloaded{
+                    [&](const typename List::list<unsigned int>::nil _args)
+                        -> unsigned int { return std::move(x); },
+                    [&](const typename List::list<unsigned int>::cons _args)
+                        -> unsigned int {
+                      unsigned int y = _args._a0;
+                      std::shared_ptr<List::list<unsigned int>> l1 = _args._a1;
+                      return std::visit(
+                          Overloaded{
+                              [&](const typename List::list<unsigned int>::nil
+                                      _args) -> unsigned int {
+                                return (std::move(x) + std::move(y));
+                              },
+                              [&](const typename List::list<unsigned int>::cons
+                                      _args) -> unsigned int {
+                                unsigned int z = _args._a0;
+                                std::shared_ptr<List::list<unsigned int>> l2 =
+                                    _args._a1;
+                                return std::visit(
+                                    Overloaded{
+                                        [&](const typename List::list<
+                                            unsigned int>::nil _args)
+                                            -> unsigned int {
+                                          return (
+                                              (std::move(x) + std::move(y)) +
+                                              std::move(z));
+                                        },
+                                        [&](const typename List::list<
+                                            unsigned int>::cons _args)
+                                            -> unsigned int {
+                                          std::shared_ptr<
+                                              List::list<unsigned int>>
+                                              rest = _args._a1;
+                                          return (
+                                              ((std::move(x) + std::move(y)) +
+                                               std::move(z)) +
+                                              std::move(rest)->length());
+                                        }},
+                                    std::move(l2)->v());
+                              }},
+                          std::move(l1)->v());
+                    }},
+                std::move(l0)->v());
+          }},
+      l->v());
+}
+
+unsigned int complex_match(
+    const std::optional<
+        std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
+        x) {
+  if (x.has_value()) {
+    std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>> p = *x;
+    unsigned int n = p.first;
+    std::shared_ptr<List::list<unsigned int>> l = p.second;
+    return std::visit(
+        Overloaded{
+            [&](const typename List::list<unsigned int>::nil _args)
+                -> unsigned int { return n; },
+            [&](const typename List::list<unsigned int>::cons _args)
+                -> unsigned int {
+              unsigned int m = _args._a0;
+              std::shared_ptr<List::list<unsigned int>> l0 = _args._a1;
+              return std::visit(
+                  Overloaded{
+                      [&](const typename List::list<unsigned int>::nil _args)
+                          -> unsigned int { return (n + std::move(m)); },
+                      [&](const typename List::list<unsigned int>::cons _args)
+                          -> unsigned int {
+                        std::shared_ptr<List::list<unsigned int>> rest =
+                            _args._a1;
+                        return ((n + std::move(m)) + std::move(rest)->length());
+                      }},
+                  std::move(l0)->v());
+            }},
+        l->v());
+  } else {
+    return 0;
+  }
+}
+
+unsigned int guarded_match(const std::pair<unsigned int, unsigned int> p) {
+  unsigned int a = p.first;
+  unsigned int b = p.second;
+  if ((a <= b)) {
+    return (((b - a) > b ? 0 : (b - a)));
+  } else {
+    return (((a - b) > a ? 0 : (a - b)));
+  }
+}
