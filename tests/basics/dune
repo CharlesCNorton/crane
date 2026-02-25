@@ -276,4 +276,15 @@
   (deps int63_arith.t.exe)
   (action (run ./int63_arith.t.exe))))
 
+(subdir prim_array
+ (rule
+  (targets prim_array_test.t.exe)
+  (deps PrimArrayTest.vo prim_array_test.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_array_test.t.exe prim_array_test.cpp prim_array_test.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_array_test.t.exe)
+  (action (run ./prim_array_test.t.exe))))
+
 

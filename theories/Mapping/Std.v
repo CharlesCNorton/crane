@@ -53,37 +53,4 @@ Crane Extract Inlined Constant lxor => "(%a0 ^ %a1)".
 Crane Extract Inlined Constant lsl => "(%a1 >= 63 ? 0 : ((%a0 << %a1) & 0x7FFFFFFFFFFFFFFFLL))".
 Crane Extract Inlined Constant lsr => "(%a1 >= 63 ? 0 : (%a0 >> %a1))".
 
-(* From Corelib Require PrimArray.
-Definition array (A : Type) {l : int} {def : A} := PrimArray.array A.
-Definition make {A  : Type} (l : int) (def : A) : @array A l def := PrimArray.make l def.
-Definition get {A  : Type} {l : int} {def : A} : @array A l def -> int -> A :=PrimArray.get.
-Definition set {A  : Type} {l : int} {def : A} : @array A l def -> int -> A -> @array A l def := PrimArray.set.
-Definition length {A  : Type} {l : int} {def : A} : @array A l def -> int := PrimArray.length.
-(* Definition copy {A  : Type} {l : int} {def : A} : @array A l def -> @array A l def := PrimArray.copy. *)
-Crane Extract Inlined Constant array => "std::array<%t0, %a0>" From "array".
-Crane Extract Inlined Constant make =>
-"[]() -> std::array<%t0, %a0> {
-    std::array<%t0, %a0> _arr;
-    _arr.fill(%a1);
-    return _arr;
-}()".
-Crane Extract Inlined Constant get =>
-"[]() -> %t0 {
-    if(%a3 < %a0){
-      return %a2[%a3];
-    }
-    else {
-      return %a1;
-    }
-}()".
-Crane Extract Inlined Constant set =>
-"[]() -> std::array<%t0, %a0> {
-    if(%a3 < %a0){
-      %a2[%a3] = %a4;
-      return %a2;
-    }
-    else {
-      return %a2;
-    }
-}()".
-Crane Extract Inlined Constant length => "%a2.size()". *)
+(* PrimArray extraction is in Mapping.PrimArrayStd (persistent_array<T>). *)
