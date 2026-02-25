@@ -20,7 +20,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct PrimFloatTest {
+struct PrimFloat {
   static inline const double f_zero = 0x0p+0;
 
   static inline const double f_one = 0x1p+0;

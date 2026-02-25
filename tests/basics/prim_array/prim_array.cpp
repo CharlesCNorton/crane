@@ -6,7 +6,8 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <prim_float.h>
+#include <persistent_array.h>
+#include <prim_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>

@@ -6,7 +6,7 @@ From Corelib Require Import PrimInt63.
 From Crane Require Import Mapping.Std Mapping.NatIntStd Mapping.PrimArrayStd.
 Require Crane.Extraction.
 
-Module PrimArrayTest.
+Module PrimArray.
 
 (* --- Basic construction and access --- *)
 
@@ -51,6 +51,6 @@ Definition copy_val : nat := parray_get arr_copy 2%int63. (* should be 42 *)
 
 Definition oob_get : nat := parray_get arr5 99%int63.
 
-End PrimArrayTest.
+End PrimArray.
 
-Crane Extraction "prim_array_test" PrimArrayTest.
+Crane Extraction "prim_array" PrimArray.

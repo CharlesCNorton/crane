@@ -20,7 +20,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct PrimArrayTest {
+struct PrimArray {
   static inline const persistent_array<unsigned int> arr5 =
       persistent_array<unsigned int>(int64_t(5), 0);
 

@@ -277,14 +277,24 @@
   (action (run ./int63_arith.t.exe))))
 
 
-
-(subdir prim_array_test
+(subdir prim_array
  (rule
-  (targets prim_array_test.t.exe)
-  (deps PrimArrayTest.vo prim_array_test.t.cpp (source_tree .))
+  (targets prim_array.t.exe)
+  (deps PrimArray.vo prim_array.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_array_test.t.exe prim_array_test.cpp prim_array_test.t.cpp)))
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_array.t.exe prim_array.cpp prim_array.t.cpp)))
  (rule
   (alias runtest)
-  (deps prim_array_test.t.exe)
-  (action (run ./prim_array_test.t.exe))))
+  (deps prim_array.t.exe)
+  (action (run ./prim_array.t.exe))))
+
+(subdir prim_float
+ (rule
+  (targets prim_float.t.exe)
+  (deps PrimFloat.vo prim_float.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_float.t.exe prim_float.cpp prim_float.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_float.t.exe)
+  (action (run ./prim_float.t.exe))))

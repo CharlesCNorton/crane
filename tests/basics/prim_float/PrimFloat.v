@@ -6,7 +6,7 @@ From Corelib Require Import PrimFloat PrimInt63.
 From Crane Require Import Mapping.Std Mapping.PrimFloatStd.
 Require Crane.Extraction.
 
-Module PrimFloatTest.
+Module PrimFloat.
 
 (* --- Constants --- *)
 
@@ -34,6 +34,6 @@ Definition test_leb (x y : pfloat) : bool := pfloat_leb x y.
 
 Definition test_of_uint63 (n : int) : pfloat := pfloat_of_uint63 n.
 
-End PrimFloatTest.
+End PrimFloat.
 
-Crane Extraction "prim_float_test" PrimFloatTest.
+Crane Extraction "prim_float" PrimFloat.
