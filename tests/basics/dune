@@ -276,7 +276,9 @@
   (deps int63_arith.t.exe)
   (action (run ./int63_arith.t.exe))))
 
-(subdir prim_array
+
+
+(subdir prim_array_test
  (rule
   (targets prim_array_test.t.exe)
   (deps PrimArrayTest.vo prim_array_test.t.cpp (source_tree .))
@@ -286,5 +288,3 @@
   (alias runtest)
   (deps prim_array_test.t.exe)
   (action (run ./prim_array_test.t.exe))))
-
-

@@ -253,16 +253,6 @@
   (deps mutual_coind.t.exe)
   (action (run ./mutual_coind.t.exe))))
 
-(subdir large_enum
- (rule
-  (targets large_enum.t.exe)
-  (deps LargeEnum.vo large_enum.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} large_enum.t.exe large_enum.cpp large_enum.t.cpp)))
- (rule
-  (alias runtest)
-  (deps large_enum.t.exe)
-  (action (run ./large_enum.t.exe))))
 
 (subdir dep_elim
  (rule
@@ -308,16 +298,6 @@
   (deps higher_kinded.t.exe)
   (action (run ./higher_kinded.t.exe))))
 
-(subdir large_mutual
- (rule
-  (targets large_mutual.t.exe)
-  (deps LargeMutual.vo large_mutual.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} large_mutual.t.exe large_mutual.cpp large_mutual.t.cpp)))
- (rule
-  (alias runtest)
-  (deps large_mutual.t.exe)
-  (action (run ./large_mutual.t.exe))))
 
 (subdir rec_record
  (rule
@@ -374,27 +354,6 @@
   (deps coind_guard.t.exe)
   (action (run ./coind_guard.t.exe))))
 
-(subdir comp_proof
- (rule
-  (targets comp_proof.t.exe)
-  (deps CompProof.vo comp_proof.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} comp_proof.t.exe comp_proof.cpp comp_proof.t.cpp)))
- (rule
-  (alias runtest)
-  (deps comp_proof.t.exe)
-  (action (run ./comp_proof.t.exe))))
-
-(subdir constrained_poly
- (rule
-  (targets constrained_poly.t.exe)
-  (deps ConstrainedPoly.vo constrained_poly.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} constrained_poly.t.exe constrained_poly.cpp constrained_poly.t.cpp)))
- (rule
-  (alias runtest)
-  (deps constrained_poly.t.exe)
-  (action (run ./constrained_poly.t.exe))))
 
 (subdir cps
  (rule
@@ -407,27 +366,6 @@
   (deps cps.t.exe)
   (action (run ./cps.t.exe))))
 
-(subdir deep_patterns
- (rule
-  (targets deep_patterns.t.exe)
-  (deps DeepPatterns.vo deep_patterns.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} deep_patterns.t.exe deep_patterns.cpp deep_patterns.t.cpp)))
- (rule
-  (alias runtest)
-  (deps deep_patterns.t.exe)
-  (action (run ./deep_patterns.t.exe))))
-
-(subdir extract_directives
- (rule
-  (targets extract_directives.t.exe)
-  (deps ExtractDirectives.vo extract_directives.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} extract_directives.t.exe extract_directives.cpp extract_directives.t.cpp)))
- (rule
-  (alias runtest)
-  (deps extract_directives.t.exe)
-  (action (run ./extract_directives.t.exe))))
 
 (subdir functor_comp
  (rule

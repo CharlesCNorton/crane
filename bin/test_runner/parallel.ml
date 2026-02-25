@@ -57,19 +57,14 @@ let build_batch targets =
   end
 
 let build_all_tests _config tests =
-  (* Build test executables one category at a time so that compilation
-     failures in one category (e.g. wip) don't prevent tests in another
-     category (e.g. regression) from being built. Within a category dune's
-     internal parallelism handles concurrent compilation. *)
-  let by_category = Hashtbl.create 8 in
+  (* Build each test executable individually so that a compilation failure
+     in one test cannot prevent other tests from being built. Each call to
+     dune is a separate process; dune's file-level caching keeps this fast
+     since shared dependencies (plugin, theories) are only built once. *)
   List.iter (fun t ->
     let target = Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name in
-    let cur = try Hashtbl.find by_category t.category with Not_found -> [] in
-    Hashtbl.replace by_category t.category (target :: cur)
-  ) tests;
-  Hashtbl.iter (fun _category targets ->
-    ignore (build_batch targets)
-  ) by_category
+    ignore (build_batch [target])
+  ) tests
 
 let run_test config test =
   let test_dir = Printf.sprintf "%s/_build/default/tests/%s/%s" config.project_root test.category test.name in
