@@ -57,25 +57,19 @@ let build_batch targets =
   end
 
 let build_all_tests _config tests =
-  (* Build test executables in batches to avoid exceeding dune's argument limit *)
-  let exe_targets = List.map (fun t ->
-    Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name
-  ) tests in
-  let batch_size = 30 in
-  let rec take n acc = function
-    | [] -> (List.rev acc, [])
-    | rest when n = 0 -> (List.rev acc, rest)
-    | x :: xs -> take (n - 1) (x :: acc) xs
-  in
-  let rec build_batches targets =
-    match targets with
-    | [] -> ()
-    | _ ->
-      let batch, rest = take batch_size [] targets in
-      ignore (build_batch batch);
-      build_batches rest
-  in
-  build_batches exe_targets
+  (* Build test executables one category at a time so that compilation
+     failures in one category (e.g. wip) don't prevent tests in another
+     category (e.g. regression) from being built. Within a category dune's
+     internal parallelism handles concurrent compilation. *)
+  let by_category = Hashtbl.create 8 in
+  List.iter (fun t ->
+    let target = Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name in
+    let cur = try Hashtbl.find by_category t.category with Not_found -> [] in
+    Hashtbl.replace by_category t.category (target :: cur)
+  ) tests;
+  Hashtbl.iter (fun _category targets ->
+    ignore (build_batch targets)
+  ) by_category
 
 let run_test config test =
   let test_dir = Printf.sprintf "%s/_build/default/tests/%s/%s" config.project_root test.category test.name in
