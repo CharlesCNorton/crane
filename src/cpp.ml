@@ -602,7 +602,7 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
         collect_from_expr (collect_from_expr (refs, decls) lhs) rhs
     (* Leaf expressions: no variables to collect *)
     | CPPglob _ | CPPvisit | CPPmk_shared _ | CPPmk_unique _ | CPPstring _
-    | CPPuint _ | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ ->
+    | CPPuint _ | CPPfloat _ | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ ->
         (refs, decls)
 
   and collect_from_stmt (refs, decls) stmt =
@@ -686,7 +686,7 @@ and expr_contains_capturing_lambda (e : Minicpp.cpp_expr) : bool =
   | CPPqualified (e', _) -> expr_contains_capturing_lambda e'
   | CPPrequires (_, constraints) -> List.exists (fun (e', _) -> expr_contains_capturing_lambda e') constraints
   | CPPbinop (_, lhs, rhs) -> expr_contains_capturing_lambda lhs || expr_contains_capturing_lambda rhs
-  | CPPvar _ | CPPvar' _ | CPPglob _ | CPPvisit | CPPmk_shared _ | CPPmk_unique _ | CPPstring _ | CPPuint _ | CPPthis | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ -> false
+  | CPPvar _ | CPPvar' _ | CPPglob _ | CPPvisit | CPPmk_shared _ | CPPmk_unique _ | CPPstring _ | CPPuint _ | CPPfloat _ | CPPthis | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ -> false
 
 and stmt_contains_capturing_lambda (s : Minicpp.cpp_stmt) : bool =
   let open Minicpp in
@@ -1191,6 +1191,7 @@ and pp_cpp_expr env args t =
           str (cpp_type ^ "(" ^ s ^ ")")
         else str s
       with Not_found -> str s)
+  | CPPfloat f -> str (Printf.sprintf "%h" (Float64.to_float f))
   | CPPrequires (ty_vars, exprs) ->
       let ty_vars_s = match ty_vars with [] -> mt () | _ ->
         str "(" ++ pp_list (fun (ty, id) -> (pp_cpp_type false [] ty) ++ spc () ++ Id.print id) ty_vars ++ str ") " in
