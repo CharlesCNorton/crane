@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <dep_elim.h>
 #include <functional>
 #include <iostream>

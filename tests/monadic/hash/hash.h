@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -65,16 +66,18 @@ struct TVar {};
 
 template <typename K, typename V> struct CHT {
   std::function<bool(K, K)> cht_eqb;
-  std::function<int(K)> cht_hash;
+  std::function<int64_t(K)> cht_hash;
   std::vector<
       std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>>
       cht_buckets;
-  int cht_nbuckets;
+  int64_t cht_nbuckets;
   std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>
       cht_fallback;
   std::shared_ptr<stm::TVar<std::shared_ptr<List::list<std::pair<K, V>>>>>
   bucket_of(const K k) const {
-    int i = this->CHT::cht_hash(k) % this->CHT::cht_nbuckets;
+    int64_t i = (this->CHT::cht_nbuckets == 0
+                     ? 0
+                     : this->CHT::cht_hash(k) % this->CHT::cht_nbuckets);
     return this->CHT::cht_buckets.at(i);
   }
   std::optional<V> stm_get(const K k) const {
@@ -241,7 +244,7 @@ template <typename K, typename V> struct CHT {
   template <typename T1, typename T2>
   static std::vector<std::shared_ptr<
       stm::TVar<std::shared_ptr<List::list<std::pair<T1, T2>>>>>>
-  mk_buckets(const int num) {
+  mk_buckets(const int64_t num) {
     std::vector<std::shared_ptr<
         stm::TVar<std::shared_ptr<List::list<std::pair<T1, T2>>>>>>
         buckets = {};
@@ -270,10 +273,10 @@ template <typename K, typename V> struct CHT {
   }
 
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0,
-            MapsTo<int, T1> F1>
+            MapsTo<int64_t, T1> F1>
   static std::shared_ptr<CHT<T1, T2>> new_hash(F0 &&eqb, F1 &&hash,
-                                               const int requested) {
-    int n = std::max(requested, 1);
+                                               const int64_t requested) {
+    int64_t n = std::max(requested, 1);
     std::vector<std::shared_ptr<
         stm::TVar<std::shared_ptr<List::list<std::pair<T1, T2>>>>>>
         bs = CHT<int, int>::template mk_buckets<T1, T2>(n);

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <currying.h>
 #include <functional>
 #include <iostream>

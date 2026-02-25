@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <functional>

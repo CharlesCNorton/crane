@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <func_vernac.h>
 #include <functional>
 #include <iostream>

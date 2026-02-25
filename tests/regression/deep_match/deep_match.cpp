@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <deep_match.h>
 #include <functional>
 #include <iostream>

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <eval_expr.h>
 #include <functional>
 #include <iostream>

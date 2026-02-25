@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,8 +12,8 @@
 #include <utility>
 #include <variant>
 
-bool Matcher::char_eq(const int x, const int y) {
-  bool b = x == y;
+bool Matcher::char_eq(const int64_t x, const int64_t y) {
+  bool b = (x == y);
   if (b) {
     return true;
   } else {
@@ -51,14 +52,14 @@ bool Matcher::regexp_eq(const std::shared_ptr<Matcher::regexp> &r,
                 x->v());
           },
           [&](const typename Matcher::regexp::Char _args) -> auto {
-            int c = _args._a0;
+            int64_t c = _args._a0;
             return std::visit(
                 Overloaded{
                     [](const typename Matcher::regexp::Any _args) -> bool {
                       return false;
                     },
                     [&](const typename Matcher::regexp::Char _args) -> bool {
-                      int c0 = _args._a0;
+                      int64_t c0 = _args._a0;
                       if (char_eq(c, c0)) {
                         return true;
                       } else {
@@ -907,7 +908,7 @@ bool Matcher::accepts_null(const std::shared_ptr<Matcher::regexp> &r) {
 }
 
 std::shared_ptr<Matcher::regexp>
-Matcher::deriv(const std::shared_ptr<Matcher::regexp> &r, const int c) {
+Matcher::deriv(const std::shared_ptr<Matcher::regexp> &r, const int64_t c) {
   return std::visit(
       Overloaded{[](const typename Matcher::regexp::Any _args)
                      -> std::shared_ptr<Matcher::regexp> {
@@ -915,7 +916,7 @@ Matcher::deriv(const std::shared_ptr<Matcher::regexp> &r, const int c) {
                  },
                  [&](const typename Matcher::regexp::Char _args)
                      -> std::shared_ptr<Matcher::regexp> {
-                   int c_ = _args._a0;
+                   int64_t c_ = _args._a0;
                    if (char_eq(c, c_)) {
                      return regexp::ctor::Eps_();
                    } else {
@@ -954,22 +955,22 @@ Matcher::deriv(const std::shared_ptr<Matcher::regexp> &r, const int c) {
 
 std::shared_ptr<Matcher::regexp>
 Matcher::derivs(std::shared_ptr<Matcher::regexp> r,
-                const std::shared_ptr<List::list<int>> &cs) {
+                const std::shared_ptr<List::list<int64_t>> &cs) {
   return std::visit(
       Overloaded{
-          [&](const typename List::list<int>::nil _args)
+          [&](const typename List::list<int64_t>::nil _args)
               -> std::shared_ptr<Matcher::regexp> { return std::move(r); },
-          [&](const typename List::list<int>::cons _args)
+          [&](const typename List::list<int64_t>::cons _args)
               -> std::shared_ptr<Matcher::regexp> {
-            int c = _args._a0;
-            std::shared_ptr<List::list<int>> cs_ = _args._a1;
+            int64_t c = _args._a0;
+            std::shared_ptr<List::list<int64_t>> cs_ = _args._a1;
             return derivs(deriv(std::move(r), c), std::move(cs_));
           }},
       cs->v());
 }
 
 bool Matcher::deriv_parse(const std::shared_ptr<Matcher::regexp> &r,
-                          const std::shared_ptr<List::list<int>> &cs) {
+                          const std::shared_ptr<List::list<int64_t>> &cs) {
   if (accepts_null(derivs(r, cs))) {
     return true;
   } else {
@@ -1032,7 +1033,7 @@ bool Matcher::NullEpsOrZero(const std::shared_ptr<Matcher::regexp> &r) {
 }
 
 bool Matcher::parse(const std::shared_ptr<Matcher::regexp> &r,
-                    const std::shared_ptr<List::list<int>> &cs) {
+                    const std::shared_ptr<List::list<int64_t>> &cs) {
   bool b = deriv_parse(r, cs);
   if (b) {
     return true;
@@ -1042,7 +1043,7 @@ bool Matcher::parse(const std::shared_ptr<Matcher::regexp> &r,
 }
 
 bool Matcher::parse_bool(const std::shared_ptr<Matcher::regexp> &r,
-                         const std::shared_ptr<List::list<int>> &cs) {
+                         const std::shared_ptr<List::list<int64_t>> &cs) {
   if (parse(r, cs)) {
     return true;
   } else {

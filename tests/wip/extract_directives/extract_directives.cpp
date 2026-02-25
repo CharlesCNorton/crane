@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <extract_directives.h>
 #include <functional>
 #include <iostream>

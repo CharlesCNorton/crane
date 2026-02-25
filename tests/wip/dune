@@ -89,17 +89,6 @@
   (deps program_fixpoint.t.exe)
   (action (run ./program_fixpoint.t.exe))))
 
-(subdir prim_proj
- (rule
-  (targets prim_proj.t.exe)
-  (deps PrimProj.vo prim_proj.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_proj.t.exe prim_proj.cpp prim_proj.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prim_proj.t.exe)
-  (action (run ./prim_proj.t.exe))))
-
 (subdir canon_struct
  (rule
   (targets canon_struct.t.exe)
@@ -253,17 +242,6 @@
   (deps coercions.t.exe)
   (action (run ./coercions.t.exe))))
 
-(subdir universe_poly
- (rule
-  (targets universe_poly.t.exe)
-  (deps UniversePoly.vo universe_poly.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} universe_poly.t.exe universe_poly.cpp universe_poly.t.cpp)))
- (rule
-  (alias runtest)
-  (deps universe_poly.t.exe)
-  (action (run ./universe_poly.t.exe))))
-
 (subdir mutual_coind
  (rule
   (targets mutual_coind.t.exe)
@@ -307,17 +285,6 @@
   (alias runtest)
   (deps opaque.t.exe)
   (action (run ./opaque.t.exe))))
-
-(subdir acc_rect
- (rule
-  (targets acc_rect.t.exe)
-  (deps AccRect.vo acc_rect.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} acc_rect.t.exe acc_rect.cpp acc_rect.t.cpp)))
- (rule
-  (alias runtest)
-  (deps acc_rect.t.exe)
-  (action (run ./acc_rect.t.exe))))
 
 (subdir dep_record
  (rule
@@ -506,17 +473,6 @@
   (deps mutual_indexed.t.exe)
   (action (run ./mutual_indexed.t.exe))))
 
-(subdir mutual_record
- (rule
-  (targets mutual_record.t.exe)
-  (deps MutualRecord.vo mutual_record.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_record.t.exe mutual_record.cpp mutual_record.t.cpp)))
- (rule
-  (alias runtest)
-  (deps mutual_record.t.exe)
-  (action (run ./mutual_record.t.exe))))
-
 (subdir partial_apply
  (rule
   (targets partial_apply.t.exe)
@@ -539,39 +495,6 @@
   (deps poly_inductive.t.exe)
   (action (run ./poly_inductive.t.exe))))
 
-(subdir prim_rec_tc
- (rule
-  (targets prim_rec_tc.t.exe)
-  (deps PrimRecTc.vo prim_rec_tc.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_rec_tc.t.exe prim_rec_tc.cpp prim_rec_tc.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prim_rec_tc.t.exe)
-  (action (run ./prim_rec_tc.t.exe))))
-
-(subdir record_defaults
- (rule
-  (targets record_defaults.t.exe)
-  (deps RecordDefaults.vo record_defaults.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} record_defaults.t.exe record_defaults.cpp record_defaults.t.cpp)))
- (rule
-  (alias runtest)
-  (deps record_defaults.t.exe)
-  (action (run ./record_defaults.t.exe))))
-
-(subdir setoid_rw
- (rule
-  (targets setoid_rw.t.exe)
-  (deps SetoidRw.vo setoid_rw.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} setoid_rw.t.exe setoid_rw.cpp setoid_rw.t.cpp)))
- (rule
-  (alias runtest)
-  (deps setoid_rw.t.exe)
-  (action (run ./setoid_rw.t.exe))))
-
 (subdir sigma_compute
  (rule
   (targets sigma_compute.t.exe)
@@ -583,13 +506,3 @@
   (deps sigma_compute.t.exe)
   (action (run ./sigma_compute.t.exe))))
 
-(subdir where_clause
- (rule
-  (targets where_clause.t.exe)
-  (deps WhereClause.vo where_clause.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} where_clause.t.exe where_clause.cpp where_clause.t.cpp)))
- (rule
-  (alias runtest)
-  (deps where_clause.t.exe)
-  (action (run ./where_clause.t.exe))))

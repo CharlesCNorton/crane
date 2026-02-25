@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <higher_kinded.h>
 #include <iostream>

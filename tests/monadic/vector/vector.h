@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -21,7 +22,7 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct vectest {
-  static int test1(const int _x);
+  static int64_t test1(const int64_t _x);
 
-  static std::vector<int> test2(const int _x);
+  static std::vector<int64_t> test2(const int64_t _x);
 };

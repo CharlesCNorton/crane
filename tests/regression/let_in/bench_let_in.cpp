@@ -2,6 +2,7 @@
 #include <any>
 #include <bench_let_in.h>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>

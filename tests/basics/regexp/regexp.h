@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -57,13 +58,13 @@ struct List {
 };
 
 struct Matcher {
-  static bool char_eq(const int x, const int y);
+  static bool char_eq(const int64_t x, const int64_t y);
 
   struct regexp {
   public:
     struct Any {};
     struct Char {
-      int _a0;
+      int64_t _a0;
     };
     struct Eps {};
     struct Cat {
@@ -96,7 +97,7 @@ struct Matcher {
       static std::shared_ptr<regexp> Any_() {
         return std::shared_ptr<regexp>(new regexp(Any{}));
       }
-      static std::shared_ptr<regexp> Char_(int a0) {
+      static std::shared_ptr<regexp> Char_(int64_t a0) {
         return std::shared_ptr<regexp>(new regexp(Char{a0}));
       }
       static std::shared_ptr<regexp> Eps_() {
@@ -119,7 +120,7 @@ struct Matcher {
       static std::unique_ptr<regexp> Any_uptr() {
         return std::unique_ptr<regexp>(new regexp(Any{}));
       }
-      static std::unique_ptr<regexp> Char_uptr(int a0) {
+      static std::unique_ptr<regexp> Char_uptr(int64_t a0) {
         return std::unique_ptr<regexp>(new regexp(Char{a0}));
       }
       static std::unique_ptr<regexp> Eps_uptr() {
@@ -148,7 +149,7 @@ struct Matcher {
   };
 
   template <
-      typename T1, MapsTo<T1, int> F1,
+      typename T1, MapsTo<T1, int64_t> F1,
       MapsTo<T1, std::shared_ptr<regexp>, T1, std::shared_ptr<regexp>, T1> F3,
       MapsTo<T1, std::shared_ptr<regexp>, T1, std::shared_ptr<regexp>, T1> F4,
       MapsTo<T1, std::shared_ptr<regexp>, T1> F6>
@@ -159,7 +160,7 @@ struct Matcher {
         Overloaded{
             [&](const typename regexp::Any _args) -> T1 { return f; },
             [&](const typename regexp::Char _args) -> T1 {
-              int c = _args._a0;
+              int64_t c = _args._a0;
               return f0(c);
             },
             [&](const typename regexp::Eps _args) -> T1 { return f1; },
@@ -184,7 +185,7 @@ struct Matcher {
   }
 
   template <
-      typename T1, MapsTo<T1, int> F1,
+      typename T1, MapsTo<T1, int64_t> F1,
       MapsTo<T1, std::shared_ptr<regexp>, T1, std::shared_ptr<regexp>, T1> F3,
       MapsTo<T1, std::shared_ptr<regexp>, T1, std::shared_ptr<regexp>, T1> F4,
       MapsTo<T1, std::shared_ptr<regexp>, T1> F6>
@@ -194,7 +195,7 @@ struct Matcher {
         Overloaded{
             [&](const typename regexp::Any _args) -> T1 { return f; },
             [&](const typename regexp::Char _args) -> T1 {
-              int c = _args._a0;
+              int64_t c = _args._a0;
               return f0(c);
             },
             [&](const typename regexp::Eps _args) -> T1 { return f1; },
@@ -232,38 +233,40 @@ struct Matcher {
   static bool accepts_null(const std::shared_ptr<regexp> &r);
 
   static std::shared_ptr<regexp> deriv(const std::shared_ptr<regexp> &r,
-                                       const int c);
+                                       const int64_t c);
 
   static std::shared_ptr<regexp>
-  derivs(std::shared_ptr<regexp> r, const std::shared_ptr<List::list<int>> &cs);
+  derivs(std::shared_ptr<regexp> r,
+         const std::shared_ptr<List::list<int64_t>> &cs);
 
   static bool deriv_parse(const std::shared_ptr<regexp> &r,
-                          const std::shared_ptr<List::list<int>> &cs);
+                          const std::shared_ptr<List::list<int64_t>> &cs);
 
   static bool NullEpsOrZero(const std::shared_ptr<regexp> &r);
 
   static bool parse(const std::shared_ptr<regexp> &r,
-                    const std::shared_ptr<List::list<int>> &cs);
+                    const std::shared_ptr<List::list<int64_t>> &cs);
 
   static bool parse_bool(const std::shared_ptr<regexp> &r,
-                         const std::shared_ptr<List::list<int>> &cs);
+                         const std::shared_ptr<List::list<int64_t>> &cs);
 
   static inline const std::shared_ptr<regexp> r1 = regexp::ctor::Cat_(
       regexp::ctor::Star_(regexp::ctor::Char_(0)), regexp::ctor::Char_(1));
 
-  static inline const std::shared_ptr<List::list<int>> s1 =
-      List::list<int>::ctor::cons_(
-          0, List::list<int>::ctor::cons_(1, List::list<int>::ctor::nil_()));
+  static inline const std::shared_ptr<List::list<int64_t>> s1 =
+      List::list<int64_t>::ctor::cons_(
+          0, List::list<int64_t>::ctor::cons_(
+                 1, List::list<int64_t>::ctor::nil_()));
 
-  static inline const std::shared_ptr<List::list<int>> s2 =
-      List::list<int>::ctor::cons_(1, List::list<int>::ctor::nil_());
+  static inline const std::shared_ptr<List::list<int64_t>> s2 =
+      List::list<int64_t>::ctor::cons_(1, List::list<int64_t>::ctor::nil_());
 
-  static inline const std::shared_ptr<List::list<int>> s3 =
-      List::list<int>::ctor::cons_(
-          0, List::list<int>::ctor::cons_(
-                 0, List::list<int>::ctor::cons_(
-                        1, List::list<int>::ctor::nil_())));
+  static inline const std::shared_ptr<List::list<int64_t>> s3 =
+      List::list<int64_t>::ctor::cons_(
+          0, List::list<int64_t>::ctor::cons_(
+                 0, List::list<int64_t>::ctor::cons_(
+                        1, List::list<int64_t>::ctor::nil_())));
 
-  static inline const std::shared_ptr<List::list<int>> s4 =
-      List::list<int>::ctor::cons_(0, List::list<int>::ctor::nil_());
+  static inline const std::shared_ptr<List::list<int64_t>> s4 =
+      List::list<int64_t>::ctor::cons_(0, List::list<int64_t>::ctor::nil_());
 };

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -27,9 +28,9 @@ struct StringMatch {
 
   static inline const std::string str_cat = "hello " + "world";
 
-  static inline const int str_len_empty = "".length();
+  static inline const int64_t str_len_empty = "".length();
 
-  static inline const int str_len_hello = "hello".length();
+  static inline const int64_t str_len_hello = "hello".length();
 
   static bool is_empty(const std::string s);
 

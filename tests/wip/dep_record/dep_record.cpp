@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <dep_record.h>
 #include <functional>
 #include <iostream>

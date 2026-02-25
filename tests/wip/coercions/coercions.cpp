@@ -2,6 +2,7 @@
 #include <any>
 #include <cassert>
 #include <coercions.h>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>

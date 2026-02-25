@@ -2,6 +2,7 @@
 #include <any>
 #include <canon_struct.h>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>

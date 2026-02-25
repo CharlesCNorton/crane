@@ -2,6 +2,7 @@
 #include <any>
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -20,24 +21,27 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Vec {
-  static inline const std::array<int, int> test1 = []() -> std::array<int, 5> {
-    std::array<int, 5> _arr;
+  static inline const std::array<int64_t, int64_t> test1 =
+      []() -> std::array<int64_t, 5> {
+    std::array<int64_t, 5> _arr;
     _arr.fill(12);
     return _arr;
   }();
 
-  static inline const int test2 = test1.size();
+  static inline const int64_t test2 = test1.size();
 
-  static inline const std::optional<int> test3 = []() -> std::optional<int> {
+  static inline const std::optional<int64_t> test3 =
+      []() -> std::optional<int64_t> {
     if (3 < 5) {
-      return std::make_optional<int>(test1[3]);
+      return std::make_optional<int64_t>(test1[3]);
     } else {
       return std::nullopt;
     }
   }();
 
-  static inline const std::array<int, int> test4 = []() -> std::array<int, 5> {
-    std::array<int, 5> _arr = test1;
+  static inline const std::array<int64_t, int64_t> test4 =
+      []() -> std::array<int64_t, 5> {
+    std::array<int64_t, 5> _arr = test1;
     if (2 < 5) {
       _arr[2] = 14;
     }

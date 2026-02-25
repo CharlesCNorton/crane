@@ -2,6 +2,7 @@
 #include <any>
 #include <bool_ops.h>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>

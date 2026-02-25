@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,4 +12,4 @@
 #include <utility>
 #include <variant>
 
-bool StringMatch::is_empty(const std::string s) { return s.length() == 0; }
+bool StringMatch::is_empty(const std::string s) { return (s.length() == 0); }

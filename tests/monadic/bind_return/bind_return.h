@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -66,7 +67,7 @@ struct bindreturn {
     return b;
   }
 
-  static int test1();
+  static int64_t test1();
 
   template <typename T1, typename T2, MapsTo<T2, T1> F1>
   static T2 transform(const T1 ma, F1 &&f) {
@@ -74,7 +75,7 @@ struct bindreturn {
     return f(x);
   }
 
-  static int test2();
+  static int64_t test2();
 
   template <typename T1, typename T2, typename T3, MapsTo<T2, T1> F1,
             MapsTo<T3, T2> F2>
@@ -84,13 +85,13 @@ struct bindreturn {
     return g(y);
   }
 
-  static int test3();
+  static int64_t test3();
 
-  static int test4();
+  static int64_t test4();
 
-  static std::shared_ptr<List::list<int>> intToList(const int n);
+  static std::shared_ptr<List::list<int64_t>> intToList(const int64_t n);
 
-  static std::shared_ptr<List::list<int>> test5();
+  static std::shared_ptr<List::list<int64_t>> test5();
 
-  static int test6();
+  static int64_t test6();
 };

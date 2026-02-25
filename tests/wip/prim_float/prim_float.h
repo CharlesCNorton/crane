@@ -10,6 +10,7 @@
 #include <variant>
 #include <optional>
 #include <utility>
+#include <cstdint>
 #include <string>
 #include <memory>
 
