@@ -31,7 +31,7 @@ bool le_lt_dec(const unsigned int n, const unsigned int m) {
 
 std::pair<std::shared_ptr<List::list<unsigned int>>,
           std::shared_ptr<List::list<unsigned int>>>
-split(const std::shared_ptr<List::list<unsigned int>> &l) {
+MergeSort::split(const std::shared_ptr<List::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{
           [](const typename List::list<unsigned int>::nil _args)
@@ -80,8 +80,8 @@ split(const std::shared_ptr<List::list<unsigned int>> &l) {
 }
 
 std::shared_ptr<List::list<unsigned int>>
-merge(std::shared_ptr<List::list<unsigned int>> l1,
-      const std::shared_ptr<List::list<unsigned int>> &l2) {
+MergeSort::merge(std::shared_ptr<List::list<unsigned int>> l1,
+                 const std::shared_ptr<List::list<unsigned int>> &l2) {
   std::function<std::shared_ptr<List::list<unsigned int>>(
       std::shared_ptr<List::list<unsigned int>>)>
       merge_aux;
@@ -108,7 +108,7 @@ merge(std::shared_ptr<List::list<unsigned int>> l1,
                         unsigned int a2 = _args._a0;
                         std::shared_ptr<List::list<unsigned int>> l2_ =
                             _args._a1;
-                        if (le_lt_dec(a1, a2)) {
+                        if (::le_lt_dec(a1, a2)) {
                           return List::list<unsigned int>::ctor::cons_(
                               std::move(a1),
                               merge(std::move(l1_), std::move(l3)));
@@ -125,7 +125,8 @@ merge(std::shared_ptr<List::list<unsigned int>> l1,
 }
 
 std::shared_ptr<List::list<unsigned int>>
-msort_go(const unsigned int fuel, std::shared_ptr<List::list<unsigned int>> l) {
+MergeSort::msort_go(const unsigned int fuel,
+                    std::shared_ptr<List::list<unsigned int>> l) {
   if (fuel <= 0) {
     return std::move(l);
   } else {
@@ -163,6 +164,6 @@ msort_go(const unsigned int fuel, std::shared_ptr<List::list<unsigned int>> l) {
 }
 
 std::shared_ptr<List::list<unsigned int>>
-msort(const std::shared_ptr<List::list<unsigned int>> &l) {
+MergeSort::msort(const std::shared_ptr<List::list<unsigned int>> &l) {
   return msort_go(l->length(), l);
 }

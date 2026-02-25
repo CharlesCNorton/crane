@@ -4,6 +4,8 @@
 
 From Stdlib Require Import Nat Bool.
 
+Module Coercions.
+
 (* === Basic coercion: bool -> nat === *)
 
 Definition bool_to_nat (b : bool) : nat :=
@@ -50,11 +52,8 @@ Definition double_transform : Transform := mkTransform (fun n => n + n).
 
 Definition test_fun_coercion : nat := double_transform 5.
 
+End Coercions.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "coercions"
-  bool_to_nat add_bool
-  test_add_true test_add_false
-  unwrap double_wrapped test_double_wrapped
-  unbox add_boolbox test_add_boolbox
-  apply_transform double_transform test_fun_coercion.
+Crane Extraction "coercions" Coercions.

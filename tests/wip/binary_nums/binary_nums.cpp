@@ -1188,7 +1188,8 @@ std::shared_ptr<Z::z> Z::abs(const std::shared_ptr<Z::z> &z) {
       z->v());
 }
 
-std::shared_ptr<N::n> n_max(std::shared_ptr<N::n> a, std::shared_ptr<N::n> b) {
+std::shared_ptr<N::n> BinaryNums::n_max(std::shared_ptr<N::n> a,
+                                        std::shared_ptr<N::n> b) {
   return [&](void) {
     switch (N::compare(a, b)) {
     case comparison::Eq: {
@@ -1204,7 +1205,7 @@ std::shared_ptr<N::n> n_max(std::shared_ptr<N::n> a, std::shared_ptr<N::n> b) {
   }();
 }
 
-std::shared_ptr<Z::z> z_sign(const std::shared_ptr<Z::z> &z) {
+std::shared_ptr<Z::z> BinaryNums::z_sign(const std::shared_ptr<Z::z> &z) {
   return std::visit(
       Overloaded{[](const typename Z::z::Z0 _args) -> std::shared_ptr<Z::z> {
                    return Z::z::ctor::Z0_();

@@ -25,34 +25,35 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: Pos.to_nat
     {
-        ASSERT(pos_to_nat == 7);
+        ASSERT(BinaryNums::pos_to_nat == 7);
         std::cout << "Test 1 (pos_to_nat 7): PASSED" << std::endl;
     }
 
     // Test 2: N.to_nat
     {
-        ASSERT(n_to_nat == 15);
+        ASSERT(BinaryNums::n_to_nat == 15);
         std::cout << "Test 2 (n_to_nat 15): PASSED" << std::endl;
     }
 
     // Test 3: Z.to_nat
     {
-        ASSERT(z_to_nat == 10);
+        ASSERT(BinaryNums::z_to_nat == 10);
         std::cout << "Test 3 (z_to_nat 10): PASSED" << std::endl;
     }
 
     // Test 4: N.compare
     {
-        ASSERT(n_compare_result == comparison::Lt);
+        ASSERT(BinaryNums::n_compare_result == comparison::Lt);
         std::cout << "Test 4 (N.compare 3 5): PASSED" << std::endl;
     }
 
     // Test 5: Z.compare
     {
-        ASSERT(z_compare_result == comparison::Lt);
+        ASSERT(BinaryNums::z_compare_result == comparison::Lt);
         std::cout << "Test 5 (Z.compare -3 5): PASSED" << std::endl;
     }
 

@@ -4,6 +4,8 @@
 
 From Stdlib Require Import Nat.
 
+Module UniversePoly.
+
 Set Universe Polymorphism.
 
 (* === Polymorphic identity === *)
@@ -68,9 +70,8 @@ Polymorphic Fixpoint poly_length {A : Type} (l : list A) : nat :=
 
 Definition test_length : nat := poly_length (cons 1 (cons 2 (cons 3 nil))).
 
+End UniversePoly.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "universe_poly"
-  poly_id test_id_nat test_id_bool
-  pfst psnd test_pair test_pfst test_psnd
-  poly_length test_length.
+Crane Extraction "universe_poly" UniversePoly.

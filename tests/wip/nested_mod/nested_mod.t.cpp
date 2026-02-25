@@ -33,24 +33,25 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
   // Test 1: test_area - circle with radius 5, area = 5*5*3 = 75
   {
-    unsigned int result = test_area;
+    unsigned int result = NestedMod::test_area;
     ASSERT(result == 75);
     std::cout << "Test 1 (circle area): " << result << " (expected 75): PASSED" << std::endl;
   }
 
   // Test 2: test_combined - red circle (area 75 + 100 = 175)
   {
-    unsigned int result = test_combined;
+    unsigned int result = NestedMod::test_combined;
     ASSERT(result == 175);
     std::cout << "Test 2 (red colored shape): " << result << " (expected 175): PASSED" << std::endl;
   }
 
   // Test 3: test_color - Red has code 1
   {
-    unsigned int result = test_color;
+    unsigned int result = NestedMod::test_color;
     ASSERT(result == 1);
     std::cout << "Test 3 (color code): " << result << " (expected 1): PASSED" << std::endl;
   }

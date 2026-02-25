@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat List.
 Import ListNotations.
 
+Module CoindGuard.
+
 CoInductive Stream (A : Type) : Type :=
   | Cons : A -> Stream A -> Stream A.
 
@@ -54,9 +56,8 @@ Definition test_fibs_8 : list nat := take 8 fibs.
 Definition test_sum_5 : list nat := take 5 sum_stream.
 Definition test_iterate_hd : nat := hd nats.
 
+End CoindGuard.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "coind_guard"
-  hd tl iterate zipWith smap unfold take
-  nats evens fibs sum_stream
-  test_nats_5 test_evens_5 test_fibs_8 test_sum_5 test_iterate_hd.
+Crane Extraction "coind_guard" CoindGuard.

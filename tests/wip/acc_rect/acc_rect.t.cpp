@@ -25,21 +25,22 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: div2
     {
-        ASSERT(test_div2_0 == 0);
-        ASSERT(test_div2_1 == 0);
-        ASSERT(test_div2_7 == 3);
-        ASSERT(test_div2_10 == 5);
+        ASSERT(AccRect::test_div2_0 == 0);
+        ASSERT(AccRect::test_div2_1 == 0);
+        ASSERT(AccRect::test_div2_7 == 3);
+        ASSERT(AccRect::test_div2_10 == 5);
         std::cout << "Test 1 (div2_wf): PASSED" << std::endl;
     }
 
     // Test 2: gcd
     {
-        ASSERT(test_gcd_1 == 4);   // gcd(12,8) = 4
-        ASSERT(test_gcd_2 == 7);   // gcd(35,14) = 7
-        ASSERT(test_gcd_3 == 5);   // gcd(0,5) = 5
+        ASSERT(AccRect::test_gcd_1 == 4);   // gcd(12,8) = 4
+        ASSERT(AccRect::test_gcd_2 == 7);   // gcd(35,14) = 7
+        ASSERT(AccRect::test_gcd_3 == 5);   // gcd(0,5) = 5
         std::cout << "Test 2 (gcd_wf): PASSED" << std::endl;
     }
 

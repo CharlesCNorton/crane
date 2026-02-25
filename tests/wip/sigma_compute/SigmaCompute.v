@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool Arith.
 Import ListNotations.
 
+Module SigmaCompute.
+
 (* sigT: dependent pair where second component is a type *)
 Definition nat_with_double (n : nat) : {x : nat & x = n + n} :=
   existT _ (n + n) eq_refl.
@@ -42,9 +44,8 @@ Definition test_positive_3 : nat := get_positive 3.
 Definition test_double_pos : nat := proj1_sig (double_positive 3).
 Definition test_positives : list nat := positives_up_to 5.
 
+End SigmaCompute.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "sigma_compute"
-  nat_with_double positive_succ get_positive double_positive
-  use_nat_double positives_up_to
-  test_double_5 test_positive_3 test_double_pos test_positives.
+Crane Extraction "sigma_compute" SigmaCompute.

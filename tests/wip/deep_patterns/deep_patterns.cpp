@@ -11,8 +11,8 @@
 #include <utility>
 #include <variant>
 
-unsigned int
-deep_option(const std::optional<std::optional<std::optional<unsigned int>>> x) {
+unsigned int DeepPatterns::deep_option(
+    const std::optional<std::optional<std::optional<unsigned int>>> x) {
   if (x.has_value()) {
     std::optional<std::optional<unsigned int>> o = *x;
     if (o.has_value()) {
@@ -31,9 +31,10 @@ deep_option(const std::optional<std::optional<std::optional<unsigned int>>> x) {
   }
 }
 
-unsigned int deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
-                                       std::pair<unsigned int, unsigned int>>
-                           p) {
+unsigned int
+DeepPatterns::deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
+                                        std::pair<unsigned int, unsigned int>>
+                            p) {
   std::pair<unsigned int, unsigned int> p0 = p.first;
   std::pair<unsigned int, unsigned int> p1 = p.second;
   unsigned int a = p0.first;
@@ -43,7 +44,8 @@ unsigned int deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
   return (((a + b) + c) + d);
 }
 
-unsigned int list_shape(const std::shared_ptr<List::list<unsigned int>> &l) {
+unsigned int
+DeepPatterns::list_shape(const std::shared_ptr<List::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{
           [](const typename List::list<unsigned int>::nil _args)
@@ -100,7 +102,37 @@ unsigned int list_shape(const std::shared_ptr<List::list<unsigned int>> &l) {
       l->v());
 }
 
-unsigned int complex_match(
+unsigned int
+DeepPatterns::deep_sum(const std::shared_ptr<DeepPatterns::outer> &o) {
+  return std::visit(
+      Overloaded{
+          [](const typename DeepPatterns::outer::OLeft _args) -> unsigned int {
+            std::shared_ptr<DeepPatterns::inner> i = _args._a0;
+            return std::visit(
+                Overloaded{[](const typename DeepPatterns::inner::ILeft _args)
+                               -> unsigned int {
+                             unsigned int n = _args._a0;
+                             return std::move(n);
+                           },
+                           [](const typename DeepPatterns::inner::IRight _args)
+                               -> unsigned int {
+                             bool b = _args._a0;
+                             if (b) {
+                               return (0 + 1);
+                             } else {
+                               return 0;
+                             }
+                           }},
+                std::move(i)->v());
+          },
+          [](const typename DeepPatterns::outer::ORight _args) -> unsigned int {
+            unsigned int n = _args._a0;
+ return (std::move(n) + ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+          }},
+      o->v());
+}
+
+unsigned int DeepPatterns::complex_match(
     const std::optional<
         std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
         x) {
@@ -134,7 +166,8 @@ unsigned int complex_match(
   }
 }
 
-unsigned int guarded_match(const std::pair<unsigned int, unsigned int> p) {
+unsigned int
+DeepPatterns::guarded_match(const std::pair<unsigned int, unsigned int> p) {
   unsigned int a = p.first;
   unsigned int b = p.second;
   if ((a <= b)) {

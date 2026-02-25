@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module CPS.
+
 (* CPS factorial *)
 Fixpoint fact_cps (n : nat) (k : nat -> nat) : nat :=
   match n with
@@ -68,10 +70,8 @@ Definition test_tree : nat := tree_sum (Node (Node (Leaf 1) (Leaf 2)) (Leaf 3)).
 Definition test_list_sum : nat := list_sum [10; 20; 30].
 Definition test_evens : nat := count_evens [1; 2; 3; 4; 5; 6].
 
+End CPS.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "cps"
-  fact_cps factorial fib_cps fibonacci
-  tree_sum_cps tree_sum sum_cps list_sum
-  partition_cps count_evens
-  test_fact_5 test_fib_7 test_tree test_list_sum test_evens.
+Crane Extraction "cps" CPS.

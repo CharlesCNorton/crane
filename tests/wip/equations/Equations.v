@@ -6,6 +6,8 @@ From Stdlib Require Import Arith List Lia.
 From Equations Require Import Equations.
 Import ListNotations.
 
+Module Equations.
+
 Equations gcd (p : nat * nat) : nat by wf p (lexprod _ _ lt lt) :=
   gcd (0, _) := 0;
   gcd (_, 0) := 0;
@@ -26,6 +28,8 @@ Admit Obligations.
 Definition test_gcd : nat := gcd (12, 8).
 Definition test_collatz : nat := collatz_steps 6.
 
+End Equations.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "equations" gcd collatz_steps test_gcd test_collatz.
+Crane Extraction "equations" Equations.

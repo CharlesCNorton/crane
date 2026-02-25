@@ -51,7 +51,8 @@ unsigned int Nat::modulo(const unsigned int x, const unsigned int y) {
   }
 }
 
-std::shared_ptr<List::list<unsigned int>> countdown_acc(const unsigned int n) {
+std::shared_ptr<List::list<unsigned int>>
+AccRect::countdown_acc(const unsigned int n) {
   if (n <= 0) {
     return List::list<unsigned int>::ctor::cons_(
         0, List::list<unsigned int>::ctor::nil_());
@@ -62,11 +63,12 @@ std::shared_ptr<List::list<unsigned int>> countdown_acc(const unsigned int n) {
   }
 }
 
-std::shared_ptr<List::list<unsigned int>> countdown(const unsigned int _x0) {
+std::shared_ptr<List::list<unsigned int>>
+AccRect::countdown(const unsigned int _x0) {
   return countdown_acc(_x0);
 }
 
-unsigned int div2_wf(const unsigned int x) {
+unsigned int AccRect::div2_wf(const unsigned int x) {
   if (x <= 0) {
     return 0;
   } else {
@@ -80,7 +82,7 @@ unsigned int div2_wf(const unsigned int x) {
   }
 }
 
-unsigned int gcd_wf(const unsigned int x, const unsigned int b) {
+unsigned int AccRect::gcd_wf(const unsigned int x, const unsigned int b) {
   if (x <= 0) {
     return std::move(b);
   } else {

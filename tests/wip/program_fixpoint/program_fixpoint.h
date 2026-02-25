@@ -141,25 +141,28 @@ T2 Fix_sub(const T1 _x0, F1 &&_x1) {
   return Fix_F_sub<T1>(_x0, _x1);
 }
 
-std::shared_ptr<List::list<unsigned int>> interleave_func(
-    const std::shared_ptr<SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
-                                     std::shared_ptr<List::list<unsigned int>>>>
-        &);
+struct ProgFix {
+  static std::shared_ptr<List::list<unsigned int>>
+  interleave_func(const std::shared_ptr<
+                  SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
+                             std::shared_ptr<List::list<unsigned int>>>> &);
 
-std::shared_ptr<List::list<unsigned int>>
-interleave(std::shared_ptr<List::list<unsigned int>> l1,
-           std::shared_ptr<List::list<unsigned int>> l2);
+  static std::shared_ptr<List::list<unsigned int>>
+  interleave(std::shared_ptr<List::list<unsigned int>> l1,
+             std::shared_ptr<List::list<unsigned int>> l2);
 
-const std::shared_ptr<List::list<unsigned int>> test_interleave = interleave(
-    List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            (((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                                     (((((0 + 1) + 1) + 1) + 1) + 1),
-                                     List::list<unsigned int>::ctor::nil_()))),
-    List::list<unsigned int>::ctor::cons_(
-        ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                           ((((0 + 1) + 1) + 1) + 1),
+  static inline const std::shared_ptr<List::list<unsigned int>>
+      test_interleave = interleave(
+          List::list<unsigned int>::ctor::cons_(
+              (0 + 1), List::list<unsigned int>::ctor::cons_(
+                           (((0 + 1) + 1) + 1),
                            List::list<unsigned int>::ctor::cons_(
-                               ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                               List::list<unsigned int>::ctor::nil_()))));
+                               (((((0 + 1) + 1) + 1) + 1) + 1),
+                               List::list<unsigned int>::ctor::nil_()))),
+          List::list<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+                                 ((((0 + 1) + 1) + 1) + 1),
+                                 List::list<unsigned int>::ctor::cons_(
+                                     ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+                                     List::list<unsigned int>::ctor::nil_()))));
+};

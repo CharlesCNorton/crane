@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module ConstrainedPoly.
+
 Set Universe Polymorphism.
 
 (* Identity with explicit polymorphism *)
@@ -54,9 +56,8 @@ Definition test_snd : bool := usnd test_pair.
 Definition test_umap : UOption nat :=
   uoption_map (fun n => n + 1) (USome 9).
 
+End ConstrainedPoly.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "constrained_poly"
-  poly_id swap wrap_pair uoption_map
-  test_id_nat test_id_bool test_pair test_swap
-  test_fst test_snd test_umap.
+Crane Extraction "constrained_poly" ConstrainedPoly.

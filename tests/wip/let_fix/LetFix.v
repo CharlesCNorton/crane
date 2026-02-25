@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module LetFix.
+
 (* let fix inside a definition *)
 Definition local_sum (l : list nat) : nat :=
   let fix go (acc : nat) (xs : list nat) : nat :=
@@ -65,9 +67,8 @@ Definition test_mem_found : bool := local_mem 3 [1; 2; 3; 4].
 Definition test_mem_missing : bool := local_mem 9 [1; 2; 3; 4].
 Definition test_length : nat := local_length [10; 20; 30; 40].
 
+End LetFix.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "let_fix"
-  local_sum local_rev local_flatten local_mem
-  test_sum test_rev test_flatten
-  test_mem_found test_mem_missing.
+Crane Extraction "let_fix" LetFix.

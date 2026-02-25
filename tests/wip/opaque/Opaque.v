@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List Lia.
 Import ListNotations.
 
+Module Opaque.
+
 (* === Transparent proof (Defined) — should be extractable === *)
 
 Definition safe_pred (n : nat) (H : n > 0) : nat.
@@ -53,10 +55,8 @@ Definition test_pred_succ : nat := pred_of_succ 7.
 Definition test_eq_true : bool := are_equal 5 5.
 Definition test_eq_false : bool := are_equal 3 7.
 
+End Opaque.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "opaque"
-  safe_pred pred_of_succ
-  are_equal
-  test_safe_pred test_pred_succ
-  test_eq_true test_eq_false.
+Crane Extraction "opaque" Opaque.

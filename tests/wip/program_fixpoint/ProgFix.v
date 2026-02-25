@@ -6,6 +6,8 @@ From Stdlib Require Import Arith List Lia.
 From Stdlib Require Import Program.Wf.
 Import ListNotations.
 
+Module ProgFix.
+
 Program Fixpoint interleave (l1 l2 : list nat) {measure (length l1 + length l2)} : list nat :=
   match l1 with
   | [] => l2
@@ -16,6 +18,8 @@ Next Obligation. simpl. lia. Qed.
 Definition test_interleave : list nat :=
   interleave [1; 3; 5] [2; 4; 6].
 
+End ProgFix.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "program_fixpoint" interleave test_interleave.
+Crane Extraction "program_fixpoint" ProgFix.

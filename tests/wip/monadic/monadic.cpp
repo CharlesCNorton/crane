@@ -37,18 +37,18 @@ unsigned int div(const unsigned int x, const unsigned int y) {
   }
 }
 
-std::optional<unsigned int> safe_div(const unsigned int n,
-                                     const unsigned int m) {
+std::optional<unsigned int> Monadic::safe_div(const unsigned int n,
+                                              const unsigned int m) {
   if (m <= 0) {
     return std::nullopt;
   } else {
     unsigned int m_ = m - 1;
-    return std::make_optional<unsigned int>(div(n, (m_ + 1)));
+    return std::make_optional<unsigned int>(::div(n, (m_ + 1)));
   }
 }
 
-std::optional<unsigned int> safe_sub(const unsigned int n,
-                                     const unsigned int m) {
+std::optional<unsigned int> Monadic::safe_sub(const unsigned int n,
+                                              const unsigned int m) {
   if ((n < m)) {
     return std::nullopt;
   } else {
@@ -59,8 +59,9 @@ std::optional<unsigned int> safe_sub(const unsigned int n,
   }
 }
 
-std::optional<unsigned int>
-div_then_sub(const unsigned int a, const unsigned int b, const unsigned int c) {
+std::optional<unsigned int> Monadic::div_then_sub(const unsigned int a,
+                                                  const unsigned int b,
+                                                  const unsigned int c) {
   return option_bind<unsigned int, unsigned int>(
       safe_div(a, b), [&](unsigned int x) {
         return option_bind<unsigned int, unsigned int>(

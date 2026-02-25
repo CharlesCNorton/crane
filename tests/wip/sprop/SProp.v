@@ -4,6 +4,8 @@
 
 From Stdlib Require Import Nat Bool.
 
+Module SPropTest.
+
 (* === SProp type === *)
 
 Inductive sTrue : SProp := sI.
@@ -44,8 +46,8 @@ Definition test_guarded : nat := guarded_pred 5 sI.
 Definition test_box : nat := box_value (mkBox sI 42).
 Definition test_div : nat := safe_div 10 3 sI.
 
+End SPropTest.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "sprop"
-  guarded_pred safe_div
-  test_guarded test_box test_div.
+Crane Extraction "sprop" SPropTest.

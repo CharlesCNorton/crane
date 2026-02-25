@@ -25,24 +25,25 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: string constants
     {
-        ASSERT(str_empty == "");
-        ASSERT(str_hello == "hello");
+        ASSERT(StringMatch::str_empty == "");
+        ASSERT(StringMatch::str_hello == "hello");
         std::cout << "Test 1 (string constants): PASSED" << std::endl;
     }
 
     // Test 2: is_empty
     {
-        ASSERT(test_empty_true == true);
-        ASSERT(test_empty_false == false);
+        ASSERT(StringMatch::test_empty_true == true);
+        ASSERT(StringMatch::test_empty_false == false);
         std::cout << "Test 2 (is_empty): PASSED" << std::endl;
     }
 
     // Test 3: concatenation
     {
-        ASSERT(test_cat == "foobar");
+        ASSERT(StringMatch::test_cat == "foobar");
         std::cout << "Test 3 (concatenation): PASSED" << std::endl;
     }
 

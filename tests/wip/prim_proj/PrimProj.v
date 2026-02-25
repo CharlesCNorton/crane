@@ -2,9 +2,11 @@
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 (* Test: primitive projections — Proj nodes instead of Case. *)
 
-Set Primitive Projections.
-
 From Stdlib Require Import Nat.
+
+Module PrimProj.
+
+Set Primitive Projections.
 
 Record point := mkPoint { px : nat; py : nat }.
 
@@ -16,6 +18,8 @@ Definition origin : point := mkPoint 0 0.
 Definition translate (dx dy : nat) (p : point) : point :=
   mkPoint (p.(px) + dx) (p.(py) + dy).
 
+End PrimProj.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "prim_proj" add_points origin translate.
+Crane Extraction "prim_proj" PrimProj.

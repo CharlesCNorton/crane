@@ -112,202 +112,215 @@ T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
       l->v());
 }
 
-template <typename M>
-concept CONTAINER = requires {
-  typename M::t;
-  requires std::same_as<std::remove_cvref_t<decltype(M::empty)>, typename M::t>;
-  {
-    M::push(std::declval<unsigned int>(), std::declval<typename M::t>())
-  } -> std::same_as<typename M::t>;
-  {
-    M::pop(std::declval<typename M::t>())
-  } -> std::same_as<std::optional<std::pair<unsigned int, t>>>;
-  { M::size(std::declval<typename M::t>()) } -> std::same_as<unsigned int>;
-};
+struct FunctorComp {
+  template <typename M>
+  concept CONTAINER = requires {
+    typename M::t;
+    requires std::same_as<std::remove_cvref_t<decltype(M::empty)>,
+                          typename M::t>;
+    {
+      M::push(std::declval<unsigned int>(), std::declval<typename M::t>())
+    } -> std::same_as<typename M::t>;
+    {
+      M::pop(std::declval<typename M::t>())
+    } -> std::same_as<std::optional<std::pair<unsigned int, t>>>;
+    { M::size(std::declval<typename M::t>()) } -> std::same_as<unsigned int>;
+  };
 
-struct Stack {
-  using t = std::shared_ptr<List::list<unsigned int>>;
+  struct Stack {
+    using t = std::shared_ptr<List::list<unsigned int>>;
 
-  static inline const t empty = List::list<unsigned int>::ctor::nil_();
+    static inline const t empty = List::list<unsigned int>::ctor::nil_();
 
-  static t push(const unsigned int x,
-                std::shared_ptr<List::list<unsigned int>> s);
+    static t push(const unsigned int x,
+                  std::shared_ptr<List::list<unsigned int>> s);
 
-  static std::optional<std::pair<unsigned int, t>>
-  pop(const std::shared_ptr<List::list<unsigned int>> &s);
+    static std::optional<std::pair<unsigned int, t>>
+    pop(const std::shared_ptr<List::list<unsigned int>> &s);
 
-  static unsigned int size(const t);
-};
+    static unsigned int size(const t);
+  };
 
-struct Queue {
-  using t = std::pair<std::shared_ptr<List::list<unsigned int>>,
-                      std::shared_ptr<List::list<unsigned int>>>;
+  struct Queue {
+    using t = std::pair<std::shared_ptr<List::list<unsigned int>>,
+                        std::shared_ptr<List::list<unsigned int>>>;
 
-  static inline const t empty =
-      std::make_pair(List::list<unsigned int>::ctor::nil_(),
-                     List::list<unsigned int>::ctor::nil_());
+    static inline const t empty =
+        std::make_pair(List::list<unsigned int>::ctor::nil_(),
+                       List::list<unsigned int>::ctor::nil_());
 
-  static t push(const unsigned int x,
-                const std::pair<std::shared_ptr<List::list<unsigned int>>,
-                                std::shared_ptr<List::list<unsigned int>>>
-                    q);
+    static t push(const unsigned int x,
+                  const std::pair<std::shared_ptr<List::list<unsigned int>>,
+                                  std::shared_ptr<List::list<unsigned int>>>
+                      q);
 
-  static std::optional<std::pair<unsigned int, t>>
-  pop(const std::pair<std::shared_ptr<List::list<unsigned int>>,
-                      std::shared_ptr<List::list<unsigned int>>>
-          q);
+    static std::optional<std::pair<unsigned int, t>>
+    pop(const std::pair<std::shared_ptr<List::list<unsigned int>>,
+                        std::shared_ptr<List::list<unsigned int>>>
+            q);
 
-  static unsigned int
-  size(const std::pair<std::shared_ptr<List::list<unsigned int>>,
-                       std::shared_ptr<List::list<unsigned int>>>
-           q);
-};
+    static unsigned int
+    size(const std::pair<std::shared_ptr<List::list<unsigned int>>,
+                         std::shared_ptr<List::list<unsigned int>>>
+             q);
+  };
 
-template <CONTAINER C> struct ContainerOps {
-  static typename C::t
-  push_list(const std::shared_ptr<List::list<unsigned int>> &l,
-            const typename C::t c) {
-    return fold_left<typename C::t, unsigned int>(
-        [](typename C::t acc, unsigned int x) { return C::push(x, acc); }, l,
-        c);
-  }
+  template <CONTAINER C> struct ContainerOps {
+    static typename C::t
+    push_list(const std::shared_ptr<List::list<unsigned int>> &l,
+              const typename C::t c) {
+      return fold_left<typename C::t, unsigned int>(
+          [](typename C::t acc, unsigned int x) { return C::push(x, acc); }, l,
+          c);
+    }
 
-  static std::shared_ptr<List::list<unsigned int>>
-  to_list(const typename C::t c) {
-    std::function<std::shared_ptr<List::list<unsigned int>>(
-        unsigned int, std::shared_ptr<List::list<unsigned int>>, typename C::t)>
-        go;
-    go = [&](unsigned int fuel, std::shared_ptr<List::list<unsigned int>> acc,
-             typename C::t c0) -> std::shared_ptr<List::list<unsigned int>> {
-      if (fuel <= 0) {
-        return rev<unsigned int>(std::move(acc));
-      } else {
-        unsigned int f = fuel - 1;
-        if (C::pop(c0).has_value()) {
-          std::pair<unsigned int, typename C::t> p = *C::pop(c0);
-          unsigned int x = p.first;
-          typename C::t c_ = p.second;
-          return go(f, List::list<unsigned int>::ctor::cons_(std::move(x), acc),
-                    c_);
+    static std::shared_ptr<List::list<unsigned int>>
+    to_list(const typename C::t c) {
+      std::function<std::shared_ptr<List::list<unsigned int>>(
+          unsigned int, std::shared_ptr<List::list<unsigned int>>,
+          typename C::t)>
+          go;
+      go = [&](unsigned int fuel, std::shared_ptr<List::list<unsigned int>> acc,
+               typename C::t c0) -> std::shared_ptr<List::list<unsigned int>> {
+        if (fuel <= 0) {
+          return rev<unsigned int>(std::move(acc));
         } else {
-          return rev<unsigned int>(acc);
+          unsigned int f = fuel - 1;
+          if (C::pop(c0).has_value()) {
+            std::pair<unsigned int, typename C::t> p = *C::pop(c0);
+            unsigned int x = p.first;
+            typename C::t c_ = p.second;
+            return go(f,
+                      List::list<unsigned int>::ctor::cons_(std::move(x), acc),
+                      c_);
+          } else {
+            return rev<unsigned int>(acc);
+          }
         }
-      }
-    };
-    return go(C::size(c), List::list<unsigned int>::ctor::nil_(), c);
-  }
+      };
+      return go(C::size(c), List::list<unsigned int>::ctor::nil_(), c);
+    }
+  };
+
+  using StackOps = ContainerOps<Stack>;
+
+  using QueueOps = ContainerOps<Queue>;
+
+  static inline const std::shared_ptr<List::list<unsigned int>> test_stack =
+      StackOps::to_list(StackOps::push_list(
+          List::list<unsigned int>::ctor::cons_(
+              (0 + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+                                     (((0 + 1) + 1) + 1),
+                                     List::list<unsigned int>::ctor::nil_()))),
+          Stack::empty));
+
+  static inline const std::shared_ptr<List::list<unsigned int>> test_queue =
+      QueueOps::to_list(QueueOps::push_list(
+          List::list<unsigned int>::ctor::cons_(
+              (0 + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+                                     (((0 + 1) + 1) + 1),
+                                     List::list<unsigned int>::ctor::nil_()))),
+          Queue::empty));
+
+  static inline const unsigned int test_stack_size =
+      Stack::size(StackOps::push_list(
+          List::list<unsigned int>::ctor::cons_(
+              ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1),
+                  List::list<unsigned int>::ctor::cons_(
+                      ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                               1) +
+                                              1) +
+                                             1) +
+                                            1) +
+                                           1) +
+                                          1) +
+                                         1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1),
+                      List::list<unsigned int>::ctor::nil_()))),
+          Stack::empty));
+
+  static inline const unsigned int test_queue_size =
+      Queue::size(QueueOps::push_list(
+          List::list<unsigned int>::ctor::cons_(
+              ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1),
+                  List::list<unsigned int>::ctor::cons_(
+                      ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                               1) +
+                                              1) +
+                                             1) +
+                                            1) +
+                                           1) +
+                                          1) +
+                                         1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1),
+                      List::list<unsigned int>::ctor::nil_()))),
+          Queue::empty));
 };
-
-using StackOps = ContainerOps<Stack>;
-
-using QueueOps = ContainerOps<Queue>;
-
-const std::shared_ptr<List::list<unsigned int>> test_stack =
-    StackOps::to_list(StackOps::push_list(
-        List::list<unsigned int>::ctor::cons_(
-            (0 + 1),
-            List::list<unsigned int>::ctor::cons_(
-                ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                                   (((0 + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_()))),
-        Stack::empty));
-
-const std::shared_ptr<List::list<unsigned int>> test_queue =
-    QueueOps::to_list(QueueOps::push_list(
-        List::list<unsigned int>::ctor::cons_(
-            (0 + 1),
-            List::list<unsigned int>::ctor::cons_(
-                ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                                   (((0 + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_()))),
-        Queue::empty));
-
-const unsigned int test_stack_size = Stack::size(StackOps::push_list(
-    List::list<unsigned int>::ctor::cons_(
-        ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1),
-            List::list<unsigned int>::ctor::cons_(
-                ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1),
-                List::list<unsigned int>::ctor::nil_()))),
-    Stack::empty));
-
-const unsigned int test_queue_size = Queue::size(QueueOps::push_list(
-    List::list<unsigned int>::ctor::cons_(
-        ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1),
-            List::list<unsigned int>::ctor::cons_(
-                ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1),
-                List::list<unsigned int>::ctor::nil_()))),
-    Queue::empty));

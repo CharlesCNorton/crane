@@ -56,7 +56,7 @@ struct List {
   };
 };
 
-struct Magma {
+struct DepRecord {
   struct magma {
   public:
     struct mkMagma {
@@ -71,71 +71,133 @@ struct Magma {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Magma::magma>
+      static std::shared_ptr<magma>
       mkMagma_(std::function<std::any(std::any, std::any)> a0) {
-        return std::shared_ptr<Magma::magma>(new Magma::magma(mkMagma{a0}));
+        return std::shared_ptr<magma>(new magma(mkMagma{a0}));
       }
-      static std::unique_ptr<Magma::magma>
+      static std::unique_ptr<magma>
       mkMagma_uptr(std::function<std::any(std::any, std::any)> a0) {
-        return std::unique_ptr<Magma::magma>(new Magma::magma(mkMagma{a0}));
+        return std::unique_ptr<magma>(new magma(mkMagma{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
-};
 
-const std::shared_ptr<Magma::magma> nat_magma =
-    [](const unsigned int _x0, const unsigned int _x1) { return (_x0 + _x1); };
+  using carrier = std::any;
 
-const std::shared_ptr<Magma::magma> bool_magma =
-    [](const bool _x0, const bool _x1) { return (_x0 && _x1); };
+  static carrier op(const std::shared_ptr<magma> &, const carrier,
+                    const carrier);
 
-struct Monoid {
-  std::function<std::any(std::any, std::any)> m_op;
-  std::any m_id;
-};
+  static inline const std::shared_ptr<magma> nat_magma =
+      [](const unsigned int _x0, const unsigned int _x1) {
+        return (_x0 + _x1);
+      };
 
-using m_carrier = std::any;
+  static inline const std::shared_ptr<magma> bool_magma =
+      [](const bool _x0, const bool _x1) { return (_x0 && _x1); };
 
-const std::shared_ptr<Monoid> nat_monoid = std::make_shared<Monoid>(Monoid{
-    [](const unsigned int _x0, const unsigned int _x1) { return (_x0 + _x1); },
-    0});
+  struct Monoid {
+    std::function<std::any(std::any, std::any)> m_op;
+    std::any m_id;
+  };
 
-const std::shared_ptr<Monoid> nat_mul_monoid = std::make_shared<Monoid>(Monoid{
-    [](const unsigned int _x0, const unsigned int _x1) { return (_x0 * _x1); },
-    (0 + 1)});
+  using m_carrier = std::any;
 
-const unsigned int test_fold_add =
-    nat_monoid->mfold(List::list<std::any>::ctor::cons_(
-        (0 + 1),
-        List::list<std::any>::ctor::cons_(
-            ((0 + 1) + 1), List::list<std::any>::ctor::cons_(
-                               (((0 + 1) + 1) + 1),
-                               List::list<std::any>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List::list<std::any>::ctor::nil_())))));
+  static m_carrier m_op(const std::shared_ptr<Monoid> &, const m_carrier,
+                        const m_carrier);
 
-const unsigned int test_fold_mul =
-    nat_mul_monoid->mfold(List::list<std::any>::ctor::cons_(
-        ((0 + 1) + 1),
-        List::list<std::any>::ctor::cons_(
-            (((0 + 1) + 1) + 1), List::list<std::any>::ctor::cons_(
+  static m_carrier m_id(const std::shared_ptr<Monoid> &m);
+
+  static inline const std::shared_ptr<Monoid> nat_monoid =
+      std::make_shared<Monoid>(
+          Monoid{[](const unsigned int _x0, const unsigned int _x1) {
+                   return (_x0 + _x1);
+                 },
+                 0});
+
+  static inline const std::shared_ptr<Monoid> nat_mul_monoid =
+      std::make_shared<Monoid>(
+          Monoid{[](const unsigned int _x0, const unsigned int _x1) {
+                   return (_x0 * _x1);
+                 },
+                 (0 + 1)});
+
+  static m_carrier mfold(const std::shared_ptr<Monoid> &m,
+                         const std::shared_ptr<List::list<std::any>> &l);
+
+  static inline const unsigned int test_fold_add =
+      mfold(nat_monoid,
+            List::list<std::any>::ctor::cons_(
+                (0 + 1), List::list<std::any>::ctor::cons_(
+                             ((0 + 1) + 1),
+                             List::list<std::any>::ctor::cons_(
+                                 (((0 + 1) + 1) + 1),
+                                 List::list<std::any>::ctor::cons_(
                                      ((((0 + 1) + 1) + 1) + 1),
-                                     List::list<std::any>::ctor::nil_()))));
+                                     List::list<std::any>::ctor::nil_())))));
 
-enum class tag { TNat, TBool };
+  static inline const unsigned int test_fold_mul =
+      mfold(nat_mul_monoid,
+            List::list<std::any>::ctor::cons_(
+                ((0 + 1) + 1), List::list<std::any>::ctor::cons_(
+                                   (((0 + 1) + 1) + 1),
+                                   List::list<std::any>::ctor::cons_(
+                                       ((((0 + 1) + 1) + 1) + 1),
+                                       List::list<std::any>::ctor::nil_()))));
 
-using tag_type = std::any;
+  enum class tag { TNat, TBool };
 
-struct Tagged {
-  tag the_tag;
-  tag_type the_value;
-};
+  template <typename T1>
+  static T1 tag_rect(const T1 f, const T1 f0, const tag t) {
+    return [&](void) {
+      switch (t) {
+      case tag::TNat: {
+        return f;
+      }
+      case tag::TBool: {
+        return f0;
+      }
+      }
+    }();
+  }
 
-const std::shared_ptr<Tagged> tagged_nat = std::make_shared<Tagged>(Tagged{
-    tag::TNat,
-    ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+  template <typename T1>
+  static T1 tag_rec(const T1 f, const T1 f0, const tag t) {
+    return [&](void) {
+      switch (t) {
+      case tag::TNat: {
+        return f;
+      }
+      case tag::TBool: {
+        return f0;
+      }
+      }
+    }();
+  }
+
+  using tag_type = std::any;
+
+  struct Tagged {
+    tag the_tag;
+    tag_type the_value;
+  };
+
+  static tag the_tag(const std::shared_ptr<Tagged> &t);
+
+  static tag_type the_value(const std::shared_ptr<Tagged> &t);
+
+  static inline const std::shared_ptr<Tagged> tagged_nat =
+      std::make_shared<Tagged>(Tagged{
+          tag::TNat,
+          ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                               1) +
+                                              1) +
+                                             1) +
+                                            1) +
+                                           1) +
+                                          1) +
+                                         1) +
                                         1) +
                                        1) +
                                       1) +
@@ -165,13 +227,8 @@ const std::shared_ptr<Tagged> tagged_nat = std::make_shared<Tagged>(Tagged{
               1) +
              1) +
             1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1) +
-      1) +
-     1)});
+           1)});
 
-const std::shared_ptr<Tagged> tagged_bool =
-    std::make_shared<Tagged>(Tagged{tag::TBool, true});
+  static inline const std::shared_ptr<Tagged> tagged_bool =
+      std::make_shared<Tagged>(Tagged{tag::TBool, true});
+};

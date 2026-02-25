@@ -25,24 +25,25 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: poly_id
     {
-        ASSERT(test_id_nat == 42);
-        ASSERT(test_id_bool == true);
+        ASSERT(UniversePoly::test_id_nat == 42);
+        ASSERT(UniversePoly::test_id_bool == true);
         std::cout << "Test 1 (poly_id): PASSED" << std::endl;
     }
 
     // Test 2: polymorphic pair
     {
-        ASSERT(test_pfst == 5);
-        ASSERT(test_psnd == true);
+        ASSERT(UniversePoly::test_pfst == 5);
+        ASSERT(UniversePoly::test_psnd == true);
         std::cout << "Test 2 (ppair): PASSED" << std::endl;
     }
 
     // Test 3: poly_length
     {
-        ASSERT(test_length == 3);
+        ASSERT(UniversePoly::test_length == 3);
         std::cout << "Test 3 (poly_length): PASSED" << std::endl;
     }
 

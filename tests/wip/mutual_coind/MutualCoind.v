@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat List.
 Import ListNotations.
 
+Module MutualCoind.
+
 (* === Mutual coinductive: alternating streams === *)
 
 CoInductive streamA (A : Type) : Type :=
@@ -55,10 +57,8 @@ Definition test_headA : nat := headA (countA 0).
 Definition test_headB : nat := headB (countB 10).
 Definition test_take5 : list nat := takeA 5 (countA 0).
 
+End MutualCoind.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "mutual_coind"
-  headA tailA headB tailB
-  countA countB
-  takeA takeB
-  test_headA test_headB test_take5.
+Crane Extraction "mutual_coind" MutualCoind.

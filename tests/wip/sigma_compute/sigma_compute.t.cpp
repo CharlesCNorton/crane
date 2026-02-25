@@ -25,22 +25,23 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: use_nat_double 5 = 10
     {
-        ASSERT(test_double_5 == 10);
+        ASSERT(SigmaCompute::test_double_5 == 10);
         std::cout << "Test 1 (use_nat_double 5): PASSED" << std::endl;
     }
 
     // Test 2: get_positive 3 = 4
     {
-        ASSERT(test_positive_3 == 4);
+        ASSERT(SigmaCompute::test_positive_3 == 4);
         std::cout << "Test 2 (get_positive 3): PASSED" << std::endl;
     }
 
     // Test 3: double_positive 3 = 8
     {
-        ASSERT(test_double_pos == 8);
+        ASSERT(SigmaCompute::test_double_pos == 8);
         std::cout << "Test 3 (double_positive 3): PASSED" << std::endl;
     }
 

@@ -86,16 +86,20 @@ T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
       l->v());
 }
 
-std::shared_ptr<List::list<unsigned int>>
-inc_all(const std::shared_ptr<List::list<unsigned int>> &l);
+struct PartialApply {
+  static std::shared_ptr<List::list<unsigned int>>
+  inc_all(const std::shared_ptr<List::list<unsigned int>> &l);
 
-std::shared_ptr<List::list<std::pair<unsigned int, unsigned int>>>
-tag_all(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List::list<std::pair<unsigned int, unsigned int>>>
+  tag_all(const std::shared_ptr<List::list<unsigned int>> &l);
 
-std::shared_ptr<List::list<std::optional<unsigned int>>>
-wrap_all(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List::list<std::optional<unsigned int>>>
+  wrap_all(const std::shared_ptr<List::list<unsigned int>> &l);
 
-struct Tagged {
+  static std::shared_ptr<List::list<std::function<std::shared_ptr<
+      List::list<unsigned int>>(std::shared_ptr<List::list<unsigned int>>)>>>
+  prepend_each(const std::shared_ptr<List::list<unsigned int>> &l);
+
   template <typename A> struct tagged {
   public:
     struct Tag {
@@ -111,40 +115,67 @@ struct Tagged {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Tagged::tagged<A>> Tag_(unsigned int a0, A a1) {
-        return std::shared_ptr<Tagged::tagged<A>>(
-            new Tagged::tagged<A>(Tag{a0, a1}));
+      static std::shared_ptr<tagged<A>> Tag_(unsigned int a0, A a1) {
+        return std::shared_ptr<tagged<A>>(new tagged<A>(Tag{a0, a1}));
       }
-      static std::unique_ptr<Tagged::tagged<A>> Tag_uptr(unsigned int a0,
-                                                         A a1) {
-        return std::unique_ptr<Tagged::tagged<A>>(
-            new Tagged::tagged<A>(Tag{a0, a1}));
+      static std::unique_ptr<tagged<A>> Tag_uptr(unsigned int a0, A a1) {
+        return std::unique_ptr<tagged<A>>(new tagged<A>(Tag{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
-};
 
-std::shared_ptr<List::list<std::shared_ptr<Tagged::tagged<bool>>>>
-tag_with(const unsigned int n, const std::shared_ptr<List::list<bool>> &l);
+  template <typename T1, typename T2, MapsTo<T2, unsigned int, T1> F0>
+  static T2 tagged_rect(F0 &&f, const std::shared_ptr<tagged<T1>> &t) {
+    return std::visit(
+        Overloaded{[&](const typename tagged<T1>::Tag _args) -> T2 {
+          unsigned int n = _args._a0;
+          T1 a = _args._a1;
+          return f(std::move(n), a);
+        }},
+        t->v());
+  }
 
-unsigned int sum_with_init(const unsigned int init,
-                           const std::shared_ptr<List::list<unsigned int>> &l);
+  template <typename T1, typename T2, MapsTo<T2, unsigned int, T1> F0>
+  static T2 tagged_rec(F0 &&f, const std::shared_ptr<tagged<T1>> &t) {
+    return std::visit(
+        Overloaded{[&](const typename tagged<T1>::Tag _args) -> T2 {
+          unsigned int n = _args._a0;
+          T1 a = _args._a1;
+          return f(std::move(n), a);
+        }},
+        t->v());
+  }
 
-const std::shared_ptr<List::list<unsigned int>> test_inc =
-    inc_all(List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((0 + 1) + 1),
-            List::list<unsigned int>::ctor::cons_(
-                (((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()))));
+  static std::shared_ptr<List::list<std::shared_ptr<tagged<bool>>>>
+  tag_with(const unsigned int n, const std::shared_ptr<List::list<bool>> &l);
 
-const std::shared_ptr<List::list<std::pair<unsigned int, unsigned int>>>
-    test_tag = tag_all(List::list<unsigned int>::ctor::cons_(
-        ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+  static std::shared_ptr<List::list<
+      std::pair<unsigned int, std::pair<unsigned int, unsigned int>>>>
+  double_tag(const std::shared_ptr<List::list<unsigned int>> &l);
+
+  static unsigned int
+  sum_with_init(const unsigned int init,
+                const std::shared_ptr<List::list<unsigned int>> &l);
+
+  static inline const std::shared_ptr<List::list<unsigned int>> test_inc =
+      inc_all(List::list<unsigned int>::ctor::cons_(
+          (0 + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+                                 (((0 + 1) + 1) + 1),
+                                 List::list<unsigned int>::ctor::nil_()))));
+
+  static inline const std::shared_ptr<
+      List::list<std::pair<unsigned int, unsigned int>>>
+      test_tag = tag_all(List::list<unsigned int>::ctor::cons_(
+          ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                          1) +
+                         1) +
+                        1) +
                        1) +
                       1) +
                      1) +
@@ -153,11 +184,12 @@ const std::shared_ptr<List::list<std::pair<unsigned int, unsigned int>>>
                   1) +
                  1) +
                 1) +
-               1) +
-              1) +
-             1),
-            List::list<unsigned int>::ctor::cons_(
-                ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+               1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                           1) +
+                                          1) +
+                                         1) +
                                         1) +
                                        1) +
                                       1) +
@@ -179,20 +211,19 @@ const std::shared_ptr<List::list<std::pair<unsigned int, unsigned int>>>
                       1) +
                      1) +
                     1) +
-                   1) +
-                  1) +
-                 1),
-                List::list<unsigned int>::ctor::nil_()))));
+                   1),
+                  List::list<unsigned int>::ctor::nil_()))));
 
-const std::shared_ptr<List::list<std::optional<unsigned int>>> test_wrap =
-    wrap_all(List::list<unsigned int>::ctor::cons_(
-        (((((0 + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-            List::list<unsigned int>::ctor::cons_(
-                (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                List::list<unsigned int>::ctor::nil_()))));
+  static inline const std::shared_ptr<List::list<std::optional<unsigned int>>>
+      test_wrap = wrap_all(List::list<unsigned int>::ctor::cons_(
+          (((((0 + 1) + 1) + 1) + 1) + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+                  List::list<unsigned int>::ctor::nil_()))));
 
-const std::shared_ptr<List::list<std::shared_ptr<Tagged::tagged<bool>>>> test_tag_with = tag_with((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<bool>::ctor::cons_(true, List::list<bool>::ctor::cons_(false, List::list<bool>::ctor::cons_(true, List::list<bool>::ctor::nil_()))));
+ static inline const std::shared_ptr<List::list<std::shared_ptr<tagged<bool>>>> test_tag_with = tag_with((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<bool>::ctor::cons_(true, List::list<bool>::ctor::cons_(false, List::list<bool>::ctor::cons_(true, List::list<bool>::ctor::nil_()))));
 
-const unsigned int test_sum = sum_with_init(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<unsigned int>::ctor::cons_((0 + 1), List::list<unsigned int>::ctor::cons_(((0 + 1) + 1), List::list<unsigned int>::ctor::cons_((((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()))));
+ static inline const unsigned int test_sum = sum_with_init(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<unsigned int>::ctor::cons_((0 + 1), List::list<unsigned int>::ctor::cons_(((0 + 1) + 1), List::list<unsigned int>::ctor::cons_((((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()))));
+};

@@ -25,16 +25,17 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: tree_sum
     {
-        ASSERT(test_tree_sum == 6);  // 1 + 2 + 3
+        ASSERT(HigherKinded::test_tree_sum == 6);  // 1 + 2 + 3
         std::cout << "Test 1 (tree_sum): PASSED" << std::endl;
     }
 
     // Test 2: tree_size
     {
-        ASSERT(test_tree_size == 3);
+        ASSERT(HigherKinded::test_tree_size == 3);
         std::cout << "Test 2 (tree_size): PASSED" << std::endl;
     }
 

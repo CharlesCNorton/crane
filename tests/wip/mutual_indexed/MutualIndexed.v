@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module MutualIndexed.
+
 (* Even/Odd as mutual inductives indexed by nat *)
 Inductive Even : nat -> Prop :=
   | even_O : Even 0
@@ -39,8 +41,8 @@ Definition test_leaf_val : nat := even_val leaf.
 Definition test_tree1_val : nat := odd_val tree1.
 Definition test_tree2_val : nat := even_val tree2.
 
+End MutualIndexed.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "mutual_indexed"
-  even_val odd_val leaf tree1 tree2
-  test_leaf_val test_tree1_val test_tree2_val.
+Crane Extraction "mutual_indexed" MutualIndexed.

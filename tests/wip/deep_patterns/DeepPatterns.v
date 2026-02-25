@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module DeepPatterns.
+
 (* Deep match on nested options *)
 Definition deep_option (x : option (option (option nat))) : nat :=
   match x with
@@ -72,10 +74,8 @@ Definition test_deep_sum : nat := deep_sum (OLeft (ILeft 77)).
 Definition test_complex : nat := complex_match (Some (5, [10; 20; 30])).
 Definition test_guarded : nat := guarded_match (3, 7).
 
+End DeepPatterns.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "deep_patterns"
-  deep_option deep_pair list_shape deep_sum complex_match guarded_match
-  test_deep_some test_deep_none test_deep_pair
-  test_shape_3 test_shape_long test_deep_sum
-  test_complex test_guarded.
+Crane Extraction "deep_patterns" DeepPatterns.

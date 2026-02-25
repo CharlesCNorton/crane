@@ -14,6 +14,8 @@ From Stdlib Require Import Arith List Sorted Permutation.
 Import ListNotations.
 Open Scope list_scope.
 
+Module Sort.
+
 Section DivConq.
 
 Variable A : Type.
@@ -440,6 +442,8 @@ Defined.
 
 End QSort.
 
+End Sort.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "msort" msort.
+Crane Extraction "msort" Sort.

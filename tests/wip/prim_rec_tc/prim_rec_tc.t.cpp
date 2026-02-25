@@ -25,29 +25,30 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: primitive projection access
     {
-        ASSERT(test_px == 3);
-        ASSERT(test_py == 4);
+        ASSERT(PrimRecTc::test_px == 3);
+        ASSERT(PrimRecTc::test_py == 4);
         std::cout << "Test 1 (point projections): PASSED" << std::endl;
     }
 
     // Test 2: typeclass norm on point
     {
-        ASSERT(test_norm_point == 7);  // 3 + 4
+        ASSERT(PrimRecTc::test_norm_point == 7);  // 3 + 4
         std::cout << "Test 2 (norm point): PASSED" << std::endl;
     }
 
     // Test 3: double_norm via typeclass
     {
-        ASSERT(test_double_norm == 14);  // (3+4) + (3+4)
+        ASSERT(PrimRecTc::test_double_norm == 14);  // (3+4) + (3+4)
         std::cout << "Test 3 (double_norm): PASSED" << std::endl;
     }
 
     // Test 4: vec3 norm
     {
-        ASSERT(test_norm_vec3 == 6);  // 1 + 2 + 3
+        ASSERT(PrimRecTc::test_norm_vec3 == 6);  // 1 + 2 + 3
         std::cout << "Test 4 (norm vec3): PASSED" << std::endl;
     }
 

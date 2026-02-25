@@ -25,22 +25,23 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: expr_size
     {
-        ASSERT(test_expr_size == 5);  // EAdd(ENum, EMul(ENum, ENum)) = 1+1+1+1+1
+        ASSERT(LargeMutual::test_expr_size == 5);  // EAdd(ENum, EMul(ENum, ENum)) = 1+1+1+1+1
         std::cout << "Test 1 (expr_size): PASSED" << std::endl;
     }
 
     // Test 2: bexpr_size
     {
-        ASSERT(test_bexpr_size == 7);  // BAnd(BEq(EVar,ENum), BLt(EVar,ENum))
+        ASSERT(LargeMutual::test_bexpr_size == 7);  // BAnd(BEq(EVar,ENum), BLt(EVar,ENum))
         std::cout << "Test 2 (bexpr_size): PASSED" << std::endl;
     }
 
     // Test 3: stmt_size
     {
-        ASSERT(test_stmt_size > 0);
+        ASSERT(LargeMutual::test_stmt_size > 0);
         std::cout << "Test 3 (stmt_size): PASSED" << std::endl;
     }
 

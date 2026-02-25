@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module FunctorComp.
+
 (* Module type: a container with an element type and ops *)
 Module Type CONTAINER.
   Parameter t : Type.
@@ -82,7 +84,8 @@ Definition test_stack_size : nat :=
 Definition test_queue_size : nat :=
   Queue.size (QueueOps.push_list [10; 20; 30] Queue.empty).
 
+End FunctorComp.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "functor_comp"
-  test_stack test_queue test_stack_size test_queue_size.
+Crane Extraction "functor_comp" FunctorComp.

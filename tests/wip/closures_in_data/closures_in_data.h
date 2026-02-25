@@ -93,115 +93,97 @@ T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
       l->v());
 }
 
-const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
-    fn_list =
-        List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
-            [](axiom x) { return (x + 1); },
-            List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
-                [](unsigned int x) { return (x + x); },
-                List::list<std::function<unsigned int(unsigned int)>>::ctor::
-                    cons_([](unsigned int x) { return (x * x); },
-                          List::list<std::function<unsigned int(
-                              unsigned int)>>::ctor::nil_())));
-
-std::shared_ptr<List::list<unsigned int>> apply_all(
-    const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
-        &fns,
-    const unsigned int x);
-
-struct transform {
-  std::function<unsigned int(unsigned int)> forward;
-  std::function<unsigned int(unsigned int)> backward;
-};
-
-const std::shared_ptr<transform> double_transform = std::make_shared<transform>(
-    transform{[](unsigned int x) { return (x + x); },
-              [](unsigned int x) { return div(x, ((0 + 1) + 1)); }});
-
-unsigned int compose_all(
-    const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
-        &fns,
-    const unsigned int x);
-
-const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
-    pipeline =
-        List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
-            [](unsigned int x) { return (x + (0 + 1)); },
-            List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
-                [](unsigned int x) { return (x * ((0 + 1) + 1)); },
-                List::list<std::function<unsigned int(unsigned int)>>::ctor::
-                    cons_(
-                        [](unsigned int x) {
-                          return (
-                              x +
-                              ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                                 1) +
-                                1) +
-                               1));
-                        },
+struct ClosuresInData {
+  static inline const std::shared_ptr<
+      List::list<std::function<unsigned int(unsigned int)>>>
+      fn_list =
+          List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
+              [](axiom x) { return (x + 1); },
+              List::list<std::function<unsigned int(unsigned int)>>::ctor::
+                  cons_([](unsigned int x) { return (x + x); },
                         List::list<std::function<unsigned int(unsigned int)>>::
-                            ctor::nil_())));
+                            ctor::cons_([](unsigned int x) { return (x * x); },
+                                        List::list<std::function<unsigned int(
+                                            unsigned int)>>::ctor::nil_())));
 
-unsigned int
-maybe_apply(const std::optional<std::function<unsigned int(unsigned int)>> mf,
+  static std::shared_ptr<List::list<unsigned int>>
+  apply_all(const std::shared_ptr<
+                List::list<std::function<unsigned int(unsigned int)>>> &fns,
             const unsigned int x);
 
-const std::shared_ptr<List::list<unsigned int>> test_apply_all =
-    apply_all(fn_list, (((((0 + 1) + 1) + 1) + 1) + 1));
+  struct transform {
+    std::function<unsigned int(unsigned int)> forward;
+    std::function<unsigned int(unsigned int)> backward;
+  };
 
-const unsigned int test_forward = double_transform->apply_forward(
-    (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static unsigned int forward(const std::shared_ptr<transform> &,
+                              const unsigned int);
 
-const unsigned int test_backward = double_transform->apply_backward((
-    (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-     1) +
-    1));
+  static unsigned int backward(const std::shared_ptr<transform> &,
+                               const unsigned int);
 
-const unsigned int test_compose = compose_all(pipeline, (((0 + 1) + 1) + 1));
+  static inline const std::shared_ptr<transform> double_transform =
+      std::make_shared<transform>(
+          transform{[](unsigned int x) { return (x + x); },
+                    [](unsigned int x) { return div(x, ((0 + 1) + 1)); }});
 
-const unsigned int test_maybe_some = maybe_apply(
-    std::make_optional<std::function<unsigned int(unsigned int)>>(
-        [](axiom x) { return (x + 1); }),
-    (((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1) +
+  static unsigned int apply_forward(const std::shared_ptr<transform> &t,
+                                    const unsigned int x);
+
+  static unsigned int apply_backward(const std::shared_ptr<transform> &t,
+                                     const unsigned int x);
+
+  static unsigned int
+  compose_all(const std::shared_ptr<
+                  List::list<std::function<unsigned int(unsigned int)>>> &fns,
+              const unsigned int x);
+
+  static inline const std::shared_ptr<
+      List::list<std::function<unsigned int(unsigned int)>>>
+      pipeline =
+          List::list<std::function<unsigned int(unsigned int)>>::ctor::cons_(
+              [](unsigned int x) { return (x + (0 + 1)); },
+              List::list<std::function<unsigned int(unsigned int)>>::ctor::
+                  cons_([](unsigned int x) { return (x * ((0 + 1) + 1)); },
+                        List::list<std::function<unsigned int(unsigned int)>>::
+                            ctor::cons_(
+                                [](unsigned int x) {
+                                  return (x +
+                                          ((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                               1) +
+                                              1) +
+                                             1) +
+                                            1) +
+                                           1));
+                                },
+                                List::list<std::function<unsigned int(
+                                    unsigned int)>>::ctor::nil_())));
+
+  static unsigned int
+  maybe_apply(const std::optional<std::function<unsigned int(unsigned int)>> mf,
+              const unsigned int x);
+
+  static inline const std::shared_ptr<List::list<unsigned int>> test_apply_all =
+      apply_all(fn_list, (((((0 + 1) + 1) + 1) + 1) + 1));
+
+  static inline const unsigned int test_forward = apply_forward(
+      double_transform, (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+
+  static inline const unsigned int test_backward = apply_backward(
+      double_transform,
+      ((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
          1) +
         1) +
-       1) +
-      1) +
-     1));
+       1));
 
-const unsigned int test_maybe_none = maybe_apply(
-    std::nullopt,
-    ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+  static inline const unsigned int test_compose =
+      compose_all(pipeline, (((0 + 1) + 1) + 1));
+
+  static inline const unsigned int test_maybe_some = maybe_apply(
+      std::make_optional<std::function<unsigned int(unsigned int)>>(
+          [](axiom x) { return (x + 1); }),
+      (((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+                                         1) +
                                         1) +
                                        1) +
                                       1) +
@@ -235,6 +217,46 @@ const unsigned int test_maybe_none = maybe_apply(
           1) +
          1) +
         1) +
-       1) +
-      1) +
-     1));
+       1));
+
+  static inline const unsigned int test_maybe_none = maybe_apply(
+      std::nullopt,
+      ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                           1) +
+                                          1) +
+                                         1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1));
+};

@@ -351,134 +351,143 @@ struct Z {
   static std::shared_ptr<Z::z> abs(const std::shared_ptr<Z::z> &z);
 };
 
-const std::shared_ptr<Positive::positive> pos_one =
-    Positive::positive::ctor::xH_();
+struct BinaryNums {
+  static inline const std::shared_ptr<Positive::positive> pos_one =
+      Positive::positive::ctor::xH_();
 
-const std::shared_ptr<Positive::positive> pos_five =
-    Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()));
+  static inline const std::shared_ptr<Positive::positive> pos_five =
+      Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()));
 
-const std::shared_ptr<Positive::positive> pos_add_result =
-    Coq_Pos::add(Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()),
-                 Positive::positive::ctor::xI_(Positive::positive::ctor::xI_(
-                     Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<Positive::positive> pos_add_result =
+      Coq_Pos::add(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()),
+          Positive::positive::ctor::xI_(
+              Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<Positive::positive> pos_mul_result = Coq_Pos::mul(
-    Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())),
-    Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<Positive::positive> pos_mul_result =
+      Coq_Pos::mul(Positive::positive::ctor::xO_(Positive::positive::ctor::xO_(
+                       Positive::positive::ctor::xH_())),
+                   Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+                       Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<Positive::positive> pos_succ_result =
-    Coq_Pos::succ(Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<Positive::positive> pos_succ_result =
+      Coq_Pos::succ(Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<N::n> n_zero = N::n::ctor::N0_();
+  static inline const std::shared_ptr<N::n> n_zero = N::n::ctor::N0_();
 
-const std::shared_ptr<N::n> n_five =
-    N::n::ctor::Npos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<N::n> n_five =
+      N::n::ctor::Npos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<N::n> n_add_result = N::add(
-    N::n::ctor::Npos_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
-    N::n::ctor::Npos_(Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))))));
+  static inline const std::shared_ptr<N::n> n_add_result = N::add(
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
+              Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xO_(
+              Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+                  Positive::positive::ctor::xH_()))))));
 
-const std::shared_ptr<N::n> n_mul_result = N::mul(
-    N::n::ctor::Npos_(Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))),
-    N::n::ctor::Npos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<N::n> n_mul_result = N::mul(
+      N::n::ctor::Npos_(Positive::positive::ctor::xO_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))),
+      N::n::ctor::Npos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<N::n> n_sub_result = N::sub(
-    N::n::ctor::Npos_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
-    N::n::ctor::Npos_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<N::n> n_sub_result = N::sub(
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
+              Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<N::n> n_pred_result =
-    N::pred(N::n::ctor::Npos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<N::n> n_pred_result =
+      N::pred(N::n::ctor::Npos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const comparison n_compare_result = N::compare(
-    N::n::ctor::Npos_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
-    N::n::ctor::Npos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const comparison n_compare_result = N::compare(
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
+      N::n::ctor::Npos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<Z::z> z_zero = Z::z::ctor::Z0_();
+  static inline const std::shared_ptr<Z::z> z_zero = Z::z::ctor::Z0_();
 
-const std::shared_ptr<Z::z> z_pos = Z::z::ctor::Zpos_(
-    Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))))));
+  static inline const std::shared_ptr<Z::z> z_pos =
+      Z::z::ctor::Zpos_(Positive::positive::ctor::xO_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+              Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+                  Positive::positive::ctor::xH_()))))));
 
-const std::shared_ptr<Z::z> z_neg =
-    Z::z::ctor::Zneg_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<Z::z> z_neg =
+      Z::z::ctor::Zneg_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<Z::z> z_add_result = Z::add(
-    Z::z::ctor::Zpos_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
-    Z::z::ctor::Zneg_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<Z::z> z_add_result = Z::add(
+      Z::z::ctor::Zpos_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
+              Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))),
+      Z::z::ctor::Zneg_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<Z::z> z_mul_result = Z::mul(
-    Z::z::ctor::Zneg_(Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))),
-    Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<Z::z> z_mul_result = Z::mul(
+      Z::z::ctor::Zneg_(Positive::positive::ctor::xO_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))),
+      Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<Z::z> z_sub_result = Z::sub(
-    Z::z::ctor::Zpos_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
-    Z::z::ctor::Zpos_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-            Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))));
+  static inline const std::shared_ptr<Z::z> z_sub_result =
+      Z::sub(Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
+                 Positive::positive::ctor::xH_())),
+             Z::z::ctor::Zpos_(Positive::positive::ctor::xO_(
+                 Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+                     Positive::positive::ctor::xH_())))));
 
-const std::shared_ptr<Z::z> z_abs_result =
-    Z::abs(Z::z::ctor::Zneg_(Positive::positive::ctor::xO_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
-            Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
-                Positive::positive::ctor::xH_())))))));
+  static inline const std::shared_ptr<Z::z> z_abs_result =
+      Z::abs(Z::z::ctor::Zneg_(Positive::positive::ctor::xO_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+              Positive::positive::ctor::xI_(Positive::positive::ctor::xO_(
+                  Positive::positive::ctor::xH_())))))));
 
-const comparison z_compare_result = Z::compare(
-    Z::z::ctor::Zneg_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
-    Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const comparison z_compare_result = Z::compare(
+      Z::z::ctor::Zneg_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
+      Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const unsigned int pos_to_nat = Coq_Pos::to_nat(Positive::positive::ctor::xI_(
-    Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
+  static inline const unsigned int pos_to_nat =
+      Coq_Pos::to_nat(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const unsigned int n_to_nat = N::to_nat(N::n::ctor::Npos_(
-    Positive::positive::ctor::xI_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())))));
+  static inline const unsigned int n_to_nat = N::to_nat(N::n::ctor::Npos_(
+      Positive::positive::ctor::xI_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())))));
 
-const unsigned int z_to_nat = Z::to_nat(Z::z::ctor::Zpos_(
-    Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))));
+  static inline const unsigned int z_to_nat = Z::to_nat(Z::z::ctor::Zpos_(
+      Positive::positive::ctor::xO_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_())))));
 
-std::shared_ptr<N::n> n_max(std::shared_ptr<N::n> a, std::shared_ptr<N::n> b);
+  static std::shared_ptr<N::n> n_max(std::shared_ptr<N::n> a,
+                                     std::shared_ptr<N::n> b);
 
-std::shared_ptr<Z::z> z_sign(const std::shared_ptr<Z::z> &z);
+  static std::shared_ptr<Z::z> z_sign(const std::shared_ptr<Z::z> &z);
 
-const std::shared_ptr<N::n> test_n_max =
-    n_max(N::n::ctor::Npos_(
-              Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
-          N::n::ctor::Npos_(Positive::positive::ctor::xI_(
-              Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<N::n> test_n_max = n_max(
+      N::n::ctor::Npos_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())),
+      N::n::ctor::Npos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<Z::z> test_z_sign_pos =
-    z_sign(Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
-        Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
+  static inline const std::shared_ptr<Z::z> test_z_sign_pos =
+      z_sign(Z::z::ctor::Zpos_(Positive::positive::ctor::xI_(
+          Positive::positive::ctor::xO_(Positive::positive::ctor::xH_()))));
 
-const std::shared_ptr<Z::z> test_z_sign_neg = z_sign(Z::z::ctor::Zneg_(
-    Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
+  static inline const std::shared_ptr<Z::z> test_z_sign_neg =
+      z_sign(Z::z::ctor::Zneg_(
+          Positive::positive::ctor::xI_(Positive::positive::ctor::xH_())));
 
-const std::shared_ptr<Z::z> test_z_sign_zero = z_sign(Z::z::ctor::Z0_());
+  static inline const std::shared_ptr<Z::z> test_z_sign_zero =
+      z_sign(Z::z::ctor::Z0_());
+};

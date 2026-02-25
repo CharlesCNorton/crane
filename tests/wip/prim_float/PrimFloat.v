@@ -7,11 +7,14 @@
 
 From Stdlib Require Import PrimFloat.
 
+Module PrimFloat.
+
 Definition f_zero : float := 0%float.
 Definition f_one : float := 1%float.
 Definition f_pi : float := 3.14159%float.
 
+End PrimFloat.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std.
-Crane Extraction "prim_float"
-  f_zero f_one f_pi.
+Crane Extraction "prim_float" PrimFloat.

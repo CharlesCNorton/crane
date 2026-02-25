@@ -18,12 +18,23 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct point {
-  unsigned int px;
-  unsigned int py;
+struct PrimProj {
+  struct point {
+    unsigned int px;
+    unsigned int py;
+  };
+
+  static unsigned int px(const std::shared_ptr<point> &p);
+
+  static unsigned int py(const std::shared_ptr<point> &p);
+
+  static std::shared_ptr<point> add_points(std::shared_ptr<point> p1,
+                                           std::shared_ptr<point> p2);
+
+  static inline const std::shared_ptr<point> origin =
+      std::make_shared<point>(point{0, 0});
+
+  static std::shared_ptr<point> translate(const unsigned int dx,
+                                          const unsigned int dy,
+                                          std::shared_ptr<point> p);
 };
-
-const std::shared_ptr<point> origin = std::make_shared<point>(point{0, 0});
-
-std::shared_ptr<point> translate(const unsigned int dx, const unsigned int dy,
-                                 std::shared_ptr<point> p);

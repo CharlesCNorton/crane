@@ -37,28 +37,50 @@ unsigned int div(const unsigned int x, const unsigned int y) {
   }
 }
 
-std::shared_ptr<List::list<unsigned int>> apply_all(
+std::shared_ptr<List::list<unsigned int>> ClosuresInData::apply_all(
     const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
         &fns,
     const unsigned int x) {
-  return map<std::function<unsigned int(unsigned int)>, unsigned int>(
+  return ::map<std::function<unsigned int(unsigned int)>, unsigned int>(
       [&](std::function<unsigned int(unsigned int)> f) { return f(x); }, fns);
 }
 
-unsigned int compose_all(
+unsigned int
+ClosuresInData::forward(const std::shared_ptr<ClosuresInData::transform> &t,
+                        const unsigned int _x0) {
+  return t->forward(_x0);
+}
+
+unsigned int
+ClosuresInData::backward(const std::shared_ptr<ClosuresInData::transform> &t,
+                         const unsigned int _x0) {
+  return t->backward(_x0);
+}
+
+unsigned int ClosuresInData::apply_forward(
+    const std::shared_ptr<ClosuresInData::transform> &t, const unsigned int x) {
+  return t->forward(x);
+}
+
+unsigned int ClosuresInData::apply_backward(
+    const std::shared_ptr<ClosuresInData::transform> &t, const unsigned int x) {
+  return t->backward(x);
+}
+
+unsigned int ClosuresInData::compose_all(
     const std::shared_ptr<List::list<std::function<unsigned int(unsigned int)>>>
         &fns,
     const unsigned int x) {
-  return fold_left<unsigned int, std::function<unsigned int(unsigned int)>>(
+  return ::fold_left<unsigned int, std::function<unsigned int(unsigned int)>>(
       [](unsigned int acc, std::function<unsigned int(unsigned int)> f) {
         return f(acc);
       },
       fns, x);
 }
 
-unsigned int
-maybe_apply(const std::optional<std::function<unsigned int(unsigned int)>> mf,
-            const unsigned int x) {
+unsigned int ClosuresInData::maybe_apply(
+    const std::optional<std::function<unsigned int(unsigned int)>> mf,
+    const unsigned int x) {
   if (mf.has_value()) {
     std::function<unsigned int(unsigned int)> f = *mf;
     return std::move(f)(x);

@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List String.
 Import ListNotations.
 
+Module RecordDefaults.
+
 (* Record with default values via notation/wrapper *)
 Record Config := mkConfig {
   cfg_width  : nat;
@@ -56,10 +58,8 @@ Definition test_modified : nat :=
   total_cells (set_width 120 (set_debug true default_config)).
 Definition test_rect_area : nat := rect_area (make_rect 0 0 10 5).
 
+End RecordDefaults.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "record_defaults"
-  default_config set_width set_debug total_cells
-  rect_area make_rect
-  test_default_width test_default_debug test_cells
-  test_modified test_rect_area.
+Crane Extraction "record_defaults" RecordDefaults.

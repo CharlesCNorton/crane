@@ -58,28 +58,29 @@ std::shared_ptr<List::list<unsigned int>> vector_to_list(const std::vector<unsig
   return result;
 }
 
+
 int main() {
   // Test 1: div2
   {
-    ASSERT(div2(0) == 0);
-    ASSERT(div2(1) == 0);
-    ASSERT(div2(6) == 3);
-    ASSERT(div2(7) == 3);
-    ASSERT(div2(10) == 5);
+    ASSERT(FuncVernac::div2(0) == 0);
+    ASSERT(FuncVernac::div2(1) == 0);
+    ASSERT(FuncVernac::div2(6) == 3);
+    ASSERT(FuncVernac::div2(7) == 3);
+    ASSERT(FuncVernac::div2(10) == 5);
     std::cout << "Test 1 (div2): PASSED" << std::endl;
   }
 
   // Test 2: list_sum
   {
     auto l = vector_to_list({1, 2, 3, 4, 5});
-    ASSERT(list_sum(l) == 15);
+    ASSERT(FuncVernac::list_sum(l) == 15);
     std::cout << "Test 2 (list_sum): PASSED" << std::endl;
   }
 
   // Test 3: test constants
   {
-    ASSERT(test_div2 == 5);
-    ASSERT(test_sum == 15);
+    ASSERT(FuncVernac::test_div2 == 5);
+    ASSERT(FuncVernac::test_sum == 15);
     std::cout << "Test 3 (constants): PASSED" << std::endl;
   }
 

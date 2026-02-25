@@ -18,16 +18,16 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct EvenTree;
-struct OddTree;
-struct EvenTree {
+struct MutualIndexed {
+  struct EvenTree;
+  struct OddTree;
   struct evenTree {
   public:
     struct ELeaf {};
     struct ENode {
       unsigned int _a0;
       unsigned int _a1;
-      std::shared_ptr<OddTree::oddTree> _a2;
+      std::shared_ptr<oddTree> _a2;
     };
     using variant_t = std::variant<ELeaf, ENode>;
 
@@ -39,49 +39,32 @@ struct EvenTree {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<EvenTree::evenTree> ELeaf_() {
-        return std::shared_ptr<EvenTree::evenTree>(
-            new EvenTree::evenTree(ELeaf{}));
+      static std::shared_ptr<evenTree> ELeaf_() {
+        return std::shared_ptr<evenTree>(new evenTree(ELeaf{}));
       }
-      static std::shared_ptr<EvenTree::evenTree>
+      static std::shared_ptr<evenTree>
       ENode_(unsigned int a0, unsigned int a1,
-             const std::shared_ptr<OddTree::oddTree> &a2) {
-        return std::shared_ptr<EvenTree::evenTree>(
-            new EvenTree::evenTree(ENode{a0, a1, a2}));
+             const std::shared_ptr<oddTree> &a2) {
+        return std::shared_ptr<evenTree>(new evenTree(ENode{a0, a1, a2}));
       }
-      static std::unique_ptr<EvenTree::evenTree> ELeaf_uptr() {
-        return std::unique_ptr<EvenTree::evenTree>(
-            new EvenTree::evenTree(ELeaf{}));
+      static std::unique_ptr<evenTree> ELeaf_uptr() {
+        return std::unique_ptr<evenTree>(new evenTree(ELeaf{}));
       }
-      static std::unique_ptr<EvenTree::evenTree>
+      static std::unique_ptr<evenTree>
       ENode_uptr(unsigned int a0, unsigned int a1,
-                 const std::shared_ptr<OddTree::oddTree> &a2) {
-        return std::unique_ptr<EvenTree::evenTree>(
-            new EvenTree::evenTree(ENode{a0, a1, a2}));
+                 const std::shared_ptr<oddTree> &a2) {
+        return std::unique_ptr<evenTree>(new evenTree(ENode{a0, a1, a2}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int even_val(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{[](const typename EvenTree::evenTree::ELeaf _args)
-                         -> unsigned int { return 0; },
-                     [](const typename EvenTree::evenTree::ENode _args)
-                         -> unsigned int {
-                       unsigned int v = _args._a1;
-                       return std::move(v);
-                     }},
-          this->v());
-    }
   };
-};
-struct OddTree {
   struct oddTree {
   public:
     struct ONode {
       unsigned int _a0;
       unsigned int _a1;
-      std::shared_ptr<EvenTree::evenTree> _a2;
+      std::shared_ptr<evenTree> _a2;
     };
     using variant_t = std::variant<ONode>;
 
@@ -92,47 +75,98 @@ struct OddTree {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<OddTree::oddTree>
+      static std::shared_ptr<oddTree>
       ONode_(unsigned int a0, unsigned int a1,
-             const std::shared_ptr<EvenTree::evenTree> &a2) {
-        return std::shared_ptr<OddTree::oddTree>(
-            new OddTree::oddTree(ONode{a0, a1, a2}));
+             const std::shared_ptr<evenTree> &a2) {
+        return std::shared_ptr<oddTree>(new oddTree(ONode{a0, a1, a2}));
       }
-      static std::unique_ptr<OddTree::oddTree>
+      static std::unique_ptr<oddTree>
       ONode_uptr(unsigned int a0, unsigned int a1,
-                 const std::shared_ptr<EvenTree::evenTree> &a2) {
-        return std::unique_ptr<OddTree::oddTree>(
-            new OddTree::oddTree(ONode{a0, a1, a2}));
+                 const std::shared_ptr<evenTree> &a2) {
+        return std::unique_ptr<oddTree>(new oddTree(ONode{a0, a1, a2}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int odd_val(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{
-              [](const typename OddTree::oddTree::ONode _args) -> unsigned int {
-                unsigned int v = _args._a1;
-                return std::move(v);
-              }},
-          this->v());
-    }
   };
-};
 
-const std::shared_ptr<EvenTree::evenTree> leaf =
-    EvenTree::evenTree::ctor::ELeaf_();
+  template <typename T1,
+            MapsTo<T1, unsigned int, unsigned int, std::shared_ptr<oddTree>> F1>
+  static T1 EvenTree_rect(const T1 f, F1 &&f0, const unsigned int _x,
+                          const std::shared_ptr<evenTree> &e) {
+    return std::visit(
+        Overloaded{
+            [&](const typename evenTree::ELeaf _args) -> T1 { return f; },
+            [&](const typename evenTree::ENode _args) -> T1 {
+              unsigned int n = _args._a0;
+              unsigned int n0 = _args._a1;
+              std::shared_ptr<oddTree> o = _args._a2;
+              return f0(std::move(n), std::move(n0), std::move(o));
+            }},
+        e->v());
+  }
 
-const std::shared_ptr<OddTree::oddTree> tree1 = OddTree::oddTree::ctor::ONode_(
-    0, ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-    EvenTree::evenTree::ctor::ELeaf_());
+  template <typename T1,
+            MapsTo<T1, unsigned int, unsigned int, std::shared_ptr<oddTree>> F1>
+  static T1 EvenTree_rec(const T1 f, F1 &&f0, const unsigned int _x,
+                         const std::shared_ptr<evenTree> &e) {
+    return std::visit(
+        Overloaded{
+            [&](const typename evenTree::ELeaf _args) -> T1 { return f; },
+            [&](const typename evenTree::ENode _args) -> T1 {
+              unsigned int n = _args._a0;
+              unsigned int n0 = _args._a1;
+              std::shared_ptr<oddTree> o = _args._a2;
+              return f0(std::move(n), std::move(n0), std::move(o));
+            }},
+        e->v());
+  }
 
-const std::shared_ptr<EvenTree::evenTree> tree2 =
-    EvenTree::evenTree::ctor::ENode_(
-        (0 + 1),
-        ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                   1) +
-                  1) +
-                 1) +
+  template <
+      typename T1,
+      MapsTo<T1, unsigned int, unsigned int, std::shared_ptr<evenTree>> F0>
+  static T1 OddTree_rect(F0 &&f, const unsigned int _x,
+                         const std::shared_ptr<oddTree> &o) {
+    return std::visit(
+        Overloaded{[&](const typename oddTree::ONode _args) -> T1 {
+          unsigned int n = _args._a0;
+          unsigned int n0 = _args._a1;
+          std::shared_ptr<evenTree> e = _args._a2;
+          return f(std::move(n), std::move(n0), std::move(e));
+        }},
+        o->v());
+  }
+
+  template <
+      typename T1,
+      MapsTo<T1, unsigned int, unsigned int, std::shared_ptr<evenTree>> F0>
+  static T1 OddTree_rec(F0 &&f, const unsigned int _x,
+                        const std::shared_ptr<oddTree> &o) {
+    return std::visit(
+        Overloaded{[&](const typename oddTree::ONode _args) -> T1 {
+          unsigned int n = _args._a0;
+          unsigned int n0 = _args._a1;
+          std::shared_ptr<evenTree> e = _args._a2;
+          return f(std::move(n), std::move(n0), std::move(e));
+        }},
+        o->v());
+  }
+
+  static unsigned int even_val(const unsigned int _x,
+                               const std::shared_ptr<evenTree> &t);
+
+  static unsigned int odd_val(const unsigned int _x,
+                              const std::shared_ptr<oddTree> &t);
+
+  static inline const std::shared_ptr<evenTree> leaf = evenTree::ctor::ELeaf_();
+
+  static inline const std::shared_ptr<oddTree> tree1 = oddTree::ctor::ONode_(
+      0, ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+      evenTree::ctor::ELeaf_());
+
+  static inline const std::shared_ptr<evenTree> tree2 = evenTree::ctor::ENode_(
+      (0 + 1),
+      ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                 1) +
                1) +
               1) +
@@ -140,13 +174,17 @@ const std::shared_ptr<EvenTree::evenTree> tree2 =
             1) +
            1) +
           1) +
-         1),
-        OddTree::oddTree::ctor::ONode_(
-            0, ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-            EvenTree::evenTree::ctor::ELeaf_()));
+         1) +
+        1) +
+       1),
+      oddTree::ctor::ONode_(
+          0, ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+          evenTree::ctor::ELeaf_()));
 
-const unsigned int test_leaf_val = leaf->even_val(0);
+  static inline const unsigned int test_leaf_val = even_val(0, leaf);
 
-const unsigned int test_tree1_val = tree1->odd_val((0 + 1));
+  static inline const unsigned int test_tree1_val = odd_val((0 + 1), tree1);
 
-const unsigned int test_tree2_val = tree2->even_val(((0 + 1) + 1));
+  static inline const unsigned int test_tree2_val =
+      even_val(((0 + 1) + 1), tree2);
+};

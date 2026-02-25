@@ -4,6 +4,8 @@
 
 From Stdlib Require Import BinNat BinInt BinPos Nat.
 
+Module BinaryNums.
+
 (* === Positive === *)
 
 Definition pos_one : positive := 1%positive.
@@ -59,14 +61,8 @@ Definition test_z_sign_pos : Z := z_sign 5.
 Definition test_z_sign_neg : Z := z_sign (-3).
 Definition test_z_sign_zero : Z := z_sign 0.
 
+End BinaryNums.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "binary_nums"
-  pos_one pos_five pos_add_result pos_mul_result pos_succ_result
-  n_zero n_five n_add_result n_mul_result n_sub_result n_pred_result
-  n_compare_result
-  z_zero z_pos z_neg z_add_result z_mul_result z_sub_result
-  z_abs_result z_compare_result
-  pos_to_nat n_to_nat z_to_nat
-  n_max z_sign
-  test_n_max test_z_sign_pos test_z_sign_neg test_z_sign_zero.
+Crane Extraction "binary_nums" BinaryNums.

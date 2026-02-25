@@ -6,6 +6,8 @@
 From Stdlib Require Import NArith.
 Open Scope nat_scope.
 
+Module NestedMod.
+
 (* Outer module *)
 Module Outer.
   (* Inductive at outer level *)
@@ -55,8 +57,10 @@ Definition test_area := Outer.Inner.area my_circle.
 Definition test_combined := Outer.shape_with_color my_circle my_color.
 Definition test_color := Outer.color_code my_color.
 
+End NestedMod.
+
 Require Crane.Extraction.
 Require Crane.Mapping.Std.
 Require Crane.Mapping.NatIntStd.
 
-Crane Extraction "nested_mod" test_area test_combined test_color.
+Crane Extraction "nested_mod" NestedMod.

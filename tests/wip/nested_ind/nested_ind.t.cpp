@@ -48,33 +48,34 @@ to_vector(const std::shared_ptr<List::list<unsigned int>> &l) {
     return result;
 }
 
+
 int main() {
     // Test 1: eval(1 + 2 + 3) = 6
     {
-        ASSERT(test_eval_add == 6);
+        ASSERT(NestedInd::test_eval_add == 6);
         std::cout << "Test 1 (eval add): PASSED" << std::endl;
     }
 
     // Test 2: eval(2 * 3 * 4) = 24
     {
-        ASSERT(test_eval_mul == 24);
+        ASSERT(NestedInd::test_eval_mul == 24);
         std::cout << "Test 2 (eval mul): PASSED" << std::endl;
     }
 
     // Test 3: eval((1+2) * (3+4)) = 21
     {
-        ASSERT(test_eval_nested == 21);
+        ASSERT(NestedInd::test_eval_nested == 21);
         std::cout << "Test 3 (eval nested): PASSED" << std::endl;
     }
 
     // Test 4: literals of (1+2)*(3+4) = [1,2,3,4]
     {
         auto v = to_vector(test_literals);
-        ASSERT(v.size() == 4);
-        ASSERT(v[0] == 1);
-        ASSERT(v[1] == 2);
-        ASSERT(v[2] == 3);
-        ASSERT(v[3] == 4);
+        ASSERT(NestedInd::v.size() == 4);
+        ASSERT(NestedInd::v[0] == 1);
+        ASSERT(NestedInd::v[1] == 2);
+        ASSERT(NestedInd::v[2] == 3);
+        ASSERT(NestedInd::v[3] == 4);
         std::cout << "Test 4 (literals): PASSED" << std::endl;
     }
 

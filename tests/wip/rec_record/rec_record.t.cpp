@@ -25,22 +25,23 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: rlist length
     {
-        ASSERT(test_rlist_len == 3);
+        ASSERT(RecRecord::test_rlist_len == 3);
         std::cout << "Test 1 (rlist_length): PASSED" << std::endl;
     }
 
     // Test 2: rlist sum
     {
-        ASSERT(test_rlist_sum == 6);  // 1 + 2 + 3
+        ASSERT(RecRecord::test_rlist_sum == 6);  // 1 + 2 + 3
         std::cout << "Test 2 (rlist_sum): PASSED" << std::endl;
     }
 
     // Test 3: dept_head_name
     {
-        ASSERT(test_dept_head_name == 42);
+        ASSERT(RecRecord::test_dept_head_name == 42);
         std::cout << "Test 3 (dept_head_name): PASSED" << std::endl;
     }
 

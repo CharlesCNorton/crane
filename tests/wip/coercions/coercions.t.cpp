@@ -25,29 +25,30 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: bool coercion
     {
-        ASSERT(test_add_true == 6);
-        ASSERT(test_add_false == 5);
+        ASSERT(Coercions::test_add_true == 6);
+        ASSERT(Coercions::test_add_false == 5);
         std::cout << "Test 1 (bool coercion): PASSED" << std::endl;
     }
 
     // Test 2: record coercion
     {
-        ASSERT(test_double_wrapped == 14);
+        ASSERT(Coercions::test_double_wrapped == 14);
         std::cout << "Test 2 (record coercion): PASSED" << std::endl;
     }
 
     // Test 3: chained coercion
     {
-        ASSERT(test_add_boolbox == 11);
+        ASSERT(Coercions::test_add_boolbox == 11);
         std::cout << "Test 3 (chained coercion): PASSED" << std::endl;
     }
 
     // Test 4: function coercion
     {
-        ASSERT(test_fun_coercion == 10);
+        ASSERT(Coercions::test_fun_coercion == 10);
         std::cout << "Test 4 (function coercion): PASSED" << std::endl;
     }
 

@@ -36,26 +36,27 @@ A list_nth(const std::shared_ptr<List::list<A>> &l, unsigned int n) {
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: inc_all (map S [1;2;3] = [2;3;4])
     {
-        ASSERT(list_nth(test_inc, 0) == 2);
-        ASSERT(list_nth(test_inc, 1) == 3);
-        ASSERT(list_nth(test_inc, 2) == 4);
+        ASSERT(PartialApply::list_nth(test_inc, 0) == 2);
+        ASSERT(PartialApply::list_nth(test_inc, 1) == 3);
+        ASSERT(PartialApply::list_nth(test_inc, 2) == 4);
         std::cout << "Test 1 (inc_all): PASSED" << std::endl;
     }
 
     // Test 2: tag_all (map (pair 1) [10;20;30])
     {
         auto fst = list_nth(test_tag, 0);
-        ASSERT(fst.first == 1);
-        ASSERT(fst.second == 10);
+        ASSERT(PartialApply::fst.first == 1);
+        ASSERT(PartialApply::fst.second == 10);
         std::cout << "Test 2 (tag_all): PASSED" << std::endl;
     }
 
     // Test 3: sum_with_init (100 + 1 + 2 + 3 = 106)
     {
-        ASSERT(test_sum == 106);
+        ASSERT(PartialApply::test_sum == 106);
         std::cout << "Test 3 (sum_with_init): PASSED" << std::endl;
     }
 

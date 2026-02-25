@@ -56,7 +56,7 @@ struct List {
   };
 };
 
-struct Fin {
+struct DepElim {
   struct fin {
   public:
     struct FZ {
@@ -64,7 +64,7 @@ struct Fin {
     };
     struct FS {
       unsigned int _a0;
-      std::shared_ptr<Fin::fin> _a1;
+      std::shared_ptr<fin> _a1;
     };
     using variant_t = std::variant<FZ, FS>;
 
@@ -76,46 +76,67 @@ struct Fin {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Fin::fin> FZ_(unsigned int a0) {
-        return std::shared_ptr<Fin::fin>(new Fin::fin(FZ{a0}));
+      static std::shared_ptr<fin> FZ_(unsigned int a0) {
+        return std::shared_ptr<fin>(new fin(FZ{a0}));
       }
-      static std::shared_ptr<Fin::fin>
-      FS_(unsigned int a0, const std::shared_ptr<Fin::fin> &a1) {
-        return std::shared_ptr<Fin::fin>(new Fin::fin(FS{a0, a1}));
+      static std::shared_ptr<fin> FS_(unsigned int a0,
+                                      const std::shared_ptr<fin> &a1) {
+        return std::shared_ptr<fin>(new fin(FS{a0, a1}));
       }
-      static std::unique_ptr<Fin::fin> FZ_uptr(unsigned int a0) {
-        return std::unique_ptr<Fin::fin>(new Fin::fin(FZ{a0}));
+      static std::unique_ptr<fin> FZ_uptr(unsigned int a0) {
+        return std::unique_ptr<fin>(new fin(FZ{a0}));
       }
-      static std::unique_ptr<Fin::fin>
-      FS_uptr(unsigned int a0, const std::shared_ptr<Fin::fin> &a1) {
-        return std::unique_ptr<Fin::fin>(new Fin::fin(FS{a0, a1}));
+      static std::unique_ptr<fin> FS_uptr(unsigned int a0,
+                                          const std::shared_ptr<fin> &a1) {
+        return std::unique_ptr<fin>(new fin(FS{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int fin_to_nat(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{[](const typename Fin::fin::FZ _args) -> unsigned int {
-                       return 0;
-                     },
-                     [](const typename Fin::fin::FS _args) -> unsigned int {
-                       unsigned int n0 = _args._a0;
-                       std::shared_ptr<Fin::fin> f_ = _args._a1;
-                       return (std::move(f_)->fin_to_nat(std::move(n0)) + 1);
-                     }},
-          this->v());
-    }
   };
-};
 
-struct Vec {
+  template <typename T1, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, unsigned int, std::shared_ptr<fin>, T1> F1>
+  static T1 fin_rect(F0 &&f, F1 &&f0, const unsigned int _x,
+                     const std::shared_ptr<fin> &f1) {
+    return std::visit(Overloaded{[&](const typename fin::FZ _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename fin::FS _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   std::shared_ptr<fin> f2 = _args._a1;
+                                   return f0(n, f2, fin_rect<T1>(f, f0, n, f2));
+                                 }},
+                      f1->v());
+  }
+
+  template <typename T1, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, unsigned int, std::shared_ptr<fin>, T1> F1>
+  static T1 fin_rec(F0 &&f, F1 &&f0, const unsigned int _x,
+                    const std::shared_ptr<fin> &f1) {
+    return std::visit(Overloaded{[&](const typename fin::FZ _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename fin::FS _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   std::shared_ptr<fin> f2 = _args._a1;
+                                   return f0(n, f2, fin_rec<T1>(f, f0, n, f2));
+                                 }},
+                      f1->v());
+  }
+
+  static unsigned int fin_to_nat(const unsigned int _x,
+                                 const std::shared_ptr<fin> &f);
+
   template <typename A> struct vec {
   public:
     struct vnil {};
     struct vcons {
       unsigned int _a0;
       A _a1;
-      std::shared_ptr<Vec::vec<A>> _a2;
+      std::shared_ptr<vec<A>> _a2;
     };
     using variant_t = std::variant<vnil, vcons>;
 
@@ -127,83 +148,119 @@ struct Vec {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Vec::vec<A>> vnil_() {
-        return std::shared_ptr<Vec::vec<A>>(new Vec::vec<A>(vnil{}));
+      static std::shared_ptr<vec<A>> vnil_() {
+        return std::shared_ptr<vec<A>>(new vec<A>(vnil{}));
       }
-      static std::shared_ptr<Vec::vec<A>>
-      vcons_(unsigned int a0, A a1, const std::shared_ptr<Vec::vec<A>> &a2) {
-        return std::shared_ptr<Vec::vec<A>>(new Vec::vec<A>(vcons{a0, a1, a2}));
+      static std::shared_ptr<vec<A>> vcons_(unsigned int a0, A a1,
+                                            const std::shared_ptr<vec<A>> &a2) {
+        return std::shared_ptr<vec<A>>(new vec<A>(vcons{a0, a1, a2}));
       }
-      static std::unique_ptr<Vec::vec<A>> vnil_uptr() {
-        return std::unique_ptr<Vec::vec<A>>(new Vec::vec<A>(vnil{}));
+      static std::unique_ptr<vec<A>> vnil_uptr() {
+        return std::unique_ptr<vec<A>>(new vec<A>(vnil{}));
       }
-      static std::unique_ptr<Vec::vec<A>>
-      vcons_uptr(unsigned int a0, A a1,
-                 const std::shared_ptr<Vec::vec<A>> &a2) {
-        return std::unique_ptr<Vec::vec<A>>(new Vec::vec<A>(vcons{a0, a1, a2}));
+      static std::unique_ptr<vec<A>>
+      vcons_uptr(unsigned int a0, A a1, const std::shared_ptr<vec<A>> &a2) {
+        return std::unique_ptr<vec<A>>(new vec<A>(vcons{a0, a1, a2}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    std::shared_ptr<List::list<A>> vec_to_list(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{[](const typename Vec::vec<A>::vnil _args)
-                         -> std::shared_ptr<List::list<A>> {
-                       return List::list<A>::ctor::nil_();
-                     },
-                     [](const typename Vec::vec<A>::vcons _args)
-                         -> std::shared_ptr<List::list<A>> {
-                       unsigned int n0 = _args._a0;
-                       A x = _args._a1;
-                       std::shared_ptr<Vec::vec<A>> xs = _args._a2;
-                       return List::list<A>::ctor::cons_(
-                           x, std::move(xs)->vec_to_list(std::move(n0)));
-                     }},
-          this->v());
-    }
-    template <typename T2, MapsTo<T2, A> F1>
-    std::shared_ptr<Vec::vec<T2>> vec_map(const unsigned int _x, F1 &&f) const {
-      return std::visit(
-          Overloaded{[](const typename Vec::vec<A>::vnil _args)
-                         -> std::shared_ptr<Vec::vec<T2>> {
-                       return Vec::vec<T2>::ctor::vnil_();
-                     },
-                     [&](const typename Vec::vec<A>::vcons _args)
-                         -> std::shared_ptr<Vec::vec<T2>> {
-                       unsigned int n0 = _args._a0;
-                       A x = _args._a1;
-                       std::shared_ptr<Vec::vec<A>> xs = _args._a2;
-                       return Vec::vec<T2>::ctor::vcons_(
-                           n0, f(x), std::move(xs)->vec_map(n0, f));
-                     }},
-          this->v());
-    }
-    A vec_head(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{[](const typename Vec::vec<A>::vnil _args) -> auto {
-                       return "dummy";
-                     },
-                     [](const typename Vec::vec<A>::vcons _args) -> auto {
-                       A x = _args._a1;
-                       return x;
-                     }},
-          this->v());
-    }
-    std::shared_ptr<Vec::vec<A>> vec_tail(const unsigned int _x) const {
-      return std::visit(
-          Overloaded{[](const typename Vec::vec<A>::vnil _args)
-                         -> std::shared_ptr<Vec::vec<A>> { return "dummy"; },
-                     [](const typename Vec::vec<A>::vcons _args)
-                         -> std::shared_ptr<Vec::vec<A>> {
-                       std::shared_ptr<Vec::vec<A>> xs = _args._a2;
-                       return std::move(xs);
-                     }},
-          this->v());
-    }
   };
-};
 
-struct Avail {
+  template <typename T1, typename T2,
+            MapsTo<T2, unsigned int, T1, std::shared_ptr<vec<T1>>, T2> F1>
+  static T2 vec_rect(const T2 f, F1 &&f0, const unsigned int _x,
+                     const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(
+        Overloaded{[&](const typename vec<T1>::vnil _args) -> T2 { return f; },
+                   [&](const typename vec<T1>::vcons _args) -> T2 {
+                     unsigned int n = _args._a0;
+                     T1 y = _args._a1;
+                     std::shared_ptr<vec<T1>> v0 = _args._a2;
+                     return f0(n, y, v0, vec_rect<T1, T2>(f, f0, n, v0));
+                   }},
+        v->v());
+  }
+
+  template <typename T1, typename T2,
+            MapsTo<T2, unsigned int, T1, std::shared_ptr<vec<T1>>, T2> F1>
+  static T2 vec_rec(const T2 f, F1 &&f0, const unsigned int _x,
+                    const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(
+        Overloaded{[&](const typename vec<T1>::vnil _args) -> T2 { return f; },
+                   [&](const typename vec<T1>::vcons _args) -> T2 {
+                     unsigned int n = _args._a0;
+                     T1 y = _args._a1;
+                     std::shared_ptr<vec<T1>> v0 = _args._a2;
+                     return f0(n, y, v0, vec_rec<T1, T2>(f, f0, n, v0));
+                   }},
+        v->v());
+  }
+
+  template <typename T1>
+  static std::shared_ptr<List::list<T1>>
+  vec_to_list(const unsigned int _x, const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(
+        Overloaded{[](const typename vec<T1>::vnil _args)
+                       -> std::shared_ptr<List::list<T1>> {
+                     return List::list<T1>::ctor::nil_();
+                   },
+                   [](const typename vec<T1>::vcons _args)
+                       -> std::shared_ptr<List::list<T1>> {
+                     unsigned int n0 = _args._a0;
+                     T1 x = _args._a1;
+                     std::shared_ptr<vec<T1>> xs = _args._a2;
+                     return List::list<T1>::ctor::cons_(
+                         x, vec_to_list<T1>(std::move(n0), std::move(xs)));
+                   }},
+        v->v());
+  }
+
+  template <typename T1, typename T2, MapsTo<T2, T1> F1>
+  static std::shared_ptr<vec<T2>> vec_map(const unsigned int _x, F1 &&f,
+                                          const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(
+        Overloaded{
+            [](const typename vec<T1>::vnil _args) -> std::shared_ptr<vec<T2>> {
+              return vec<T2>::ctor::vnil_();
+            },
+            [&](const typename vec<T1>::vcons _args)
+                -> std::shared_ptr<vec<T2>> {
+              unsigned int n0 = _args._a0;
+              T1 x = _args._a1;
+              std::shared_ptr<vec<T1>> xs = _args._a2;
+              return vec<T2>::ctor::vcons_(
+                  n0, f(x), vec_map<T1, T2>(n0, f, std::move(xs)));
+            }},
+        v->v());
+  }
+
+  template <typename T1>
+  static T1 vec_head(const unsigned int _x, const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(Overloaded{[](const typename vec<T1>::vnil _args) -> T1 {
+                                   return "dummy";
+                                 },
+                                 [](const typename vec<T1>::vcons _args) -> T1 {
+                                   T1 x = _args._a1;
+                                   return x;
+                                 }},
+                      v->v());
+  }
+
+  template <typename T1>
+  static std::shared_ptr<vec<T1>> vec_tail(const unsigned int _x,
+                                           const std::shared_ptr<vec<T1>> &v) {
+    return std::visit(
+        Overloaded{[](const typename vec<T1>::vnil _args)
+                       -> std::shared_ptr<vec<T1>> { return "dummy"; },
+                   [](const typename vec<T1>::vcons _args)
+                       -> std::shared_ptr<vec<T1>> {
+                     std::shared_ptr<vec<T1>> xs = _args._a2;
+                     return std::move(xs);
+                   }},
+        v->v());
+  }
+
   struct avail {
   public:
     struct present {
@@ -220,51 +277,69 @@ struct Avail {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Avail::avail> present_(unsigned int a0) {
-        return std::shared_ptr<Avail::avail>(new Avail::avail(present{a0}));
+      static std::shared_ptr<avail> present_(unsigned int a0) {
+        return std::shared_ptr<avail>(new avail(present{a0}));
       }
-      static std::shared_ptr<Avail::avail> absent_() {
-        return std::shared_ptr<Avail::avail>(new Avail::avail(absent{}));
+      static std::shared_ptr<avail> absent_() {
+        return std::shared_ptr<avail>(new avail(absent{}));
       }
-      static std::unique_ptr<Avail::avail> present_uptr(unsigned int a0) {
-        return std::unique_ptr<Avail::avail>(new Avail::avail(present{a0}));
+      static std::unique_ptr<avail> present_uptr(unsigned int a0) {
+        return std::unique_ptr<avail>(new avail(present{a0}));
       }
-      static std::unique_ptr<Avail::avail> absent_uptr() {
-        return std::unique_ptr<Avail::avail>(new Avail::avail(absent{}));
+      static std::unique_ptr<avail> absent_uptr() {
+        return std::unique_ptr<avail>(new avail(absent{}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int get_present() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Avail::avail::present _args) -> unsigned int {
-                unsigned int n = _args._a0;
-                return std::move(n);
-              },
-              [](const typename Avail::avail::absent _args) -> unsigned int {
-                return "dummy";
-              }},
-          this->v());
-    }
   };
-};
 
-const unsigned int test_fin0 =
-    Fin::fin::ctor::FZ_(((0 + 1) + 1))->fin_to_nat((((0 + 1) + 1) + 1));
+  template <typename T1, MapsTo<T1, unsigned int> F0>
+  static T1 avail_rect(F0 &&f, const T1 f0, const bool _x,
+                       const std::shared_ptr<avail> &a) {
+    return std::visit(
+        Overloaded{
+            [&](const typename avail::present _args) -> T1 {
+              unsigned int n = _args._a0;
+              return f(std::move(n));
+            },
+            [&](const typename avail::absent _args) -> T1 { return f0; }},
+        a->v());
+  }
 
-const unsigned int test_fin2 =
-    Fin::fin::ctor::FS_(((0 + 1) + 1),
-                        Fin::fin::ctor::FS_((0 + 1), Fin::fin::ctor::FZ_(0)))
-        ->fin_to_nat((((0 + 1) + 1) + 1));
+  template <typename T1, MapsTo<T1, unsigned int> F0>
+  static T1 avail_rec(F0 &&f, const T1 f0, const bool _x,
+                      const std::shared_ptr<avail> &a) {
+    return std::visit(
+        Overloaded{
+            [&](const typename avail::present _args) -> T1 {
+              unsigned int n = _args._a0;
+              return f(std::move(n));
+            },
+            [&](const typename avail::absent _args) -> T1 { return f0; }},
+        a->v());
+  }
 
-const std::shared_ptr<Vec::vec<unsigned int>> my_vec =
-    Vec::vec<unsigned int>::ctor::vcons_(
-        ((0 + 1) + 1),
-        ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-        Vec::vec<unsigned int>::ctor::vcons_(
-            (0 + 1),
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+  static unsigned int get_present(const std::shared_ptr<avail> &a);
+
+  static inline const unsigned int test_fin0 =
+      fin_to_nat((((0 + 1) + 1) + 1), fin::ctor::FZ_(((0 + 1) + 1)));
+
+  static inline const unsigned int test_fin2 =
+      fin_to_nat((((0 + 1) + 1) + 1),
+                 fin::ctor::FS_(((0 + 1) + 1),
+                                fin::ctor::FS_((0 + 1), fin::ctor::FZ_(0))));
+
+  static inline const std::shared_ptr<vec<unsigned int>> my_vec =
+      vec<unsigned int>::ctor::vcons_(
+          ((0 + 1) + 1),
+          ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+          vec<unsigned int>::ctor::vcons_(
+              (0 + 1),
+              ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                          1) +
+                         1) +
+                        1) +
                        1) +
                       1) +
                      1) +
@@ -273,12 +348,13 @@ const std::shared_ptr<Vec::vec<unsigned int>> my_vec =
                   1) +
                  1) +
                 1) +
-               1) +
-              1) +
-             1),
-            Vec::vec<unsigned int>::ctor::vcons_(
-                0,
-                ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+               1),
+              vec<unsigned int>::ctor::vcons_(
+                  0,
+                  ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                           1) +
+                                          1) +
+                                         1) +
                                         1) +
                                        1) +
                                       1) +
@@ -300,28 +376,31 @@ const std::shared_ptr<Vec::vec<unsigned int>> my_vec =
                       1) +
                      1) +
                     1) +
-                   1) +
-                  1) +
-                 1),
-                Vec::vec<unsigned int>::ctor::vnil_())));
+                   1),
+                  vec<unsigned int>::ctor::vnil_())));
 
-const std::shared_ptr<List::list<unsigned int>> test_vec_list =
-    my_vec->vec_to_list((((0 + 1) + 1) + 1));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_vec_list =
+      vec_to_list<unsigned int>((((0 + 1) + 1) + 1), my_vec);
 
-const unsigned int test_vec_head = my_vec->vec_head(((0 + 1) + 1));
+  static inline const unsigned int test_vec_head =
+      vec_head<unsigned int>(((0 + 1) + 1), my_vec);
 
-const std::shared_ptr<List::list<unsigned int>> test_vec_tail_list =
-    my_vec->vec_tail(((0 + 1) + 1))->vec_to_list(((0 + 1) + 1));
+  static inline const std::shared_ptr<List::list<unsigned int>>
+      test_vec_tail_list = vec_to_list<unsigned int>(
+          ((0 + 1) + 1), vec_tail<unsigned int>(((0 + 1) + 1), my_vec));
 
-const std::shared_ptr<List::list<unsigned int>> test_vec_map =
-    my_vec
-        ->vec_map((((0 + 1) + 1) + 1),
-                  [](unsigned int n) { return (n + (0 + 1)); })
-        ->vec_to_list((((0 + 1) + 1) + 1));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_vec_map =
+      vec_to_list<unsigned int>(
+          (((0 + 1) + 1) + 1),
+          vec_map<unsigned int, unsigned int>(
+              (((0 + 1) + 1) + 1), [](unsigned int n) { return (n + (0 + 1)); },
+              my_vec));
 
-const unsigned int test_present =
-    Avail::avail::ctor::present_(
-        ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+  static inline const unsigned int test_present =
+      get_present(avail::ctor::present_(
+          ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                               1) +
+                                              1) +
                                              1) +
                                             1) +
                                            1) +
@@ -356,7 +435,5 @@ const unsigned int test_present =
               1) +
              1) +
             1) +
-           1) +
-          1) +
-         1))
-        ->get_present();
+           1)));
+};

@@ -25,16 +25,17 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
   // Test 1: test_nat — same 3 5 = false
   {
-    ASSERT(test_nat == false);
+    ASSERT(CanonStruct::test_nat == false);
     std::cout << "Test 1 (test_nat): PASSED" << std::endl;
   }
 
   // Test 2: test_bool — same true false = false
   {
-    ASSERT(test_bool == false);
+    ASSERT(CanonStruct::test_bool == false);
     std::cout << "Test 2 (test_bool): PASSED" << std::endl;
   }
 

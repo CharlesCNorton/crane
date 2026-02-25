@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List Lia.
 Import ListNotations.
 
+Module CompProof.
+
 (* Decision procedure that computes *)
 Definition nat_eq_dec (n m : nat) : {n = m} + {n <> m}.
 Proof.
@@ -62,9 +64,8 @@ Definition test_min : nat := min_dec 4 9.
 Definition test_max : nat := max_dec 4 9.
 Definition test_sort : list nat := isort_dec [5; 1; 4; 2; 3].
 
+End CompProof.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "comp_proof"
-  nat_eqb_dec nat_leb_dec min_dec max_dec insert_dec isort_dec
-  test_eq_true test_eq_false test_leb_true test_leb_false
-  test_min test_max test_sort.
+Crane Extraction "comp_proof" CompProof.

@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module PrimRecTc.
+
 Set Primitive Projections.
 
 (* Record with primitive projections *)
@@ -69,10 +71,8 @@ Definition test_width : nat := rect_width r1.
 Definition test_height : nat := rect_height r1.
 Definition test_perimeter : nat := rect_perimeter r1.
 
+End PrimRecTc.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "prim_rec_tc"
-  px py norm double_norm
-  p1 p2 v1
-  test_px test_py test_norm_point test_double_norm
-  test_norm_vec3.
+Crane Extraction "prim_rec_tc" PrimRecTc.

@@ -25,23 +25,24 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: safe_pred (transparent proof via Defined)
     {
-        ASSERT(test_safe_pred == 4);
+        ASSERT(Opaque::test_safe_pred == 4);
         std::cout << "Test 1 (safe_pred 5): PASSED" << std::endl;
     }
 
     // Test 2: pred_of_succ (uses opaque lemma as proof arg)
     {
-        ASSERT(test_pred_succ == 7);
+        ASSERT(Opaque::test_pred_succ == 7);
         std::cout << "Test 2 (pred_of_succ 7): PASSED" << std::endl;
     }
 
     // Test 3: are_equal (transparent decision procedure via Defined)
     {
-        ASSERT(test_eq_true == true);
-        ASSERT(test_eq_false == false);
+        ASSERT(Opaque::test_eq_true == true);
+        ASSERT(Opaque::test_eq_false == false);
         std::cout << "Test 3 (are_equal): PASSED" << std::endl;
     }
 

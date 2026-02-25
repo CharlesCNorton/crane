@@ -66,11 +66,12 @@ std::shared_ptr<List::list<unsigned int>> vector_to_list(const std::vector<unsig
   return result;
 }
 
+
 int main() {
   // Test 1: Sort empty list
   {
     auto empty = List::list<unsigned int>::ctor::nil_();
-    auto result = qsort(empty);
+    auto result = Sort::qsort(empty);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 0);
@@ -80,7 +81,7 @@ int main() {
   // Test 2: Sort single element
   {
     auto single = List::list<unsigned int>::ctor::cons_(5, List::list<unsigned int>::ctor::nil_());
-    auto result = qsort(single);
+    auto result = Sort::qsort(single);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
@@ -91,7 +92,7 @@ int main() {
   // Test 3: Sort already sorted list
   {
     auto input = vector_to_list({1, 2, 3, 4, 5, 6, 7});
-    auto result = qsort(input);
+    auto result = Sort::qsort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 7);
@@ -104,7 +105,7 @@ int main() {
   // Test 4: Sort reverse sorted list
   {
     auto input = vector_to_list({7, 6, 5, 4, 3, 2, 1});
-    auto result = qsort(input);
+    auto result = Sort::qsort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 7);
@@ -117,7 +118,7 @@ int main() {
   // Test 5: Sort unsorted list with duplicates
   {
     auto input = vector_to_list({5, 2, 8, 1, 9, 3, 7, 4, 6, 5});
-    auto result = qsort(input);
+    auto result = Sort::qsort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 10);

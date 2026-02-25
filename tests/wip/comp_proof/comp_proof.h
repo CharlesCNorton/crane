@@ -56,53 +56,55 @@ struct List {
   };
 };
 
-bool nat_eq_dec(const unsigned int n, const unsigned int x);
+struct CompProof {
+  static bool nat_eq_dec(const unsigned int n, const unsigned int x);
 
-bool nat_eqb_dec(const unsigned int n, const unsigned int m);
+  static bool nat_eqb_dec(const unsigned int n, const unsigned int m);
 
-bool le_dec(const unsigned int n, const unsigned int m);
+  static bool le_dec(const unsigned int n, const unsigned int m);
 
-bool nat_leb_dec(const unsigned int n, const unsigned int m);
+  static bool nat_leb_dec(const unsigned int n, const unsigned int m);
 
-unsigned int min_dec(const unsigned int n, const unsigned int m);
+  static unsigned int min_dec(const unsigned int n, const unsigned int m);
 
-unsigned int max_dec(const unsigned int n, const unsigned int m);
+  static unsigned int max_dec(const unsigned int n, const unsigned int m);
 
-std::shared_ptr<List::list<unsigned int>>
-insert_dec(const unsigned int x,
-           const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List::list<unsigned int>>
+  insert_dec(const unsigned int x,
+             const std::shared_ptr<List::list<unsigned int>> &l);
 
-std::shared_ptr<List::list<unsigned int>>
-isort_dec(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List::list<unsigned int>>
+  isort_dec(const std::shared_ptr<List::list<unsigned int>> &l);
 
-const bool test_eq_true = nat_eqb_dec((((((0 + 1) + 1) + 1) + 1) + 1),
-                                      (((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const bool test_eq_true = nat_eqb_dec(
+      (((((0 + 1) + 1) + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
 
-const bool test_eq_false = nat_eqb_dec(
-    (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool test_eq_false = nat_eqb_dec(
+      (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const bool test_leb_true =
-    nat_leb_dec((((0 + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const bool test_leb_true =
+      nat_leb_dec((((0 + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
 
-const bool test_leb_false = nat_leb_dec(
-    ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), ((0 + 1) + 1));
+  static inline const bool test_leb_false = nat_leb_dec(
+      ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), ((0 + 1) + 1));
 
-const unsigned int test_min =
-    min_dec(((((0 + 1) + 1) + 1) + 1),
-            (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_min =
+      min_dec(((((0 + 1) + 1) + 1) + 1),
+              (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_max =
-    max_dec(((((0 + 1) + 1) + 1) + 1),
-            (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_max =
+      max_dec(((((0 + 1) + 1) + 1) + 1),
+              (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const std::shared_ptr<List::list<unsigned int>> test_sort =
-    isort_dec(List::list<unsigned int>::ctor::cons_(
-        (((((0 + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            (0 + 1), List::list<unsigned int>::ctor::cons_(
-                         ((((0 + 1) + 1) + 1) + 1),
-                         List::list<unsigned int>::ctor::cons_(
-                             ((0 + 1) + 1),
-                             List::list<unsigned int>::ctor::cons_(
-                                 (((0 + 1) + 1) + 1),
-                                 List::list<unsigned int>::ctor::nil_()))))));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_sort =
+      isort_dec(List::list<unsigned int>::ctor::cons_(
+          (((((0 + 1) + 1) + 1) + 1) + 1),
+          List::list<unsigned int>::ctor::cons_(
+              (0 + 1), List::list<unsigned int>::ctor::cons_(
+                           ((((0 + 1) + 1) + 1) + 1),
+                           List::list<unsigned int>::ctor::cons_(
+                               ((0 + 1) + 1),
+                               List::list<unsigned int>::ctor::cons_(
+                                   (((0 + 1) + 1) + 1),
+                                   List::list<unsigned int>::ctor::nil_()))))));
+};

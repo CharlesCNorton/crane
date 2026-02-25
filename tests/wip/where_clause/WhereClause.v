@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module WhereClause.
+
 (* Arithmetic expression type *)
 Inductive Expr : Type :=
   | Num : nat -> Expr
@@ -69,9 +71,8 @@ Definition test_beval : bool := beval (BAnd BTrue (BNot BFalse)).
 Definition test_aeval : nat :=
   aeval (AIf (BAnd BTrue BTrue) (ANum 10) (ANum 20)).
 
+End WhereClause.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "where_clause"
-  eval expr_size beval aeval
-  test_eval_plus test_eval_times test_eval_nested
-  test_size test_beval test_aeval.
+Crane Extraction "where_clause" WhereClause.

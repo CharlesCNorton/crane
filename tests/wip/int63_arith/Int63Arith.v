@@ -4,6 +4,8 @@
 
 From Stdlib Require Import PrimInt63.
 
+Module Int63Arith.
+
 Definition i_zero : int := 0%int63.
 Definition i_one : int := 1%int63.
 
@@ -24,11 +26,8 @@ Definition i_abs (x : int) : int :=
 Definition test_abs_pos : int := i_abs 42.
 Definition test_abs_neg : int := i_abs (sub 0 42).
 
+End Int63Arith.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std.
-Crane Extraction "int63_arith"
-  i_zero i_one
-  i_add i_mul i_sub
-  i_eqb_true i_eqb_false i_ltb_true i_ltb_false i_leb_true i_leb_false
-  i_abs
-  test_abs_pos test_abs_neg.
+Crane Extraction "int63_arith" Int63Arith.

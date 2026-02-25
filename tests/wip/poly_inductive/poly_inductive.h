@@ -18,7 +18,46 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Ppair {
+struct PolyInductive {
+  template <typename A> struct pbox {
+  public:
+    struct PBox {
+      A _a0;
+    };
+    using variant_t = std::variant<PBox>;
+
+  private:
+    variant_t v_;
+    explicit pbox(PBox _v) : v_(std::move(_v)) {}
+
+  public:
+    struct ctor {
+      ctor() = delete;
+      static std::shared_ptr<pbox<A>> PBox_(A a0) {
+        return std::shared_ptr<pbox<A>>(new pbox<A>(PBox{a0}));
+      }
+      static std::unique_ptr<pbox<A>> PBox_uptr(A a0) {
+        return std::unique_ptr<pbox<A>>(new pbox<A>(PBox{a0}));
+      }
+    };
+    const variant_t &v() const { return v_; }
+    variant_t &v_mut() { return v_; }
+  };
+
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static T2 pbox_rect(F0 &&f, std::shared_ptr<pbox<T1>> _x0) {
+    return f(std::move(_x0));
+  }
+
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static T2 pbox_rec(F0 &&f, std::shared_ptr<pbox<T1>> _x0) {
+    return f(std::move(_x0));
+  }
+
+  template <typename T1> static T1 punbox(std::shared_ptr<pbox<T1>> b) {
+    return std::move(b);
+  }
+
   template <typename A, typename B> struct ppair {
   public:
     struct PPair {
@@ -34,39 +73,59 @@ struct Ppair {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Ppair::ppair<A, B>> PPair_(A a0, B a1) {
-        return std::shared_ptr<Ppair::ppair<A, B>>(
-            new Ppair::ppair<A, B>(PPair{a0, a1}));
+      static std::shared_ptr<ppair<A, B>> PPair_(A a0, B a1) {
+        return std::shared_ptr<ppair<A, B>>(new ppair<A, B>(PPair{a0, a1}));
       }
-      static std::unique_ptr<Ppair::ppair<A, B>> PPair_uptr(A a0, B a1) {
-        return std::unique_ptr<Ppair::ppair<A, B>>(
-            new Ppair::ppair<A, B>(PPair{a0, a1}));
+      static std::unique_ptr<ppair<A, B>> PPair_uptr(A a0, B a1) {
+        return std::unique_ptr<ppair<A, B>>(new ppair<A, B>(PPair{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    A pfst() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Ppair::ppair<A, B>::PPair _args) -> auto {
-                A a = _args._a0;
-                return a;
-              }},
-          this->v());
-    }
-    B psnd() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Ppair::ppair<A, B>::PPair _args) -> auto {
-                B b = _args._a1;
-                return b;
-              }},
-          this->v());
-    }
   };
-};
 
-struct Pmaybe {
+  template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
+  static T3 ppair_rect(F0 &&f, const std::shared_ptr<ppair<T1, T2>> &p) {
+    return std::visit(
+        Overloaded{[&](const typename ppair<T1, T2>::PPair _args) -> T3 {
+          T1 a = _args._a0;
+          T2 b = _args._a1;
+          return f(a, b);
+        }},
+        p->v());
+  }
+
+  template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
+  static T3 ppair_rec(F0 &&f, const std::shared_ptr<ppair<T1, T2>> &p) {
+    return std::visit(
+        Overloaded{[&](const typename ppair<T1, T2>::PPair _args) -> T3 {
+          T1 a = _args._a0;
+          T2 b = _args._a1;
+          return f(a, b);
+        }},
+        p->v());
+  }
+
+  template <typename T1, typename T2>
+  static T1 pfst(const std::shared_ptr<ppair<T1, T2>> &p) {
+    return std::visit(
+        Overloaded{[](const typename ppair<T1, T2>::PPair _args) -> T1 {
+          T1 a = _args._a0;
+          return a;
+        }},
+        p->v());
+  }
+
+  template <typename T1, typename T2>
+  static T2 psnd(const std::shared_ptr<ppair<T1, T2>> &p) {
+    return std::visit(
+        Overloaded{[](const typename ppair<T1, T2>::PPair _args) -> T2 {
+          T2 b = _args._a1;
+          return b;
+        }},
+        p->v());
+  }
+
   template <typename A> struct pmaybe {
   public:
     struct PNothing {};
@@ -83,47 +142,84 @@ struct Pmaybe {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Pmaybe::pmaybe<A>> PNothing_() {
-        return std::shared_ptr<Pmaybe::pmaybe<A>>(
-            new Pmaybe::pmaybe<A>(PNothing{}));
+      static std::shared_ptr<pmaybe<A>> PNothing_() {
+        return std::shared_ptr<pmaybe<A>>(new pmaybe<A>(PNothing{}));
       }
-      static std::shared_ptr<Pmaybe::pmaybe<A>> PJust_(A a0) {
-        return std::shared_ptr<Pmaybe::pmaybe<A>>(
-            new Pmaybe::pmaybe<A>(PJust{a0}));
+      static std::shared_ptr<pmaybe<A>> PJust_(A a0) {
+        return std::shared_ptr<pmaybe<A>>(new pmaybe<A>(PJust{a0}));
       }
-      static std::unique_ptr<Pmaybe::pmaybe<A>> PNothing_uptr() {
-        return std::unique_ptr<Pmaybe::pmaybe<A>>(
-            new Pmaybe::pmaybe<A>(PNothing{}));
+      static std::unique_ptr<pmaybe<A>> PNothing_uptr() {
+        return std::unique_ptr<pmaybe<A>>(new pmaybe<A>(PNothing{}));
       }
-      static std::unique_ptr<Pmaybe::pmaybe<A>> PJust_uptr(A a0) {
-        return std::unique_ptr<Pmaybe::pmaybe<A>>(
-            new Pmaybe::pmaybe<A>(PJust{a0}));
+      static std::unique_ptr<pmaybe<A>> PJust_uptr(A a0) {
+        return std::unique_ptr<pmaybe<A>>(new pmaybe<A>(PJust{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    A pmaybe_default(const A d) const {
-      return std::visit(
-          Overloaded{[&](const typename Pmaybe::pmaybe<A>::PNothing _args)
-                         -> auto { return d; },
-                     [](const typename Pmaybe::pmaybe<A>::PJust _args) -> auto {
-                       A x = _args._a0;
-                       return x;
-                     }},
-          this->v());
-    }
   };
-};
 
-struct Ptree {
+  template <typename T1, typename T2, MapsTo<T2, T1> F1>
+  static T2 pmaybe_rect(const T2 f, F1 &&f0,
+                        const std::shared_ptr<pmaybe<T1>> &p) {
+    return std::visit(
+        Overloaded{
+            [&](const typename pmaybe<T1>::PNothing _args) -> T2 { return f; },
+            [&](const typename pmaybe<T1>::PJust _args) -> T2 {
+              T1 a = _args._a0;
+              return f0(a);
+            }},
+        p->v());
+  }
+
+  template <typename T1, typename T2, MapsTo<T2, T1> F1>
+  static T2 pmaybe_rec(const T2 f, F1 &&f0,
+                       const std::shared_ptr<pmaybe<T1>> &p) {
+    return std::visit(
+        Overloaded{
+            [&](const typename pmaybe<T1>::PNothing _args) -> T2 { return f; },
+            [&](const typename pmaybe<T1>::PJust _args) -> T2 {
+              T1 a = _args._a0;
+              return f0(a);
+            }},
+        p->v());
+  }
+
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static std::shared_ptr<pmaybe<T2>>
+  pmaybe_map(F0 &&f, const std::shared_ptr<pmaybe<T1>> &m) {
+    return std::visit(Overloaded{[](const typename pmaybe<T1>::PNothing _args)
+                                     -> std::shared_ptr<pmaybe<T2>> {
+                                   return pmaybe<T2>::ctor::PNothing_();
+                                 },
+                                 [&](const typename pmaybe<T1>::PJust _args)
+                                     -> std::shared_ptr<pmaybe<T2>> {
+                                   T1 x = _args._a0;
+                                   return pmaybe<T2>::ctor::PJust_(f(x));
+                                 }},
+                      m->v());
+  }
+
+  template <typename T1>
+  static T1 pmaybe_default(const T1 d, const std::shared_ptr<pmaybe<T1>> &m) {
+    return std::visit(
+        Overloaded{
+            [&](const typename pmaybe<T1>::PNothing _args) -> T1 { return d; },
+            [](const typename pmaybe<T1>::PJust _args) -> T1 {
+              T1 x = _args._a0;
+              return x;
+            }},
+        m->v());
+  }
+
   template <typename A> struct ptree {
   public:
     struct PLeaf {
       A _a0;
     };
     struct PNode {
-      std::shared_ptr<Ptree::ptree<A>> _a0;
-      std::shared_ptr<Ptree::ptree<A>> _a1;
+      std::shared_ptr<ptree<A>> _a0;
+      std::shared_ptr<ptree<A>> _a1;
     };
     using variant_t = std::variant<PLeaf, PNode>;
 
@@ -135,64 +231,143 @@ struct Ptree {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Ptree::ptree<A>> PLeaf_(A a0) {
-        return std::shared_ptr<Ptree::ptree<A>>(new Ptree::ptree<A>(PLeaf{a0}));
+      static std::shared_ptr<ptree<A>> PLeaf_(A a0) {
+        return std::shared_ptr<ptree<A>>(new ptree<A>(PLeaf{a0}));
       }
-      static std::shared_ptr<Ptree::ptree<A>>
-      PNode_(const std::shared_ptr<Ptree::ptree<A>> &a0,
-             const std::shared_ptr<Ptree::ptree<A>> &a1) {
-        return std::shared_ptr<Ptree::ptree<A>>(
-            new Ptree::ptree<A>(PNode{a0, a1}));
+      static std::shared_ptr<ptree<A>>
+      PNode_(const std::shared_ptr<ptree<A>> &a0,
+             const std::shared_ptr<ptree<A>> &a1) {
+        return std::shared_ptr<ptree<A>>(new ptree<A>(PNode{a0, a1}));
       }
-      static std::unique_ptr<Ptree::ptree<A>> PLeaf_uptr(A a0) {
-        return std::unique_ptr<Ptree::ptree<A>>(new Ptree::ptree<A>(PLeaf{a0}));
+      static std::unique_ptr<ptree<A>> PLeaf_uptr(A a0) {
+        return std::unique_ptr<ptree<A>>(new ptree<A>(PLeaf{a0}));
       }
-      static std::unique_ptr<Ptree::ptree<A>>
-      PNode_uptr(const std::shared_ptr<Ptree::ptree<A>> &a0,
-                 const std::shared_ptr<Ptree::ptree<A>> &a1) {
-        return std::unique_ptr<Ptree::ptree<A>>(
-            new Ptree::ptree<A>(PNode{a0, a1}));
+      static std::unique_ptr<ptree<A>>
+      PNode_uptr(const std::shared_ptr<ptree<A>> &a0,
+                 const std::shared_ptr<ptree<A>> &a1) {
+        return std::unique_ptr<ptree<A>>(new ptree<A>(PNode{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int ptree_size() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Ptree::ptree<A>::PLeaf _args) -> unsigned int {
-                return (0 + 1);
-              },
-              [](const typename Ptree::ptree<A>::PNode _args) -> unsigned int {
-                std::shared_ptr<Ptree::ptree<A>> l = _args._a0;
-                std::shared_ptr<Ptree::ptree<A>> r = _args._a1;
-                return (
-                    (std::move(l)->ptree_size() + std::move(r)->ptree_size()) +
-                    1);
-              }},
-          this->v());
-    }
   };
+
+  template <
+      typename T1, typename T2, MapsTo<T2, T1> F0,
+      MapsTo<T2, std::shared_ptr<ptree<T1>>, T2, std::shared_ptr<ptree<T1>>, T2>
+          F1>
+  static T2 ptree_rect(F0 &&f, F1 &&f0, const std::shared_ptr<ptree<T1>> &p) {
+    return std::visit(
+        Overloaded{[&](const typename ptree<T1>::PLeaf _args) -> T2 {
+                     T1 y = _args._a0;
+                     return f(y);
+                   },
+                   [&](const typename ptree<T1>::PNode _args) -> T2 {
+                     std::shared_ptr<ptree<T1>> p0 = _args._a0;
+                     std::shared_ptr<ptree<T1>> p1 = _args._a1;
+                     return f0(p0, ptree_rect<T1, T2>(f, f0, p0), p1,
+                               ptree_rect<T1, T2>(f, f0, p1));
+                   }},
+        p->v());
+  }
+
+  template <
+      typename T1, typename T2, MapsTo<T2, T1> F0,
+      MapsTo<T2, std::shared_ptr<ptree<T1>>, T2, std::shared_ptr<ptree<T1>>, T2>
+          F1>
+  static T2 ptree_rec(F0 &&f, F1 &&f0, const std::shared_ptr<ptree<T1>> &p) {
+    return std::visit(
+        Overloaded{[&](const typename ptree<T1>::PLeaf _args) -> T2 {
+                     T1 y = _args._a0;
+                     return f(y);
+                   },
+                   [&](const typename ptree<T1>::PNode _args) -> T2 {
+                     std::shared_ptr<ptree<T1>> p0 = _args._a0;
+                     std::shared_ptr<ptree<T1>> p1 = _args._a1;
+                     return f0(p0, ptree_rec<T1, T2>(f, f0, p0), p1,
+                               ptree_rec<T1, T2>(f, f0, p1));
+                   }},
+        p->v());
+  }
+
+  template <typename T1>
+  static unsigned int ptree_size(const std::shared_ptr<ptree<T1>> &t) {
+    return std::visit(
+        Overloaded{[](const typename ptree<T1>::PLeaf _args) -> unsigned int {
+                     return (0 + 1);
+                   },
+                   [](const typename ptree<T1>::PNode _args) -> unsigned int {
+                     std::shared_ptr<ptree<T1>> l = _args._a0;
+                     std::shared_ptr<ptree<T1>> r = _args._a1;
+                     return ((ptree_size<T1>(std::move(l)) +
+                              ptree_size<T1>(std::move(r))) +
+                             1);
+                   }},
+        t->v());
+  }
+
+  static inline const unsigned int test_pbox = punbox<unsigned int>((
+      (((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+                                         1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1) +
+          1) +
+         1) +
+        1) +
+       1) +
+      1));
+
+  static inline const unsigned int test_ppair_fst =
+      pfst<unsigned int, bool>(ppair<unsigned int, bool>::ctor::PPair_(
+          (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1), true));
+
+  static inline const bool test_ppair_snd =
+      psnd<unsigned int, bool>(ppair<unsigned int, bool>::ctor::PPair_(
+          (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1), true));
+
+ static inline const unsigned int test_pjust = pmaybe_default<unsigned int>(0, pmaybe<unsigned int>::ctor::PJust_((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)));
+
+ static inline const unsigned int test_pnothing =
+     pmaybe_default<unsigned int>(0, pmaybe<unsigned int>::ctor::PNothing_());
+
+ static inline const unsigned int test_pmap = pmaybe_default<unsigned int>(
+     0,
+     pmaybe_map<unsigned int, unsigned int>(
+         [](axiom x) { return (x + 1); },
+         pmaybe<unsigned int>::ctor::PJust_((((((0 + 1) + 1) + 1) + 1) + 1))));
+
+ static inline const unsigned int test_ptree =
+     ptree_size<unsigned int>(ptree<unsigned int>::ctor::PNode_(
+         ptree<unsigned int>::ctor::PLeaf_((0 + 1)),
+         ptree<unsigned int>::ctor::PNode_(
+             ptree<unsigned int>::ctor::PLeaf_(((0 + 1) + 1)),
+             ptree<unsigned int>::ctor::PLeaf_((((0 + 1) + 1) + 1)))));
 };
-
-const unsigned int test_ppair_fst =
-    Ppair::ppair<unsigned int, bool>::ctor::PPair_(
-        (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1), true)
-        ->pfst();
-
-const bool test_ppair_snd =
-    Ppair::ppair<unsigned int, bool>::ctor::PPair_(
-        (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1), true)
-        ->psnd();
-
-const unsigned int test_pjust = Pmaybe::pmaybe<unsigned int>::ctor::PJust_((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1))->pmaybe_default(0);
-
-const unsigned int test_pnothing =
-    Pmaybe::pmaybe<unsigned int>::ctor::PNothing_()->pmaybe_default(0);
-
-const unsigned int test_ptree =
-    Ptree::ptree<unsigned int>::ctor::PNode_(
-        Ptree::ptree<unsigned int>::ctor::PLeaf_((0 + 1)),
-        Ptree::ptree<unsigned int>::ctor::PNode_(
-            Ptree::ptree<unsigned int>::ctor::PLeaf_(((0 + 1) + 1)),
-            Ptree::ptree<unsigned int>::ctor::PLeaf_((((0 + 1) + 1) + 1))))
-        ->ptree_size();

@@ -25,22 +25,23 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: guarded_pred
     {
-        ASSERT(test_guarded == 4);  // guarded_pred 5 = 4
+        ASSERT(SPropTest::test_guarded == 4);  // guarded_pred 5 = 4
         std::cout << "Test 1 (guarded_pred): PASSED" << std::endl;
     }
 
     // Test 2: SProp box unboxing
     {
-        ASSERT(test_box == 42);
+        ASSERT(SPropTest::test_box == 42);
         std::cout << "Test 2 (sbox unbox): PASSED" << std::endl;
     }
 
     // Test 3: safe_div
     {
-        ASSERT(test_div == 3);  // safe_div 10 3 = 3
+        ASSERT(SPropTest::test_div == 3);  // safe_div 10 3 = 3
         std::cout << "Test 3 (safe_div): PASSED" << std::endl;
     }
 

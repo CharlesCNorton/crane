@@ -11,12 +11,12 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List::list<unsigned int>> interleave_func(
+std::shared_ptr<List::list<unsigned int>> ProgFix::interleave_func(
     const std::shared_ptr<SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
                                      std::shared_ptr<List::list<unsigned int>>>>
         &_x0) {
   return [&](const T1 _x0) {
-    return Fix_sub<
+    return ::Fix_sub<
         std::shared_ptr<SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
                                    std::shared_ptr<List::list<unsigned int>>>>>(
         [&](std::shared_ptr<
@@ -76,8 +76,8 @@ std::shared_ptr<List::list<unsigned int>> interleave_func(
 }
 
 std::shared_ptr<List::list<unsigned int>>
-interleave(std::shared_ptr<List::list<unsigned int>> l1,
-           std::shared_ptr<List::list<unsigned int>> l2) {
+ProgFix::interleave(std::shared_ptr<List::list<unsigned int>> l1,
+                    std::shared_ptr<List::list<unsigned int>> l2) {
   return interleave_func(SigT::sigT<std::shared_ptr<List::list<unsigned int>>,
                                     std::shared_ptr<List::list<unsigned int>>>::
                              ctor::existT_(std::move(l1), std::move(l2)));

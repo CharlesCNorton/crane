@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module HigherKinded.
+
 (* === Direct HKT parameter (not via typeclass) === *)
 
 Definition hk_map (F : Type -> Type)
@@ -54,10 +56,8 @@ Definition test_tree_map : Tree nat := tree_map (fun n => n * 2) test_tree.
 Definition test_hk_option : option nat := hk_map option (@map_option) (fun n => n + 1) (Some 5).
 Definition test_hk_tree : Tree nat := hk_map Tree (@tree_map) (fun n => n + 10) test_tree.
 
+End HigherKinded.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "higher_kinded"
-  tree_map tree_fold tree_sum tree_size
-  hk_map map_option
-  test_tree test_tree_sum test_tree_size test_tree_map
-  test_hk_option test_hk_tree.
+Crane Extraction "higher_kinded" HigherKinded.

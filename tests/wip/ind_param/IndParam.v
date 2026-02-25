@@ -6,6 +6,8 @@
 From Stdlib Require Import NArith.
 Open Scope nat_scope.
 
+Module IndParam.
+
 (* Module type requiring an inductive with specific structure *)
 Module Type Container.
   Parameter elem : Type.
@@ -74,8 +76,10 @@ Definition test_size_single := NatWrapper.get_size test_single.
 Definition test_size_pair := NatWrapper.get_size test_pair.
 Definition test_error := NatWrapper.get_size NatWrapper.error_result.
 
+End IndParam.
+
 Require Crane.Extraction.
 Require Crane.Mapping.Std.
 Require Crane.Mapping.NatIntStd.
 
-Crane Extraction "ind_param" test_size_single test_size_pair test_error.
+Crane Extraction "ind_param" IndParam.

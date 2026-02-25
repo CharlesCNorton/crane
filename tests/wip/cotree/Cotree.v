@@ -6,6 +6,8 @@
 From Stdlib Require Import List Nat.
 Import ListNotations.
 
+Module Cotree.
+
 (* === Coinductive types === *)
 
 CoInductive colist (A : Type) : Type :=
@@ -129,7 +131,8 @@ Definition test_approx : tree nat := tree_of_cotree 2 binary_tree.
 Definition test_approx_root : nat := tree_root test_approx.
 Definition test_approx_size : nat := tree_size test_approx.
 
+End Cotree.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "cotree" root children singleton_cotree comap comap_cotree unfold_cotree nats sample_cotree test_root test_doubled_root test_first_five binary_children binary_tree test_binary_root tree_root list_of_colist tree_of_cotree
-  test_approx test_approx_root.
+Crane Extraction "cotree" Cotree.

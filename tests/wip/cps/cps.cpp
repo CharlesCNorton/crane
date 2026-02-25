@@ -25,20 +25,25 @@ bool even(const unsigned int n) {
   }
 }
 
-unsigned int factorial(const unsigned int n) {
+unsigned int CPS::factorial(const unsigned int n) {
   return fact_cps(n, [](unsigned int x) { return x; });
 }
 
-unsigned int fibonacci(const unsigned int n) {
+unsigned int CPS::fibonacci(const unsigned int n) {
   return fib_cps(n, [](unsigned int x) { return x; });
 }
 
-unsigned int list_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
+unsigned int CPS::tree_sum(const std::shared_ptr<CPS::tree> &t) {
+  return tree_sum_cps(t, [](unsigned int x) { return x; });
+}
+
+unsigned int CPS::list_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
   return sum_cps(l, [](unsigned int x) { return x; });
 }
 
-unsigned int count_evens(const std::shared_ptr<List::list<unsigned int>> &l) {
-  return partition_cps(even, l,
+unsigned int
+CPS::count_evens(const std::shared_ptr<List::list<unsigned int>> &l) {
+  return partition_cps(::even, l,
                        [](std::shared_ptr<List::list<unsigned int>> yes,
                           std::shared_ptr<List::list<unsigned int>> _x) {
                          return yes->length();

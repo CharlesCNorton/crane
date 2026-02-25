@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module DepRecord.
+
 (* === Simple dependent record: carrier + operation === *)
 
 Record Magma := mkMagma {
@@ -55,10 +57,8 @@ Record Tagged := mkTagged {
 Definition tagged_nat : Tagged := mkTagged TNat 42.
 Definition tagged_bool : Tagged := mkTagged TBool true.
 
+End DepRecord.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "dep_record"
-  nat_magma bool_magma
-  nat_monoid nat_mul_monoid
-  mfold test_fold_add test_fold_mul
-  tagged_nat tagged_bool.
+Crane Extraction "dep_record" DepRecord.

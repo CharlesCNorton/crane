@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module Monadic.
+
 (* === Option monad === *)
 
 Definition option_return {A : Type} (x : A) : option A := Some x.
@@ -66,10 +68,8 @@ Definition test_chain_ok : option nat := div_then_sub 20 4 2.
 Definition test_chain_fail : option nat := div_then_sub 20 0 2.
 Definition test_state : nat * nat := count_elements [1; 2; 3; 4; 5] 0.
 
+End Monadic.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "monadic"
-  option_return option_bind safe_div safe_sub div_then_sub
-  test_return test_bind_some test_bind_none
-  test_safe_div_ok test_safe_div_zero
-  test_chain_ok test_chain_fail.
+Crane Extraction "monadic" Monadic.

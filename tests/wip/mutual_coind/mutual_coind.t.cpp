@@ -25,16 +25,17 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: headA of countA(0) == 0
     {
-        ASSERT(test_headA == 0);
+        ASSERT(MutualCoind::test_headA == 0);
         std::cout << "Test 1 (headA countA 0): PASSED" << std::endl;
     }
 
     // Test 2: headB of countB(10) == 10
     {
-        ASSERT(test_headB == 10);
+        ASSERT(MutualCoind::test_headB == 10);
         std::cout << "Test 2 (headB countB 10): PASSED" << std::endl;
     }
 
@@ -44,12 +45,12 @@ int main() {
         unsigned int expected[] = {0, 1, 2, 3, 4};
         for (int i = 0; i < 5; i++) {
             auto &v = l->v();
-            ASSERT(std::holds_alternative<List::list<unsigned int>::cons>(v));
+            ASSERT(MutualCoind::std::holds_alternative<List::list<unsigned int>::cons>(v));
             auto &c = std::get<List::list<unsigned int>::cons>(v);
-            ASSERT(c._a0 == expected[i]);
+            ASSERT(MutualCoind::c._a0 == expected[i]);
             l = c._a1;
         }
-        ASSERT(std::holds_alternative<List::list<unsigned int>::nil>(l->v()));
+        ASSERT(MutualCoind::std::holds_alternative<List::list<unsigned int>::nil>(l->v()));
         std::cout << "Test 3 (takeA 5): PASSED" << std::endl;
     }
 

@@ -56,44 +56,61 @@ struct List {
   };
 };
 
-unsigned int local_sum(const std::shared_ptr<List::list<unsigned int>> &l);
+struct LetFix {
+  static unsigned int
+  local_sum(const std::shared_ptr<List::list<unsigned int>> &l);
 
-template <typename T1>
-std::shared_ptr<List::list<T1>>
-local_rev(const std::shared_ptr<List::list<T1>> &l) {
-  std::function<std::shared_ptr<List::list<T1>>(
-      std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T1>>)>
-      go;
-  go = [&](std::shared_ptr<List::list<T1>> acc,
-           std::shared_ptr<List::list<T1>> xs)
-      -> std::shared_ptr<List::list<T1>> {
+  template <typename T1>
+  static std::shared_ptr<List::list<T1>>
+  local_rev(const std::shared_ptr<List::list<T1>> &l) {
+    std::function<std::shared_ptr<List::list<T1>>(
+        std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T1>>)>
+        go;
+    go = [&](std::shared_ptr<List::list<T1>> acc,
+             std::shared_ptr<List::list<T1>> xs)
+        -> std::shared_ptr<List::list<T1>> {
+      return std::visit(
+          Overloaded{
+              [&](const typename List::list<T1>::nil _args)
+                  -> std::shared_ptr<List::list<T1>> { return std::move(acc); },
+              [&](const typename List::list<T1>::cons _args)
+                  -> std::shared_ptr<List::list<T1>> {
+                T1 x = _args._a0;
+                std::shared_ptr<List::list<T1>> rest = _args._a1;
+                return go(List::list<T1>::ctor::cons_(x, std::move(acc)),
+                          std::move(rest));
+              }},
+          xs->v());
+    };
+    return go(List::list<T1>::ctor::nil_(), l);
+  }
+
+  static std::shared_ptr<List::list<unsigned int>>
+  local_flatten(const std::shared_ptr<
+                List::list<std::shared_ptr<List::list<unsigned int>>>> &xss);
+
+  static bool local_mem(const unsigned int n,
+                        const std::shared_ptr<List::list<unsigned int>> &l);
+
+  template <typename T1>
+  static unsigned int
+  local_length(const std::shared_ptr<List::list<std::any>> &xs) {
     return std::visit(
-        Overloaded{
-            [&](const typename List::list<T1>::nil _args)
-                -> std::shared_ptr<List::list<T1>> { return std::move(acc); },
-            [&](const typename List::list<T1>::cons _args)
-                -> std::shared_ptr<List::list<T1>> {
-              T1 x = _args._a0;
-              std::shared_ptr<List::list<T1>> rest = _args._a1;
-              return go(List::list<T1>::ctor::cons_(x, std::move(acc)),
-                        std::move(rest));
-            }},
+        Overloaded{[](const typename List::list<std::any>::nil _args)
+                       -> unsigned int { return 0; },
+                   [](const typename List::list<std::any>::cons _args)
+                       -> unsigned int {
+                     std::shared_ptr<List::list<std::any>> rest = _args._a1;
+                     return (local_length<T1>(std::move(rest)) + 1);
+                   }},
         xs->v());
-  };
-  return go(List::list<T1>::ctor::nil_(), l);
-}
+  }
 
-std::shared_ptr<List::list<unsigned int>> local_flatten(
-    const std::shared_ptr<List::list<std::shared_ptr<List::list<unsigned int>>>>
-        &xss);
-
-bool local_mem(const unsigned int n,
-               const std::shared_ptr<List::list<unsigned int>> &l);
-
-const unsigned int test_sum = local_sum(List::list<unsigned int>::ctor::cons_(
-    (0 + 1),
-    List::list<unsigned int>::ctor::cons_(
-        ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+  static inline const unsigned int test_sum =
+      local_sum(List::list<unsigned int>::ctor::cons_(
+          (0 + 1), List::list<unsigned int>::ctor::cons_(
+                       ((0 + 1) + 1),
+                       List::list<unsigned int>::ctor::cons_(
                            (((0 + 1) + 1) + 1),
                            List::list<unsigned int>::ctor::cons_(
                                ((((0 + 1) + 1) + 1) + 1),
@@ -101,52 +118,141 @@ const unsigned int test_sum = local_sum(List::list<unsigned int>::ctor::cons_(
                                    (((((0 + 1) + 1) + 1) + 1) + 1),
                                    List::list<unsigned int>::ctor::nil_()))))));
 
-const std::shared_ptr<List::list<unsigned int>> test_rev =
-    local_rev<unsigned int>(List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((0 + 1) + 1),
-            List::list<unsigned int>::ctor::cons_(
-                (((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()))));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_rev =
+      local_rev<unsigned int>(List::list<unsigned int>::ctor::cons_(
+          (0 + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
+                                 (((0 + 1) + 1) + 1),
+                                 List::list<unsigned int>::ctor::nil_()))));
 
-const std::shared_ptr<List::list<unsigned int>> test_flatten = local_flatten(
-    List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::cons_(
-        List::list<unsigned int>::ctor::cons_(
-            (0 + 1),
-            List::list<unsigned int>::ctor::cons_(
-                ((0 + 1) + 1), List::list<unsigned int>::ctor::nil_())),
-        List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::cons_(
-            List::list<unsigned int>::ctor::cons_(
-                (((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()),
-            List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::cons_(
-                List::list<unsigned int>::ctor::cons_(
-                    ((((0 + 1) + 1) + 1) + 1),
-                    List::list<unsigned int>::ctor::cons_(
-                        (((((0 + 1) + 1) + 1) + 1) + 1),
-                        List::list<unsigned int>::ctor::cons_(
-                            ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                            List::list<unsigned int>::ctor::nil_()))),
-                List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::
-                    nil_()))));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_flatten =
+      local_flatten(
+          List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::cons_(
+              List::list<unsigned int>::ctor::cons_(
+                  (0 + 1),
+                  List::list<unsigned int>::ctor::cons_(
+                      ((0 + 1) + 1), List::list<unsigned int>::ctor::nil_())),
+              List::list<std::shared_ptr<List::list<unsigned int>>>::ctor::
+                  cons_(
+                      List::list<unsigned int>::ctor::cons_(
+                          (((0 + 1) + 1) + 1),
+                          List::list<unsigned int>::ctor::nil_()),
+                      List::list<std::shared_ptr<List::list<unsigned int>>>::
+                          ctor::cons_(
+                              List::list<unsigned int>::ctor::cons_(
+                                  ((((0 + 1) + 1) + 1) + 1),
+                                  List::list<unsigned int>::ctor::cons_(
+                                      (((((0 + 1) + 1) + 1) + 1) + 1),
+                                      List::list<unsigned int>::ctor::cons_(
+                                          ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+                                          List::list<
+                                              unsigned int>::ctor::nil_()))),
+                              List::list<std::shared_ptr<
+                                  List::list<unsigned int>>>::ctor::nil_()))));
 
-const bool test_mem_found = local_mem(
-    (((0 + 1) + 1) + 1),
-    List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                               (((0 + 1) + 1) + 1),
-                               List::list<unsigned int>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_())))));
+  static inline const bool test_mem_found = local_mem(
+      (((0 + 1) + 1) + 1),
+      List::list<unsigned int>::ctor::cons_(
+          (0 + 1), List::list<unsigned int>::ctor::cons_(
+                       ((0 + 1) + 1),
+                       List::list<unsigned int>::ctor::cons_(
+                           (((0 + 1) + 1) + 1),
+                           List::list<unsigned int>::ctor::cons_(
+                               ((((0 + 1) + 1) + 1) + 1),
+                               List::list<unsigned int>::ctor::nil_())))));
 
-const bool test_mem_missing = local_mem(
-    (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-    List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((0 + 1) + 1), List::list<unsigned int>::ctor::cons_(
-                               (((0 + 1) + 1) + 1),
-                               List::list<unsigned int>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_())))));
+  static inline const bool test_mem_missing = local_mem(
+      (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+      List::list<unsigned int>::ctor::cons_(
+          (0 + 1), List::list<unsigned int>::ctor::cons_(
+                       ((0 + 1) + 1),
+                       List::list<unsigned int>::ctor::cons_(
+                           (((0 + 1) + 1) + 1),
+                           List::list<unsigned int>::ctor::cons_(
+                               ((((0 + 1) + 1) + 1) + 1),
+                               List::list<unsigned int>::ctor::nil_())))));
+
+  static inline const unsigned int test_length = local_length<
+      unsigned int>(List::list<unsigned int>::ctor::cons_(
+      ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+      List::list<unsigned int>::ctor::cons_(
+          ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1) +
+              1) +
+             1) +
+            1) +
+           1),
+          List::list<unsigned int>::ctor::cons_(
+              ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1) +
+                  1) +
+                 1) +
+                1) +
+               1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) +
+                                                       1) +
+                                                      1) +
+                                                     1) +
+                                                    1) +
+                                                   1) +
+                                                  1) +
+                                                 1) +
+                                                1) +
+                                               1) +
+                                              1) +
+                                             1) +
+                                            1) +
+                                           1) +
+                                          1) +
+                                         1) +
+                                        1) +
+                                       1) +
+                                      1) +
+                                     1) +
+                                    1) +
+                                   1) +
+                                  1) +
+                                 1) +
+                                1) +
+                               1) +
+                              1) +
+                             1) +
+                            1) +
+                           1) +
+                          1) +
+                         1) +
+                        1) +
+                       1) +
+                      1) +
+                     1) +
+                    1) +
+                   1),
+                  List::list<unsigned int>::ctor::nil_())))));
+};

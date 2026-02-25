@@ -67,33 +67,38 @@ struct Nat {
   static unsigned int modulo(const unsigned int x, const unsigned int y);
 };
 
-std::shared_ptr<List::list<unsigned int>> countdown_acc(const unsigned int n);
+struct AccRect {
+  static std::shared_ptr<List::list<unsigned int>>
+  countdown_acc(const unsigned int n);
 
-std::shared_ptr<List::list<unsigned int>> countdown(const unsigned int);
+  static std::shared_ptr<List::list<unsigned int>>
+  countdown(const unsigned int);
 
-unsigned int div2_wf(const unsigned int x);
+  static unsigned int div2_wf(const unsigned int x);
 
-unsigned int gcd_wf(const unsigned int x, const unsigned int b);
+  static unsigned int gcd_wf(const unsigned int x, const unsigned int b);
 
-const unsigned int test_div2_0 = div2_wf(0);
+  static inline const unsigned int test_div2_0 = div2_wf(0);
 
-const unsigned int test_div2_1 = div2_wf((0 + 1));
+  static inline const unsigned int test_div2_1 = div2_wf((0 + 1));
 
-const unsigned int test_div2_7 =
-    div2_wf((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_div2_7 =
+      div2_wf((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_div2_10 =
-    div2_wf(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_div2_10 =
+      div2_wf(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const std::shared_ptr<List::list<unsigned int>> test_countdown =
-    countdown((((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_countdown =
+      countdown((((((0 + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_gcd_1 = gcd_wf(
-    ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-    ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_gcd_1 = gcd_wf(
+      ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+      ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_gcd_2 = gcd_wf(
-    (((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+  static inline const unsigned int test_gcd_2 = gcd_wf(
+      (((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                                  1) +
+                                 1) +
                                 1) +
                                1) +
                               1) +
@@ -119,12 +124,12 @@ const unsigned int test_gcd_2 = gcd_wf(
           1) +
          1) +
         1) +
-       1) +
-      1) +
-     1),
-    ((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-       1) +
-      1) +
-     1));
+       1),
+      ((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+         1) +
+        1) +
+       1));
 
-const unsigned int test_gcd_3 = gcd_wf(0, (((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_gcd_3 =
+      gcd_wf(0, (((((0 + 1) + 1) + 1) + 1) + 1));
+};

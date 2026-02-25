@@ -24,10 +24,11 @@ void aSsErT(bool condition, const char *message, int line)
 
 #define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: hd nats == 0
     {
-        ASSERT(test_iterate_hd == 0);
+        ASSERT(CoindGuard::test_iterate_hd == 0);
         std::cout << "Test 1 (hd nats): PASSED" << std::endl;
     }
 

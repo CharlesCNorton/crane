@@ -18,34 +18,37 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-unsigned int offset(const unsigned int base, const unsigned int x);
+struct ExtractDirectives {
+  static unsigned int offset(const unsigned int base, const unsigned int x);
 
-unsigned int scale(const unsigned int base, const unsigned int x);
+  static unsigned int scale(const unsigned int base, const unsigned int x);
 
-unsigned int transform(const unsigned int base, const unsigned int x);
+  static unsigned int transform(const unsigned int base, const unsigned int x);
 
-unsigned int safe_pred(const unsigned int n);
+  static unsigned int safe_pred(const unsigned int n);
 
-const unsigned int test_offset =
-    offset(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-           (((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_offset =
+      offset(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+             (((((0 + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_scale =
-    scale((((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_scale =
+      scale((((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1));
 
-const unsigned int test_transform =
-    transform(((0 + 1) + 1), (((0 + 1) + 1) + 1));
+  static inline const unsigned int test_transform =
+      transform(((0 + 1) + 1), (((0 + 1) + 1) + 1));
 
-const unsigned int test_safe_pred = safe_pred((((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_safe_pred =
+      safe_pred((((((0 + 1) + 1) + 1) + 1) + 1));
 
-unsigned int inner_add(const unsigned int, const unsigned int);
+  static unsigned int inner_add(const unsigned int, const unsigned int);
 
-unsigned int inner_mul(const unsigned int, const unsigned int);
+  static unsigned int inner_mul(const unsigned int, const unsigned int);
 
-unsigned int outer_use(const unsigned int a, const unsigned int b);
+  static unsigned int outer_use(const unsigned int a, const unsigned int b);
 
-const unsigned int test_inner =
-    inner_add((((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_inner = inner_add(
+      (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_outer =
-    outer_use(((((0 + 1) + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_outer =
+      outer_use(((((0 + 1) + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
+};

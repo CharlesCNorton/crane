@@ -48,40 +48,41 @@ to_vector(const std::shared_ptr<List::list<unsigned int>> &l) {
     return result;
 }
 
+
 int main() {
     // Test 1: root of manually built cotree
     {
-        ASSERT(test_root == 1);
+        ASSERT(Cotree::test_root == 1);
         std::cout << "Test 1 (root sample_cotree): PASSED" << std::endl;
     }
 
     // Test 2: comap_cotree doubles root
     {
-        ASSERT(test_doubled_root == 2);
+        ASSERT(Cotree::test_doubled_root == 2);
         std::cout << "Test 2 (comap_cotree double): PASSED" << std::endl;
     }
 
     // Test 3: list_of_colist on infinite nats stream
     {
         auto v = to_vector(test_first_five);
-        ASSERT(v.size() == 5);
-        ASSERT(v[0] == 0);
-        ASSERT(v[1] == 1);
-        ASSERT(v[2] == 2);
-        ASSERT(v[3] == 3);
-        ASSERT(v[4] == 4);
+        ASSERT(Cotree::v.size() == 5);
+        ASSERT(Cotree::v[0] == 0);
+        ASSERT(Cotree::v[1] == 1);
+        ASSERT(Cotree::v[2] == 2);
+        ASSERT(Cotree::v[3] == 3);
+        ASSERT(Cotree::v[4] == 4);
         std::cout << "Test 3 (first 5 nats): PASSED" << std::endl;
     }
 
     // Test 4: root of unfolded infinite binary tree
     {
-        ASSERT(test_binary_root == 0);
+        ASSERT(Cotree::test_binary_root == 0);
         std::cout << "Test 4 (binary tree root): PASSED" << std::endl;
     }
 
     // Test 5: tree_of_cotree finite approximation root
     {
-        ASSERT(test_approx_root == 0);
+        ASSERT(Cotree::test_approx_root == 0);
         std::cout << "Test 5 (approx root): PASSED" << std::endl;
     }
 

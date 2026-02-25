@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module LargeMutual.
+
 (* === 5-way mutual inductive: simple expression language === *)
 
 Inductive stmt : Type :=
@@ -70,9 +72,8 @@ Definition test_expr_size : nat := expr_size test_expr.
 Definition test_bexpr_size : nat := bexpr_size test_bexpr.
 Definition test_stmt_size : nat := stmt_size test_stmt.
 
+End LargeMutual.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "large_mutual"
-  expr_size bexpr_size stmt_size
-  test_expr test_bexpr test_stmt
-  test_expr_size test_bexpr_size test_stmt_size.
+Crane Extraction "large_mutual" LargeMutual.

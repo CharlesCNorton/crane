@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module MutualRecord.
+
 (* Mutual inductive records: a company has departments, departments have employees *)
 Inductive department : Type :=
   | mk_department : nat -> list employee -> department
@@ -55,10 +57,8 @@ Definition test_total_salary : nat := dept_total_salary test_dept.
 Definition test_dept_count : nat := dept_count test_dept.
 Definition test_dept_id : nat := dept_id test_dept.
 
+End MutualRecord.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "mutual_record"
-  dept_id dept_employees emp_id emp_salary
-  dept_total_salary emp_list_salary dept_count emp_list_count
-  emp1 emp2 emp3 test_dept
-  test_total_salary test_dept_count test_dept_id.
+Crane Extraction "mutual_record" MutualRecord.

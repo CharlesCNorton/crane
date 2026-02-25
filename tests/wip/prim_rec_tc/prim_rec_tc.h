@@ -18,48 +18,80 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct point {
-  unsigned int px;
-  unsigned int py;
-};
-
 template <typename I, typename A>
 concept HasNorm = requires(A a0) {
   { I::norm(a0) } -> std::convertible_to<unsigned int>;
 };
 
-template <typename _tcI0, typename T1> unsigned int norm(const T1 _x0) {
-  return _tcI0::norm(_x0);
-}
+struct PrimRecTc {
+  struct point {
+    unsigned int px;
+    unsigned int py;
+  };
 
-struct pointNorm {
-  static unsigned int norm(std::shared_ptr<point> p) { return (p->px + p->py); }
-};
-static_assert(HasNorm<pointNorm, std::shared_ptr<point>>);
+  static unsigned int px(const std::shared_ptr<point> &p);
 
-struct vec3 {
-  unsigned int vx;
-  unsigned int vy;
-  unsigned int vz;
-};
+  static unsigned int py(const std::shared_ptr<point> &p);
 
-struct vec3Norm {
-  static unsigned int norm(std::shared_ptr<vec3> v) {
-    return ((v->vx + v->vy) + v->vz);
+  template <typename _tcI0, typename T1>
+  static unsigned int norm(const T1 _x0) {
+    return _tcI0::norm(_x0);
   }
-};
-static_assert(HasNorm<vec3Norm, std::shared_ptr<vec3>>);
 
-template <typename _tcI0, typename T1> unsigned int double_norm(const T1 x) {
-  return (_tcI0::norm(x) + _tcI0::norm(x));
-}
+  struct pointNorm {
+    static unsigned int norm(std::shared_ptr<point> p) {
+      return (p->px + p->py);
+    }
+  };
+  static_assert(HasNorm<pointNorm, std::shared_ptr<point>>);
 
-const std::shared_ptr<point> p1 = std::make_shared<point>(
-    point{(((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1)});
+  struct vec3 {
+    unsigned int vx;
+    unsigned int vy;
+    unsigned int vz;
+  };
 
-const std::shared_ptr<point> p2 = std::make_shared<point>(point{
-    ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-    ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+  static unsigned int vx(const std::shared_ptr<vec3> &v);
+
+  static unsigned int vy(const std::shared_ptr<vec3> &v);
+
+  static unsigned int vz(const std::shared_ptr<vec3> &v);
+
+  struct vec3Norm {
+    static unsigned int norm(std::shared_ptr<vec3> v) {
+      return ((v->vx + v->vy) + v->vz);
+    }
+  };
+  static_assert(HasNorm<vec3Norm, std::shared_ptr<vec3>>);
+
+  template <typename _tcI0, typename T1>
+  static unsigned int double_norm(const T1 x) {
+    return (_tcI0::norm(x) + _tcI0::norm(x));
+  }
+
+  struct rect {
+    std::shared_ptr<point> top_left;
+    std::shared_ptr<point> bot_right;
+  };
+
+  static std::shared_ptr<point> top_left(const std::shared_ptr<rect> &r);
+
+  static std::shared_ptr<point> bot_right(const std::shared_ptr<rect> &r);
+
+  static unsigned int rect_width(const std::shared_ptr<rect> &r);
+
+  static unsigned int rect_height(const std::shared_ptr<rect> &r);
+
+  static unsigned int rect_perimeter(const std::shared_ptr<rect> &r);
+
+  static inline const std::shared_ptr<point> p1 = std::make_shared<point>(
+      point{(((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1)});
+
+  static inline const std::shared_ptr<point> p2 = std::make_shared<point>(point{
+      ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+      ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                1) +
+               1) +
               1) +
              1) +
             1) +
@@ -67,20 +99,32 @@ const std::shared_ptr<point> p2 = std::make_shared<point>(point{
           1) +
          1) +
         1) +
-       1) +
-      1) +
-     1)});
+       1)});
 
-const unsigned int test_px = p1->px;
+  static inline const unsigned int test_px = p1->px;
 
-const unsigned int test_py = p1->py;
+  static inline const unsigned int test_py = p1->py;
 
-const unsigned int test_norm_point = pointNorm::norm(p1);
+  static inline const unsigned int test_norm_point = pointNorm::norm(p1);
 
-const unsigned int test_double_norm =
-    double_norm<pointNorm, std::shared_ptr<point>>(p1);
+  static inline const unsigned int test_double_norm =
+      double_norm<pointNorm, std::shared_ptr<point>>(p1);
 
-const std::shared_ptr<vec3> v1 =
-    std::make_shared<vec3>(vec3{(0 + 1), ((0 + 1) + 1), (((0 + 1) + 1) + 1)});
+  static inline const std::shared_ptr<vec3> v1 =
+      std::make_shared<vec3>(vec3{(0 + 1), ((0 + 1) + 1), (((0 + 1) + 1) + 1)});
 
-const unsigned int test_norm_vec3 = vec3Norm::norm(v1);
+  static inline const unsigned int test_norm_vec3 = vec3Norm::norm(v1);
+
+  static inline const std::shared_ptr<rect> r1 = std::make_shared<rect>(rect{
+      std::make_shared<point>(point{((0 + 1) + 1), (((0 + 1) + 1) + 1)}),
+      std::make_shared<point>(point{
+          ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+           1),
+          ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)})});
+
+  static inline const unsigned int test_width = rect_width(r1);
+
+  static inline const unsigned int test_height = rect_height(r1);
+
+  static inline const unsigned int test_perimeter = rect_perimeter(r1);
+};

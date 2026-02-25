@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module PartialApply.
+
 (* Partial application of S (successor) *)
 Definition inc_all (l : list nat) : list nat := map S l.
 
@@ -39,8 +41,8 @@ Definition test_wrap : list (option nat) := wrap_all [5; 6; 7].
 Definition test_tag_with : list (tagged bool) := tag_with 99 [true; false; true].
 Definition test_sum : nat := sum_with_init 100 [1; 2; 3].
 
+End PartialApply.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "partial_apply"
-  inc_all tag_all wrap_all tag_with sum_with_init
-  test_inc test_tag test_wrap test_tag_with test_sum.
+Crane Extraction "partial_apply" PartialApply.

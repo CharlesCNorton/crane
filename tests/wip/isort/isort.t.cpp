@@ -66,11 +66,12 @@ std::shared_ptr<List::list<unsigned int>> vector_to_list(const std::vector<unsig
   return result;
 }
 
+
 int main() {
   // Test 1: Sort empty list
   {
     auto empty = List::list<unsigned int>::ctor::nil_();
-    auto result = isort(empty);
+    auto result = Sort::isort(empty);
     // Extract the list from the sigma type
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
@@ -81,7 +82,7 @@ int main() {
   // Test 2: Sort single element
   {
     auto single = List::list<unsigned int>::ctor::cons_(5, List::list<unsigned int>::ctor::nil_());
-    auto result = isort(single);
+    auto result = Sort::isort(single);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
@@ -92,7 +93,7 @@ int main() {
   // Test 3: Sort already sorted list
   {
     auto input = vector_to_list({1, 2, 3, 4, 5});
-    auto result = isort(input);
+    auto result = Sort::isort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 5);
@@ -103,7 +104,7 @@ int main() {
   // Test 4: Sort reverse sorted list
   {
     auto input = vector_to_list({5, 4, 3, 2, 1});
-    auto result = isort(input);
+    auto result = Sort::isort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 5);
@@ -114,7 +115,7 @@ int main() {
   // Test 5: Sort unsorted list
   {
     auto input = vector_to_list({3, 1, 4, 1, 5, 9, 2, 6});
-    auto result = isort(input);
+    auto result = Sort::isort(input);
     auto sorted_list = result->_a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 8);

@@ -68,22 +68,24 @@ struct List {
   };
 };
 
-unsigned int
-deep_option(const std::optional<std::optional<std::optional<unsigned int>>> x);
+struct DeepPatterns {
+  static unsigned int deep_option(
+      const std::optional<std::optional<std::optional<unsigned int>>> x);
 
-unsigned int deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
-                                       std::pair<unsigned int, unsigned int>>
-                           p);
+  static unsigned int
+  deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
+                            std::pair<unsigned int, unsigned int>>
+                p);
 
-unsigned int list_shape(const std::shared_ptr<List::list<unsigned int>> &l);
+  static unsigned int
+  list_shape(const std::shared_ptr<List::list<unsigned int>> &l);
 
-struct outer;
-struct inner;
-struct Outer {
+  struct outer;
+  struct inner;
   struct outer {
   public:
     struct OLeft {
-      std::shared_ptr<Inner::inner> _a0;
+      std::shared_ptr<inner> _a0;
     };
     struct ORight {
       unsigned int _a0;
@@ -98,54 +100,23 @@ struct Outer {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Outer::outer>
-      OLeft_(const std::shared_ptr<Inner::inner> &a0) {
-        return std::shared_ptr<Outer::outer>(new Outer::outer(OLeft{a0}));
+      static std::shared_ptr<outer> OLeft_(const std::shared_ptr<inner> &a0) {
+        return std::shared_ptr<outer>(new outer(OLeft{a0}));
       }
-      static std::shared_ptr<Outer::outer> ORight_(unsigned int a0) {
-        return std::shared_ptr<Outer::outer>(new Outer::outer(ORight{a0}));
+      static std::shared_ptr<outer> ORight_(unsigned int a0) {
+        return std::shared_ptr<outer>(new outer(ORight{a0}));
       }
-      static std::unique_ptr<Outer::outer>
-      OLeft_uptr(const std::shared_ptr<Inner::inner> &a0) {
-        return std::unique_ptr<Outer::outer>(new Outer::outer(OLeft{a0}));
+      static std::unique_ptr<outer>
+      OLeft_uptr(const std::shared_ptr<inner> &a0) {
+        return std::unique_ptr<outer>(new outer(OLeft{a0}));
       }
-      static std::unique_ptr<Outer::outer> ORight_uptr(unsigned int a0) {
-        return std::unique_ptr<Outer::outer>(new Outer::outer(ORight{a0}));
+      static std::unique_ptr<outer> ORight_uptr(unsigned int a0) {
+        return std::unique_ptr<outer>(new outer(ORight{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int deep_sum() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Outer::outer::OLeft _args) -> unsigned int {
-                std::shared_ptr<Inner::inner> i = _args._a0;
-                return std::visit(
-                    Overloaded{[](const typename Inner::inner::ILeft _args)
-                                   -> unsigned int {
-                                 unsigned int n = _args._a0;
-                                 return std::move(n);
-                               },
-                               [](const typename Inner::inner::IRight _args)
-                                   -> unsigned int {
-                                 bool b = _args._a0;
-                                 if (b) {
-                                   return (0 + 1);
-                                 } else {
-                                   return 0;
-                                 }
-                               }},
-                    std::move(i)->v());
-              },
-              [](const typename Outer::outer::ORight _args) -> unsigned int {
-                unsigned int n = _args._a0;
-return (std::move(n) + ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
-              }},
-          this->v());
-    }
   };
-};
-struct Inner {
   struct inner {
   public:
     struct ILeft {
@@ -164,37 +135,92 @@ struct Inner {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Inner::inner> ILeft_(unsigned int a0) {
-        return std::shared_ptr<Inner::inner>(new Inner::inner(ILeft{a0}));
+      static std::shared_ptr<inner> ILeft_(unsigned int a0) {
+        return std::shared_ptr<inner>(new inner(ILeft{a0}));
       }
-      static std::shared_ptr<Inner::inner> IRight_(bool a0) {
-        return std::shared_ptr<Inner::inner>(new Inner::inner(IRight{a0}));
+      static std::shared_ptr<inner> IRight_(bool a0) {
+        return std::shared_ptr<inner>(new inner(IRight{a0}));
       }
-      static std::unique_ptr<Inner::inner> ILeft_uptr(unsigned int a0) {
-        return std::unique_ptr<Inner::inner>(new Inner::inner(ILeft{a0}));
+      static std::unique_ptr<inner> ILeft_uptr(unsigned int a0) {
+        return std::unique_ptr<inner>(new inner(ILeft{a0}));
       }
-      static std::unique_ptr<Inner::inner> IRight_uptr(bool a0) {
-        return std::unique_ptr<Inner::inner>(new Inner::inner(IRight{a0}));
+      static std::unique_ptr<inner> IRight_uptr(bool a0) {
+        return std::unique_ptr<inner>(new inner(IRight{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
-};
 
-unsigned int complex_match(
-    const std::optional<
-        std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
-        x);
+  template <typename T1, MapsTo<T1, std::shared_ptr<inner>> F0,
+            MapsTo<T1, unsigned int> F1>
+  static T1 outer_rect(F0 &&f, F1 &&f0, const std::shared_ptr<outer> &o) {
+    return std::visit(Overloaded{[&](const typename outer::OLeft _args) -> T1 {
+                                   std::shared_ptr<inner> i = _args._a0;
+                                   return f(std::move(i));
+                                 },
+                                 [&](const typename outer::ORight _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f0(std::move(n));
+                                 }},
+                      o->v());
+  }
 
-unsigned int guarded_match(const std::pair<unsigned int, unsigned int> p);
+  template <typename T1, MapsTo<T1, std::shared_ptr<inner>> F0,
+            MapsTo<T1, unsigned int> F1>
+  static T1 outer_rec(F0 &&f, F1 &&f0, const std::shared_ptr<outer> &o) {
+    return std::visit(Overloaded{[&](const typename outer::OLeft _args) -> T1 {
+                                   std::shared_ptr<inner> i = _args._a0;
+                                   return f(std::move(i));
+                                 },
+                                 [&](const typename outer::ORight _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f0(std::move(n));
+                                 }},
+                      o->v());
+  }
 
-const unsigned int test_deep_some =
-    deep_option(std::make_optional<std::optional<std::optional<unsigned int>>>(
-        std::make_optional<std::optional<unsigned int>>(
-            std::make_optional<unsigned int>((
-                (((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) +
-                                                     1) +
+  template <typename T1, MapsTo<T1, unsigned int> F0, MapsTo<T1, bool> F1>
+  static T1 inner_rect(F0 &&f, F1 &&f0, const std::shared_ptr<inner> &i) {
+    return std::visit(Overloaded{[&](const typename inner::ILeft _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename inner::IRight _args) -> T1 {
+                                   bool b = _args._a0;
+                                   return f0(std::move(b));
+                                 }},
+                      i->v());
+  }
+
+  template <typename T1, MapsTo<T1, unsigned int> F0, MapsTo<T1, bool> F1>
+  static T1 inner_rec(F0 &&f, F1 &&f0, const std::shared_ptr<inner> &i) {
+    return std::visit(Overloaded{[&](const typename inner::ILeft _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename inner::IRight _args) -> T1 {
+                                   bool b = _args._a0;
+                                   return f0(std::move(b));
+                                 }},
+                      i->v());
+  }
+
+  static unsigned int deep_sum(const std::shared_ptr<outer> &o);
+
+  static unsigned int complex_match(
+      const std::optional<
+          std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
+          x);
+
+  static unsigned int
+  guarded_match(const std::pair<unsigned int, unsigned int> p);
+
+  static inline const unsigned int test_deep_some = deep_option(
+      std::make_optional<std::optional<std::optional<unsigned int>>>(
+          std::make_optional<
+              std::optional<unsigned int>>(std::make_optional<unsigned int>(
+              ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) +
                                                     1) +
                                                    1) +
                                                   1) +
@@ -231,21 +257,25 @@ const unsigned int test_deep_some =
                    1) +
                   1) +
                  1) +
-                1)))));
+                1) +
+               1)))));
 
-const unsigned int test_deep_none =
-    deep_option(std::make_optional<std::optional<std::optional<unsigned int>>>(
-        std::make_optional<std::optional<unsigned int>>(std::nullopt)));
+  static inline const unsigned int test_deep_none = deep_option(
+      std::make_optional<std::optional<std::optional<unsigned int>>>(
+          std::make_optional<std::optional<unsigned int>>(std::nullopt)));
 
-const unsigned int test_deep_pair = deep_pair(std::make_pair(
-    std::make_pair((0 + 1), ((0 + 1) + 1)),
-    std::make_pair((((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1))));
+  static inline const unsigned int test_deep_pair = deep_pair(std::make_pair(
+      std::make_pair((0 + 1), ((0 + 1) + 1)),
+      std::make_pair((((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1))));
 
-const unsigned int test_shape_3 =
-    list_shape(List::list<unsigned int>::ctor::cons_(
-        ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+  static inline const unsigned int test_shape_3 =
+      list_shape(List::list<unsigned int>::ctor::cons_(
+          ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                          1) +
+                         1) +
+                        1) +
                        1) +
                       1) +
                      1) +
@@ -254,11 +284,12 @@ const unsigned int test_shape_3 =
                   1) +
                  1) +
                 1) +
-               1) +
-              1) +
-             1),
-            List::list<unsigned int>::ctor::cons_(
-                ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
+               1),
+              List::list<unsigned int>::ctor::cons_(
+                  ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
+                                           1) +
+                                          1) +
+                                         1) +
                                         1) +
                                        1) +
                                       1) +
@@ -280,37 +311,36 @@ const unsigned int test_shape_3 =
                       1) +
                      1) +
                     1) +
-                   1) +
-                  1) +
-                 1),
-                List::list<unsigned int>::ctor::nil_()))));
+                   1),
+                  List::list<unsigned int>::ctor::nil_()))));
 
-const unsigned int test_shape_long =
-    list_shape(List::list<unsigned int>::ctor::cons_(
-        (0 + 1),
-        List::list<unsigned int>::ctor::cons_(
-            ((0 + 1) + 1),
-            List::list<unsigned int>::ctor::cons_(
-                (((0 + 1) + 1) + 1),
-                List::list<unsigned int>::ctor::cons_(
-                    ((((0 + 1) + 1) + 1) + 1),
-                    List::list<unsigned int>::ctor::cons_(
-                        (((((0 + 1) + 1) + 1) + 1) + 1),
-                        List::list<unsigned int>::ctor::cons_(
-                            ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                            List::list<unsigned int>::ctor::nil_())))))));
+  static inline const unsigned int test_shape_long =
+      list_shape(List::list<unsigned int>::ctor::cons_(
+          (0 + 1),
+          List::list<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1),
+              List::list<unsigned int>::ctor::cons_(
+                  (((0 + 1) + 1) + 1),
+                  List::list<unsigned int>::ctor::cons_(
+                      ((((0 + 1) + 1) + 1) + 1),
+                      List::list<unsigned int>::ctor::cons_(
+                          (((((0 + 1) + 1) + 1) + 1) + 1),
+                          List::list<unsigned int>::ctor::cons_(
+                              ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+                              List::list<unsigned int>::ctor::nil_())))))));
 
-const unsigned int test_deep_sum = Outer::outer::ctor::OLeft_(Inner::inner::ctor::ILeft_((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)))->deep_sum();
+ static inline const unsigned int test_deep_sum = deep_sum(outer::ctor::OLeft_(inner::ctor::ILeft_((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1))));
 
-const unsigned int test_complex = complex_match(
-    std::make_optional<
-        std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>(
-        std::make_pair(
-            (((((0 + 1) + 1) + 1) + 1) + 1),
-            List::list<unsigned int>::ctor::cons_(
-                ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                List::list<unsigned int>::ctor::cons_(
-                    ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+ static inline const unsigned int test_complex = complex_match(
+     std::make_optional<
+         std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>(
+         std::make_pair(
+             (((((0 + 1) + 1) + 1) + 1) + 1),
+             List::list<unsigned int>::ctor::cons_(
+                 ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
+                 List::list<unsigned int>::ctor::cons_(
+                     ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
+                                  1) +
                                  1) +
                                 1) +
                                1) +
@@ -322,10 +352,10 @@ const unsigned int test_complex = complex_match(
                          1) +
                         1) +
                        1) +
-                      1) +
-                     1),
-                    List::list<unsigned int>::ctor::cons_(
-                        ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) +
+                      1),
+                     List::list<unsigned int>::ctor::cons_(
+                         ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) +
+                                                   1) +
                                                   1) +
                                                  1) +
                                                 1) +
@@ -350,9 +380,9 @@ const unsigned int test_complex = complex_match(
                              1) +
                             1) +
                            1) +
-                          1) +
-                         1),
-                        List::list<unsigned int>::ctor::nil_()))))));
+                          1),
+                         List::list<unsigned int>::ctor::nil_()))))));
 
-const unsigned int test_guarded = guarded_match(std::make_pair(
-    (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1)));
+ static inline const unsigned int test_guarded = guarded_match(std::make_pair(
+     (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1)));
+};

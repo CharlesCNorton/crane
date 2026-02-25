@@ -24,25 +24,26 @@ void aSsErT(bool condition, const char *message, int line)
 
 #define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: nat_eq_dec
     {
-        ASSERT(test_eq_true == true);
-        ASSERT(test_eq_false == false);
+        ASSERT(CompProof::test_eq_true == true);
+        ASSERT(CompProof::test_eq_false == false);
         std::cout << "Test 1 (nat_eqb_dec): PASSED" << std::endl;
     }
 
     // Test 2: nat_leb_dec
     {
-        ASSERT(test_leb_true == true);
-        ASSERT(test_leb_false == false);
+        ASSERT(CompProof::test_leb_true == true);
+        ASSERT(CompProof::test_leb_false == false);
         std::cout << "Test 2 (nat_leb_dec): PASSED" << std::endl;
     }
 
     // Test 3: min/max
     {
-        ASSERT(test_min == 4);
-        ASSERT(test_max == 9);
+        ASSERT(CompProof::test_min == 4);
+        ASSERT(CompProof::test_max == 9);
         std::cout << "Test 3 (min/max_dec): PASSED" << std::endl;
     }
 

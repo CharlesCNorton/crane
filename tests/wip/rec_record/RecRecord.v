@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module RecRecord.
+
 (* === Recursive record: linked list as record === *)
 
 Inductive rlist (A : Type) : Type :=
@@ -66,10 +68,8 @@ Definition test_emp : Employee := mkEmployee 42 7.
 Definition test_dept : Department := mkDepartment 7 test_emp 50.
 Definition test_dept_head_name : nat := emp_name (dept_head test_dept).
 
+End RecRecord.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "rec_record"
-  rlist_length rlist_sum rnode_depth
-  test_rlist test_rlist_len test_rlist_sum
-  test_rnode test_rnode_depth
-  test_emp test_dept test_dept_head_name.
+Crane Extraction "rec_record" RecRecord.

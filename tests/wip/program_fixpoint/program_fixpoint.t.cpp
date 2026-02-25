@@ -58,12 +58,13 @@ std::shared_ptr<List::list<unsigned int>> vector_to_list(const std::vector<unsig
   return result;
 }
 
+
 int main() {
   // Test 1: interleave two lists
   {
     auto l1 = vector_to_list({1, 3, 5});
     auto l2 = vector_to_list({2, 4, 6});
-    auto result = interleave(l1, l2);
+    auto result = ProgFix::interleave(l1, l2);
     auto vec = list_to_vector(result);
     ASSERT(vec.size() == 6);
     ASSERT(vec[0] == 1);
@@ -79,7 +80,7 @@ int main() {
   {
     auto l1 = vector_to_list({1, 2, 3});
     auto l2 = List::list<unsigned int>::ctor::nil_();
-    auto result = interleave(l1, l2);
+    auto result = ProgFix::interleave(l1, l2);
     auto vec = list_to_vector(result);
     ASSERT(vec.size() == 3);
     ASSERT(vec[0] == 1);

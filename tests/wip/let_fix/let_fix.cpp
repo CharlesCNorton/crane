@@ -11,7 +11,8 @@
 #include <utility>
 #include <variant>
 
-unsigned int local_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
+unsigned int
+LetFix::local_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
   std::function<unsigned int(unsigned int,
                              std::shared_ptr<List::list<unsigned int>>)>
       go;
@@ -32,7 +33,7 @@ unsigned int local_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
   return go(0, l);
 }
 
-std::shared_ptr<List::list<unsigned int>> local_flatten(
+std::shared_ptr<List::list<unsigned int>> LetFix::local_flatten(
     const std::shared_ptr<List::list<std::shared_ptr<List::list<unsigned int>>>>
         &xss) {
   return std::visit(
@@ -75,8 +76,8 @@ std::shared_ptr<List::list<unsigned int>> local_flatten(
       xss->v());
 }
 
-bool local_mem(const unsigned int n,
-               const std::shared_ptr<List::list<unsigned int>> &l) {
+bool LetFix::local_mem(const unsigned int n,
+                       const std::shared_ptr<List::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{
           [](const typename List::list<unsigned int>::nil _args) -> bool {

@@ -25,37 +25,38 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: constants
     {
-        ASSERT(i_zero == 0);
-        ASSERT(i_one == 1);
+        ASSERT(Int63Arith::i_zero == 0);
+        ASSERT(Int63Arith::i_one == 1);
         std::cout << "Test 1 (constants): PASSED" << std::endl;
     }
 
     // Test 2: arithmetic
     {
-        ASSERT(i_add == 30);
-        ASSERT(i_mul == 42);
-        ASSERT(i_sub == 42);
+        ASSERT(Int63Arith::i_add == 30);
+        ASSERT(Int63Arith::i_mul == 42);
+        ASSERT(Int63Arith::i_sub == 42);
         std::cout << "Test 2 (arithmetic): PASSED" << std::endl;
     }
 
     // Test 3: comparisons
     {
-        ASSERT(i_eqb_true == true);
-        ASSERT(i_eqb_false == false);
-        ASSERT(i_ltb_true == true);
-        ASSERT(i_ltb_false == false);
-        ASSERT(i_leb_true == true);
-        ASSERT(i_leb_false == false);
+        ASSERT(Int63Arith::i_eqb_true == true);
+        ASSERT(Int63Arith::i_eqb_false == false);
+        ASSERT(Int63Arith::i_ltb_true == true);
+        ASSERT(Int63Arith::i_ltb_false == false);
+        ASSERT(Int63Arith::i_leb_true == true);
+        ASSERT(Int63Arith::i_leb_false == false);
         std::cout << "Test 3 (comparisons): PASSED" << std::endl;
     }
 
     // Test 4: abs
     {
-        ASSERT(test_abs_pos == 42);
-        ASSERT(test_abs_neg == 42);
+        ASSERT(Int63Arith::test_abs_pos == 42);
+        ASSERT(Int63Arith::test_abs_neg == 42);
         std::cout << "Test 4 (abs): PASSED" << std::endl;
     }
 

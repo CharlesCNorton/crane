@@ -24,16 +24,17 @@ void aSsErT(bool condition, const char *message, int line)
 
 #define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: stack size
     {
-        ASSERT(test_stack_size == 3);
+        ASSERT(FunctorComp::test_stack_size == 3);
         std::cout << "Test 1 (stack size): PASSED" << std::endl;
     }
 
     // Test 2: queue size
     {
-        ASSERT(test_queue_size == 3);
+        ASSERT(FunctorComp::test_queue_size == 3);
         std::cout << "Test 2 (queue size): PASSED" << std::endl;
     }
 

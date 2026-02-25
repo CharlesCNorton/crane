@@ -11,6 +11,8 @@ Infix "::" := String (at level 60, right associativity) : string_scope.
 Notation "[ x ]" := (String x EmptyString) : string_scope.
 Notation "[ x ; y ; .. ; z ]" := (String x (String y .. (String z EmptyString) ..)) : string_scope.
 
+Module Levenshtein.
+
 Inductive edit : string -> string -> Type :=
 | insertion (a : ascii) {s : string} : edit s (a :: s)
 | deletion (a : ascii) {s : string} : edit (a :: s) s
@@ -945,5 +947,7 @@ Qed.
 
 (* Eval compute in (levenshtein_chain "pascal" "haskell"). *)
 
+End Levenshtein.
+
 Require Crane.Extraction.
-Crane Extraction "levenshtein" levenshtein_chain.
+Crane Extraction "levenshtein" Levenshtein.

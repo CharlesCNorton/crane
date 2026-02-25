@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module PolyInductive.
+
 Set Universe Polymorphism.
 
 (* Polymorphic identity wrapper *)
@@ -63,9 +65,8 @@ Definition test_pnothing : nat := pmaybe_default 0 (PNothing nat).
 Definition test_pmap : nat := pmaybe_default 0 (pmaybe_map S (PJust nat 5)).
 Definition test_ptree : nat := ptree_size (PNode nat (PLeaf nat 1) (PNode nat (PLeaf nat 2) (PLeaf nat 3))).
 
+End PolyInductive.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "poly_inductive"
-  pfst psnd pmaybe_default ptree_size
-  test_ppair_fst test_ppair_snd
-  test_pjust test_pnothing test_ptree.
+Crane Extraction "poly_inductive" PolyInductive.

@@ -25,29 +25,30 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: ppair fst/snd
     {
-        ASSERT(test_ppair_fst == 7);
-        ASSERT(test_ppair_snd == true);
+        ASSERT(PolyInductive::test_ppair_fst == 7);
+        ASSERT(PolyInductive::test_ppair_snd == true);
         std::cout << "Test 1 (ppair fst/snd): PASSED" << std::endl;
     }
 
     // Test 2: pmaybe default on PJust
     {
-        ASSERT(test_pjust == 99);
+        ASSERT(PolyInductive::test_pjust == 99);
         std::cout << "Test 2 (pjust default): PASSED" << std::endl;
     }
 
     // Test 3: pmaybe default on PNothing
     {
-        ASSERT(test_pnothing == 0);
+        ASSERT(PolyInductive::test_pnothing == 0);
         std::cout << "Test 3 (pnothing default): PASSED" << std::endl;
     }
 
     // Test 4: ptree_size
     {
-        ASSERT(test_ptree == 5);  // PNode(PLeaf, PNode(PLeaf, PLeaf)) = 1+1+1+1+1
+        ASSERT(PolyInductive::test_ptree == 5);  // PNode(PLeaf, PNode(PLeaf, PLeaf)) = 1+1+1+1+1
         std::cout << "Test 4 (ptree_size): PASSED" << std::endl;
     }
 

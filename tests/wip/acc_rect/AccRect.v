@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List Wf_nat Lia PeanoNat.
 Import ListNotations.
 
+Module AccRect.
+
 (* === Acc-based countdown === *)
 
 Fixpoint countdown_acc (n : nat) (acc : Acc lt n) {struct acc} : list nat :=
@@ -56,10 +58,8 @@ Definition test_gcd_1 : nat := gcd_wf 12 8.
 Definition test_gcd_2 : nat := gcd_wf 35 14.
 Definition test_gcd_3 : nat := gcd_wf 0 5.
 
+End AccRect.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "acc_rect"
-  div2_wf countdown gcd_wf
-  test_div2_0 test_div2_1 test_div2_7 test_div2_10
-  test_countdown
-  test_gcd_1 test_gcd_2 test_gcd_3.
+Crane Extraction "acc_rect" AccRect.

@@ -8,6 +8,8 @@
 From Stdlib Require Import List Nat Bool Arith Lia.
 Import ListNotations.
 
+Module ExtractDirectives.
+
 (* Section with local variables — tests extraction of section-abstracted defs *)
 Section WithBase.
   Variable base : nat.
@@ -53,10 +55,8 @@ End Outer.
 Definition test_inner : nat := inner_add 3 7.
 Definition test_outer : nat := outer_use 4 5.
 
+End ExtractDirectives.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "extract_directives"
-  offset scale transform safe_pred
-  inner_add inner_mul outer_use
-  test_offset test_scale test_transform test_safe_pred
-  test_inner test_outer.
+Crane Extraction "extract_directives" ExtractDirectives.

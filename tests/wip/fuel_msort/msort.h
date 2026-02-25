@@ -70,16 +70,19 @@ struct List {
 
 bool le_lt_dec(const unsigned int n, const unsigned int m);
 
-std::pair<std::shared_ptr<List::list<unsigned int>>,
-          std::shared_ptr<List::list<unsigned int>>>
-split(const std::shared_ptr<List::list<unsigned int>> &l);
+struct MergeSort {
+  static std::pair<std::shared_ptr<List::list<unsigned int>>,
+                   std::shared_ptr<List::list<unsigned int>>>
+  split(const std::shared_ptr<List::list<unsigned int>> &l);
 
-std::shared_ptr<List::list<unsigned int>>
-merge(std::shared_ptr<List::list<unsigned int>> l1,
-      const std::shared_ptr<List::list<unsigned int>> &l2);
+  static std::shared_ptr<List::list<unsigned int>>
+  merge(std::shared_ptr<List::list<unsigned int>> l1,
+        const std::shared_ptr<List::list<unsigned int>> &l2);
 
-std::shared_ptr<List::list<unsigned int>>
-msort_go(const unsigned int fuel, std::shared_ptr<List::list<unsigned int>> l);
+  static std::shared_ptr<List::list<unsigned int>>
+  msort_go(const unsigned int fuel,
+           std::shared_ptr<List::list<unsigned int>> l);
 
-std::shared_ptr<List::list<unsigned int>>
-msort(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List::list<unsigned int>>
+  msort(const std::shared_ptr<List::list<unsigned int>> &l);
+};

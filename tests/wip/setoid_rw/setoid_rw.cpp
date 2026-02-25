@@ -11,9 +11,11 @@
 #include <utility>
 #include <variant>
 
-unsigned int mod3(const unsigned int n) { return (n % (((0 + 1) + 1) + 1)); }
+unsigned int SetoidRw::mod3(const unsigned int n) {
+  return (n % (((0 + 1) + 1) + 1));
+}
 
-unsigned int classify_mod3(const unsigned int n) {
+unsigned int SetoidRw::classify_mod3(const unsigned int n) {
   if (mod3(n) <= 0) {
     return 0;
   } else {
@@ -27,6 +29,6 @@ unsigned int classify_mod3(const unsigned int n) {
   }
 }
 
-unsigned int add_mod3(const unsigned int x, const unsigned int y) {
+unsigned int SetoidRw::add_mod3(const unsigned int x, const unsigned int y) {
   return mod3((x + y));
 }

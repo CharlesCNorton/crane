@@ -6,6 +6,8 @@ From Stdlib Require Import Arith List Sorted Permutation Lia.
 Import ListNotations.
 Open Scope list_scope.
 
+Module MergeSort.
+
 (** * Split *)
 
 Fixpoint split (l : list nat) : list nat * list nat :=
@@ -218,6 +220,8 @@ Defined.
 
 (** * Extraction *)
 
+End MergeSort.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "msort" msort.
+Crane Extraction "msort" MergeSort.

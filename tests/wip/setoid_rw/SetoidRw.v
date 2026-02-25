@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List Relations Morphisms.
 Import ListNotations.
 
+Module SetoidRw.
+
 (* A simple quotient type: integers mod 3 *)
 Definition mod3 (n : nat) : nat := n mod 3.
 
@@ -44,9 +46,8 @@ Definition test_classify_6 : nat := classify_mod3 6.
 Definition test_classify_7 : nat := classify_mod3 7.
 Definition test_add_mod3 : nat := add_mod3 5 7.
 
+End SetoidRw.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "setoid_rw"
-  mod3 classify_mod3 add_mod3
-  test_mod3_0 test_mod3_5 test_mod3_9
-  test_classify_6 test_classify_7 test_add_mod3.
+Crane Extraction "setoid_rw" SetoidRw.

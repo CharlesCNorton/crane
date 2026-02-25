@@ -37,7 +37,7 @@ unsigned int div(const unsigned int x, const unsigned int y) {
   }
 }
 
-unsigned int Outer::Inner::area(const std::shared_ptr<shape> &s) {
+unsigned int NestedMod::Outer::Inner::area(const std::shared_ptr<shape> &s) {
   return std::visit(
       Overloaded{[](const typename shape::Circle _args) -> unsigned int {
                    unsigned int r = _args._a0;
@@ -55,8 +55,9 @@ unsigned int Outer::Inner::area(const std::shared_ptr<shape> &s) {
       s->v());
 }
 
-unsigned int Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
-                                     const Outer::color c) {
+unsigned int
+NestedMod::Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
+                                   const color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {
@@ -72,7 +73,7 @@ unsigned int Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
   }();
 }
 
-unsigned int Outer::color_code(const Outer::color c) {
+unsigned int NestedMod::Outer::color_code(const color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {

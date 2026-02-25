@@ -6,6 +6,8 @@
 
 From Stdlib Require Import PArray PrimInt63 Nat Bool.
 
+Module PrimArray.
+
 Definition arr3 : array nat :=
   (make 3 0).[0 <- 1].[1 <- 2].[2 <- 3].
 
@@ -20,9 +22,9 @@ Definition test_arr3_first : nat := get_first arr3.
 Definition test_arr3_len : int := arr_length arr3.
 Definition test_set : nat := get_first (set_elem arr3 0 42).
 
+End PrimArray.
+
 (* Crane Extraction crashes with Translation.TODO on all PrimArray ops *)
 (* Require Crane.Extraction. *)
 (* From Crane Require Mapping.Std Mapping.NatIntStd. *)
-(* Crane Extraction "prim_array" *)
-(*   arr3 get_first set_elem arr_length *)
-(*   test_arr3_first test_arr3_len test_set. *)
+(* Crane Extraction "prim_array" PrimArray. *)

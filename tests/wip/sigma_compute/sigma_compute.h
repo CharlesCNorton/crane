@@ -121,25 +121,32 @@ struct SigT {
   };
 };
 
-std::shared_ptr<SigT::sigT<unsigned int, dummy_prop>>
-nat_with_double(const unsigned int n);
+struct SigmaCompute {
+  static std::shared_ptr<SigT::sigT<unsigned int, dummy_prop>>
+  nat_with_double(const unsigned int n);
 
-std::shared_ptr<Sig0::sig0<unsigned int>> positive_succ(const unsigned int n);
+  static std::shared_ptr<Sig0::sig0<unsigned int>>
+  positive_succ(const unsigned int n);
 
-unsigned int get_positive(const unsigned int);
+  static unsigned int get_positive(const unsigned int);
 
-std::shared_ptr<Sig0::sig0<unsigned int>> double_positive(const unsigned int n);
+  static std::shared_ptr<Sig0::sig0<unsigned int>>
+  double_positive(const unsigned int n);
 
-unsigned int use_nat_double(const unsigned int n);
+  static unsigned int use_nat_double(const unsigned int n);
 
-std::shared_ptr<List::list<unsigned int>> positives_up_to(const unsigned int k);
+  static std::shared_ptr<List::list<unsigned int>>
+  positives_up_to(const unsigned int k);
 
-const unsigned int test_double_5 =
-    use_nat_double((((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_double_5 =
+      use_nat_double((((((0 + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_positive_3 = get_positive((((0 + 1) + 1) + 1));
+  static inline const unsigned int test_positive_3 =
+      get_positive((((0 + 1) + 1) + 1));
 
-const unsigned int test_double_pos = double_positive((((0 + 1) + 1) + 1));
+  static inline const unsigned int test_double_pos =
+      double_positive((((0 + 1) + 1) + 1));
 
-const std::shared_ptr<List::list<unsigned int>> test_positives =
-    positives_up_to((((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const std::shared_ptr<List::list<unsigned int>> test_positives =
+      positives_up_to((((((0 + 1) + 1) + 1) + 1) + 1));
+};

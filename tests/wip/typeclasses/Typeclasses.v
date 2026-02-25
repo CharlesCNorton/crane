@@ -6,6 +6,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module Typeclasses.
+
 (* === Basic typeclass === *)
 
 Class Numeric (A : Type) := {
@@ -97,11 +99,8 @@ Definition test_max         : nat := max_of 8 3.
 Definition test_describe_eq : nat := describe 5 5.
 Definition test_describe_ne : nat := describe 3 7.
 
+End Typeclasses.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "typeclasses"
-  to_nat test_nat test_bool_true test_bool_false
-  numeric_double test_double
-  eqb leb sort_pair min_of max_of
-  test_sort_pair test_min test_max
-  describe test_describe_eq test_describe_ne.
+Crane Extraction "typeclasses" Typeclasses.

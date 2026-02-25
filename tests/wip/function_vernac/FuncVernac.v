@@ -6,6 +6,8 @@ From Stdlib Require Import Arith List Lia.
 From Stdlib Require Import Recdef.
 Import ListNotations.
 
+Module FuncVernac.
+
 Function div2 (n : nat) {measure id} : nat :=
   match n with
   | 0 => 0
@@ -28,6 +30,8 @@ Defined.
 Definition test_div2 : nat := div2 10.
 Definition test_sum : nat := list_sum [1; 2; 3; 4; 5].
 
+End FuncVernac.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "func_vernac" div2 list_sum test_div2 test_sum.
+Crane Extraction "func_vernac" FuncVernac.

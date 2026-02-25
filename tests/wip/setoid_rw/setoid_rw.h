@@ -18,25 +18,28 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-unsigned int mod3(const unsigned int n);
+struct SetoidRw {
+  static unsigned int mod3(const unsigned int n);
 
-unsigned int classify_mod3(const unsigned int n);
+  static unsigned int classify_mod3(const unsigned int n);
 
-unsigned int add_mod3(const unsigned int x, const unsigned int y);
+  static unsigned int add_mod3(const unsigned int x, const unsigned int y);
 
-const unsigned int test_mod3_0 = mod3(0);
+  static inline const unsigned int test_mod3_0 = mod3(0);
 
-const unsigned int test_mod3_5 = mod3((((((0 + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_mod3_5 =
+      mod3((((((0 + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_mod3_9 =
-    mod3((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_mod3_9 =
+      mod3((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_classify_6 =
-    classify_mod3(((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_classify_6 =
+      classify_mod3(((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_classify_7 =
-    classify_mod3((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_classify_7 =
+      classify_mod3((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-const unsigned int test_add_mod3 =
-    add_mod3((((((0 + 1) + 1) + 1) + 1) + 1),
-             (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_add_mod3 =
+      add_mod3((((((0 + 1) + 1) + 1) + 1) + 1),
+               (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+};

@@ -5,6 +5,8 @@
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
+Module ClosuresInData.
+
 (* List of functions *)
 Definition fn_list : list (nat -> nat) :=
   [S; fun x => x + x; fun x => x * x].
@@ -48,10 +50,8 @@ Definition test_compose : nat := compose_all pipeline 3.
 Definition test_maybe_some : nat := maybe_apply (Some S) 41.
 Definition test_maybe_none : nat := maybe_apply None 42.
 
+End ClosuresInData.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "closures_in_data"
-  apply_all apply_forward apply_backward compose_all maybe_apply
-  fn_list double_transform pipeline
-  test_apply_all test_forward test_backward
-  test_compose test_maybe_some test_maybe_none.
+Crane Extraction "closures_in_data" ClosuresInData.

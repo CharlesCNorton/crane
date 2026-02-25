@@ -25,29 +25,30 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
   // Test 1: gcd(12, 8) = 4
   {
-    ASSERT(gcd(std::make_pair(12u, 8u)) == 4);
+    ASSERT(Equations::gcd(std::make_pair(12u, 8u)) == 4);
     std::cout << "Test 1 (gcd 12 8): PASSED" << std::endl;
   }
 
   // Test 2: gcd(7, 3) = 1
   {
-    ASSERT(gcd(std::make_pair(7u, 3u)) == 1);
+    ASSERT(Equations::gcd(std::make_pair(7u, 3u)) == 1);
     std::cout << "Test 2 (gcd 7 3): PASSED" << std::endl;
   }
 
   // Test 3: collatz_steps(6) = 8
   {
-    ASSERT(collatz_steps(6) == 8);
+    ASSERT(Equations::collatz_steps(6) == 8);
     std::cout << "Test 3 (collatz 6): PASSED" << std::endl;
   }
 
   // Test 4: precomputed constants
   {
-    ASSERT(test_gcd == 4);
-    ASSERT(test_collatz == 8);
+    ASSERT(Equations::test_gcd == 4);
+    ASSERT(Equations::test_collatz == 8);
     std::cout << "Test 4 (constants): PASSED" << std::endl;
   }
 

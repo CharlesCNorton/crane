@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool List.
 Import ListNotations.
 
+Module DepElim.
+
 (* === Fin: bounded natural numbers === *)
 
 Inductive fin : nat -> Type :=
@@ -72,11 +74,8 @@ Definition test_vec_map : list nat := vec_to_list (vec_map (fun n => n + 1) my_v
 
 Definition test_present : nat := get_present (present 42).
 
+End DepElim.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "dep_elim"
-  fin_to_nat
-  vec_to_list vec_map vec_head vec_tail
-  test_fin0 test_fin2
-  my_vec test_vec_list test_vec_head test_vec_tail_list test_vec_map
-  get_present test_present.
+Crane Extraction "dep_elim" DepElim.

@@ -25,16 +25,17 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: monoid fold add
     {
-        ASSERT(test_fold_add == 10);  // 1 + 2 + 3 + 4
+        ASSERT(DepRecord::test_fold_add == 10);  // 1 + 2 + 3 + 4
         std::cout << "Test 1 (fold_add): PASSED" << std::endl;
     }
 
     // Test 2: monoid fold mul
     {
-        ASSERT(test_fold_mul == 24);  // 2 * 3 * 4
+        ASSERT(DepRecord::test_fold_mul == 24);  // 2 * 3 * 4
         std::cout << "Test 2 (fold_mul): PASSED" << std::endl;
     }
 

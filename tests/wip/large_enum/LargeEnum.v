@@ -5,6 +5,8 @@
 From Stdlib Require Import Nat Bool String List.
 Import ListNotations.
 
+Module LargeEnum.
+
 (* === 12-constructor color enum === *)
 
 Inductive color : Type :=
@@ -85,12 +87,8 @@ Definition test_tok_eof : nat := tok_to_nat TEOF.
 Definition test_is_op_plus : bool := is_operator TPlus.
 Definition test_is_op_num : bool := is_operator (TNum 0).
 
+End LargeEnum.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "large_enum"
-  color_to_nat is_warm is_neutral
-  test_red test_pink test_warm_red test_warm_blue
-  test_neutral_black test_neutral_red
-  tok_to_nat is_operator
-  test_tok_num test_tok_plus test_tok_ident test_tok_eof
-  test_is_op_plus test_is_op_num.
+Crane Extraction "large_enum" LargeEnum.

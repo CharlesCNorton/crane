@@ -11,7 +11,7 @@
 #include <utility>
 #include <variant>
 
-int i_abs(const int x) {
+int Int63Arith::i_abs(const int x) {
   if (x < 0) {
     return 0 - x;
   } else {

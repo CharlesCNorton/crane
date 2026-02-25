@@ -18,19 +18,19 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Expr {
+struct WhereClause {
   struct expr {
   public:
     struct Num {
       unsigned int _a0;
     };
     struct Plus {
-      std::shared_ptr<Expr::expr> _a0;
-      std::shared_ptr<Expr::expr> _a1;
+      std::shared_ptr<expr> _a0;
+      std::shared_ptr<expr> _a1;
     };
     struct Times {
-      std::shared_ptr<Expr::expr> _a0;
-      std::shared_ptr<Expr::expr> _a1;
+      std::shared_ptr<expr> _a0;
+      std::shared_ptr<expr> _a1;
     };
     using variant_t = std::variant<Num, Plus, Times>;
 
@@ -43,92 +43,98 @@ struct Expr {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<Expr::expr> Num_(unsigned int a0) {
-        return std::shared_ptr<Expr::expr>(new Expr::expr(Num{a0}));
+      static std::shared_ptr<expr> Num_(unsigned int a0) {
+        return std::shared_ptr<expr>(new expr(Num{a0}));
       }
-      static std::shared_ptr<Expr::expr>
-      Plus_(const std::shared_ptr<Expr::expr> &a0,
-            const std::shared_ptr<Expr::expr> &a1) {
-        return std::shared_ptr<Expr::expr>(new Expr::expr(Plus{a0, a1}));
+      static std::shared_ptr<expr> Plus_(const std::shared_ptr<expr> &a0,
+                                         const std::shared_ptr<expr> &a1) {
+        return std::shared_ptr<expr>(new expr(Plus{a0, a1}));
       }
-      static std::shared_ptr<Expr::expr>
-      Times_(const std::shared_ptr<Expr::expr> &a0,
-             const std::shared_ptr<Expr::expr> &a1) {
-        return std::shared_ptr<Expr::expr>(new Expr::expr(Times{a0, a1}));
+      static std::shared_ptr<expr> Times_(const std::shared_ptr<expr> &a0,
+                                          const std::shared_ptr<expr> &a1) {
+        return std::shared_ptr<expr>(new expr(Times{a0, a1}));
       }
-      static std::unique_ptr<Expr::expr> Num_uptr(unsigned int a0) {
-        return std::unique_ptr<Expr::expr>(new Expr::expr(Num{a0}));
+      static std::unique_ptr<expr> Num_uptr(unsigned int a0) {
+        return std::unique_ptr<expr>(new expr(Num{a0}));
       }
-      static std::unique_ptr<Expr::expr>
-      Plus_uptr(const std::shared_ptr<Expr::expr> &a0,
-                const std::shared_ptr<Expr::expr> &a1) {
-        return std::unique_ptr<Expr::expr>(new Expr::expr(Plus{a0, a1}));
+      static std::unique_ptr<expr> Plus_uptr(const std::shared_ptr<expr> &a0,
+                                             const std::shared_ptr<expr> &a1) {
+        return std::unique_ptr<expr>(new expr(Plus{a0, a1}));
       }
-      static std::unique_ptr<Expr::expr>
-      Times_uptr(const std::shared_ptr<Expr::expr> &a0,
-                 const std::shared_ptr<Expr::expr> &a1) {
-        return std::unique_ptr<Expr::expr>(new Expr::expr(Times{a0, a1}));
+      static std::unique_ptr<expr> Times_uptr(const std::shared_ptr<expr> &a0,
+                                              const std::shared_ptr<expr> &a1) {
+        return std::unique_ptr<expr>(new expr(Times{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int eval() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Expr::expr::Num _args) -> unsigned int {
-                unsigned int n = _args._a0;
-                return std::move(n);
-              },
-              [](const typename Expr::expr::Plus _args) -> unsigned int {
-                std::shared_ptr<Expr::expr> a = _args._a0;
-                std::shared_ptr<Expr::expr> b = _args._a1;
-                return (std::move(a)->eval() + std::move(b)->eval());
-              },
-              [](const typename Expr::expr::Times _args) -> unsigned int {
-                std::shared_ptr<Expr::expr> a = _args._a0;
-                std::shared_ptr<Expr::expr> b = _args._a1;
-                return (std::move(a)->eval() * std::move(b)->eval());
-              }},
-          this->v());
-    }
-    unsigned int expr_size() const {
-      return std::visit(
-          Overloaded{
-              [](const typename Expr::expr::Num _args) -> unsigned int {
-                return (0 + 1);
-              },
-              [](const typename Expr::expr::Plus _args) -> unsigned int {
-                std::shared_ptr<Expr::expr> a = _args._a0;
-                std::shared_ptr<Expr::expr> b = _args._a1;
-                return (((0 + 1) + std::move(a)->expr_size()) +
-                        std::move(b)->expr_size());
-              },
-              [](const typename Expr::expr::Times _args) -> unsigned int {
-                std::shared_ptr<Expr::expr> a = _args._a0;
-                std::shared_ptr<Expr::expr> b = _args._a1;
-                return (((0 + 1) + std::move(a)->expr_size()) +
-                        std::move(b)->expr_size());
-              }},
-          this->v());
-    }
   };
-};
 
-struct BExpr {
+  template <typename T1, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, std::shared_ptr<expr>, T1, std::shared_ptr<expr>, T1> F1,
+            MapsTo<T1, std::shared_ptr<expr>, T1, std::shared_ptr<expr>, T1> F2>
+  static T1 Expr_rect(F0 &&f, F1 &&f0, F2 &&f1,
+                      const std::shared_ptr<expr> &e) {
+    return std::visit(Overloaded{[&](const typename expr::Num _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename expr::Plus _args) -> T1 {
+                                   std::shared_ptr<expr> e0 = _args._a0;
+                                   std::shared_ptr<expr> e1 = _args._a1;
+                                   return f0(e0, Expr_rect<T1>(f, f0, f1, e0),
+                                             e1, Expr_rect<T1>(f, f0, f1, e1));
+                                 },
+                                 [&](const typename expr::Times _args) -> T1 {
+                                   std::shared_ptr<expr> e0 = _args._a0;
+                                   std::shared_ptr<expr> e1 = _args._a1;
+                                   return f1(e0, Expr_rect<T1>(f, f0, f1, e0),
+                                             e1, Expr_rect<T1>(f, f0, f1, e1));
+                                 }},
+                      e->v());
+  }
+
+  template <typename T1, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, std::shared_ptr<expr>, T1, std::shared_ptr<expr>, T1> F1,
+            MapsTo<T1, std::shared_ptr<expr>, T1, std::shared_ptr<expr>, T1> F2>
+  static T1 Expr_rec(F0 &&f, F1 &&f0, F2 &&f1, const std::shared_ptr<expr> &e) {
+    return std::visit(Overloaded{[&](const typename expr::Num _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename expr::Plus _args) -> T1 {
+                                   std::shared_ptr<expr> e0 = _args._a0;
+                                   std::shared_ptr<expr> e1 = _args._a1;
+                                   return f0(e0, Expr_rec<T1>(f, f0, f1, e0),
+                                             e1, Expr_rec<T1>(f, f0, f1, e1));
+                                 },
+                                 [&](const typename expr::Times _args) -> T1 {
+                                   std::shared_ptr<expr> e0 = _args._a0;
+                                   std::shared_ptr<expr> e1 = _args._a1;
+                                   return f1(e0, Expr_rec<T1>(f, f0, f1, e0),
+                                             e1, Expr_rec<T1>(f, f0, f1, e1));
+                                 }},
+                      e->v());
+  }
+
+  static unsigned int eval(const std::shared_ptr<expr> &e);
+
+  static unsigned int expr_size(const std::shared_ptr<expr> &e);
+
   struct bExpr {
   public:
     struct BTrue {};
     struct BFalse {};
     struct BAnd {
-      std::shared_ptr<BExpr::bExpr> _a0;
-      std::shared_ptr<BExpr::bExpr> _a1;
+      std::shared_ptr<bExpr> _a0;
+      std::shared_ptr<bExpr> _a1;
     };
     struct BOr {
-      std::shared_ptr<BExpr::bExpr> _a0;
-      std::shared_ptr<BExpr::bExpr> _a1;
+      std::shared_ptr<bExpr> _a0;
+      std::shared_ptr<bExpr> _a1;
     };
     struct BNot {
-      std::shared_ptr<BExpr::bExpr> _a0;
+      std::shared_ptr<bExpr> _a0;
     };
     using variant_t = std::variant<BTrue, BFalse, BAnd, BOr, BNot>;
 
@@ -143,90 +149,120 @@ struct BExpr {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<BExpr::bExpr> BTrue_() {
-        return std::shared_ptr<BExpr::bExpr>(new BExpr::bExpr(BTrue{}));
+      static std::shared_ptr<bExpr> BTrue_() {
+        return std::shared_ptr<bExpr>(new bExpr(BTrue{}));
       }
-      static std::shared_ptr<BExpr::bExpr> BFalse_() {
-        return std::shared_ptr<BExpr::bExpr>(new BExpr::bExpr(BFalse{}));
+      static std::shared_ptr<bExpr> BFalse_() {
+        return std::shared_ptr<bExpr>(new bExpr(BFalse{}));
       }
-      static std::shared_ptr<BExpr::bExpr>
-      BAnd_(const std::shared_ptr<BExpr::bExpr> &a0,
-            const std::shared_ptr<BExpr::bExpr> &a1) {
-        return std::shared_ptr<BExpr::bExpr>(new BExpr::bExpr(BAnd{a0, a1}));
+      static std::shared_ptr<bExpr> BAnd_(const std::shared_ptr<bExpr> &a0,
+                                          const std::shared_ptr<bExpr> &a1) {
+        return std::shared_ptr<bExpr>(new bExpr(BAnd{a0, a1}));
       }
-      static std::shared_ptr<BExpr::bExpr>
-      BOr_(const std::shared_ptr<BExpr::bExpr> &a0,
-           const std::shared_ptr<BExpr::bExpr> &a1) {
-        return std::shared_ptr<BExpr::bExpr>(new BExpr::bExpr(BOr{a0, a1}));
+      static std::shared_ptr<bExpr> BOr_(const std::shared_ptr<bExpr> &a0,
+                                         const std::shared_ptr<bExpr> &a1) {
+        return std::shared_ptr<bExpr>(new bExpr(BOr{a0, a1}));
       }
-      static std::shared_ptr<BExpr::bExpr>
-      BNot_(const std::shared_ptr<BExpr::bExpr> &a0) {
-        return std::shared_ptr<BExpr::bExpr>(new BExpr::bExpr(BNot{a0}));
+      static std::shared_ptr<bExpr> BNot_(const std::shared_ptr<bExpr> &a0) {
+        return std::shared_ptr<bExpr>(new bExpr(BNot{a0}));
       }
-      static std::unique_ptr<BExpr::bExpr> BTrue_uptr() {
-        return std::unique_ptr<BExpr::bExpr>(new BExpr::bExpr(BTrue{}));
+      static std::unique_ptr<bExpr> BTrue_uptr() {
+        return std::unique_ptr<bExpr>(new bExpr(BTrue{}));
       }
-      static std::unique_ptr<BExpr::bExpr> BFalse_uptr() {
-        return std::unique_ptr<BExpr::bExpr>(new BExpr::bExpr(BFalse{}));
+      static std::unique_ptr<bExpr> BFalse_uptr() {
+        return std::unique_ptr<bExpr>(new bExpr(BFalse{}));
       }
-      static std::unique_ptr<BExpr::bExpr>
-      BAnd_uptr(const std::shared_ptr<BExpr::bExpr> &a0,
-                const std::shared_ptr<BExpr::bExpr> &a1) {
-        return std::unique_ptr<BExpr::bExpr>(new BExpr::bExpr(BAnd{a0, a1}));
+      static std::unique_ptr<bExpr>
+      BAnd_uptr(const std::shared_ptr<bExpr> &a0,
+                const std::shared_ptr<bExpr> &a1) {
+        return std::unique_ptr<bExpr>(new bExpr(BAnd{a0, a1}));
       }
-      static std::unique_ptr<BExpr::bExpr>
-      BOr_uptr(const std::shared_ptr<BExpr::bExpr> &a0,
-               const std::shared_ptr<BExpr::bExpr> &a1) {
-        return std::unique_ptr<BExpr::bExpr>(new BExpr::bExpr(BOr{a0, a1}));
+      static std::unique_ptr<bExpr> BOr_uptr(const std::shared_ptr<bExpr> &a0,
+                                             const std::shared_ptr<bExpr> &a1) {
+        return std::unique_ptr<bExpr>(new bExpr(BOr{a0, a1}));
       }
-      static std::unique_ptr<BExpr::bExpr>
-      BNot_uptr(const std::shared_ptr<BExpr::bExpr> &a0) {
-        return std::unique_ptr<BExpr::bExpr>(new BExpr::bExpr(BNot{a0}));
+      static std::unique_ptr<bExpr>
+      BNot_uptr(const std::shared_ptr<bExpr> &a0) {
+        return std::unique_ptr<bExpr>(new bExpr(BNot{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    bool beval() const {
-      return std::visit(
-          Overloaded{[](const typename BExpr::bExpr::BTrue _args) -> bool {
-                       return true;
-                     },
-                     [](const typename BExpr::bExpr::BFalse _args) -> bool {
-                       return false;
-                     },
-                     [](const typename BExpr::bExpr::BAnd _args) -> bool {
-                       std::shared_ptr<BExpr::bExpr> a = _args._a0;
-                       std::shared_ptr<BExpr::bExpr> b = _args._a1;
-                       return (std::move(a)->beval() && std::move(b)->beval());
-                     },
-                     [](const typename BExpr::bExpr::BOr _args) -> bool {
-                       std::shared_ptr<BExpr::bExpr> a = _args._a0;
-                       std::shared_ptr<BExpr::bExpr> b = _args._a1;
-                       return (std::move(a)->beval() || std::move(b)->beval());
-                     },
-                     [](const typename BExpr::bExpr::BNot _args) -> bool {
-                       std::shared_ptr<BExpr::bExpr> a = _args._a0;
-                       return !(std::move(a)->beval());
-                     }},
-          this->v());
-    }
   };
-};
 
-struct AExpr {
+  template <
+      typename T1,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1, std::shared_ptr<bExpr>, T1> F2,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1, std::shared_ptr<bExpr>, T1> F3,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1> F4>
+  static T1 BExpr_rect(const T1 f, const T1 f0, F2 &&f1, F3 &&f2, F4 &&f3,
+                       const std::shared_ptr<bExpr> &b) {
+    return std::visit(
+        Overloaded{[&](const typename bExpr::BTrue _args) -> T1 { return f; },
+                   [&](const typename bExpr::BFalse _args) -> T1 { return f0; },
+                   [&](const typename bExpr::BAnd _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     std::shared_ptr<bExpr> b1 = _args._a1;
+                     return f1(b0, BExpr_rect<T1>(f, f0, f1, f2, f3, b0), b1,
+                               BExpr_rect<T1>(f, f0, f1, f2, f3, b1));
+                   },
+                   [&](const typename bExpr::BOr _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     std::shared_ptr<bExpr> b1 = _args._a1;
+                     return f2(b0, BExpr_rect<T1>(f, f0, f1, f2, f3, b0), b1,
+                               BExpr_rect<T1>(f, f0, f1, f2, f3, b1));
+                   },
+                   [&](const typename bExpr::BNot _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     return f3(b0, BExpr_rect<T1>(f, f0, f1, f2, f3, b0));
+                   }},
+        b->v());
+  }
+
+  template <
+      typename T1,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1, std::shared_ptr<bExpr>, T1> F2,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1, std::shared_ptr<bExpr>, T1> F3,
+      MapsTo<T1, std::shared_ptr<bExpr>, T1> F4>
+  static T1 BExpr_rec(const T1 f, const T1 f0, F2 &&f1, F3 &&f2, F4 &&f3,
+                      const std::shared_ptr<bExpr> &b) {
+    return std::visit(
+        Overloaded{[&](const typename bExpr::BTrue _args) -> T1 { return f; },
+                   [&](const typename bExpr::BFalse _args) -> T1 { return f0; },
+                   [&](const typename bExpr::BAnd _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     std::shared_ptr<bExpr> b1 = _args._a1;
+                     return f1(b0, BExpr_rec<T1>(f, f0, f1, f2, f3, b0), b1,
+                               BExpr_rec<T1>(f, f0, f1, f2, f3, b1));
+                   },
+                   [&](const typename bExpr::BOr _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     std::shared_ptr<bExpr> b1 = _args._a1;
+                     return f2(b0, BExpr_rec<T1>(f, f0, f1, f2, f3, b0), b1,
+                               BExpr_rec<T1>(f, f0, f1, f2, f3, b1));
+                   },
+                   [&](const typename bExpr::BNot _args) -> T1 {
+                     std::shared_ptr<bExpr> b0 = _args._a0;
+                     return f3(b0, BExpr_rec<T1>(f, f0, f1, f2, f3, b0));
+                   }},
+        b->v());
+  }
+
+  static bool beval(const std::shared_ptr<bExpr> &e);
+
   struct aExpr {
   public:
     struct ANum {
       unsigned int _a0;
     };
     struct APlus {
-      std::shared_ptr<AExpr::aExpr> _a0;
-      std::shared_ptr<AExpr::aExpr> _a1;
+      std::shared_ptr<aExpr> _a0;
+      std::shared_ptr<aExpr> _a1;
     };
     struct AIf {
-      std::shared_ptr<BExpr::bExpr> _a0;
-      std::shared_ptr<AExpr::aExpr> _a1;
-      std::shared_ptr<AExpr::aExpr> _a2;
+      std::shared_ptr<bExpr> _a0;
+      std::shared_ptr<aExpr> _a1;
+      std::shared_ptr<aExpr> _a2;
     };
     using variant_t = std::variant<ANum, APlus, AIf>;
 
@@ -239,105 +275,123 @@ struct AExpr {
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<AExpr::aExpr> ANum_(unsigned int a0) {
-        return std::shared_ptr<AExpr::aExpr>(new AExpr::aExpr(ANum{a0}));
+      static std::shared_ptr<aExpr> ANum_(unsigned int a0) {
+        return std::shared_ptr<aExpr>(new aExpr(ANum{a0}));
       }
-      static std::shared_ptr<AExpr::aExpr>
-      APlus_(const std::shared_ptr<AExpr::aExpr> &a0,
-             const std::shared_ptr<AExpr::aExpr> &a1) {
-        return std::shared_ptr<AExpr::aExpr>(new AExpr::aExpr(APlus{a0, a1}));
+      static std::shared_ptr<aExpr> APlus_(const std::shared_ptr<aExpr> &a0,
+                                           const std::shared_ptr<aExpr> &a1) {
+        return std::shared_ptr<aExpr>(new aExpr(APlus{a0, a1}));
       }
-      static std::shared_ptr<AExpr::aExpr>
-      AIf_(const std::shared_ptr<BExpr::bExpr> &a0,
-           const std::shared_ptr<AExpr::aExpr> &a1,
-           const std::shared_ptr<AExpr::aExpr> &a2) {
-        return std::shared_ptr<AExpr::aExpr>(new AExpr::aExpr(AIf{a0, a1, a2}));
+      static std::shared_ptr<aExpr> AIf_(const std::shared_ptr<bExpr> &a0,
+                                         const std::shared_ptr<aExpr> &a1,
+                                         const std::shared_ptr<aExpr> &a2) {
+        return std::shared_ptr<aExpr>(new aExpr(AIf{a0, a1, a2}));
       }
-      static std::unique_ptr<AExpr::aExpr> ANum_uptr(unsigned int a0) {
-        return std::unique_ptr<AExpr::aExpr>(new AExpr::aExpr(ANum{a0}));
+      static std::unique_ptr<aExpr> ANum_uptr(unsigned int a0) {
+        return std::unique_ptr<aExpr>(new aExpr(ANum{a0}));
       }
-      static std::unique_ptr<AExpr::aExpr>
-      APlus_uptr(const std::shared_ptr<AExpr::aExpr> &a0,
-                 const std::shared_ptr<AExpr::aExpr> &a1) {
-        return std::unique_ptr<AExpr::aExpr>(new AExpr::aExpr(APlus{a0, a1}));
+      static std::unique_ptr<aExpr>
+      APlus_uptr(const std::shared_ptr<aExpr> &a0,
+                 const std::shared_ptr<aExpr> &a1) {
+        return std::unique_ptr<aExpr>(new aExpr(APlus{a0, a1}));
       }
-      static std::unique_ptr<AExpr::aExpr>
-      AIf_uptr(const std::shared_ptr<BExpr::bExpr> &a0,
-               const std::shared_ptr<AExpr::aExpr> &a1,
-               const std::shared_ptr<AExpr::aExpr> &a2) {
-        return std::unique_ptr<AExpr::aExpr>(new AExpr::aExpr(AIf{a0, a1, a2}));
+      static std::unique_ptr<aExpr> AIf_uptr(const std::shared_ptr<bExpr> &a0,
+                                             const std::shared_ptr<aExpr> &a1,
+                                             const std::shared_ptr<aExpr> &a2) {
+        return std::unique_ptr<aExpr>(new aExpr(AIf{a0, a1, a2}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
-    unsigned int aeval() const {
-      return std::visit(
-          Overloaded{
-              [](const typename AExpr::aExpr::ANum _args) -> unsigned int {
-                unsigned int n = _args._a0;
-                return std::move(n);
-              },
-              [](const typename AExpr::aExpr::APlus _args) -> unsigned int {
-                std::shared_ptr<AExpr::aExpr> a = _args._a0;
-                std::shared_ptr<AExpr::aExpr> b = _args._a1;
-                return (std::move(a)->aeval() + std::move(b)->aeval());
-              },
-              [](const typename AExpr::aExpr::AIf _args) -> unsigned int {
-                std::shared_ptr<BExpr::bExpr> c = _args._a0;
-                std::shared_ptr<AExpr::aExpr> t = _args._a1;
-                std::shared_ptr<AExpr::aExpr> f = _args._a2;
-                if (c->beval()) {
-                  return std::move(t)->aeval();
-                } else {
-                  return std::move(f)->aeval();
-                }
-              }},
-          this->v());
-    }
   };
-};
 
-const unsigned int test_eval_plus =
-    Expr::expr::ctor::Plus_(Expr::expr::ctor::Num_((((0 + 1) + 1) + 1)),
-                            Expr::expr::ctor::Num_(((((0 + 1) + 1) + 1) + 1)))
-        ->eval();
+  template <
+      typename T1, MapsTo<T1, unsigned int> F0,
+      MapsTo<T1, std::shared_ptr<aExpr>, T1, std::shared_ptr<aExpr>, T1> F1,
+      MapsTo<T1, std::shared_ptr<bExpr>, std::shared_ptr<aExpr>, T1,
+             std::shared_ptr<aExpr>, T1>
+          F2>
+  static T1 AExpr_rect(F0 &&f, F1 &&f0, F2 &&f1,
+                       const std::shared_ptr<aExpr> &a) {
+    return std::visit(Overloaded{[&](const typename aExpr::ANum _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename aExpr::APlus _args) -> T1 {
+                                   std::shared_ptr<aExpr> a0 = _args._a0;
+                                   std::shared_ptr<aExpr> a1 = _args._a1;
+                                   return f0(a0, AExpr_rect<T1>(f, f0, f1, a0),
+                                             a1, AExpr_rect<T1>(f, f0, f1, a1));
+                                 },
+                                 [&](const typename aExpr::AIf _args) -> T1 {
+                                   std::shared_ptr<bExpr> b = _args._a0;
+                                   std::shared_ptr<aExpr> a0 = _args._a1;
+                                   std::shared_ptr<aExpr> a1 = _args._a2;
+                                   return f1(std::move(b), a0,
+                                             AExpr_rect<T1>(f, f0, f1, a0), a1,
+                                             AExpr_rect<T1>(f, f0, f1, a1));
+                                 }},
+                      a->v());
+  }
 
-const unsigned int test_eval_times =
-    Expr::expr::ctor::Times_(
-        Expr::expr::ctor::Num_((((((0 + 1) + 1) + 1) + 1) + 1)),
-        Expr::expr::ctor::Num_(((((((0 + 1) + 1) + 1) + 1) + 1) + 1)))
-        ->eval();
+  template <
+      typename T1, MapsTo<T1, unsigned int> F0,
+      MapsTo<T1, std::shared_ptr<aExpr>, T1, std::shared_ptr<aExpr>, T1> F1,
+      MapsTo<T1, std::shared_ptr<bExpr>, std::shared_ptr<aExpr>, T1,
+             std::shared_ptr<aExpr>, T1>
+          F2>
+  static T1 AExpr_rec(F0 &&f, F1 &&f0, F2 &&f1,
+                      const std::shared_ptr<aExpr> &a) {
+    return std::visit(Overloaded{[&](const typename aExpr::ANum _args) -> T1 {
+                                   unsigned int n = _args._a0;
+                                   return f(std::move(n));
+                                 },
+                                 [&](const typename aExpr::APlus _args) -> T1 {
+                                   std::shared_ptr<aExpr> a0 = _args._a0;
+                                   std::shared_ptr<aExpr> a1 = _args._a1;
+                                   return f0(a0, AExpr_rec<T1>(f, f0, f1, a0),
+                                             a1, AExpr_rec<T1>(f, f0, f1, a1));
+                                 },
+                                 [&](const typename aExpr::AIf _args) -> T1 {
+                                   std::shared_ptr<bExpr> b = _args._a0;
+                                   std::shared_ptr<aExpr> a0 = _args._a1;
+                                   std::shared_ptr<aExpr> a1 = _args._a2;
+                                   return f1(std::move(b), a0,
+                                             AExpr_rec<T1>(f, f0, f1, a0), a1,
+                                             AExpr_rec<T1>(f, f0, f1, a1));
+                                 }},
+                      a->v());
+  }
 
-const unsigned int test_eval_nested =
-    Expr::expr::ctor::Plus_(
-        Expr::expr::ctor::Times_(Expr::expr::ctor::Num_(((0 + 1) + 1)),
-                                 Expr::expr::ctor::Num_((((0 + 1) + 1) + 1))),
-        Expr::expr::ctor::Num_((0 + 1)))
-        ->eval();
+  static unsigned int aeval(const std::shared_ptr<aExpr> &e);
 
-const unsigned int test_size =
-    Expr::expr::ctor::Plus_(
-        Expr::expr::ctor::Times_(Expr::expr::ctor::Num_(((0 + 1) + 1)),
-                                 Expr::expr::ctor::Num_((((0 + 1) + 1) + 1))),
-        Expr::expr::ctor::Num_((0 + 1)))
-        ->expr_size();
+  static inline const unsigned int test_eval_plus =
+      eval(expr::ctor::Plus_(expr::ctor::Num_((((0 + 1) + 1) + 1)),
+                             expr::ctor::Num_(((((0 + 1) + 1) + 1) + 1))));
 
-const bool test_beval =
-    BExpr::bExpr::ctor::BAnd_(
-        BExpr::bExpr::ctor::BTrue_(),
-        BExpr::bExpr::ctor::BNot_(BExpr::bExpr::ctor::BFalse_()))
-        ->beval();
+  static inline const unsigned int test_eval_times = eval(expr::ctor::Times_(
+      expr::ctor::Num_((((((0 + 1) + 1) + 1) + 1) + 1)),
+      expr::ctor::Num_(((((((0 + 1) + 1) + 1) + 1) + 1) + 1))));
 
-const unsigned int test_aeval =
-    AExpr::aExpr::ctor::AIf_(
-        BExpr::bExpr::ctor::BAnd_(BExpr::bExpr::ctor::BTrue_(),
-                                  BExpr::bExpr::ctor::BTrue_()),
-        AExpr::aExpr::ctor::ANum_(
-            ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)),
-        AExpr::aExpr::ctor::ANum_(
-            ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                       1) +
-                      1) +
+  static inline const unsigned int test_eval_nested = eval(expr::ctor::Plus_(
+      expr::ctor::Times_(expr::ctor::Num_(((0 + 1) + 1)),
+                         expr::ctor::Num_((((0 + 1) + 1) + 1))),
+      expr::ctor::Num_((0 + 1))));
+
+  static inline const unsigned int test_size = expr_size(expr::ctor::Plus_(
+      expr::ctor::Times_(expr::ctor::Num_(((0 + 1) + 1)),
+                         expr::ctor::Num_((((0 + 1) + 1) + 1))),
+      expr::ctor::Num_((0 + 1))));
+
+  static inline const bool test_beval = beval(bExpr::ctor::BAnd_(
+      bExpr::ctor::BTrue_(), bExpr::ctor::BNot_(bExpr::ctor::BFalse_())));
+
+  static inline const unsigned int test_aeval = aeval(aExpr::ctor::AIf_(
+      bExpr::ctor::BAnd_(bExpr::ctor::BTrue_(), bExpr::ctor::BTrue_()),
+      aExpr::ctor::ANum_(
+          ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)),
+      aExpr::ctor::ANum_(
+          ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                      1) +
                     1) +
                    1) +
@@ -346,5 +400,7 @@ const unsigned int test_aeval =
                 1) +
                1) +
               1) +
-             1)))
-        ->aeval();
+             1) +
+            1) +
+           1))));
+};

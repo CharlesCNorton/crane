@@ -37,7 +37,7 @@ unsigned int div(const unsigned int x, const unsigned int y) {
   }
 }
 
-unsigned int guarded_pred(const unsigned int n) {
+unsigned int SPropTest::guarded_pred(const unsigned int n) {
   if (n <= 0) {
     return 0;
   } else {
@@ -46,6 +46,7 @@ unsigned int guarded_pred(const unsigned int n) {
   }
 }
 
-unsigned int safe_div(const unsigned int _x0, const unsigned int _x1) {
-  return div(_x0, _x1);
+unsigned int SPropTest::safe_div(const unsigned int _x0,
+                                 const unsigned int _x1) {
+  return ::div(_x0, _x1);
 }

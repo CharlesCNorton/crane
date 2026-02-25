@@ -11,7 +11,7 @@
 #include <utility>
 #include <variant>
 
-bool nat_eq_dec(const unsigned int n, const unsigned int x) {
+bool CompProof::nat_eq_dec(const unsigned int n, const unsigned int x) {
   if (n <= 0) {
     if (x <= 0) {
       return true;
@@ -34,7 +34,7 @@ bool nat_eq_dec(const unsigned int n, const unsigned int x) {
   }
 }
 
-bool nat_eqb_dec(const unsigned int n, const unsigned int m) {
+bool CompProof::nat_eqb_dec(const unsigned int n, const unsigned int m) {
   if (nat_eq_dec(n, m)) {
     return true;
   } else {
@@ -42,7 +42,7 @@ bool nat_eqb_dec(const unsigned int n, const unsigned int m) {
   }
 }
 
-bool le_dec(const unsigned int n, const unsigned int m) {
+bool CompProof::le_dec(const unsigned int n, const unsigned int m) {
   if (n <= 0) {
     return true;
   } else {
@@ -61,7 +61,7 @@ bool le_dec(const unsigned int n, const unsigned int m) {
   }
 }
 
-bool nat_leb_dec(const unsigned int n, const unsigned int m) {
+bool CompProof::nat_leb_dec(const unsigned int n, const unsigned int m) {
   if (le_dec(n, m)) {
     return true;
   } else {
@@ -69,7 +69,7 @@ bool nat_leb_dec(const unsigned int n, const unsigned int m) {
   }
 }
 
-unsigned int min_dec(const unsigned int n, const unsigned int m) {
+unsigned int CompProof::min_dec(const unsigned int n, const unsigned int m) {
   if (le_dec(n, m)) {
     return std::move(n);
   } else {
@@ -77,7 +77,7 @@ unsigned int min_dec(const unsigned int n, const unsigned int m) {
   }
 }
 
-unsigned int max_dec(const unsigned int n, const unsigned int m) {
+unsigned int CompProof::max_dec(const unsigned int n, const unsigned int m) {
   if (le_dec(n, m)) {
     return std::move(m);
   } else {
@@ -86,8 +86,8 @@ unsigned int max_dec(const unsigned int n, const unsigned int m) {
 }
 
 std::shared_ptr<List::list<unsigned int>>
-insert_dec(const unsigned int x,
-           const std::shared_ptr<List::list<unsigned int>> &l) {
+CompProof::insert_dec(const unsigned int x,
+                      const std::shared_ptr<List::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{[&](const typename List::list<unsigned int>::nil _args)
                      -> std::shared_ptr<List::list<unsigned int>> {
@@ -112,7 +112,7 @@ insert_dec(const unsigned int x,
 }
 
 std::shared_ptr<List::list<unsigned int>>
-isort_dec(const std::shared_ptr<List::list<unsigned int>> &l) {
+CompProof::isort_dec(const std::shared_ptr<List::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{[](const typename List::list<unsigned int>::nil _args)
                      -> std::shared_ptr<List::list<unsigned int>> {

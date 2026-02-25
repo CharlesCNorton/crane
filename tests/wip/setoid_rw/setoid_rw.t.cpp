@@ -24,25 +24,26 @@ void aSsErT(bool condition, const char *message, int line)
 
 #define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: mod3
     {
-        ASSERT(test_mod3_0 == 0);   // 0 mod 3 = 0
-        ASSERT(test_mod3_5 == 2);   // 5 mod 3 = 2
-        ASSERT(test_mod3_9 == 0);   // 9 mod 3 = 0
+        ASSERT(SetoidRw::test_mod3_0 == 0);   // 0 mod 3 = 0
+        ASSERT(SetoidRw::test_mod3_5 == 2);   // 5 mod 3 = 2
+        ASSERT(SetoidRw::test_mod3_9 == 0);   // 9 mod 3 = 0
         std::cout << "Test 1 (mod3): PASSED" << std::endl;
     }
 
     // Test 2: classify_mod3
     {
-        ASSERT(test_classify_6 == 0);  // 6 mod 3 = 0
-        ASSERT(test_classify_7 == 1);  // 7 mod 3 = 1
+        ASSERT(SetoidRw::test_classify_6 == 0);  // 6 mod 3 = 0
+        ASSERT(SetoidRw::test_classify_7 == 1);  // 7 mod 3 = 1
         std::cout << "Test 2 (classify_mod3): PASSED" << std::endl;
     }
 
     // Test 3: add_mod3
     {
-        ASSERT(test_add_mod3 == 0);  // (5+7) mod 3 = 12 mod 3 = 0
+        ASSERT(SetoidRw::test_add_mod3 == 0);  // (5+7) mod 3 = 12 mod 3 = 0
         std::cout << "Test 3 (add_mod3): PASSED" << std::endl;
     }
 

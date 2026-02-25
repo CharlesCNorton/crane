@@ -4,6 +4,8 @@
 
 From Stdlib Require Import Nat Bool.
 
+Module CanonStruct.
+
 Record EqType := mkEqType {
   carrier : Type;
   eqb : carrier -> carrier -> bool
@@ -17,6 +19,8 @@ Definition same {E : EqType} (x y : carrier E) : bool := eqb E x y.
 Definition test_nat : bool := same 3 5.
 Definition test_bool : bool := same true false.
 
+End CanonStruct.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "canon_struct" same test_nat test_bool.
+Crane Extraction "canon_struct" CanonStruct.

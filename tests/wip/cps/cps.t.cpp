@@ -25,34 +25,35 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: factorial 5 = 120
     {
-        ASSERT(test_fact_5 == 120);
+        ASSERT(CPS::test_fact_5 == 120);
         std::cout << "Test 1 (factorial 5): PASSED" << std::endl;
     }
 
     // Test 2: fibonacci 7 = 13
     {
-        ASSERT(test_fib_7 == 13);
+        ASSERT(CPS::test_fib_7 == 13);
         std::cout << "Test 2 (fibonacci 7): PASSED" << std::endl;
     }
 
     // Test 3: tree_sum (Node (Node (Leaf 1) (Leaf 2)) (Leaf 3)) = 6
     {
-        ASSERT(test_tree == 6);
+        ASSERT(CPS::test_tree == 6);
         std::cout << "Test 3 (tree_sum): PASSED" << std::endl;
     }
 
     // Test 4: list_sum [10;20;30] = 60
     {
-        ASSERT(test_list_sum == 60);
+        ASSERT(CPS::test_list_sum == 60);
         std::cout << "Test 4 (list_sum): PASSED" << std::endl;
     }
 
     // Test 5: count_evens [1;2;3;4;5;6] = 3
     {
-        ASSERT(test_evens == 3);
+        ASSERT(CPS::test_evens == 3);
         std::cout << "Test 5 (count_evens): PASSED" << std::endl;
     }
 

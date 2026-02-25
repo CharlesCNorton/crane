@@ -25,11 +25,12 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
+
 int main() {
     // Test 1: fin_to_nat
     {
-        ASSERT(test_fin0 == 0);
-        ASSERT(test_fin2 == 2);
+        ASSERT(DepElim::test_fin0 == 0);
+        ASSERT(DepElim::test_fin2 == 2);
         std::cout << "Test 1 (fin_to_nat): PASSED" << std::endl;
     }
 
@@ -39,24 +40,24 @@ int main() {
         unsigned int expected[] = {10, 20, 30};
         for (int i = 0; i < 3; i++) {
             auto &v = l->v();
-            ASSERT(std::holds_alternative<List::list<unsigned int>::cons>(v));
+            ASSERT(DepElim::std::holds_alternative<List::list<unsigned int>::cons>(v));
             auto &c = std::get<List::list<unsigned int>::cons>(v);
-            ASSERT(c._a0 == expected[i]);
+            ASSERT(DepElim::c._a0 == expected[i]);
             l = c._a1;
         }
-        ASSERT(std::holds_alternative<List::list<unsigned int>::nil>(l->v()));
+        ASSERT(DepElim::std::holds_alternative<List::list<unsigned int>::nil>(l->v()));
         std::cout << "Test 2 (vec_to_list): PASSED" << std::endl;
     }
 
     // Test 3: vec_head
     {
-        ASSERT(test_vec_head == 10);
+        ASSERT(DepElim::test_vec_head == 10);
         std::cout << "Test 3 (vec_head): PASSED" << std::endl;
     }
 
     // Test 4: get_present
     {
-        ASSERT(test_present == 42);
+        ASSERT(DepElim::test_present == 42);
         std::cout << "Test 4 (get_present): PASSED" << std::endl;
     }
 

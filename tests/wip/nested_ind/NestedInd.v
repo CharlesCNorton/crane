@@ -7,6 +7,8 @@
 From Stdlib Require Import List Nat.
 Import ListNotations.
 
+Module NestedInd.
+
 (* === Nested inductive: expr uses list expr in constructors === *)
 
 Inductive expr : Type :=
@@ -127,10 +129,8 @@ Definition test_literals    : list nat := literals test_nested. (* [1;2;3;4] *)
 Definition test_doubled : nat :=
   eval (lit_map (fun n => n * 2) test_nested). (* (2+4)*(6+8) = 6*14 = 84 *)
 
+End NestedInd.
+
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "nested_ind"
-  eval literals
-  test_add test_mul test_nested
-  test_eval_add test_eval_mul test_eval_nested
-  test_literals.
+Crane Extraction "nested_ind" NestedInd.
