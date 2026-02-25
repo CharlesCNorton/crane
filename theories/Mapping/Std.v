@@ -33,16 +33,25 @@ Crane Extract Inlined Constant sub => "%a0.substr(%a1, %a2)" From "string".
 Crane Extract Inlined Constant length => "%a0.length()" From "string".
 
 
-(* TODO: unsafe as extracting int63 to int64 *)
+(* int63 primitives — int64_t with 63-bit masking.
+   All arithmetic results are masked to [0, 2^63) to match Rocq semantics.
+   Bitwise ops preserve the invariant (inputs have bit 63 = 0).
+   Shifts guard against UB when shift amount >= 63. *)
 From Corelib Require Import PrimInt63.
-Crane Extract Inlined Constant int => "int".
-Crane Extract Inlined Constant add => "%a0 + %a1".
-Crane Extract Inlined Constant sub => "%a0 - %a1".
-Crane Extract Inlined Constant mul => "%a0 * %a1".
-Crane Extract Inlined Constant mod => "%a0 % %a1".
-Crane Extract Inlined Constant eqb => "%a0 == %a1".
-Crane Extract Inlined Constant ltb => "%a0 < %a1".
-Crane Extract Inlined Constant leb => "%a0 <= %a1".
+Crane Extract Inlined Constant int => "int64_t" From "cstdint".
+Crane Extract Inlined Constant add => "((%a0 + %a1) & 0x7FFFFFFFFFFFFFFFLL)".
+Crane Extract Inlined Constant sub => "((%a0 - %a1) & 0x7FFFFFFFFFFFFFFFLL)".
+Crane Extract Inlined Constant mul => "((%a0 * %a1) & 0x7FFFFFFFFFFFFFFFLL)".
+Crane Extract Inlined Constant div => "(%a1 == 0 ? 0 : %a0 / %a1)".
+Crane Extract Inlined Constant mod => "(%a1 == 0 ? 0 : %a0 % %a1)".
+Crane Extract Inlined Constant eqb => "(%a0 == %a1)".
+Crane Extract Inlined Constant ltb => "(%a0 < %a1)".
+Crane Extract Inlined Constant leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant land => "(%a0 & %a1)".
+Crane Extract Inlined Constant lor => "(%a0 | %a1)".
+Crane Extract Inlined Constant lxor => "(%a0 ^ %a1)".
+Crane Extract Inlined Constant lsl => "(%a1 >= 63 ? 0 : ((%a0 << %a1) & 0x7FFFFFFFFFFFFFFFLL))".
+Crane Extract Inlined Constant lsr => "(%a1 >= 63 ? 0 : (%a0 >> %a1))".
 
 (* From Corelib Require PrimArray.
 Definition array (A : Type) {l : int} {def : A} := PrimArray.array A.
