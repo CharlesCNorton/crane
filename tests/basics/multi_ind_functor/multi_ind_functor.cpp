@@ -1,12 +1,14 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <multi_ind_functor.h>
 #include <optional>
+#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>

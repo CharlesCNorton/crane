@@ -8,14 +8,12 @@ From Crane Require Export Mapping.Shared.
 (* #[export] Set Crane Format Style "BDE". *)
 #[export] Set Crane Format Style "LLVM".
 
-
 Crane Extract Inductive option =>
   "bsl::optional<%t0>"
   [ "bsl::make_optional<%t0>(%a0)"
     "bsl::nullopt" ]
   "if (%scrut.has_value()) { %t0 %b0a0 = *%scrut; %br0 } else { %br1 }"
   From "bsl_optional.h" "bsl_memory.h".
-
 
 Crane Extract Inductive prod =>
   "bsl::pair<%t0, %t1>"
@@ -25,22 +23,35 @@ Crane Extract Inductive prod =>
 Crane Extract Inlined Constant fst => "%a0.first" From "bsl_utility.h".
 Crane Extract Inlined Constant snd => "%a0.second" From "bsl_utility.h".
 
-
 From Corelib Require Import PrimString.
-Crane Extract Inlined Constant char63 => "char".
-Crane Extract Inlined Constant string => "std::string" From "bsl_string.h".
-Crane Extract Inlined Constant cat => "%a0 + %a1" From "bsl_string.h".
-Crane Extract Inlined Constant get => "%a0[%a1]" From "bsl_string.h".
-Crane Extract Inlined Constant sub => "%a0.substr(%a1, %a2)" From "bsl_string.h".
-Crane Extract Inlined Constant length => "%a0.length()" From "bsl_string.h".
-
+Crane Extract Inlined Constant PrimString.char63 => "char".
+Crane Extract Inlined Constant PrimString.string => "std::string" From "bsl_string.h".
+Crane Extract Inlined Constant PrimString.cat => "%a0 + %a1" From "bsl_string.h".
+Crane Extract Inlined Constant PrimString.get => "%a0[%a1]" From "bsl_string.h".
+Crane Extract Inlined Constant PrimString.sub => "%a0.substr(%a1, %a2)" From "bsl_string.h".
+Crane Extract Inlined Constant PrimString.length => "%a0.length()" From "bsl_string.h".
 
 From Corelib Require Import PrimInt63.
-Crane Extract Inlined Constant int => "int64_t" From "bsl_cstdint.h".
-Crane Extract Inlined Constant add => "%a0 + %a1".
-Crane Extract Inlined Constant sub => "%a0 - %a1".
-Crane Extract Inlined Constant mul => "%a0 * %a1".
-Crane Extract Inlined Constant mod => "%a0 % %a1".
-Crane Extract Inlined Constant eqb => "%a0 == %a1".
-Crane Extract Inlined Constant ltb => "%a0 < %a1".
-Crane Extract Inlined Constant leb => "%a0 <= %a1".
+Crane Extract Inlined Constant PrimInt63.int => "int64_t" From "bsl_cstdint.h".
+Crane Extract Inlined Constant PrimInt63.add => "%a0 + %a1".
+Crane Extract Inlined Constant PrimInt63.sub => "%a0 - %a1".
+Crane Extract Inlined Constant PrimInt63.mul => "%a0 * %a1".
+Crane Extract Inlined Constant PrimInt63.mod => "%a0 % %a1".
+Crane Extract Inlined Constant PrimInt63.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant PrimInt63.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant PrimInt63.leb => "%a0 <= %a1".
+
+(* PrimFloat - IEEE 754 binary64 (C++ double). *)
+From Corelib Require Import PrimFloat.
+Crane Extract Inlined Constant PrimFloat.float => "double".
+Crane Extract Inlined Constant PrimFloat.add => "(%a0 + %a1)".
+Crane Extract Inlined Constant PrimFloat.sub => "(%a0 - %a1)".
+Crane Extract Inlined Constant PrimFloat.mul => "(%a0 * %a1)".
+Crane Extract Inlined Constant PrimFloat.div => "(%a0 / %a1)".
+Crane Extract Inlined Constant PrimFloat.opp => "(-%a0)".
+Crane Extract Inlined Constant PrimFloat.abs => "bsl::abs(%a0)" From "bsl_cmath.h".
+Crane Extract Inlined Constant PrimFloat.sqrt => "bsl::sqrt(%a0)" From "bsl_cmath.h".
+Crane Extract Inlined Constant PrimFloat.eqb => "(%a0 == %a1)".
+Crane Extract Inlined Constant PrimFloat.ltb => "(%a0 < %a1)".
+Crane Extract Inlined Constant PrimFloat.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant PrimFloat.of_uint63 => "static_cast<double>(%a0)".

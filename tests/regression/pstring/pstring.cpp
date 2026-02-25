@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <persistent_array.h>
 #include <pstring.h>
 #include <stdexcept>
 #include <string>

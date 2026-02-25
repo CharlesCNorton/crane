@@ -1,17 +1,17 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 From Crane Require Extraction.
-From Crane Require Import Mapping.Std Mapping.NatIntStd Mapping.ArrayStd.
-From Corelib Require Import PrimInt63.
+From Crane Require Import Mapping.Std Mapping.NatIntStd.
+From Corelib Require Import PrimInt63 PrimArray.
 
 Module Vec.
 
 Open Scope int63.
 
-Definition test1 : array int 5 := make 5 12.
-Definition test2 := length test1.
-Definition test3 := get_nth test1 3.
-Definition test4 : array int 5 := set_nth test1 2 14.
+Definition test1 : array int := PrimArray.make 5 12.
+Definition test2 := PrimArray.length test1.
+Definition test3 := PrimArray.get test1 3.
+Definition test4 : array int := PrimArray.set test1 2 14.
 
 
 (*

@@ -1,12 +1,13 @@
 #include <algorithm>
 #include <any>
-#include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -21,30 +22,13 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Vec {
-  static inline const std::array<int64_t, int64_t> test1 =
-      []() -> std::array<int64_t, int64_t(5)> {
-    std::array<int64_t, int64_t(5)> _arr;
-    _arr.fill(int64_t(12));
-    return _arr;
-  }();
+  static inline const persistent_array<int64_t> test1 =
+      persistent_array<int64_t>(int64_t(5), int64_t(12));
 
-  static inline const int64_t test2 = test1.size();
+  static inline const int64_t test2 = test1.length();
 
-  static inline const std::optional<int64_t> test3 =
-      []() -> std::optional<int64_t> {
-    if (int64_t(3) < int64_t(5)) {
-      return std::make_optional<int64_t>(test1[int64_t(3)]);
-    } else {
-      return std::nullopt;
-    }
-  }();
+  static inline const int64_t test3 = test1.get(int64_t(3));
 
-  static inline const std::array<int64_t, int64_t> test4 =
-      []() -> std::array<int64_t, int64_t(5)> {
-    std::array<int64_t, int64_t(5)> _arr = test1;
-    if (int64_t(2) < int64_t(5)) {
-      _arr[int64_t(2)] = int64_t(14);
-    }
-    return _arr;
-  }();
+  static inline const persistent_array<int64_t> test4 =
+      test1.set(int64_t(2), int64_t(14));
 };

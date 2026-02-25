@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>

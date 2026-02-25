@@ -19,3 +19,12 @@ Crane Extract Inlined Constant orb => "(%a0 || %a1)".
 Axiom void : Type.
 Axiom ghost : void.
 Crane Extract Void void [ ghost ].
+
+(* PrimArray - persistent copy-on-write array (persistent_array<T>). *)
+From Corelib Require PrimArray.
+Crane Extract Inlined Constant PrimArray.array => "persistent_array<%t0>" From "persistent_array.h".
+Crane Extract Inlined Constant PrimArray.make => "persistent_array<%t0>(%a0, %a1)" From "persistent_array.h".
+Crane Extract Inlined Constant PrimArray.get => "%a0.get(%a1)" From "persistent_array.h".
+Crane Extract Inlined Constant PrimArray.set => "%a0.set(%a1, %a2)" From "persistent_array.h".
+Crane Extract Inlined Constant PrimArray.length => "%a0.length()" From "persistent_array.h".
+Crane Extract Inlined Constant PrimArray.copy => "%a0.copy()" From "persistent_array.h".

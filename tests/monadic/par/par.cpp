@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <future>
@@ -8,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <par.h>
+#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>

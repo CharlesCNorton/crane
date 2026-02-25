@@ -1,5 +1,6 @@
 #include <bdlf_overloaded.h>
 #include <bsl_algorithm.h>
+#include <bsl_cmath.h>
 #include <bsl_concepts.h>
 #include <bsl_cstdint.h>
 #include <bsl_functional.h>
@@ -15,6 +16,7 @@
 #include <fstream>
 #include <hash_bde.h>
 #include <mini_stm.h>
+#include <persistent_array.h>
 
 namespace BloombergLP {
 
