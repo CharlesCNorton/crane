@@ -276,4 +276,13 @@
   (deps int63_arith.t.exe)
   (action (run ./int63_arith.t.exe))))
 
-
+(subdir prim_float
+ (rule
+  (targets prim_float_test.t.exe)
+  (deps PrimFloatTest.vo prim_float_test.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prim_float_test.t.exe prim_float_test.cpp prim_float_test.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prim_float_test.t.exe)
+  (action (run ./prim_float_test.t.exe))))

@@ -76,6 +76,7 @@ and cpp_expr =
   | CPPget' of cpp_expr * GlobRef.t (* access from a struct (or class) *)
   | CPPstring of Pstring.t
   | CPPuint   of Uint63.t
+  | CPPfloat  of Float64.t
   | CPPparray of cpp_expr array * cpp_expr
 (*| CPPnamespace of Id.t * cpp_expr    should we do this for namespace access (in general, as is not just cpp_expressions)? *)
   | CPPrequires of (cpp_type * Id.t) list * (cpp_expr * cpp_constraint) list

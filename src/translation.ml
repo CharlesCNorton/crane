@@ -728,6 +728,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
   (*| MLfix _ -> CPPvar (Id.of_string "FIX")*)
   | MLstring s -> CPPstring s
   | MLuint x -> CPPuint x
+  | MLfloat f -> CPPfloat f
   | MLparray (elems, def) ->
     let elems = Array.map (gen_expr env) elems in
     let def = gen_expr env def in
@@ -2044,7 +2045,7 @@ let rec tvar_subst_expr (tvars : Id.t list) (e : cpp_expr) : cpp_expr =
   | CPPqualified (e', qid) -> CPPqualified (subst_e e', qid)
   | CPPmk_shared ty -> CPPmk_shared (subst_ty ty)
   | CPPmk_unique ty -> CPPmk_unique (subst_ty ty)
-  | _ -> e  (* CPPvar, CPPvar', CPPvisit, CPPstring, CPPuint, CPPthis, CPPrequires *)
+  | _ -> e  (* CPPvar, CPPvar', CPPvisit, CPPstring, CPPuint, CPPfloat, CPPthis, CPPrequires *)
 
 and tvar_subst_stmt (tvars : Id.t list) (s : cpp_stmt) : cpp_stmt =
   let subst_ty = tvar_subst_type tvars in
