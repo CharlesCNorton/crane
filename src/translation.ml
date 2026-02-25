@@ -27,109 +27,90 @@ let clear_local_inductives () =
 let get_local_inductives () =
   !local_inductives
 
-(* Track type variables (template parameters) in scope for the current function.
-   When converting Tvar to C++ types, we use this to give them proper names. *)
-let current_type_vars : Id.t list ref = ref []
-let set_current_type_vars (tvars : Id.t list) = current_type_vars := tvars
-let get_current_type_vars () = !current_type_vars
-let clear_current_type_vars () = current_type_vars := []
+(* ========================================================================== *)
+(*  Translation context — consolidated mutable state for expression compilation.
+    All fields except local_inductives (which has a different lifecycle and is
+    exported to cpp.ml) are grouped here in a single mutable record.        *)
+(* ========================================================================== *)
 
-(* Track parameter types for the current function.
-   Maps de Bruijn indices to ML types. Used to refine pattern match types.
-   The params list is in innermost-first order (from collect_lams), matching
-   de Bruijn indexing where MLrel 1 is the first/innermost binding. *)
-let current_param_types : (int * ml_type) list ref = ref []
+type translation_ctx = {
+  mutable current_type_vars : Id.t list;
+  mutable current_param_types : (int * ml_type) list;
+  mutable current_outer_function_name : string option;
+  mutable env_types : (Id.t * ml_type) list;
+  mutable pending_lifted_decls : cpp_decl list;
+  mutable unique_bindings : int list;
+  mutable current_letin_depth : int;
+  mutable move_owned_vars : Escape.IntSet.t;
+  mutable move_dead_after : Escape.IntSet.t;
+  mutable move_n_params : int;
+}
+
+let tctx = {
+  current_type_vars = [];
+  current_param_types = [];
+  current_outer_function_name = None;
+  env_types = [];
+  pending_lifted_decls = [];
+  unique_bindings = [];
+  current_letin_depth = 0;
+  move_owned_vars = Escape.IntSet.empty;
+  move_dead_after = Escape.IntSet.empty;
+  move_n_params = 0;
+}
+
+(* Accessor wrappers — thin layer over tctx fields. *)
+let set_current_type_vars (tvars : Id.t list) =
+  tctx.current_type_vars <- tvars
+let get_current_type_vars () = tctx.current_type_vars
+let clear_current_type_vars () =
+  tctx.current_type_vars <- []
+
 let set_current_param_types (params : (Id.t * ml_type) list) =
-  current_param_types := List.mapi (fun i (_, ty) ->
+  tctx.current_param_types <- List.mapi (fun i (_, ty) ->
     (i + 1, ty)) params
 let get_param_type_by_index (idx : int) : ml_type option =
-  try Some (List.assoc idx !current_param_types)
+  try Some (List.assoc idx tctx.current_param_types)
   with Not_found -> None
-let clear_current_param_types () = current_param_types := []
+let clear_current_param_types () =
+  tctx.current_param_types <- []
 
-(* Track the current outer function name for generating lifted function names.
-   When an inner fixpoint needs lifting, its name becomes _<outer>_<fix>. *)
-let current_outer_function_name : string option ref = ref None
+let add_lifted_decl (d : cpp_decl) =
+  tctx.pending_lifted_decls <- d :: tctx.pending_lifted_decls
+let take_lifted_decls () =
+  let ds = List.rev tctx.pending_lifted_decls in
+  tctx.pending_lifted_decls <- []; ds
 
-(* Accumulate lifted declarations (inner fixpoints promoted to top-level functions).
-   These are collected during gen_stmts and emitted before the enclosing function. *)
-let pending_lifted_decls : cpp_decl list ref = ref []
-let add_lifted_decl (d : cpp_decl) = pending_lifted_decls := d :: !pending_lifted_decls
-let take_lifted_decls () = let ds = List.rev !pending_lifted_decls in pending_lifted_decls := []; ds
-
-(* Parallel type stack for the de Bruijn environment.
-   Tracks (Id.t * ml_type) for each variable pushed via push_vars',
-   in the same order as the env's db list (innermost first).
-   Used to look up ML types of free variables when lifting polymorphic let helpers. *)
-let env_types : (Id.t * ml_type) list ref = ref []
 let push_env_types (ids : (Id.t * ml_type) list) =
-  env_types := ids @ !env_types
-let get_env_type (i : int) : ml_type = snd (List.nth !env_types (pred i))
-let reset_env_types () = env_types := []
+  tctx.env_types <- ids @ tctx.env_types
+let get_env_type (i : int) : ml_type = snd (List.nth tctx.env_types (pred i))
+let reset_env_types () = tctx.env_types <- []
 
 let ml_type_is_void : ml_type -> bool = function
 | Tglob (r, _, _) -> is_void r
 | _ -> false
-
-(* ========================================================================== *)
-(*  Smart pointer optimization state                                         *)
-(* ========================================================================== *)
-
-(* Phase 1: unique_ptr promotion.
-
-   The analysis runs on the MiniML AST before C++ translation. It identifies
-   MLletin bindings that are safe for unique_ptr (used at most once, never
-   escape). The [unique_bindings] list stores the letin depth indices of safe
-   bindings; [current_letin_depth] tracks the current depth during translation. *)
-let unique_bindings : int list ref = ref []
-let current_letin_depth : int ref = ref 0
-
-(* Phase 2: owned/borrowed parameter inference.
-
-   [current_owned_params] stores the result of [Escape.infer_owned_params]
-   for the function currently being compiled. Element [i] is [true] when the
-   parameter at de Bruijn index [i+1] (1-based, innermost first) should be
-   passed by value (owned) as shared_ptr<T>. [false] means the parameter can
-   be borrowed (passed as const shared_ptr<T>&). *)
-let current_owned_params : bool list ref = ref []
-
-(* Phase 2: move insertion state (std::move on last use).
-
-   [move_dead_after] holds de Bruijn indices of variables that will NOT be
-   used in the continuation of the current expression. When generating an
-   MLrel reference for such an index, and the variable is owned (not borrowed),
-   we wrap the reference in CPPmove.
-
-   [move_owned_vars] tracks which de Bruijn indices hold owned values:
-   - Function params whose [current_owned_params] flag is true
-   - Let-bound variables with shared_ptr type (they own the value)
-
-   [move_n_params] is the number of function parameters (from collect_lams),
-   used to determine if a de Bruijn index refers to a parameter vs a let binding. *)
-let move_owned_vars : Escape.IntSet.t ref = ref Escape.IntSet.empty
-let move_dead_after : Escape.IntSet.t ref = ref Escape.IntSet.empty
-let move_n_params : int ref = ref 0
 
 (* Run escape analysis on [body], saving and restoring the analysis state
    around the call to [f]. This is needed because escape analysis runs at
    multiple nesting levels (lambdas, let-in expressions, top-level functions)
    and each level has its own set of safe bindings. *)
 let with_escape_analysis body f =
-  let saved = (!unique_bindings, !current_letin_depth,
-               !move_dead_after, !move_owned_vars, !move_n_params) in
-  unique_bindings := Escape.analyze body;
-  current_letin_depth := 0;
-  (* Reset move state for inner scope — will be set up by caller if needed *)
-  move_dead_after := Escape.IntSet.empty;
-  move_owned_vars := Escape.IntSet.empty;
-  move_n_params := 0;
+  let saved_ub = tctx.unique_bindings in
+  let saved_depth = tctx.current_letin_depth in
+  let saved_dead = tctx.move_dead_after in
+  let saved_owned = tctx.move_owned_vars in
+  let saved_nparams = tctx.move_n_params in
+  tctx.unique_bindings <- Escape.analyze body;
+  tctx.current_letin_depth <- 0;
+  tctx.move_dead_after <- Escape.IntSet.empty;
+  tctx.move_owned_vars <- Escape.IntSet.empty;
+  tctx.move_n_params <- 0;
   let result = f () in
-  let (ub, depth, dead, owned, nparams) = saved in
-  unique_bindings := ub;
-  current_letin_depth := depth;
-  move_dead_after := dead;
-  move_owned_vars := owned;
-  move_n_params := nparams;
+  tctx.unique_bindings <- saved_ub;
+  tctx.current_letin_depth <- saved_depth;
+  tctx.move_dead_after <- saved_dead;
+  tctx.move_owned_vars <- saved_owned;
+  tctx.move_n_params <- saved_nparams;
   result
 
 (* Swap shared_ptr to unique_ptr in a C++ type. *)
@@ -588,8 +569,8 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
        Emit std::move if: (1) the variable is dead after this point,
        (2) it's an owned variable (not borrowed), and
        (3) this is its only occurrence in the current RHS expression. *)
-    if Escape.IntSet.mem i !move_dead_after
-       && Escape.IntSet.mem i !move_owned_vars then
+    if Escape.IntSet.mem i tctx.move_dead_after
+       && Escape.IntSet.mem i tctx.move_owned_vars then
       CPPmove var_expr
     else
       var_expr
@@ -605,14 +586,14 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       let args,a = collect_lams a in
       let lam_params = List.map (fun (x, y) -> (id_of_mlid x, y)) args in
       let args,env = push_vars' lam_params env in
-      let saved_env_types = !env_types in
+      let saved_env_types = tctx.env_types in
       push_env_types args;
       let filtered_args = List.filter (fun (_,ty) -> not (isTdummy ty)) args in
       let f = with_escape_analysis a (fun () ->
         let tvars = get_current_type_vars () in
         let cpp_args = List.map (fun (id, ty) -> (convert_ml_type_to_cpp_type env [] tvars ty, Some id)) filtered_args in
         CPPlambda (cpp_args, None, gen_stmts env (fun x -> Sreturn x) a, false)) in
-      env_types := saved_env_types;
+      tctx.env_types <- saved_env_types;
       (match filtered_args with
       | [] -> CPPfun_call (f, [])
       | _ -> f)
@@ -897,8 +878,8 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
   (* Phase 2: Add pattern-bound variables as owned for move insertion.
      Pattern variables are extracted from the scrutinee into local variables,
      so they own their values. ids is in de Bruijn order. *)
-  let saved_dead = !move_dead_after in
-  let saved_owned = !move_owned_vars in
+  let saved_dead = tctx.move_dead_after in
+  let saved_owned = tctx.move_owned_vars in
   let n_pat_vars = List.length ids in
   let pat_owned = Escape.IntSet.of_list (List.filter_map (fun i ->
     let db = i + 1 in
@@ -906,12 +887,12 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
     if Escape.is_shared_ptr_type ml_ty then Some db else None
   ) (List.init n_pat_vars (fun i -> i))) in
   (* Shift existing owned vars by n_pat_vars (pattern vars add binders) *)
-  let shifted_outer = Escape.IntSet.map (fun i -> i + n_pat_vars) !move_owned_vars in
-  move_owned_vars := Escape.IntSet.union pat_owned shifted_outer;
-  move_dead_after := Escape.IntSet.empty;
+  let shifted_outer = Escape.IntSet.map (fun i -> i + n_pat_vars) tctx.move_owned_vars in
+  tctx.move_owned_vars <- Escape.IntSet.union pat_owned shifted_outer;
+  tctx.move_dead_after <- Escape.IntSet.empty;
   let body_stmts = gen_stmts env (fun x -> Sreturn x) body in
-  move_dead_after := saved_dead;
-  move_owned_vars := saved_owned;
+  tctx.move_dead_after <- saved_dead;
+  tctx.move_owned_vars <- saved_owned;
   CPPlambda(
         [(Tmod (TMconst, constr), Some sname)],
         Some ret,
@@ -966,7 +947,7 @@ and gen_cpp_case (typ : ml_type) t env pv =
   let reuse_candidates = Escape.find_reuse_candidates typ pv in
   let scrut_db = match t with MLrel i -> Some i | MLmagic (MLrel i) -> Some i | _ -> None in
   let scrut_is_owned = match scrut_db with
-    | Some i -> Escape.IntSet.mem i !move_owned_vars
+    | Some i -> Escape.IntSet.mem i tctx.move_owned_vars
     | None -> false
   in
   (* Helper: generate the normal std::visit path *)
@@ -978,14 +959,14 @@ and gen_cpp_case (typ : ml_type) t env pv =
       (match p with
       | Pusual r ->
         let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-        let saved_env_types = !env_types in
+        let saved_env_types = tctx.env_types in
         push_env_types ids';
         let dummies = List.map (fun (x,_) ->
           match x with
           | Dummy -> false
           | _ -> true) ids in
         let br = gen_cpp_pat_lambda env' typ rty r ids' dummies t in
-        env_types := saved_env_types;
+        tctx.env_types <- saved_env_types;
         br :: (gen_cases cs)
       | _ -> raise TODO) in
     outer (gen_cases (Array.to_list pv)) (gen_expr env t)
@@ -1023,7 +1004,7 @@ and gen_cpp_case (typ : ml_type) t env pv =
         [CPPmethod_call (scrut_expr, Id.of_string "v_mut", [])])) in
     (* 2. Push pattern variables into the environment, same as normal path *)
     let ids' , env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-    let saved_env_types = !env_types in
+    let saved_env_types = tctx.env_types in
     push_env_types ids';
     (* 3. Extract fields into local variables:
           auto var_name = std::move(_rf._aN); *)
@@ -1079,7 +1060,7 @@ and gen_cpp_case (typ : ml_type) t env pv =
     let normal_visit = Sreturn (gen_normal_visit_expr ()) in
     (* Generate IIFE with if-else *)
     let _ = n_fields in
-    env_types := saved_env_types;
+    tctx.env_types <- saved_env_types;
     CPPfun_call (CPPlambda ([], None,
       [Sif (cond, reuse_stmts, [normal_visit])], false), [])
   end else
@@ -1093,7 +1074,7 @@ and gen_rust_case (typ : ml_type) t env pv =
     (match p with
     | Pusual r ->
       let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-      let saved_env_types = !env_types in
+      let saved_env_types = tctx.env_types in
       push_env_types ids';
       let temps = begin match typ with
         | Tglob (r, tys, _) -> List.map (convert_ml_type_to_cpp_type env [] []) tys
@@ -1104,7 +1085,7 @@ and gen_rust_case (typ : ml_type) t env pv =
        | _ -> CPPfun_call(CPPglob (r, temps), List.map (fun (x, _) -> CPPvar x) ids')
        end in
       let br = (c, gen_expr env' t) in
-      env_types := saved_env_types;
+      tctx.env_types <- saved_env_types;
       br :: (gen_cases cs)
     | _ -> raise TODO) in
   outer (gen_cases (Array.to_list pv)) (gen_expr env t)
@@ -1130,10 +1111,10 @@ and gen_custom_cpp_case env k (typ : ml_type) t pv =
     (match p with
     | Pusual r ->
       let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-      let saved_env_types = !env_types in
+      let saved_env_types = tctx.env_types in
       push_env_types ids';
       let br = gen_cpp_custom_body env' k rty ids' t in
-      env_types := saved_env_types;
+      tctx.env_types <- saved_env_types;
       br :: (gen_cases cs)
     | _ -> raise TODO) in
   let cmatch = find_custom_match pv in
@@ -1175,7 +1156,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let all_temps = List.map (fun id -> (TTtypename, id)) all_tvar_names in
     (* Generate the lifted function name *)
     let fix_name = fst (ids.(x)) in
-    let outer_name = match !current_outer_function_name with
+    let outer_name = match tctx.current_outer_function_name with
       | Some n -> n | None -> "anon" in
     let lifted_name_str = "_" ^ outer_name ^ "_" ^ Id.to_string fix_name in
     let lifted_ref = GlobRef.VarRef (Id.of_string lifted_name_str) in
@@ -1212,10 +1193,10 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let lifted_call = CPPglob (lifted_ref, outer_type_args) in
     (* Phase 2: shift owned vars for fix bindings *)
     let n_fix_bindings_lifted = Array.length ids in
-    let saved_owned_lifted = !move_owned_vars in
-    move_owned_vars := Escape.IntSet.map (fun i -> i + n_fix_bindings_lifted) !move_owned_vars;
+    let saved_owned_lifted = tctx.move_owned_vars in
+    tctx.move_owned_vars <- Escape.IntSet.map (fun i -> i + n_fix_bindings_lifted) tctx.move_owned_vars;
     let result = gen_stmts env_with_fix k b in
-    move_owned_vars := saved_owned_lifted;
+    tctx.move_owned_vars <- saved_owned_lifted;
     List.map (local_var_subst_stmt fix_name lifted_call) result
   end else begin
     (* No extra Tvars - proceed with original local fixpoint approach *)
@@ -1249,10 +1230,10 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     push_env_types renamed_ids;
     (* Phase 2: shift owned vars for fix bindings *)
     let n_fix_bindings = Array.length ids in
-    let saved_owned = !move_owned_vars in
-    move_owned_vars := Escape.IntSet.map (fun i -> i + n_fix_bindings) !move_owned_vars;
+    let saved_owned = tctx.move_owned_vars in
+    tctx.move_owned_vars <- Escape.IntSet.map (fun i -> i + n_fix_bindings) tctx.move_owned_vars;
     let cont = gen_stmts env_with_fix k b in
-    move_owned_vars := saved_owned;
+    tctx.move_owned_vars <- saved_owned;
     decls @ defs @ cont
   end
 | MLletin (x, t, (MLlam _ as a), b) ->
@@ -1287,11 +1268,11 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let asgn = gen_stmts env afun a in
     let tvars = get_current_type_vars () in
     (* Phase 2: shift owned vars for lambda let binding *)
-    let saved_owned_lam = !move_owned_vars in
-    move_owned_vars := Escape.IntSet.map (fun i -> i + 1) !move_owned_vars;
+    let saved_owned_lam = tctx.move_owned_vars in
+    tctx.move_owned_vars <- Escape.IntSet.map (fun i -> i + 1) tctx.move_owned_vars;
     let gen_cont () =
       let cont = gen_stmts env' k b in
-      move_owned_vars := saved_owned_lam;
+      tctx.move_owned_vars <- saved_owned_lam;
       cont
     in
     match asgn with
@@ -1335,7 +1316,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let extended_tvar_names = build_extended_tvar_names tvar_indices all_tvar_names all_body_tvars in
 
     (* 3. Generate the lifted function name *)
-    let outer_name = match !current_outer_function_name with
+    let outer_name = match tctx.current_outer_function_name with
       | Some n -> n | None -> "anon" in
     let lifted_name_str = "_" ^ outer_name ^ "_" ^ Id.to_string x' in
     let lifted_ref = GlobRef.VarRef (Id.of_string lifted_name_str) in
@@ -1398,7 +1379,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let free_var_params = List.map (fun (name, ty, _) -> (name, ty)) free_vars in
     let body_params_for_env = free_var_params @ param_ids in
     let body_param_ids, body_env = push_vars' body_params_for_env env in
-    let saved_env_types = !env_types in
+    let saved_env_types = tctx.env_types in
     push_env_types body_param_ids;
 
     (* Now compile the body. The body's de Bruijn indices:
@@ -1420,10 +1401,10 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     (* Simpler approach: compile body in a modified env where free vars at their original
        positions are accessible. We push only the lambda params on top of the outer env. *)
     let lam_param_ids, lam_env = push_vars' param_ids env in
-    env_types := saved_env_types;
+    tctx.env_types <- saved_env_types;
     push_env_types lam_param_ids;
     let compiled_body = gen_stmts lam_env (fun x -> Sreturn x) body in
-    env_types := saved_env_types;
+    tctx.env_types <- saved_env_types;
     set_current_type_vars saved_tvars;
 
     (* 7. Now substitute free variable references in compiled body:
@@ -1453,10 +1434,10 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let x_renamed2 = fst (List.hd ids_renamed2) in
     push_env_types [x_renamed2, t];
     (* Phase 2: shift owned vars for lifted lambda binding *)
-    let saved_owned_lifted2 = !move_owned_vars in
-    move_owned_vars := Escape.IntSet.map (fun i -> i + 1) !move_owned_vars;
+    let saved_owned_lifted2 = tctx.move_owned_vars in
+    tctx.move_owned_vars <- Escape.IntSet.map (fun i -> i + 1) tctx.move_owned_vars;
     let cont = gen_stmts env' k b in
-    move_owned_vars := saved_owned_lifted2;
+    tctx.move_owned_vars <- saved_owned_lifted2;
     (* Build the free variable argument expressions *)
     let free_var_cpps = List.map (fun (name, _, _) -> CPPvar name) free_vars in
     List.map (subst_lifted_call_stmt x_renamed2 lifted_ref free_var_cpps) cont
@@ -1468,38 +1449,38 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
   let x_renamed = fst (List.hd ids_renamed) in
   push_env_types [x_renamed, t];
   if x == Dummy then gen_stmts env' k b else
-  let depth = !current_letin_depth in
-  current_letin_depth := depth + 1;
-  let use_unique = List.mem depth !unique_bindings in
+  let depth = tctx.current_letin_depth in
+  tctx.current_letin_depth <- depth + 1;
+  let use_unique = List.mem depth tctx.unique_bindings in
   (* Phase 2: set up dead-after info for move insertion.
      Compute free vars of the continuation [b] (shifted by 1 because [b] is
      under the let binder).  A variable at de Bruijn index [i] in [a] is
      dead-after if [i+1] is not free in [b] (since [b] has one extra binder).
      Only move if the variable has exactly 1 occurrence in [a]. *)
-  let saved_dead = !move_dead_after in
-  let saved_owned = !move_owned_vars in
+  let saved_dead = tctx.move_dead_after in
+  let saved_owned = tctx.move_owned_vars in
   let cont_free = Escape.free_rels 1 b in  (* free in b, shifted past let binder *)
   let dead_in_a = Escape.IntSet.filter (fun i ->
     (* i is dead after [a] if i is not free in [b] AND occurs exactly once in [a] *)
     not (Escape.IntSet.mem i cont_free) &&
     Escape.nb_occur_match i a = 1
-  ) !move_owned_vars in
+  ) tctx.move_owned_vars in
   (* Also add any vars from our current dead set that have single occurrence in a *)
   let dead_from_above = Escape.IntSet.filter (fun i ->
-    Escape.IntSet.mem i !move_dead_after &&
+    Escape.IntSet.mem i tctx.move_dead_after &&
     Escape.nb_occur_match i a = 1
-  ) !move_owned_vars in
-  move_dead_after := Escape.IntSet.union dead_in_a dead_from_above;
+  ) tctx.move_owned_vars in
+  tctx.move_dead_after <- Escape.IntSet.union dead_in_a dead_from_above;
   let afun v = Sasgn (x_renamed, None, v) in
   let asgn = gen_stmts env afun a in
-  move_dead_after := saved_dead;
+  tctx.move_dead_after <- saved_dead;
   (* The new let binding is owned (it's a local variable).
      Update move_owned_vars for processing [b]: shift all existing indices by 1
      (because [b] has one more binder) and add index 1 if the type is shared_ptr. *)
-  let shifted_owned = Escape.IntSet.map (fun i -> i + 1) !move_owned_vars in
+  let shifted_owned = Escape.IntSet.map (fun i -> i + 1) tctx.move_owned_vars in
   let new_is_shared = Escape.is_shared_ptr_type t in
   let owned_for_b = if new_is_shared then Escape.IntSet.add 1 shifted_owned else shifted_owned in
-  move_owned_vars := owned_for_b;
+  tctx.move_owned_vars <- owned_for_b;
   let tvars = get_current_type_vars () in
   let result = begin match asgn with
   | [ Sasgn (_, None, e) ] ->
@@ -1512,7 +1493,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let cpp_ty = if use_unique then shared_to_unique cpp_ty else cpp_ty in
     Sdecl (x_renamed, cpp_ty) :: asgn @ gen_stmts env' k b
   end in
-  move_owned_vars := saved_owned;
+  tctx.move_owned_vars <- saved_owned;
   result
 | MLapp (MLfix (x, ids, funs, _), args) ->
   (* Resolve unresolved metas in fix function types to Tvars using mgu.
@@ -1550,7 +1531,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let all_temps = List.map (fun id -> (TTtypename, id)) all_tvar_names in
     let extended_tvar_names = build_extended_tvar_names fix_tvar_indices all_tvar_names all_body_tvars in
     let fix_name = fst (ids.(x)) in
-    let outer_name = match !current_outer_function_name with
+    let outer_name = match tctx.current_outer_function_name with
       | Some n -> n | None -> "anon" in
     let lifted_name_str = "_" ^ outer_name ^ "_" ^ Id.to_string fix_name in
     let lifted_ref = GlobRef.VarRef (Id.of_string lifted_name_str) in
@@ -1681,13 +1662,13 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
 | t ->
   (* Tail position: all owned variables used here are at their last use.
      Set move_dead_after to include all owned variables that occur exactly once in t. *)
-  let saved_dead = !move_dead_after in
+  let saved_dead = tctx.move_dead_after in
   let tail_dead = Escape.IntSet.filter (fun i ->
     Escape.nb_occur_match i t = 1
-  ) !move_owned_vars in
-  move_dead_after := Escape.IntSet.union !move_dead_after tail_dead;
+  ) tctx.move_owned_vars in
+  tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead;
   let result = [k (gen_expr env t)] in
-  move_dead_after := saved_dead;
+  tctx.move_dead_after <- saved_dead;
   result
 
 and gen_fix env (n,ty) f =
@@ -1695,7 +1676,7 @@ and gen_fix env (n,ty) f =
   let ids,_ = push_vars' (List.map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
   (* Push the fix function name, which may be renamed to avoid shadowing *)
   let renamed_fix_ids, env = push_vars' (ids @ [(n,ty)]) env in
-  let saved_env_types = !env_types in
+  let saved_env_types = tctx.env_types in
   push_env_types (ids @ [(n,ty)]);
   let renamed_n = fst (List.hd (List.rev renamed_fix_ids)) in
   let ids = List.filter (fun (_,ty) -> not (ml_type_is_void ty)) ids in
@@ -1711,16 +1692,16 @@ and gen_fix env (n,ty) f =
      combined binders of [ids @ [(n,ty)]]. The fix self-ref n is at db index 1
      (last pushed), and the lambda params are at 2..n_params+1.
      We want to mark the lambda params as owned. *)
-  let saved_dead = !move_dead_after in
-  let saved_owned = !move_owned_vars in
-  let saved_nparams = !move_n_params in
+  let saved_dead = tctx.move_dead_after in
+  let saved_owned = tctx.move_owned_vars in
+  let saved_nparams = tctx.move_n_params in
   let n_fix_params = List.length ids in
   let fix_owned = Escape.infer_owned_params (n_fix_params + 1) f in
   (* After push_vars'(ids @ [(n,ty)]):
      ids[0] → db 1, ids[1] → db 2, ..., (n,ty) → db n_fix_params+1.
      fix_owned[i] = ownership flag for db i+1.
      We only mark lambda params as owned (not the fix self-reference). *)
-  move_owned_vars := List.fold_left (fun acc i ->
+  tctx.move_owned_vars <- List.fold_left (fun acc i ->
     let db = i + 1 in  (* ids[i] has db index i+1 *)
     let owned = match List.nth_opt fix_owned i with Some b -> b | None -> false in
     let ml_ty = snd (List.nth ids i) in
@@ -1728,13 +1709,13 @@ and gen_fix env (n,ty) f =
     then Escape.IntSet.add db acc
     else acc
   ) Escape.IntSet.empty (List.init n_fix_params (fun i -> i));
-  move_dead_after := Escape.IntSet.empty;
-  move_n_params := n_fix_params + 1;
+  tctx.move_dead_after <- Escape.IntSet.empty;
+  tctx.move_n_params <- n_fix_params + 1;
   let result = (renamed_n, ty), ids, gen_stmts env (fun x -> Sreturn x) f in
-  env_types := saved_env_types;
-  move_dead_after := saved_dead;
-  move_owned_vars := saved_owned;
-  move_n_params := saved_nparams;
+  tctx.env_types <- saved_env_types;
+  tctx.move_dead_after <- saved_dead;
+  tctx.move_owned_vars <- saved_owned;
+  tctx.move_n_params <- saved_nparams;
   result
 
 (* TODO: REDO NAMESPACE AS PART OF NAMES!!! *)
@@ -2167,7 +2148,6 @@ let gen_dfun n b dom cod ty temps =
      infer_owned_params returns a bool list in the same order. *)
   let n_params = List.length all_params in
   let owned_flags = Escape.infer_owned_params n_params b in
-  current_owned_params := owned_flags;
   (* Zip all_ids with ownership flags.  all_ids and all_params have the same length
      (push_vars' preserves length), so owned_flags aligns 1:1. *)
   let all_ids_with_owned = List.map2 (fun (id, ty) owned -> (id, ty, owned)) all_ids owned_flags in
@@ -2217,8 +2197,8 @@ let gen_dfun n b dom cod ty temps =
   set_current_type_vars type_var_ids;
   set_current_param_types all_ids;
   (* Set the outer function name so inner fixpoints can generate lifted names *)
-  let saved_outer_name = !current_outer_function_name in
-  current_outer_function_name := Some (Common.pp_global_name Term n);
+  let saved_outer_name = tctx.current_outer_function_name in
+  tctx.current_outer_function_name <- Some (Common.pp_global_name Term n);
   (* Check if the return type is coinductive - if so, wrap body in lazy thunk *)
   let rec get_ml_return_type = function
     | Miniml.Tarr (_, t2) -> get_ml_return_type t2
@@ -2285,18 +2265,18 @@ let gen_dfun n b dom cod ty temps =
             Some (Sassert ("true", Some comment))
       ) assertions
   in
-  unique_bindings := Escape.analyze b;
-  current_letin_depth := 0;
+  tctx.unique_bindings <- Escape.analyze b;
+  tctx.current_letin_depth <- 0;
   (* Phase 2: Initialize owned-variable tracking for move insertion.
      Parameters at de Bruijn indices 1..n_params; owned ones get added to the set. *)
   let n_all_params = List.length all_params in
-  move_n_params := n_all_params;
-  move_owned_vars := List.fold_left (fun acc (i, owned) ->
+  tctx.move_n_params <- n_all_params;
+  tctx.move_owned_vars <- List.fold_left (fun acc (i, owned) ->
     if owned && Escape.is_shared_ptr_type (snd (List.nth all_params i))
     then Escape.IntSet.add (i + 1) acc
     else acc
   ) Escape.IntSet.empty (List.mapi (fun i o -> (i, o)) owned_flags);
-  move_dead_after := Escape.IntSet.empty;
+  tctx.move_dead_after <- Escape.IntSet.empty;
   let inner =
     if missing == [] then
       let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap b) in
@@ -2323,7 +2303,7 @@ let gen_dfun n b dom cod ty temps =
       clear_current_type_vars ();
       clear_current_param_types ();
       Dfundef ([n, []], cod, ids, sigma_asserts @ b) in
-  current_outer_function_name := saved_outer_name;
+  tctx.current_outer_function_name <- saved_outer_name;
   (match temps with
     | [] -> inner, env
     | l -> Dtemplate (l, None, inner), env)
@@ -2529,7 +2509,6 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
      Note: method 'this' is always borrowed (const method). *)
   let n_method_params = List.length ids_with_types in
   let method_owned_flags = Escape.infer_owned_params n_method_params inner_body in
-  current_owned_params := method_owned_flags;
 
   (* Extract 'this' argument at this_pos - use renamed ids for consistency with body *)
   let ids_normal_order = List.rev all_ids in
@@ -2601,18 +2580,18 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
   (* Generate method body.
      Save and reset move state: methods have const this, so all params are borrowed.
      No reuse optimization possible since 'this' is a raw pointer in methods. *)
-  let saved_dead = !move_dead_after in
-  let saved_owned = !move_owned_vars in
-  let saved_nparams = !move_n_params in
-  move_dead_after := Escape.IntSet.empty;
-  move_owned_vars := Escape.IntSet.empty;
-  move_n_params := 0;
-  unique_bindings := Escape.analyze inner_body;
-  current_letin_depth := 0;
+  let saved_dead = tctx.move_dead_after in
+  let saved_owned = tctx.move_owned_vars in
+  let saved_nparams = tctx.move_n_params in
+  tctx.move_dead_after <- Escape.IntSet.empty;
+  tctx.move_owned_vars <- Escape.IntSet.empty;
+  tctx.move_n_params <- 0;
+  tctx.unique_bindings <- Escape.analyze inner_body;
+  tctx.current_letin_depth <- 0;
   let stmts = gen_stmts env method_k inner_body in
-  move_dead_after := saved_dead;
-  move_owned_vars := saved_owned;
-  move_n_params := saved_nparams;
+  tctx.move_dead_after <- saved_dead;
+  tctx.move_owned_vars <- saved_owned;
+  tctx.move_n_params <- saved_nparams;
   let stmts = match this_arg_id with
     | Some id -> List.map (var_subst_stmt id CPPthis) stmts
     | None -> stmts
