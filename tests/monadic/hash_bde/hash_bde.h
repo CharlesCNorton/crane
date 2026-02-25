@@ -1,6 +1,7 @@
 #include <bdlf_overloaded.h>
 #include <bsl_algorithm.h>
 #include <bsl_concepts.h>
+#include <bsl_cstdint.h>
 #include <bsl_functional.h>
 #include <bsl_iostream.h>
 #include <bsl_memory.h>
@@ -92,11 +93,11 @@ struct TVar {
 template <typename K, typename V>
 struct CHT {
     bsl::function<bool(K, K)> cht_eqb;
-    bsl::function<int(K)>     cht_hash;
+    bsl::function<int64_t(K)> cht_hash;
     bsl::vector<bsl::shared_ptr<
         stm::TVar<bsl::shared_ptr<List::list<bsl::pair<K, V> > > > > >
                               cht_buckets;
-    int                       cht_nbuckets;
+    int64_t                   cht_nbuckets;
     bsl::shared_ptr<
         stm::TVar<bsl::shared_ptr<List::list<bsl::pair<K, V> > > > >
         cht_fallback;
@@ -104,7 +105,7 @@ struct CHT {
         stm::TVar<bsl::shared_ptr<List::list<bsl::pair<K, V> > > > >
     bucket_of(const K k) const
     {
-        int i = this->CHT::cht_hash(k) % this->CHT::cht_nbuckets;
+        int64_t i = this->CHT::cht_hash(k) % this->CHT::cht_nbuckets;
         return this->CHT::cht_buckets.at(i);
     }
     bsl::optional<V> stm_get(const K k) const
@@ -344,7 +345,7 @@ struct CHT {
     template <typename T1, typename T2>
     static bsl::vector<bsl::shared_ptr<
         stm::TVar<bsl::shared_ptr<List::list<bsl::pair<T1, T2> > > > > >
-    mk_buckets(const int num)
+    mk_buckets(const int64_t num)
     {
         bsl::vector<bsl::shared_ptr<
             stm::TVar<bsl::shared_ptr<List::list<bsl::pair<T1, T2> > > > > >
@@ -378,15 +379,15 @@ struct CHT {
     template <typename T1,
               typename T2,
               MapsTo<bool, T1, T1> F0,
-              MapsTo<int, T1>      F1>
+              MapsTo<int64_t, T1>  F1>
     static bsl::shared_ptr<CHT<T1, T2> >
-    new_hash(F0&& eqb, F1&& hash, const int requested)
+    new_hash(F0&& eqb, F1&& hash, const int64_t requested)
     {
-        int  n    = bsl::max(requested, 1);
+        int64_t n    = bsl::max(requested, int64_t(1));
         bsl::vector<bsl::shared_ptr<
             stm::TVar<bsl::shared_ptr<List::list<bsl::pair<T1, T2> > > > > >
-             bs   = CHT<int, int>::template mk_buckets<T1, T2>(n);
-        bool empt = bs.empty();
+                bs   = CHT<int, int>::template mk_buckets<T1, T2>(n);
+        bool    empt = bs.empty();
         if (empt) {
             bsl::shared_ptr<
                 stm::TVar<bsl::shared_ptr<List::list<bsl::pair<T1, T2> > > > >
@@ -400,12 +401,12 @@ struct CHT {
                 v  = {};
             v.push_back(fb);
             return bsl::make_shared<CHT<T1, T2> >(
-                                             CHT<T1, T2>{eqb, hash, v, 1, fb});
+                                    CHT<T1, T2>{eqb, hash, v, int64_t(1), fb});
         }
         else {
             bsl::shared_ptr<
                 stm::TVar<bsl::shared_ptr<List::list<bsl::pair<T1, T2> > > > >
-                b = bs.at(0);
+                b = bs.at(int64_t(0));
             return bsl::make_shared<CHT<T1, T2> >(
                                              CHT<T1, T2>{eqb, hash, bs, n, b});
         }

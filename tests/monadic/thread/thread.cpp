@@ -21,7 +21,7 @@ void threadtest::fun1(const unsigned int n) {
   } else {
     unsigned int n0 = n - 1;
     std::cout << "fun1 is sleeping for 100ms" << '\n';
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(100)));
     return fun1(n0);
   }
 }
@@ -33,7 +33,7 @@ void threadtest::fun2(const unsigned int n) {
   } else {
     unsigned int n0 = n - 1;
     std::cout << "fun2 is sleeping for 150ms" << '\n';
-    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(150)));
     return fun2(n0);
   }
 }

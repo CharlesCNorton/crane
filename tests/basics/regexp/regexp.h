@@ -250,23 +250,27 @@ struct Matcher {
   static bool parse_bool(const std::shared_ptr<regexp> &r,
                          const std::shared_ptr<List::list<int64_t>> &cs);
 
-  static inline const std::shared_ptr<regexp> r1 = regexp::ctor::Cat_(
-      regexp::ctor::Star_(regexp::ctor::Char_(0)), regexp::ctor::Char_(1));
+  static inline const std::shared_ptr<regexp> r1 =
+      regexp::ctor::Cat_(regexp::ctor::Star_(regexp::ctor::Char_(int64_t(0))),
+                         regexp::ctor::Char_(int64_t(1)));
 
   static inline const std::shared_ptr<List::list<int64_t>> s1 =
       List::list<int64_t>::ctor::cons_(
-          0, List::list<int64_t>::ctor::cons_(
-                 1, List::list<int64_t>::ctor::nil_()));
+          int64_t(0), List::list<int64_t>::ctor::cons_(
+                          int64_t(1), List::list<int64_t>::ctor::nil_()));
 
   static inline const std::shared_ptr<List::list<int64_t>> s2 =
-      List::list<int64_t>::ctor::cons_(1, List::list<int64_t>::ctor::nil_());
+      List::list<int64_t>::ctor::cons_(int64_t(1),
+                                       List::list<int64_t>::ctor::nil_());
 
   static inline const std::shared_ptr<List::list<int64_t>> s3 =
       List::list<int64_t>::ctor::cons_(
-          0, List::list<int64_t>::ctor::cons_(
-                 0, List::list<int64_t>::ctor::cons_(
-                        1, List::list<int64_t>::ctor::nil_())));
+          int64_t(0),
+          List::list<int64_t>::ctor::cons_(
+              int64_t(0), List::list<int64_t>::ctor::cons_(
+                              int64_t(1), List::list<int64_t>::ctor::nil_())));
 
   static inline const std::shared_ptr<List::list<int64_t>> s4 =
-      List::list<int64_t>::ctor::cons_(0, List::list<int64_t>::ctor::nil_());
+      List::list<int64_t>::ctor::cons_(int64_t(0),
+                                       List::list<int64_t>::ctor::nil_());
 };

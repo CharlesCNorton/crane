@@ -1,5 +1,6 @@
 #include <bdlf_overloaded.h>
 #include <bsl_concepts.h>
+#include <bsl_cstdint.h>
 #include <bsl_functional.h>
 #include <bsl_iostream.h>
 #include <bsl_memory.h>

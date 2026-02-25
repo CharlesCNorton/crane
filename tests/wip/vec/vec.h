@@ -22,9 +22,9 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Vec {
   static inline const std::array<int64_t, int64_t> test1 =
-      []() -> std::array<int64_t, 5> {
-    std::array<int64_t, 5> _arr;
-    _arr.fill(12);
+      []() -> std::array<int64_t, int64_t(5)> {
+    std::array<int64_t, int64_t(5)> _arr;
+    _arr.fill(int64_t(12));
     return _arr;
   }();
 
@@ -32,18 +32,18 @@ struct Vec {
 
   static inline const std::optional<int64_t> test3 =
       []() -> std::optional<int64_t> {
-    if (3 < 5) {
-      return std::make_optional<int64_t>(test1[3]);
+    if (int64_t(3) < int64_t(5)) {
+      return std::make_optional<int64_t>(test1[int64_t(3)]);
     } else {
       return std::nullopt;
     }
   }();
 
   static inline const std::array<int64_t, int64_t> test4 =
-      []() -> std::array<int64_t, 5> {
-    std::array<int64_t, 5> _arr = test1;
-    if (2 < 5) {
-      _arr[2] = 14;
+      []() -> std::array<int64_t, int64_t(5)> {
+    std::array<int64_t, int64_t(5)> _arr = test1;
+    if (int64_t(2) < int64_t(5)) {
+      _arr[int64_t(2)] = int64_t(14);
     }
     return _arr;
   }();

@@ -35,9 +35,8 @@ Crane Extract Inlined Constant sub => "%a0.substr(%a1, %a2)" From "bsl_string.h"
 Crane Extract Inlined Constant length => "%a0.length()" From "bsl_string.h".
 
 
-(* TODO: unsafe as extracting int63 to int64 *)
 From Corelib Require Import PrimInt63.
-Crane Extract Inlined Constant int => "int".
+Crane Extract Inlined Constant int => "int64_t" From "bsl_cstdint.h".
 Crane Extract Inlined Constant add => "%a0 + %a1".
 Crane Extract Inlined Constant sub => "%a0 - %a1".
 Crane Extract Inlined Constant mul => "%a0 * %a1".

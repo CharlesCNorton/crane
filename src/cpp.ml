@@ -1168,7 +1168,29 @@ and pp_cpp_expr env args t =
       (pp_cpp_expr env args e) ++ str "->" ++ pp_global Type id
   | CPPstring s -> str ("\"" ^  (Pstring.to_string s) ^ "\"")
   | CPPparray (elems, _) -> str "{" ++ pp_list (pp_cpp_expr env args) (Array.to_list elems) ++ str "}"
-  | CPPuint x -> str (Uint63.to_string x)
+  | CPPuint x ->
+      (* Emit int literals with an explicit cast to the mapped C++ type for
+         PrimInt63's [int].  A bare literal like [1] has type [int] in C++,
+         which causes template-deduction failures when it is passed alongside
+         a value whose type is the mapped type (e.g. [std::max(x, 1)] where
+         [x] is [int64_t]).
+
+         We use [Nametab.locate] to resolve PrimInt63's [int] to its
+         [GlobRef.t], then [is_inline_custom] checks whether the user has
+         registered a custom C++ type for it via
+         [Crane Extract Inlined Constant int => "..."]. If so,
+         [find_custom] retrieves that type string (e.g. ["int64_t"]) and we
+         emit a functional-style cast like [int64_t(1)].  If [int] has no
+         custom extraction or is not in scope, we fall back to the bare
+         literal. *)
+      let s = Uint63.to_string x in
+      (try
+        let gr = Nametab.locate (Libnames.qualid_of_string "int") in
+        if is_inline_custom gr then
+          let cpp_type = find_custom gr in
+          str (cpp_type ^ "(" ^ s ^ ")")
+        else str s
+      with Not_found -> str s)
   | CPPrequires (ty_vars, exprs) ->
       let ty_vars_s = match ty_vars with [] -> mt () | _ ->
         str "(" ++ pp_list (fun (ty, id) -> (pp_cpp_type false [] ty) ++ spc () ++ Id.print id) ty_vars ++ str ") " in

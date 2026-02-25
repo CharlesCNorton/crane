@@ -14,10 +14,11 @@
 #include <variant>
 #include <vector>
 
-int64_t bindreturn::test1() { return ignoreAndReturn<int64_t>(42); }
+int64_t bindreturn::test1() { return ignoreAndReturn<int64_t>(int64_t(42)); }
 
 int64_t bindreturn::test2() {
-  return transform<unit, int64_t>(unit::tt, [](unit _x) { return 42; });
+  return transform<unit, int64_t>(unit::tt,
+                                  [](unit _x) { return int64_t(42); });
 }
 
 int64_t bindreturn::test3() {
@@ -25,18 +26,18 @@ int64_t bindreturn::test3() {
       unit::tt, [](unit _x) { return true; },
       [](bool b) {
         if (b) {
-          return 1;
+          return int64_t(1);
         } else {
-          return 0;
+          return int64_t(0);
         }
       });
 }
 
 int64_t bindreturn::test4() {
   std::vector<int64_t> v = {};
-  v.push_back(1);
-  v.push_back(2);
-  v.push_back(3);
+  v.push_back(int64_t(1));
+  v.push_back(int64_t(2));
+  v.push_back(int64_t(3));
   return v.size();
 }
 
@@ -45,7 +46,7 @@ std::shared_ptr<List::list<int64_t>> bindreturn::intToList(const int64_t n) {
 }
 
 std::shared_ptr<List::list<int64_t>> bindreturn::test5() {
-  int64_t x = 1;
+  int64_t x = int64_t(1);
   return intToList(x);
 }
 
@@ -54,9 +55,9 @@ int64_t bindreturn::test6() {
   bool y = true;
   return [&](void) {
     if (y) {
-      return 42;
+      return int64_t(42);
     } else {
-      return 0;
+      return int64_t(0);
     }
   }();
 }
