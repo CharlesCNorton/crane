@@ -70,12 +70,12 @@ int main() {
 
     // Test 4: literals of (1+2)*(3+4) = [1,2,3,4]
     {
-        auto v = to_vector(test_literals);
-        ASSERT(NestedInd::v.size() == 4);
-        ASSERT(NestedInd::v[0] == 1);
-        ASSERT(NestedInd::v[1] == 2);
-        ASSERT(NestedInd::v[2] == 3);
-        ASSERT(NestedInd::v[3] == 4);
+        auto v = to_vector(NestedInd::test_literals);
+        ASSERT(v.size() == 4);
+        ASSERT(v[0] == 1);
+        ASSERT(v[1] == 2);
+        ASSERT(v[2] == 3);
+        ASSERT(v[3] == 4);
         std::cout << "Test 4 (literals): PASSED" << std::endl;
     }
 

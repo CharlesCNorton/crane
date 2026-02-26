@@ -580,6 +580,11 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
     gen_expr env t
   (* | MLapp (MLglob (h, _), a1 :: a2 :: l) when is_hoist h ->
     gen_expr env (MLapp (a1, a2::[])) *)
+  | MLapp (MLfix _, _) as a ->
+    (* Nested fix application in expression context (e.g., S((fix aux ...) es)).
+       Wrap in an IIFE, delegating to gen_stmts which handles MLapp(MLfix ...). *)
+    with_escape_analysis a (fun () ->
+      CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), []))
   | MLapp (f, args) ->
     eta_fun env f args
   | MLlam _ as a ->
@@ -724,7 +729,10 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
   | MLletin (_, ty, _, _) as a ->
       with_escape_analysis a (fun () ->
         CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), []))
-  (*| MLfix _ -> CPPvar (Id.of_string "FIX")*)
+  | MLfix _ as a ->
+    (* Bare fixpoint in expression context — wrap in IIFE, delegate to gen_stmts. *)
+    with_escape_analysis a (fun () ->
+      CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), []))
   | MLstring s -> CPPstring s
   | MLuint x -> CPPuint x
   | MLfloat f -> CPPfloat f
