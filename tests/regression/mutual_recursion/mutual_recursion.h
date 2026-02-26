@@ -21,8 +21,8 @@ struct MutualRecursion {
   static bool is_even(const unsigned int n);
   static bool is_odd(const unsigned int n);
 
-  struct tree;
-  struct forest;
+  template <typename A> struct tree;
+  template <typename A> struct forest;
   template <typename A> struct tree {
   public:
     struct Leaf {

@@ -143,17 +143,6 @@
   (deps vec.t.exe)
   (action (run ./vec.t.exe))))
 
-(subdir mutual_recursion
- (rule
-  (targets mutual_recursion.t.exe)
-  (deps MutualRecursion.vo mutual_recursion.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_recursion.t.exe mutual_recursion.cpp mutual_recursion.t.cpp)))
- (rule
-  (alias runtest)
-  (deps mutual_recursion.t.exe)
-  (action (run ./mutual_recursion.t.exe))))
-
 (subdir sections
  (rule
   (targets sections.t.exe)

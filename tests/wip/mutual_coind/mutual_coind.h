@@ -57,8 +57,8 @@ struct List {
 };
 
 struct MutualCoind {
-  struct streamA;
-  struct streamB;
+  template <typename A> struct streamA;
+  template <typename A> struct streamB;
   template <typename A> struct streamA {
   public:
     struct consA {

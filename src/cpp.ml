@@ -1765,11 +1765,22 @@ let pp_cpp_ind_header kn ind =
        1. Forward declarations so each struct can reference the others
        2. Full definitions immediately after
 
-       Example (tree and node are mutually inductive):
+       Non-parameterized example:
          struct Tree;  // forward decl
          struct Node;  // forward decl
          struct Tree { ... Node usage ... };
-         struct Node { ... Tree usage ... }; *)
+         struct Node { ... Tree usage ... };
+
+       Parameterized example (tree A / forest A):
+         template <typename A> struct tree;    // forward decl
+         template <typename A> struct forest;  // forward decl
+         template <typename A> struct tree { ... forest<A> usage ... };
+         template <typename A> struct forest { ... tree<A> usage ... };
+
+       The forward declaration must carry the same template parameters as the
+       full definition; a plain [struct tree;] followed by
+       [template <typename A> struct tree { ... }] is a C++ error
+       ("redefinition as different kind of symbol"). *)
     let is_mutual = Array.length ind.ind_packets > 1 in
     let forward_decls =
       if is_mutual then
@@ -1779,8 +1790,24 @@ let pp_cpp_ind_header kn ind =
             let ip = (kn,i) in
             if is_custom (GlobRef.IndRef ip) then fwd (i+1)
             else
+              let p = ind.ind_packets.(i) in
+              (* Compute template parameters the same way as the full
+                 definition (see param_vars below at the struct gen site).
+                 Parameters (before the colon) become template params;
+                 indices (after the colon) are erased. *)
+              let param_sign = List.firstn ind.ind_nparams p.ip_sign in
+              let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
+              let param_vars = List.firstn num_param_vars p.ip_vars in
               let name = pp_global Type names.(i) in
-              str "struct " ++ name ++ str ";" ++ fnl () ++ fwd (i+1)
+              let tmpl = match param_vars with
+                | [] -> mt ()
+                | vars ->
+                  str "template <"
+                  ++ prlist_with_sep (fun () -> str ", ")
+                       (fun v -> str "typename " ++ Id.print v) vars
+                  ++ str "> "
+              in
+              tmpl ++ str "struct " ++ name ++ str ";" ++ fnl () ++ fwd (i+1)
         in
         fwd 0
       else mt ()
