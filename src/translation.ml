@@ -721,7 +721,6 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       (* TODO: ugly. should better attempt when generating statements! *)
       (* TODO: we don't currently support the fancy thing of pattern matching on record fields at the same time *)
   | MLcase (typ, t, pv) when lang () == Cpp -> gen_cpp_case typ t env pv
-  (* | MLcase (typ, t, pv) when lang () == Rust -> gen_rust_case typ t env pv *)
   | MLletin (_, ty, _, _) as a ->
       with_escape_analysis a (fun () ->
         CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), []))
@@ -739,6 +738,8 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
   | MLexn msg ->
     (* Unreachable/absurd case - e.g., match on empty type *)
     CPPabort msg
+  | MLaxiom s ->
+    CPPabort ("unrealized axiom: " ^ s)
   | _ -> raise TODO
 
 and eta_fun env f args =
@@ -931,12 +932,13 @@ and gen_cpp_case (typ : ml_type) t env pv =
       | [] -> []
       | (ids, _rty, p, body) :: cs ->
         (match p with
-        | Pusual r ->
+        | Pusual r | Pcons (r, _) ->
           let _ids', env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
           let ctor_name = Id.of_string (Common.pp_global_name Type r) in
           let body_stmts = gen_stmts env' (fun x -> Sreturn x) body in
           (ctor_name, body_stmts) :: gen_enum_branches cs
-        | _ -> raise TODO)
+        | Pwild | Prel _ | Ptuple _ ->
+          gen_enum_branches cs)
     in
     let branches = gen_enum_branches (Array.to_list pv) in
     CPPfun_call (CPPlambda ([], None, [Sswitch (scrutinee, ind_ref, branches)], false), [])
@@ -958,7 +960,7 @@ and gen_cpp_case (typ : ml_type) t env pv =
     | [] -> []
     | (ids,rty,p,t) :: cs ->
       (match p with
-      | Pusual r ->
+      | Pusual r | Pcons (r, _) ->
         let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
         let saved_env_types = tctx.env_types in
         push_env_types ids';
@@ -969,7 +971,8 @@ and gen_cpp_case (typ : ml_type) t env pv =
         let br = gen_cpp_pat_lambda env' typ rty r ids' dummies t in
         tctx.env_types <- saved_env_types;
         br :: (gen_cases cs)
-      | _ -> raise TODO) in
+      | Pwild | Prel _ | Ptuple _ ->
+        gen_cases cs) in
     outer (gen_cases (Array.to_list pv)) (gen_expr env t)
   in
   (* Also exclude coinductive types — they use lazy evaluation and don't have v_mut(). *)
@@ -1067,30 +1070,6 @@ and gen_cpp_case (typ : ml_type) t env pv =
   end else
   gen_normal_visit_expr ()
 
-and gen_rust_case (typ : ml_type) t env pv =
-  let outer cases x = (CPPmatch (x, cases)) in
-  let rec gen_cases = function
-  | [] -> []
-  | (ids,rty,p,t) :: cs ->
-    (match p with
-    | Pusual r ->
-      let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-      let saved_env_types = tctx.env_types in
-      push_env_types ids';
-      let temps = begin match typ with
-        | Tglob (r, tys, _) -> List.map (convert_ml_type_to_cpp_type env [] []) tys
-        | _ -> []
-        end in
-      let c = begin match ids' with
-       | [] -> CPPglob (r, temps)
-       | _ -> CPPfun_call(CPPglob (r, temps), List.map (fun (x, _) -> CPPvar x) ids')
-       end in
-      let br = (c, gen_expr env' t) in
-      tctx.env_types <- saved_env_types;
-      br :: (gen_cases cs)
-    | _ -> raise TODO) in
-  outer (gen_cases (Array.to_list pv)) (gen_expr env t)
-
 and gen_cpp_custom_body env k rty ids body =
   let tvars = get_current_type_vars () in
   let ret = convert_ml_type_to_cpp_type env [] tvars rty in
@@ -1110,14 +1089,15 @@ and gen_custom_cpp_case env k (typ : ml_type) t pv =
   | [] -> []
   | (ids,rty,p,t) :: cs ->
     (match p with
-    | Pusual r ->
+    | Pusual r | Pcons (r, _) ->
       let ids',env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
       let saved_env_types = tctx.env_types in
       push_env_types ids';
       let br = gen_cpp_custom_body env' k rty ids' t in
       tctx.env_types <- saved_env_types;
       br :: (gen_cases cs)
-    | _ -> raise TODO) in
+    | Pwild | Prel _ | Ptuple _ ->
+      gen_cases cs) in
   let cmatch = find_custom_match pv in
   Scustom_case (typ, t, temps, gen_cases (Array.to_list pv), cmatch)
 

@@ -94,10 +94,6 @@ let pp_apply_cpp st args = match args with
   | [] -> st
   | _  -> hov 2 (st ++ str "(" ++ prlist_with_sep (fun _ -> str ", ") identity args) ++ str ")"
 
-let pp_apply_rust st args = match args with
-  | [] -> st
-  | _  -> hov 2 (st ++ str "(" ++ prlist_with_sep (fun _ -> str ", ") identity args) ++ str ")"
-
 (** Same as [pp_apply], but with also protection of the head by parenthesis *)
 
 let pp_apply2 st par args =
@@ -497,7 +493,7 @@ and mp_renaming =
 let ref_renaming_fun (k,r) =
   let mp = modpath_of_r r in
   let l = mp_renaming mp in
-  let l = if (lang () != Cpp (*|| lang () != Rust*)) && not (modular ()) then [""] else l in
+  let l = if (lang () != Cpp) && not (modular ()) then [""] else l in
   let s =
     let idg = safe_basename_of_global r in
     match l with
@@ -681,15 +677,6 @@ let pp_cpp_gen k mp rls olab =
         if is_mp_bound base then pp_ocaml_bound base rls
         else pp_ocaml_extern k base rls
 
-let pp_rust_gen k mp rls olab =
-  match common_prefix_from_list mp (get_visible_mps ()) with
-    | Some prefix -> pp_ocaml_local k mp mp rls olab
-    | None ->
-        let base = base_mp mp in
-        if is_mp_bound base then pp_ocaml_bound base rls
-        else pp_ocaml_extern k base rls
-
-
 (* Main name printing function for a reference *)
 
 let pp_global_with_key k key r =
@@ -705,7 +692,6 @@ let pp_global_with_key k key r =
     let rls = List.rev ls in (* for what come next it's easier this way *)
     match lang () with
       | Cpp -> pp_cpp_gen k mp rls (Some l)
-      (* | Rust -> pp_rust_gen k mp rls (Some l) *)
 
 let pp_global k r =
   pp_global_with_key k (repr_of_r r) r
@@ -745,7 +731,7 @@ let ascii_type_ref () = Rocqlib.lib_ref ascii_type_name
 let check_extract_ascii () =
   try
     let char_type = match lang () with
-      | Cpp (*| Rust *) -> "char"
+      | Cpp -> "char"
     in
     String.equal (find_custom @@ ascii_type_ref ()) (char_type)
   with Not_found -> false
@@ -790,7 +776,7 @@ let string_type_ref () = Rocqlib.lib_ref string_type_name
 let check_extract_string () =
   try
     let string_type = match lang () with
-      | Cpp (*| Rust *) -> "string"
+      | Cpp -> "string"
     in
     String.equal (find_custom @@ string_type_ref ()) string_type
   with Not_found -> false

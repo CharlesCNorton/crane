@@ -483,7 +483,6 @@ let mono_environment ~opaque_access refs mpl =
 
 let descr () = match lang () with
   | Cpp -> Cpp.cpp_descr
-  (* | Rust -> Rust.rust_descr *)
 
 (* From a filename string "foo.cpp" or "foo", builds "foo.cpp" and "foo.h"
    Works similarly for the other languages. *)
@@ -607,7 +606,6 @@ let get_comment () =
 let executable_available exe =
   Sys.command ("which " ^ exe ^ " > /dev/null 2>&1") = 0
 
-let rust_format_available () = executable_available "rustfmt"
 let bde_format_available () = executable_available "bde-format"
 let clang_format_available () = executable_available "clang-format"
 let clang_available () = executable_available "clang"
@@ -622,10 +620,8 @@ let hyperfine_available () = executable_available "hyperfine"
 let format_buffer_to_string (buf : Buffer.t) : string =
   let use_bde = Table.format_style () = "BDE" in
   let formatter_cmd, available =
-    if lang () == Cpp then
-      if use_bde then "bde-format", bde_format_available ()
-      else "clang-format -style=" ^ Filename.quote (Table.format_style ()), clang_format_available ()
-    else "rustfmt", rust_format_available ()
+    if use_bde then "bde-format", bde_format_available ()
+    else "clang-format -style=" ^ Filename.quote (Table.format_style ()), clang_format_available ()
   in
   if not available then (
     Feedback.msg_warning Pp.(str (if use_bde then "bde-format" else "clang-format") ++ spc () ++ str "not found: skipping formatting");

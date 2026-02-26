@@ -768,7 +768,7 @@ let { Goptions.get = file_comment } =
 
 (*s Crane Extraction Lang *)
 
-type lang = Cpp (* | Rust *)
+type lang = Cpp
 type benchmark_lang = BenchmarkOCaml | BenchmarkCpp
 
 let lang_ref = Summary.ref Cpp ~name:"CraneExtrLang"
