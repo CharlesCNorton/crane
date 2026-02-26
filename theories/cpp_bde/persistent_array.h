@@ -1,0 +1,89 @@
+// Copyright 2026 Bloomberg Finance L.P.
+// Distributed under the terms of the GNU LGPL v2.1 license.
+//
+// persistent_array.h — Copy-on-Write persistent array for Crane extraction
+//                      (BDE edition)
+//
+// This is the BDE counterpart of theories/cpp/persistent_array.h, using
+// bsl:: types (bsl::shared_ptr, bsl::vector, bsl::move) instead of std::.
+// See the std version for design rationale (COW, ref-qualified overloads,
+// escape analysis, immer alternative).
+
+#pragma once
+#include <bsl_cstdint.h>
+#include <bsl_memory.h>
+#include <bsl_utility.h>
+#include <bsl_vector.h>
+
+using namespace BloombergLP;
+
+template<typename T>
+class persistent_array {
+    bsl::shared_ptr<bsl::vector<T>> data_;
+    T default_;
+
+public:
+    // Construct an array of `len` elements, each initialized to `def`.
+    // Matches PrimArray.make.
+    persistent_array(int64_t len, T def)
+        : data_(bsl::make_shared<bsl::vector<T>>(len, def))
+        , default_(bsl::move(def))
+    {}
+
+    // Read element at index `i`. Returns default_ on out-of-bounds.
+    // Matches PrimArray.get (which returns the array's default on OOB).
+    T get(int64_t i) const {
+        if (i >= 0 && i < static_cast<int64_t>(data_->size()))
+            return (*data_)[i];
+        return default_;
+    }
+
+    // Lvalue overload: called on named variables. Always deep-copies to
+    // preserve the original — this is the core persistence guarantee.
+    persistent_array set(int64_t i, T val) const & {
+        if (i < 0 || i >= static_cast<int64_t>(data_->size()))
+            return *this;
+
+        auto new_data = bsl::make_shared<bsl::vector<T>>(*data_);
+        (*new_data)[i] = bsl::move(val);
+        persistent_array result;
+        result.data_ = bsl::move(new_data);
+        result.default_ = default_;
+        return result;
+    }
+
+    // Rvalue overload: called on temporaries (chained sets). When we are
+    // the sole owner, mutate in-place — O(1).
+    persistent_array set(int64_t i, T val) && {
+        if (i < 0 || i >= static_cast<int64_t>(data_->size()))
+            return bsl::move(*this);
+
+        if (data_.use_count() == 1) {
+            (*data_)[i] = bsl::move(val);
+            return bsl::move(*this);
+        }
+
+        auto new_data = bsl::make_shared<bsl::vector<T>>(*data_);
+        (*new_data)[i] = bsl::move(val);
+        persistent_array result;
+        result.data_ = bsl::move(new_data);
+        result.default_ = default_;
+        return result;
+    }
+
+    // Number of elements. Matches PrimArray.length.
+    int64_t length() const {
+        return static_cast<int64_t>(data_->size());
+    }
+
+    // Independent deep copy. Matches PrimArray.copy.
+    persistent_array copy() const {
+        persistent_array result;
+        result.data_ = bsl::make_shared<bsl::vector<T>>(*data_);
+        result.default_ = default_;
+        return result;
+    }
+
+private:
+    persistent_array() : default_{} {}
+};
