@@ -118,9 +118,6 @@ std::shared_ptr<Nat::nat> _foo_aux(const T1 a,
   return ListDef::repeat<T1>(a, n)->length();
 }
 
-std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
-                              std::shared_ptr<Nat::nat> m);
-
 template <typename T1>
 std::shared_ptr<List::list<T1>>
 ListDef::repeat(const T1 x, const std::shared_ptr<Nat::nat> &n) {

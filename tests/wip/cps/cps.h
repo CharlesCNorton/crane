@@ -321,5 +321,3 @@ struct CPS {
                               ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
                               List::list<unsigned int>::ctor::nil_())))))));
 };
-
-bool even(const unsigned int n);

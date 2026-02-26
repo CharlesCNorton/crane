@@ -248,13 +248,6 @@ struct Monadic {
           0);
 };
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
-
-unsigned int div(const unsigned int x, const unsigned int y);
-
 template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
 T1 List::fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
                    const T1 a0) {

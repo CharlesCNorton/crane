@@ -739,8 +739,3 @@ struct Levenshtein {
   levenshtein(const std::shared_ptr<String::string> &,
               const std::shared_ptr<String::string> &);
 };
-
-bool0 leb(const std::shared_ptr<Nat::nat> &n,
-          const std::shared_ptr<Nat::nat> &m);
-
-sumbool bool_dec(const bool0 b1, const bool0 b2);

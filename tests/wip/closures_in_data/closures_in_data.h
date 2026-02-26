@@ -242,13 +242,6 @@ struct ClosuresInData {
        1));
 };
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
-
-unsigned int div(const unsigned int x, const unsigned int y);
-
 template <typename T1, typename T2, MapsTo<T2, T1> F0>
 std::shared_ptr<List::list<T2>>
 ListDef::map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {

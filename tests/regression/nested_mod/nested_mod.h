@@ -182,10 +182,3 @@ struct NestedMod {
 
   static inline const unsigned int test_color = Outer::color_code(my_color);
 };
-
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
-
-unsigned int div(const unsigned int x, const unsigned int y);

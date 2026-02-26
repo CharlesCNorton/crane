@@ -116,10 +116,3 @@ struct SPropTest {
       safe_div(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
                (((0 + 1) + 1) + 1));
 };
-
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
-
-unsigned int div(const unsigned int x, const unsigned int y);

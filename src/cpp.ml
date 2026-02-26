@@ -2816,6 +2816,176 @@ let rec pre_register_enum_inductives (sel : (Label.t * Miniml.ml_structure_elem)
     | _ -> ()
   ) sel
 
+(* PERFORMANCE OPTIMIZATION: Process wrapper module function declarations in a SINGLE pass.
+
+   This function generates both forward declarations and full definitions from a single
+   code generation call per function, avoiding duplicate AST traversal and type conversion.
+
+   APPROACH:
+   1. Calls gen_decl_for_dfuns/gen_decl_for_pp ONCE per function
+   2. Derives BOTH forward declaration and full definition from the same cpp_decl AST
+   3. Renders each with appropriate global state (in_struct_context for forward declarations,
+      current_struct_name for out-of-line definitions)
+
+   PARAMETERS:
+   - is_header: true for .h file rendering, false for .cpp
+   - wrapper_name: struct name (e.g., "List", "ListDef") for qualifying out-of-line defs
+   - func_sels: list of (Label.t * structure_elem) function declarations
+
+   RETURNS: (specs_pp, defs_pp, lifted_pp)
+   - specs_pp: Forward declarations to inject into Dnspace struct (rendered with in_struct_context=true)
+   - defs_pp: Out-of-line definitions with WrapperName:: prefix (rendered with current_struct_name set)
+   - lifted_pp: Template helper functions (e.g., _foo_aux from local fixpoints)
+
+   RENDERING STRATEGY:
+   - Template functions: forward declaration in .h, full definition in .h (templates require definitions in headers)
+   - Non-template functions: forward declaration in .h, full definition in .cpp (normal C++ separation)
+
+   The is_header parameter controls which definitions are generated via gen_dfuns_dual/gen_decl_for_pp_dual. *)
+let pp_wrapper_module_dual ~is_header wrapper_name func_sels =
+  let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
+  let is_global_method x = is_registered_method x <> None in
+
+  (* PHASE 1: Code generation (the expensive part — do this ONCE per function)
+
+     For each SEdecl entry, call the dual generation functions that produce
+     both forward declaration and full definition from a single code generation pass:
+     - Dterm → gen_decl_for_pp_dual
+     - Dfix → gen_dfuns_dual
+
+     These functions internally call gen_decl_for_dfuns/gen_decl_for_pp ONCE,
+     then derive the forward declaration via decl_to_spec and return both.
+
+     IMPORTANT: We collect raw (cpp_decl * env) pairs here, deferring rendering
+     to Phase 3. This allows us to render forward declarations and definitions with
+     different global state (in_struct_context vs current_struct_name).
+
+     DFIX GROUPING: Multiple functions in a Dfix are kept as a group (list of declarations/definitions)
+     so that in Phase 3 they can be rendered as a single block with pp_list_stmt
+     (no blank lines between functions within the same Dfix). Between different
+     SEdecl entries, blank line separators are used. *)
+  let process_sel (_l, se) =
+    match se with
+    (* Skip cases: These function types are handled elsewhere or aren't rendered *)
+    | SEdecl (Dterm (r,_,_)) when is_any_inline_custom r -> ([], [], [])
+    | SEdecl (Dterm (r,_,_)) when is_eponymous_record_projection r -> ([], [], [])
+    | SEdecl (Dterm (r, _, _)) when is_method_candidate r -> ([], [], [])
+    | SEdecl (Dterm (r, _, _)) when is_registered_method r <> None -> ([], [], [])
+    | SEdecl (Dterm (r, _a, Tglob (ty, _args, _e))) when is_monad ty -> ([], [], [])
+    | SEdecl (Dterm (r, a, t)) when Translation.is_typeclass_instance a t -> ([], [], [])
+
+    (* DTERM: Single function declaration
+       Call gen_decl_for_pp_dual ONCE to generate both forward declaration and full definition.
+       Returns:
+       - spec_opt: forward declaration (always generated)
+       - def_opt: full definition (template → .h, non-template → .cpp)
+       - lifted: template helper functions extracted during code gen *)
+    | SEdecl (Dterm (r, a, t)) ->
+      let (spec_opt, def_opt, _tvars) = gen_decl_for_pp_dual ~is_header r a t in
+      let lifted = Translation.take_lifted_decls () in
+      let specs = match spec_opt with Some s -> [s] | None -> [] in
+      let defs = match def_opt with Some d -> [d] | None -> [] in
+      (specs, defs, lifted)
+
+    (* DFIX: Mutually recursive function group
+       Call gen_dfuns_dual ONCE to generate forward declarations and definitions for all functions.
+       The dual function calls gen_decl_for_dfuns once per function, then derives both
+       forward declaration (via decl_to_spec) and full definition from the same cpp_decl AST.
+
+       FILTERING: Skip inline custom, method candidates, globally registered methods,
+       and eponymous projections.
+
+       GROUPING: Keep all functions from this Dfix as a list so they can be
+       rendered as a single block (no blank lines between them) in Phase 3. *)
+    | SEdecl (Dfix (rv, defs, typs)) ->
+      let filter = Array.to_list (Array.map (fun x ->
+        not (is_inline_custom x) && not (is_method_candidate x) &&
+        not (is_global_method x) && not (is_eponymous_record_projection x)) rv) in
+      let rv = Array.filter_with filter rv in
+      let defs = Array.filter_with filter defs in
+      let typs = Array.filter_with filter typs in
+      if Array.length rv = 0 then ([], [], [])
+      else
+        let results = gen_dfuns_dual ~is_header (rv, defs, typs) in
+        let specs = List.map (fun (s, _, _) -> s) results in
+        let defs_list = List.filter_map (fun (_, d, _) -> d) results in
+        let lifted = List.concat_map (fun (_, _, l) -> l) results in
+        (specs, defs_list, lifted)
+    | _ -> ([], [], [])
+  in
+
+  (* PHASE 2: Collect results from all SEdecl entries
+
+     Each SEdecl produces (specs, defs, lifted) where:
+     - specs: list of (cpp_decl * env) for this SEdecl's forward declarations
+     - defs: list of (cpp_decl * env) for this SEdecl's full definitions
+     - lifted: list of cpp_decl for template helpers extracted during code gen
+
+     For Dterm entries: specs/defs lists have 0-1 elements
+     For Dfix entries: specs/defs lists may have multiple elements (one per function in the group) *)
+  let all_results = List.map process_sel func_sels in
+  let all_lifted = List.concat_map (fun (_, _, l) -> l) all_results in
+
+  (* PHASE 3: Render cpp_decl ASTs with appropriate global state
+
+     CRITICAL: We must render forward declarations and definitions separately with different global state:
+     - Forward declarations: in_struct_context=true → renders as "static type func(...)" for injection into struct
+     - Definitions: current_struct_name=Some "WrapperName" → renders as "WrapperName::func(...)" for out-of-line defs
+
+     FORMATTING: We use:
+     - pp_list_stmt within each SEdecl group (Dfix functions have no blank line between them)
+     - prlist_sep_nonempty cut2 between different SEdecl entries (blank line separator)
+
+     Example rendering (forward declarations for List module with 3 separate Dterm entries):
+       concat(...)    ← SEdecl 1
+                      ← blank line (cut2)
+       fold_right(...) ← SEdecl 2
+                      ← blank line (cut2)
+       filter(...)    ← SEdecl 3
+
+     Example rendering (forward declarations for Dfix with 2 functions):
+       map(...)       ← function 1 in Dfix
+       seq(...)       ← function 2 in Dfix (no blank line, rendered by pp_list_stmt)
+
+     The render_sel_specs/render_sel_defs functions call pp_list_stmt per SEdecl,
+     then prlist_sep_nonempty cut2 combines them with blank line separators. *)
+
+  let render_sel_specs (specs, _, _) =
+    match specs with
+    | [] -> mt ()
+    | _ -> pp_list_stmt (fun (ds, env) -> pp_cpp_decl env ds) specs
+  in
+  let render_sel_defs (_, defs, _) =
+    match defs with
+    | [] -> mt ()
+    | _ -> pp_list_stmt (fun (ds, env) -> pp_cpp_decl env ds) defs
+  in
+
+  (* Render forward declarations with in_struct_context=true
+     This makes pp_cpp_decl render as "static type func(...)" for injection into Dnspace struct *)
+  let old_context = !in_struct_context in
+  in_struct_context := true;
+  let specs_pp = prlist_sep_nonempty cut2 render_sel_specs all_results in
+  in_struct_context := old_context;
+
+  (* Render definitions with current_struct_name set
+     This makes pp_cpp_decl render as "WrapperName::func(...)" for out-of-line definitions.
+     The Dfundef case in pp_cpp_decl checks current_struct_name and adds the
+     "WrapperName::" prefix to the function name. *)
+  let old_struct_name = !current_struct_name in
+  current_struct_name := Some (str wrapper_name);
+  let defs_pp = prlist_sep_nonempty cut2 render_sel_defs all_results in
+  current_struct_name := old_struct_name;
+
+  (* Render lifted decls (template helpers like _foo_aux)
+     These are template functions extracted from local fixpoints during gen_dfun.
+     They only appear in .h files (templates require definitions in headers). *)
+  let lifted_pp = if is_header then
+    prlist_sep_nonempty cut2 (fun d -> pp_cpp_decl (empty_env ()) d) all_lifted
+  else mt () in
+
+  (specs_pp, defs_pp, lifted_pp)
+
 let do_struct_with_decl_tracking ~is_header f s =
   (* Clear any stale lifted declarations from previous extraction passes.
      The extraction framework calls pp_struct/pp_hstruct multiple times
@@ -2857,45 +3027,80 @@ let do_struct_with_decl_tracking ~is_header f s =
       None in
   (* Pre-compute wrapper names for all modules *)
   let wrapper_names = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
-  (* PASS 1: Pre-render function declarations from wrapper modules.
-     This must happen BEFORE rendering type declarations, because Dnspace structs
-     (created during type rendering) need to pick up pending function declarations.
+  (* ============================================================================
+     COMBINED PASS: PERFORMANCE OPTIMIZATION TO ELIMINATE DUPLICATE CODE GENERATION
+     ============================================================================
 
-     We generate TWO renderings for each wrapper module's functions:
-     1. Forward declarations (specs) — injected into the Dnspace struct
-     2. Full out-of-line definitions — emitted after all structs are defined
+     This pass generates both forward declarations and full definitions from a SINGLE
+     code generation call per wrapper module function.
 
-     This split is necessary because template function bodies may reference types
-     (like ListDef) defined in later structs. Forward declarations don't have bodies,
-     so they can safely appear inside the struct. Full definitions are placed after
-     all struct definitions where all types are visible.
+     APPROACH:
+     - Call pp_wrapper_module_dual which calls gen_decl_for_dfuns/gen_decl_for_pp ONCE per function
+       → Generate both forward declaration AND full definition from the same cpp_decl AST (via decl_to_spec)
+       → Store forward declarations in pending_wrapper_decls (for Dnspace injection in PASS 2)
+       → Store definitions in deferred_defs_acc (for emission after PASS 2)
+       → Expensive work (AST traversal, type conversion, escape analysis) happens only ONCE
+     - PASS 2: Render type declarations (inductives)
+       → Dnspace structs pick up forward declarations from pending_wrapper_decls
+     - ASSEMBLY: Emit types + remaining_wrappers + main + deferred_lifted + deferred_defs
 
-     For non-template functions, the spec is a forward declaration and the full
-     definition goes into the .cpp file (already handled by the normal rendering).
-     For template functions, both the spec and full definition go into the .h file. *)
-  let f_spec = pp_structure_elem ~is_header:true pp_hdecl_spec_only in
-  (* PASS 1: Only render forward declarations (specs) for wrapper modules.
-     Full definitions are deferred to PASS 3 (after all types are defined)
-     to avoid both forward reference issues and lifted declaration leaking. *)
+     ORDERING CONSTRAINTS:
+     1. Combined pass BEFORE PASS 2: Dnspace structs (created during type rendering)
+        need to consume pending_wrapper_decls
+     2. Deferred definitions AFTER PASS 2: Template function bodies may reference types
+        (like ListDef) defined in later structs. Full definitions are placed after
+        all struct definitions where all types are visible.
+
+     RENDERING SPLIT:
+     - Template functions: forward declaration in .h, full definition in .h (templates require definitions in headers)
+     - Non-template functions: forward declaration in .h, full definition in .cpp (normal C++ separation)
+
+     The is_header parameter controls which definitions are generated by pp_wrapper_module_dual.
+     For .h: template definitions only. For .cpp: non-template definitions only. *)
+
+  let deferred_defs_acc = ref (mt ()) in
+  let deferred_lifted_acc = ref (mt ()) in
   List.iter (fun ((mp, sel), wrapper_name) ->
     match wrapper_name with
     | Some name ->
+      (* Set up visibility context for name resolution during code generation *)
       push_visible mp [];
       let func_sels = List.filter is_func_decl sel in
       let old_decls = !current_structure_decls in
       current_structure_decls := sel;
-      let old_context = !in_struct_context in
-      in_struct_context := true;
-      let p_specs = prlist_sep_nonempty cut2 f_spec func_sels in
-      in_struct_context := old_context;
+
+      (* CRITICAL CALL: pp_wrapper_module_dual generates code ONCE and returns:
+         - p_specs: forward declarations to inject into Dnspace struct
+         - p_defs: full out-of-line definitions with WrapperName:: prefix
+         - p_lifted: template helper functions (e.g., _foo_aux from local fixpoints) *)
+      let (p_specs, p_defs, p_lifted) = pp_wrapper_module_dual ~is_header name func_sels in
+
       current_structure_decls := old_decls;
-      (* Clear any lifted decls created during spec rendering *)
-      ignore (Translation.take_lifted_decls ());
+
+      (* Store forward declarations in pending_wrapper_decls for Dnspace injection during PASS 2.
+         When a Dnspace struct with matching name is rendered (e.g., struct List),
+         it consumes the forward declarations from this table and injects them as member declarations. *)
       if not (Pp.ismt p_specs) then
         Hashtbl.replace pending_wrapper_decls name p_specs;
+
+      (* Accumulate definitions for emission AFTER PASS 2 (after all types are defined).
+         Template definitions reference types that may be defined in later structs, so
+         we defer their emission until all structs are complete. *)
+      if not (Pp.ismt p_defs) then
+        deferred_defs_acc := !deferred_defs_acc ++ cut2 () ++ p_defs;
+
+      (* Accumulate lifted template helpers for emission AFTER PASS 2.
+         These are template functions extracted from local fixpoints during gen_dfun.
+         They must appear before the functions that use them, but after the functions
+         that generated them (in case they reference types from those functions). *)
+      if not (Pp.ismt p_lifted) then
+        deferred_lifted_acc := !deferred_lifted_acc ++ cut2 () ++ p_lifted;
+
       pop_visible ()
     | None -> ()
   ) wrapper_names;
+  let deferred_defs = !deferred_defs_acc in
+  let deferred_lifted = !deferred_lifted_acc in
   (* PASS 2: Render all modules. For wrapper modules, only render non-function
      declarations (inductives, types). For non-wrapper modules, render everything
      normally. Dnspace rendering picks up pending_wrapper_decls entries.
@@ -2908,8 +3113,8 @@ let do_struct_with_decl_tracking ~is_header f s =
 
      Remaining standalone wrapper structs (not consumed by any Dnspace) are emitted
      just before the first non-wrapper module (main module). This ensures all types
-     referenced by wrapper struct specs are already defined, and all wrapper structs
-     are defined before the main module references them. *)
+     referenced by wrapper struct forward declarations are already defined, and all wrapper
+     structs are defined before the main module references them. *)
   let ppl ((mp, sel), wrapper_name) =
     let old_decls = !current_structure_decls in
     current_structure_decls := sel;
@@ -2958,42 +3163,58 @@ let do_struct_with_decl_tracking ~is_header f s =
       else if Pp.ismt p_pre then remaining_wrappers
       else p_pre ++ cut2 () ++ remaining_wrappers
   in
-  (* PASS 3: Render full out-of-line definitions for wrapper module functions.
-     This must happen AFTER PASS 2 so that:
-     1. All types (like ListDef) are defined and visible
-     2. Lifted declarations from main module processing don't leak into wrapper defs
-     For header mode: template function definitions with Struct:: prefix
-     For source mode: non-template function definitions with Struct:: prefix *)
-  (* Emit any lifted declarations from PASS 2 (e.g., _foo_aux from foo's code gen).
-     These are template helper functions that were created during main module rendering
-     but not yet collected by any gen_dfuns_header call because the consuming function
-     (e.g., repeat) is in a wrapper module deferred to PASS 3. *)
+  (* ============================================================================
+     FINAL ASSEMBLY: Emit everything in the correct order
+     ============================================================================
+
+     OUTPUT ORDER:
+     1. p                : Type declarations (inductives) + remaining_wrappers + main module
+     2. deferred_lifted  : Template helpers from COMBINED PASS (wrapper module code gen)
+     3. pass2_lifted_pp  : Template helpers from PASS 2 (main module code gen)
+     4. deferred_defs    : Out-of-line function definitions from COMBINED PASS
+
+     ORDERING RATIONALE:
+
+     (1) Type declarations FIRST:
+         All struct definitions (List, ListDef, etc.) must be complete before
+         function definitions reference them.
+
+     (2) deferred_lifted BEFORE pass2_lifted_pp:
+         Lifted decls from wrapper modules (deferred_lifted) may be referenced by
+         main module functions. They must be defined before pass2_lifted_pp which
+         may call them.
+
+     (3) pass2_lifted_pp BEFORE deferred_defs:
+         Some wrapper module functions (deferred_defs) may call lifted helpers
+         from the main module (pass2_lifted_pp). The helpers must be defined first.
+
+     (4) deferred_defs LAST:
+         Out-of-line definitions like "WrapperName::func(...)" reference both
+         types (from p) and helpers (from deferred_lifted + pass2_lifted_pp).
+
+     LIFTED DECLARATIONS EXPLAINED:
+     When gen_dfun encounters a local fixpoint (nested recursive function),
+     it extracts it as a separate template function (e.g., _foo_aux) via
+     add_lifted_decl. These lifted functions are collected and must appear
+     before the function that uses them.
+
+     - deferred_lifted: Lifted from wrapper module functions during COMBINED PASS
+     - pass2_lifted: Lifted from main module functions during PASS 2
+       Example: If main module function "foo" has a local fixpoint, gen_dfun
+       creates "_foo_aux" and stores it via add_lifted_decl. We collect it
+       here via take_lifted_decls() and emit it before deferred_defs. *)
+
   let pass2_lifted = Translation.take_lifted_decls () in
   let pass2_lifted_pp = if is_header then
     prlist_sep_nonempty cut2 (fun d -> pp_cpp_decl (empty_env ()) d) pass2_lifted
   else mt () in
-  let deferred_defs = List.fold_left (fun acc ((mp, sel), wrapper_name) ->
-    match wrapper_name with
-    | Some name ->
-      push_visible mp [];
-      let func_sels = List.filter is_func_decl sel in
-      let old_decls = !current_structure_decls in
-      current_structure_decls := sel;
-      let old_struct_name = !current_struct_name in
-      current_struct_name := Some (str name);
-      let p_defs = prlist_sep_nonempty cut2 f func_sels in
-      current_struct_name := old_struct_name;
-      current_structure_decls := old_decls;
-      (* Clear lifted decls created by this wrapper's rendering to prevent leaking *)
-      ignore (Translation.take_lifted_decls ());
-      pop_visible ();
-      if Pp.ismt p_defs then acc else acc ++ cut2 () ++ p_defs
-    | None -> acc
-  ) (mt ()) wrapper_names in
+
   (* For non-modular mode, pop remaining visible entries. *)
   (if not (modular ()) then
     repeat (List.length wrapper_names) pop_visible ());
-  v 0 (p ++ pass2_lifted_pp ++ deferred_defs) ++ fnl ()
+
+  (* Emit everything in the correct order (see ordering rationale above) *)
+  v 0 (p ++ deferred_lifted ++ pass2_lifted_pp ++ deferred_defs) ++ fnl ()
 
 let do_struct f s =
   let ppl (mp,sel) =

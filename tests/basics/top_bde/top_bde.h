@@ -699,9 +699,6 @@ bsl::shared_ptr<List::list<T2> > ListDef::map(
           l->v());
 }
 
-bsl::shared_ptr<List::list<unsigned int> > seq(const unsigned int start,
-                                               const unsigned int len);
-
 template <typename T1>
 bsl::shared_ptr<List::list<T1> > List::concat(
       const bsl::shared_ptr<List::list<bsl::shared_ptr<List::list<T1> > > >& l)

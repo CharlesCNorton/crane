@@ -2450,6 +2450,45 @@ let gen_dfuns_spec (ns,bs,tys) =
     [(decl_to_spec ds, empty_env ())]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
+(* Generate both spec and def for a group of mutually recursive functions in one pass.
+   Calls gen_decl_for_dfuns ONCE per function, then derives:
+   - spec: decl_to_spec of the full definition (forward declaration)
+   - def: the full definition (for templates) or None (for non-templates in header mode)
+   Returns list of (spec, def_option, lifted_decls) *)
+let gen_dfuns_dual ~is_header (ns,bs,tys) =
+  List.concat_map (fun (i, name) ->
+    let (ds, env, tvars) = gen_decl_for_dfuns name bs.(i) tys.(i) in
+    let lifted = take_lifted_decls () in
+    let spec = (decl_to_spec ds, env) in
+    let def = match tvars, is_header with
+      | _::_, true -> Some (ds, env)   (* Template + header: full def in .h *)
+      | _::_, false -> None            (* Template + source: already in .h *)
+      | [], true -> None               (* Non-template + header: def goes in .cpp *)
+      | [], false -> Some (ds, env)    (* Non-template + source: full def in .cpp *)
+    in
+    [(spec, def, lifted)]
+  ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
+
+(* Generate both spec and def for a single Dterm function in one pass.
+   Calls gen_decl_for_pp ONCE, then derives both spec and def.
+   Returns (spec_opt, def_opt, tvars) *)
+let gen_decl_for_pp_dual ~is_header n b ty =
+  let (ds_opt, env, tvars) = gen_decl_for_pp n b ty in
+  match ds_opt, tvars with
+  | Some ds, _::_ ->
+    (* Template function: spec is decl_to_spec, def only in header *)
+    let def = if is_header then Some (ds, env) else None in
+    (Some (decl_to_spec ds, env), def, tvars)
+  | Some ds, [] ->
+    (* Non-template function: spec via gen_spec, def only in source mode *)
+    let (spec_ds, spec_env) = gen_spec n b ty in
+    let def = if is_header then None else Some (ds, env) in
+    (Some (spec_ds, spec_env), def, tvars)
+  | None, _ ->
+    (* Non-function type: no def needed *)
+    let (spec_ds, spec_env) = gen_spec n b ty in
+    (Some (spec_ds, spec_env), None, tvars)
+
 let gen_ind_header vars name cnames tys =
   let templates = List.map (fun n -> (TTtypename, n)) vars in
   let add_templates d = match templates with

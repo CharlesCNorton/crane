@@ -217,5 +217,3 @@ const NatMap::t mymap = NatMap::add(
               1) +
              1),
             NatMap::empty)));
-
-comparison compare(const unsigned int n, const unsigned int m);

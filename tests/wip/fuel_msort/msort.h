@@ -88,5 +88,3 @@ struct MergeSort {
   static std::shared_ptr<List::list<unsigned int>>
   msort(const std::shared_ptr<List::list<unsigned int>> &l);
 };
-
-bool le_lt_dec(const unsigned int n, const unsigned int m);

@@ -72,6 +72,20 @@ val gen_dfuns_header : GlobRef.t array * ml_ast array * ml_type array -> (cpp_de
     this always derives specs from gen_decl_for_dfuns for signature consistency. *)
 val gen_dfuns_spec : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
 
+(** Generate both spec and def for a group of mutually recursive functions in one pass.
+    Calls gen_decl_for_dfuns ONCE per function, then derives both spec and def.
+    Returns list of (spec, def_option, lifted_decls). *)
+val gen_dfuns_dual : is_header:bool ->
+  GlobRef.t array * ml_ast array * ml_type array ->
+  ((cpp_decl * env) * (cpp_decl * env) option * cpp_decl list) list
+
+(** Generate both spec and def for a single Dterm function in one pass.
+    Calls gen_decl_for_pp ONCE, then derives both spec and def.
+    Returns (spec_opt, def_opt, tvars). *)
+val gen_decl_for_pp_dual : is_header:bool ->
+  GlobRef.t -> ml_ast -> ml_type ->
+  (cpp_decl * env) option * (cpp_decl * env) option * variable list
+
 (** Convert a definition (Dfundef) to a declaration (Dfundecl) by stripping the body. *)
 val decl_to_spec : cpp_decl -> cpp_decl
 

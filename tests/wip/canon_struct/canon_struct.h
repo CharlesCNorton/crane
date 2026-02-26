@@ -69,5 +69,3 @@ struct CanonStruct {
 
   static inline const bool test_bool = same(bool_eqType, true, false);
 };
-
-bool eqb(const bool b1, const bool b2);

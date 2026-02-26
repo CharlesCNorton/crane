@@ -533,9 +533,6 @@ ListDef::map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
                     l->v());
 }
 
-std::shared_ptr<List::list<unsigned int>> seq(const unsigned int start,
-                                              const unsigned int len);
-
 template <typename T1>
 std::shared_ptr<List::list<T1>> List::concat(
     const std::shared_ptr<List::list<std::shared_ptr<List::list<T1>>>> &l) {

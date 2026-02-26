@@ -321,9 +321,3 @@ struct Sort {
   static std::shared_ptr<Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
   qsort(const std::shared_ptr<List::list<unsigned int>> &);
 };
-
-bool le_lt_dec(const unsigned int n, const unsigned int m);
-
-bool le_gt_dec(const unsigned int, const unsigned int);
-
-bool le_dec(const unsigned int n, const unsigned int m);

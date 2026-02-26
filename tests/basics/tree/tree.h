@@ -317,9 +317,3 @@ struct Tree {
                   Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::O_())),
                   tree<std::shared_ptr<Nat::nat>>::ctor::leaf_())));
 };
-
-std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
-                              std::shared_ptr<Nat::nat> m);
-
-std::shared_ptr<Nat::nat> max(std::shared_ptr<Nat::nat> n,
-                              std::shared_ptr<Nat::nat> m);
