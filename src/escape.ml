@@ -122,6 +122,125 @@ let escapes k t =
   in check k true t
 
 (* ========================================================================== *)
+(*  Combined analysis: occurrence counting + escape analysis                 *)
+(* ========================================================================== *)
+
+(* Combined analysis result for a specific de Bruijn index. *)
+type occur_escape_result = {
+  count: int;     (* Number of occurrences *)
+  escapes: bool;  (* Whether the variable escapes *)
+}
+
+(* Analyze both occurrence count and escape status in a single traversal.
+   This is more efficient than calling nb_occur_match and escapes separately,
+   as it only walks the AST once instead of twice. *)
+let analyze_occur_escape k t =
+  let count = ref 0 in
+  let escaped = ref false in
+
+  (* [check k in_tail t]: traverse [t] to count occurrences and check escape.
+     [in_tail]: are we in tail position (return value)? *)
+  let rec check k in_tail = function
+    | MLrel i ->
+        if i = k then begin
+          count := !count + 1;
+          if in_tail then escaped := true
+        end
+
+    | MLcase (_, scrut, branches) ->
+        (* Scrutinee is safe (destructured). Count occurrences there. *)
+        (match scrut with
+         | MLrel i when i = k -> count := !count + 1
+         | _ -> check k false scrut);
+        (* Branches inherit tail position. Use max for count. *)
+        let branch_results = Array.map (fun (ids, _, _, body) ->
+          let saved_count = !count in
+          let saved_escaped = !escaped in
+          count := 0;
+          check (k + List.length ids) in_tail body;
+          let result = (!count, !escaped) in
+          count := saved_count;
+          escaped := saved_escaped;
+          result
+        ) branches in
+        (* For count: use max over branches (conservative estimate) *)
+        let max_branch_count = Array.fold_left (fun acc (c, _) -> max acc c) 0 branch_results in
+        count := !count + max_branch_count;
+        (* For escape: any branch escaping means the variable escapes *)
+        Array.iter (fun (_, e) -> if e then escaped := true) branch_results
+
+    | MLletin (_, _, rhs, cont) ->
+        check k false rhs;
+        check (k + 1) in_tail cont
+
+    | MLlam (_, _, body) ->
+        (* Lambda capture → escape. Need to check if variable occurs. *)
+        if occurs (k + 1) body then escaped := true
+
+    | MLapp (head, args) ->
+        check k false head;
+        List.iter (check k false) args
+
+    | MLfix (_, ids, bodies, _) ->
+        (* Fixpoint capture → escape. Need to check if variable occurs. *)
+        let k' = k + Array.length ids in
+        Array.iter (fun body ->
+          if occurs k' body then escaped := true
+        ) bodies
+
+    | MLcons (_, _, args) ->
+        (* Constructor storage → escape if occurs *)
+        List.iter (fun arg ->
+          if occurs k arg then escaped := true
+        ) args
+
+    | MLtuple args ->
+        List.iter (fun arg ->
+          if occurs k arg then escaped := true
+        ) args
+
+    | MLmagic a -> check k in_tail a
+
+    | MLparray (elts, def) ->
+        (* Array storage → escape if occurs *)
+        Array.iter (fun elt ->
+          if occurs k elt then escaped := true
+        ) elts;
+        if occurs k def then escaped := true
+
+    | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
+    | MLuint _ | MLfloat _ | MLstring _ -> ()
+
+  (* Simple occurrence check: does [MLrel k] appear anywhere in [t]?
+     This is used for escape detection in constructors, lambdas, etc. *)
+  and occurs k = function
+    | MLrel i -> i = k
+    | MLcase (_, scrut, branches) ->
+        occurs k scrut ||
+        Array.exists (fun (ids, _, _, body) ->
+          occurs (k + List.length ids) body
+        ) branches
+    | MLletin (_, _, rhs, cont) ->
+        occurs k rhs || occurs (k + 1) cont
+    | MLlam (_, _, body) -> occurs (k + 1) body
+    | MLapp (head, args) ->
+        occurs k head || List.exists (occurs k) args
+    | MLfix (_, ids, bodies, _) ->
+        let k' = k + Array.length ids in
+        Array.exists (occurs k') bodies
+    | MLcons (_, _, args) | MLtuple args ->
+        List.exists (occurs k) args
+    | MLmagic a -> occurs k a
+    | MLparray (elts, def) ->
+        Array.exists (occurs k) elts || occurs k def
+    | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
+    | MLuint _ | MLfloat _ | MLstring _ -> false
+
+  in
+  check k true t;
+  { count = !count; escapes = !escaped }
+
+(* ========================================================================== *)
 (*  Phase 2: Owned/borrowed parameter inference                              *)
 (* ========================================================================== *)
 
@@ -214,7 +333,8 @@ let analyze body =
             | MLcons _ | MLmagic (MLcons _) -> true
             | _ -> false
           in
-          if is_ctor && nb_occur_match 1 cont <= 1 && not (escapes 1 cont) then
+          let analysis = analyze_occur_escape 1 cont in
+          if is_ctor && analysis.count <= 1 && not analysis.escapes then
             safe := depth :: !safe
         end;
         walk_subterm depth rhs;

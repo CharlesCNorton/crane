@@ -14,6 +14,7 @@ open Common
 open Miniml
 open Minicpp
 open Names
+open Table
 
 (** Raised when a translation feature is not yet implemented. *)
 exception TODO
@@ -32,10 +33,10 @@ val get_local_inductives : unit -> GlobRef.t list
 
 (** Convert an ML type to C++ type representation.
     @param env The current variable environment
-    @param ns List of inductive references that should be treated as local (no namespace wrapper)
+    @param ns Set of inductive references that should be treated as local (no namespace wrapper)
     @param tvars Type variable names for substitution
     @param ml_type The ML type to convert *)
-val convert_ml_type_to_cpp_type : env -> GlobRef.t list -> Id.t list -> ml_type -> cpp_type
+val convert_ml_type_to_cpp_type : env -> Refset'.t -> Id.t list -> ml_type -> cpp_type
 
 (** Check if a C++ type is erased to std::any (for indexed inductive methods).
     Returns true if the type is Tany or contains an unnamed Tvar. *)

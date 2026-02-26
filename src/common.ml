@@ -58,7 +58,7 @@ let extract_at_pos pos lst =
   let rec aux i acc = function
     | [] -> (None, List.rev acc)
     | x :: rest ->
-      if i = pos then (Some x, List.rev acc @ rest)
+      if i = pos then (Some x, List.rev_append acc rest)
       else aux (i + 1) (x :: acc) rest
   in
   aux 0 [] lst

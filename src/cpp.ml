@@ -1100,7 +1100,7 @@ and pp_cpp_expr env args t =
         in
         let ml_arg_types = extract_arg_types ml_ty in
         (* Convert ML types to C++ types *)
-        List.map (Translation.convert_ml_type_to_cpp_type env [] []) ml_arg_types
+        List.map (Translation.convert_ml_type_to_cpp_type env Refset'.empty []) ml_arg_types
       with _ -> []
     in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print n) ^ " := " ^ s) env None None tys [] (List.rev ts) arg_types [] cmds
@@ -1715,7 +1715,7 @@ function
     are needed or not. *)
 
 let pp_type par vl t =
-  let cty = convert_ml_type_to_cpp_type (empty_env ()) [] [] t in
+  let cty = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] t in
   pp_cpp_type par vl cty
 
 (*s Pretty-printing of expressions. [par] indicates whether
@@ -2038,7 +2038,7 @@ let pp_cpp_ind_header kn ind =
             in
             let ret_ml = get_return_type ty in
             (* Convert to C++ type with param_vars as template params *)
-            let ret_cpp = Translation.convert_ml_type_to_cpp_type (empty_env ()) [] param_vars ret_ml in
+            let ret_cpp = Translation.convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty param_vars ret_ml in
             (* Check if the return type is erased (Tany or unnamed Tvar) *)
             if Translation.type_is_erased ret_cpp then
               register_method_returns_any r
@@ -2105,7 +2105,7 @@ let pp_hdecl = function
                   | [] -> mt ()
                   | args ->
                       str ", " ++ prlist_with_sep (fun () -> str ", ")
-                        (fun ty -> pp_cpp_type false [] (convert_ml_type_to_cpp_type (empty_env ()) [] [] ty)) args
+                        (fun ty -> pp_cpp_type false [] (convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ty)) args
                 in
                 fnl () ++ str "static_assert(" ++ class_name ++ str "<" ++ instance_name ++ type_args_pp ++ str ">);"
             | None -> mt ()
@@ -2272,7 +2272,7 @@ and pp_spec_as_requirement = function
       let (args, ret_ty) = get_function_parts t in
       if args = [] then
         (* For non-function values, generate a requires expression to check the value exists *)
-        let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) [] [] ret_ty in
+        let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ret_ty in
         (* Helper to qualify type names with M:: *)
         let rec qualify_type = function
           | Tglob (r, [], _) when not (is_custom r) ->
@@ -2306,8 +2306,8 @@ and pp_spec_as_requirement = function
         str "requires " ++ str same_as ++ str "<" ++ str remove_cvref ++ str "<decltype(M::" ++ name ++ str ")>, " ++ qualify_type cpp_ret ++ str ">;" ++ fnl ()
       else
         (* For functions, generate requires expression with parameters and return type *)
-        let cpp_args = List.map (convert_ml_type_to_cpp_type (empty_env ()) [] []) args in
-        let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) [] [] ret_ty in
+        let cpp_args = List.map (convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty []) args in
+        let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ret_ty in
         (* Helper to qualify type names with M:: *)
         let rec qualify_type = function
           | Tglob (r, [], _) when not (is_custom r) ->
@@ -2652,7 +2652,7 @@ let rec pp_structure_elem ~is_header f = function
                          | Some r -> str (Common.pp_global_name Term r)
                          | None -> str "_field"
                        in
-                       let cpp_ty = pp_cpp_type false ty_vars (convert_ml_type_to_cpp_type (empty_env ()) [] ty_vars field_ty) in
+                       let cpp_ty = pp_cpp_type false ty_vars (convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty ty_vars field_ty) in
                        cpp_ty ++ spc () ++ field_name ++ str ";"
                      in
                      let fields_pp = prlist_with_sep fnl pp_field field_list ++ fnl () in
