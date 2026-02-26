@@ -1,17 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <large_enum.h>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 unsigned int LargeEnum::color_to_nat(const LargeEnum::color c) {

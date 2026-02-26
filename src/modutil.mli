@@ -17,6 +17,9 @@ open Miniml
 
 val struct_ast_search : (ml_ast -> bool) -> ml_structure -> bool
 val struct_type_search : (ml_type -> bool) -> ml_structure -> bool
+val struct_iter :
+  (ml_decl -> unit) -> (ml_spec -> unit) -> (ModPath.t -> unit) ->
+  ml_structure -> unit
 
 type do_ref = GlobRef.t -> unit
 

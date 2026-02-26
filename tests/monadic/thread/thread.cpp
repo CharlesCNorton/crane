@@ -2,18 +2,15 @@
 #include <any>
 #include <cassert>
 #include <chrono>
-#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <thread.h>
 #include <thread>
-#include <utility>
 #include <variant>
 
 void threadtest::fun1(const unsigned int n) {

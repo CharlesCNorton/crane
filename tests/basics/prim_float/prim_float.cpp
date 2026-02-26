@@ -7,11 +7,9 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <prim_float.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 double PrimFloat::test_add(const double _x0, const double _x1) {

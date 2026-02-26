@@ -1,17 +1,14 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <regexp.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 bool Matcher::char_eq(const int64_t x, const int64_t y) {

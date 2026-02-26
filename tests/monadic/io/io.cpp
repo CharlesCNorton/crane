@@ -1,18 +1,14 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <io.h>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 void iotest::test1(const std::string _x) { return; }

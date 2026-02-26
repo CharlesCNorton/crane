@@ -674,6 +674,19 @@ let format_file_inplace (filename : string) : unit =
     if skip_format then () else
     ignore (Sys.command cmd)
 
+(* Scan the ml_structure and mark all GlobRefs that have custom extraction
+   mappings as "used", so that their associated [From "header.h"] imports
+   are included in the generated header.  This must run before [header()]
+   is called, because [header()] reads the used-import set. *)
+let mark_used_customs struc =
+  Table.reset_used_custom_imports ();
+  let mark r = if Table.is_custom r then Table.mark_custom_used r in
+  Modutil.struct_iter
+    (Modutil.decl_iter_references mark mark mark)
+    (Modutil.spec_iter_references mark mark mark)
+    (fun _ -> ())
+    struc
+
 let print_structure_to_file (fn,si,mo) dry struc =
   Buffer.clear buf;
   let d = descr () in
@@ -684,6 +697,9 @@ let print_structure_to_file (fn,si,mo) dry struc =
     tunknown = struct_type_search ((==) Tunknown) struc;
     magic = false }
   in
+  (* Scan the structure to find which custom constants are actually used,
+     so that only their associated imports appear in the generated header. *)
+  mark_used_customs struc;
   (* First, a dry run, for computing objects to rename or duplicate *)
   set_phase Pre;
   ignore (d.pp_struct struc);

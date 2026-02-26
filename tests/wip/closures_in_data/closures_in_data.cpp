@@ -2,13 +2,10 @@
 #include <any>
 #include <cassert>
 #include <closures_in_data.h>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <utility>

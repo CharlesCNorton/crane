@@ -2,16 +2,12 @@
 #include <any>
 #include <bench_let_in.h>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 unsigned int BenchLetIn::swap_snd(const unsigned int a, const unsigned int b) {

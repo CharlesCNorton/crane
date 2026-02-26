@@ -1,15 +1,11 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <eval_expr.h>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>

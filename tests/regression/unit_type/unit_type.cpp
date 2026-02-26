@@ -1,17 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
 #include <unit_type.h>
-#include <utility>
 #include <variant>
 
 unit UnitType::return_unit(const unsigned int _x) { return unit::tt; }

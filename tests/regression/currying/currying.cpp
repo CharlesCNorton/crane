@@ -1,17 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <currying.h>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 unsigned int Currying::add3(const unsigned int a, const unsigned int b,

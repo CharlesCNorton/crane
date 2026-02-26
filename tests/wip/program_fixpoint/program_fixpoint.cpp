@@ -1,17 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <program_fixpoint.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 std::shared_ptr<List::list<unsigned int>> ProgFix::interleave_func(

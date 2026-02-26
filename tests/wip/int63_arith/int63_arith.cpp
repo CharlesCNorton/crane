@@ -1,17 +1,14 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <int63_arith.h>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 int64_t Int63Arith::i_abs(const int64_t x) {

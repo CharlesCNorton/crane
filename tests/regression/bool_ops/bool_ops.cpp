@@ -2,16 +2,12 @@
 #include <any>
 #include <bool_ops.h>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 bool BoolOps::my_negb(const bool b) {

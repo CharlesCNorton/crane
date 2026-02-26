@@ -1,17 +1,13 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <functional>
 #include <implicit_args.h>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 unsigned int ImplicitArgs::add_one(const unsigned int _x0) {

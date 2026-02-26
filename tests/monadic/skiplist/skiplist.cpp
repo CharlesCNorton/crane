@@ -1,23 +1,17 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <mini_stm.h>
 #include <optional>
-#include <persistent_array.h>
 #include <skiplist.h>
 #include <skipnode.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
-#include <vector>
 
 bool Nat::eqb(const unsigned int n, const unsigned int m) {
   if (n <= 0) {

@@ -1011,6 +1011,18 @@ let reset_extraction_blacklist () = Lib.add_leaf (reset_blacklist ())
 (* UGLY HACK: to be defined in [extraction.ml] *)
 let (use_type_scheme_nb_args, type_scheme_nb_args_hook) = Hook.make ()
 
+(* Track which custom GlobRefs are actually used during extraction. *)
+let used_refs = ref Refset'.empty
+let mark_custom_used r =
+  used_refs := Refset'.add r !used_refs;
+  (* When a constructor is used, also mark its parent inductive so that
+     imports registered on the IndRef are included. *)
+  match r with
+  | GlobRef.ConstructRef (ip, _) ->
+    used_refs := Refset'.add (GlobRef.IndRef ip) !used_refs
+  | _ -> ()
+let reset_used_custom_imports () = used_refs := Refset'.empty
+
 let customs = Summary.ref Refmap'.empty ~name:"CraneExtrCustom"
 
 let add_custom r ids s = customs := Refmap'.add r (ids,s) !customs
@@ -1023,7 +1035,9 @@ let is_foreign_custom r = (is_custom r) && (to_foreign r)
 
 let find_callback r = Refmap'.find r !callback_map
 
-let find_custom r = snd (Refmap'.find r !customs)
+let find_custom r =
+  mark_custom_used r;
+  snd (Refmap'.find r !customs)
 
 let find_type_custom r = Refmap'.find r !customs
 
@@ -1045,7 +1059,9 @@ let is_custom_match pv =
   with Not_found -> false
 
 let find_custom_match pv =
-  Refmap'.find (indref_of_match pv) !custom_matchs
+  let r = indref_of_match pv in
+  mark_custom_used r;
+  Refmap'.find r !custom_matchs
 
 (* Printing entries *)
 
@@ -1081,6 +1097,29 @@ let in_custom_matchs : GlobRef.t * string -> obj =
 
 (* Grammar entries. *)
 
+(* Custom imports are now tracked per-GlobRef rather than globally.
+   When a [From "header.h"] clause appears in an extraction directive,
+   the header is associated with the specific GlobRef being mapped.
+   During extraction, [find_custom] records which GlobRefs are actually
+   used, and [get_custom_imports] returns only the headers for those refs.
+   This prevents unused mappings (e.g. PrimArray in a file that only uses
+   PrimInt63) from injecting spurious #include directives. *)
+
+let ref_imports = Summary.ref Refmap'.empty ~name:"CraneRefImports"
+
+let add_ref_import r s =
+  if not (String.is_empty s) then
+    let existing = try Refmap'.find r !ref_imports with Not_found -> StringSet.empty in
+    ref_imports := Refmap'.add r (StringSet.add s existing) !ref_imports
+
+let ref_imports_object : (GlobRef.t * string) -> obj =
+  declare_object @@ superglobal_object_nodischarge "Crane Ref Imports"
+    ~cache:(fun (r, s) -> add_ref_import r s)
+    ~subst:(Some (fun (sub, (r, s)) -> (fst (subst_global sub r), s)))
+
+
+(* Legacy global custom imports (kept for backward compatibility with
+   [add_custom_import] which is called directly in some places). *)
 let empty_custom_imports = StringSet.empty
 
 let custom_imports = Summary.ref empty_custom_imports ~name:"CraneCustomImports"
@@ -1094,8 +1133,14 @@ let custom_imports_object : string -> obj =
     ~cache:(fun s -> add_custom_import s)
     ~subst:None
 
+(* Returns only the imports for custom constants/inductives that were
+   actually referenced during extraction, plus any legacy global imports. *)
 let get_custom_imports () =
-  StringSet.elements !custom_imports
+  let used_imports = Refset'.fold (fun r acc ->
+    try StringSet.union (Refmap'.find r !ref_imports) acc
+    with Not_found -> acc
+  ) !used_refs StringSet.empty in
+  StringSet.elements (StringSet.union !custom_imports used_imports)
 
 let extract_callback optstr x =
   if lang () != Cpp then
@@ -1140,7 +1185,11 @@ let extract_constant_foreign r s =
   extract_constant_generic r [] s (arity_handler) (is_inline_custom, "inline") (fun g -> foreign_extraction [g])
 
 let extract_constant_import inline r ids s imports =
-  List.iter (fun i -> add_custom_import i; Lib.add_leaf (custom_imports_object i)) imports;
+  let g = Smartlocate.global_with_alias r in
+  List.iter (fun i ->
+    add_ref_import g i;
+    Lib.add_leaf (ref_imports_object (g, i))
+  ) imports;
   extract_constant_inline inline r ids s
 
 let extract_inductive r s l optstr imports =
@@ -1149,7 +1198,10 @@ let extract_inductive r s l optstr imports =
   Dumpglob.add_glob ?loc:r.CAst.loc g;
   match g with
     | GlobRef.IndRef ((kn,i) as ip) ->
-        List.iter (fun i -> add_custom_import i; Lib.add_leaf (custom_imports_object i)) imports;
+        List.iter (fun i ->
+          add_ref_import g i;
+          Lib.add_leaf (ref_imports_object (g, i))
+        ) imports;
         let mib = Global.lookup_mind kn in
         let n = Array.length mib.mind_packets.(i).mind_consnames in
         if not (Int.equal n (List.length l)) then error_nb_cons ();
@@ -1215,13 +1267,19 @@ let extract_monad m b r s imports =
     | GlobRef.ConstRef kn ->
         if is_monad mon then
           CErrors.user_err ((str "The term ") ++ safe_pr_long_global mon ++ (str " is already defined as a custom monad"));
-        List.iter (fun i -> add_custom_import i; Lib.add_leaf (custom_imports_object i)) imports;
+        List.iter (fun i ->
+          add_ref_import mon i;
+          Lib.add_leaf (ref_imports_object (mon, i))
+        ) imports;
         Lib.add_leaf (monad_extraction (mon,bind,ret,s));
         Lib.add_leaf (in_customs (mon,[],s));
     | GlobRef.IndRef kn ->
         if is_monad mon then
           CErrors.user_err ((str "The term ") ++ safe_pr_long_global mon ++ (str " is already defined as a custom monad"));
-        List.iter (fun i -> add_custom_import i; Lib.add_leaf (custom_imports_object i)) imports;
+        List.iter (fun i ->
+          add_ref_import mon i;
+          Lib.add_leaf (ref_imports_object (mon, i))
+        ) imports;
         Lib.add_leaf (monad_extraction (mon,bind,ret,s));
         Lib.add_leaf (in_customs (mon,[],s));
     | _ -> error_constant ?loc:m.CAst.loc mon
@@ -1321,4 +1379,4 @@ let reset_tables () =
   init_typedefs (); init_cst_types (); init_inductives ();
   init_inductive_kinds (); init_enum_inductives (); init_sigma_assertions (); init_recursors ();
   init_projs (); init_axioms (); init_opaques (); reset_modfile ();
-  init_glob_tys ()
+  init_glob_tys (); reset_used_custom_imports ()

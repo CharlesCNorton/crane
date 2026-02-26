@@ -254,6 +254,8 @@ val reset_extraction_callback : unit -> unit
 val extract_callback : string option -> qualid -> unit
 val add_custom_import : string -> unit
 val get_custom_imports : unit -> string list
+val mark_custom_used : GlobRef.t -> unit
+val reset_used_custom_imports : unit -> unit
 val extract_constant_inline :
   bool -> qualid -> string list -> string -> unit
 val extract_constant_import :

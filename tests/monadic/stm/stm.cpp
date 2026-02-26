@@ -1,21 +1,15 @@
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <mini_stm.h>
 #include <optional>
-#include <persistent_array.h>
 #include <stdexcept>
 #include <stm.h>
 #include <string>
-#include <utility>
 #include <variant>
-#include <vector>
 
 unsigned int stmtest::stm_basic_counter() {
   std::shared_ptr<stm::TVar<unsigned int>> c = stm::newTVar<unsigned int>(0);
