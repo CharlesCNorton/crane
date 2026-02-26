@@ -99,16 +99,6 @@
   (alias runtest)
   (deps canon_struct.t.exe)
   (action (run ./canon_struct.t.exe))))
-(subdir nested_mod
- (rule
-  (targets nested_mod.t.exe)
-  (deps NestedMod.vo nested_mod.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} nested_mod.t.exe nested_mod.cpp nested_mod.t.cpp)))
- (rule
-  (alias runtest)
-  (deps nested_mod.t.exe)
-  (action (run ./nested_mod.t.exe))))
 
 (subdir psort
  (rule

@@ -56,22 +56,11 @@ struct List {
   };
 };
 
-template <typename T1, typename T2, MapsTo<T2, T1> F0>
-std::shared_ptr<List::list<T2>> map(F0 &&f,
-                                    const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 return List::list<T2>::ctor::nil_();
-                               },
-                               [&](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 T1 a = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
-                                 return List::list<T2>::ctor::cons_(
-                                     f(a), map<T1, T2>(f, std::move(l0)));
-                               }},
-                    l->v());
-}
+struct ListDef {
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static std::shared_ptr<List::list<T2>>
+  map(F0 &&f, const std::shared_ptr<List::list<T1>> &l);
+};
 
 struct Cotree {
   template <typename A> struct colist {
@@ -211,7 +200,8 @@ struct Cotree {
             } else {
               unsigned int fuel_ = fuel - 1;
               return tree<A>::ctor::node_(
-                  a, map<std::shared_ptr<cotree<A>>, std::shared_ptr<tree<A>>>(
+                  a, ListDef::map<std::shared_ptr<cotree<A>>,
+                                  std::shared_ptr<tree<A>>>(
                          [&](const std::shared_ptr<cotree<A>> _x0) {
                            return _x0->tree_of_cotree(fuel_);
                          },
@@ -418,3 +408,21 @@ struct Cotree {
   static inline const unsigned int test_approx_size =
       tree_size<unsigned int>(test_approx);
 };
+
+template <typename T1, typename T2, MapsTo<T2, T1> F0>
+std::shared_ptr<List::list<T2>>
+ListDef::map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 return List::list<T2>::ctor::nil_();
+                               },
+                               [&](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 T1 a = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
+                                 return List::list<T2>::ctor::cons_(
+                                     f(a),
+                                     ListDef::map<T1, T2>(f, std::move(l0)));
+                               }},
+                    l->v());
+}

@@ -67,24 +67,10 @@ struct List {
           this->v());
     }
   };
+  template <typename T1>
+  static std::shared_ptr<List::list<T1>>
+  rev(const std::shared_ptr<List::list<T1>> &l);
 };
-
-template <typename T1>
-std::shared_ptr<List::list<T1>> rev(const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 return List::list<T1>::ctor::nil_();
-                               },
-                               [](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 T1 x = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l_ = _args._a1;
-                                 return rev<T1>(std::move(l_))
-                                     ->app(List::list<T1>::ctor::cons_(
-                                         x, List::list<T1>::ctor::nil_()));
-                               }},
-                    l->v());
-}
 
 template <typename T1, typename T2, MapsTo<T2, T1> F0>
 std::shared_ptr<List::list<T2>>
@@ -98,7 +84,7 @@ better_map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
     return std::visit(
         Overloaded{[&](const typename List::list<T1>::nil _args)
                        -> std::shared_ptr<List::list<T2>> {
-                     return rev<T2>(std::move(acc));
+                     return List::rev<T2>(std::move(acc));
                    },
                    [&](const typename List::list<T1>::cons _args)
                        -> std::shared_ptr<List::list<T2>> {
@@ -110,4 +96,22 @@ better_map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
         l0->v());
   };
   return go(l, List::list<T2>::ctor::nil_());
+}
+
+template <typename T1>
+std::shared_ptr<List::list<T1>>
+List::rev(const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 return List::list<T1>::ctor::nil_();
+                               },
+                               [](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 T1 x = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l_ = _args._a1;
+                                 return List::rev<T1>(std::move(l_))
+                                     ->app(List::list<T1>::ctor::cons_(
+                                         x, List::list<T1>::ctor::nil_()));
+                               }},
+                    l->v());
 }

@@ -18,12 +18,14 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
+struct Nat {
+  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                                      const unsigned int y,
+                                                      const unsigned int q,
+                                                      const unsigned int u);
 
-unsigned int div(const unsigned int x, const unsigned int y);
+  static unsigned int div(const unsigned int x, const unsigned int y);
+};
 
 struct NestedMod {
   struct Outer {
@@ -171,7 +173,7 @@ struct NestedMod {
   static inline const std::shared_ptr<Outer::Inner::shape> my_circle =
       Outer::Inner::shape::ctor::Circle_((((((0 + 1) + 1) + 1) + 1) + 1));
 
-  static inline const outer::color my_color = color::Red;
+  static inline const Outer::color my_color = Outer::color::Red;
 
   static inline const unsigned int test_area = Outer::Inner::area(my_circle);
 
@@ -180,3 +182,10 @@ struct NestedMod {
 
   static inline const unsigned int test_color = Outer::color_code(my_color);
 };
+
+std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                             const unsigned int y,
+                                             const unsigned int q,
+                                             const unsigned int u);
+
+unsigned int div(const unsigned int x, const unsigned int y);

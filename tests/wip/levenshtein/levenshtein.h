@@ -53,6 +53,8 @@ struct Nat {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  static bool0 leb(const std::shared_ptr<Nat::nat> &n,
+                   const std::shared_ptr<Nat::nat> &m);
 };
 
 struct SigT {
@@ -94,11 +96,6 @@ struct SigT {
 };
 
 enum class sumbool { left, right };
-
-bool0 leb(const std::shared_ptr<Nat::nat> &n,
-          const std::shared_ptr<Nat::nat> &m);
-
-sumbool bool_dec(const bool0 b1, const bool0 b2);
 
 struct Ascii {
   struct ascii {
@@ -150,47 +147,42 @@ struct Ascii {
             bool0 b6 = _args._a6;
             bool0 b7 = _args._a7;
             return std::visit(
-                Overloaded{
-                    [&](const typename Ascii::ascii::Ascii _args) -> sumbool {
-                      bool0 b8 = _args._a0;
-                      bool0 b9 = _args._a1;
-                      bool0 b10 = _args._a2;
-                      bool0 b11 = _args._a3;
-                      bool0 b12 = _args._a4;
-                      bool0 b13 = _args._a5;
-                      bool0 b14 = _args._a6;
-                      bool0 b15 = _args._a7;
+                Overloaded{[&](const typename Ascii::ascii::Ascii _args)
+                               -> sumbool {
+                  bool0 b8 = _args._a0;
+                  bool0 b9 = _args._a1;
+                  bool0 b10 = _args._a2;
+                  bool0 b11 = _args._a3;
+                  bool0 b12 = _args._a4;
+                  bool0 b13 = _args._a5;
+                  bool0 b14 = _args._a6;
+                  bool0 b15 = _args._a7;
+                  return [&](void) {
+                    switch (Bool::bool_dec(b0, b8)) {
+                    case sumbool::left: {
                       return [&](void) {
-                        switch (bool_dec(b0, b8)) {
+                        switch (Bool::bool_dec(b1, b9)) {
                         case sumbool::left: {
                           return [&](void) {
-                            switch (bool_dec(b1, b9)) {
+                            switch (Bool::bool_dec(b2, b10)) {
                             case sumbool::left: {
                               return [&](void) {
-                                switch (bool_dec(b2, b10)) {
+                                switch (Bool::bool_dec(b3, b11)) {
                                 case sumbool::left: {
                                   return [&](void) {
-                                    switch (bool_dec(b3, b11)) {
+                                    switch (Bool::bool_dec(b4, b12)) {
                                     case sumbool::left: {
                                       return [&](void) {
-                                        switch (bool_dec(b4, b12)) {
+                                        switch (Bool::bool_dec(b5, b13)) {
                                         case sumbool::left: {
                                           return [&](void) {
-                                            switch (bool_dec(b5, b13)) {
+                                            switch (Bool::bool_dec(b6, b14)) {
                                             case sumbool::left: {
                                               return [&](void) {
-                                                switch (bool_dec(b6, b14)) {
+                                                switch (
+                                                    Bool::bool_dec(b7, b15)) {
                                                 case sumbool::left: {
-                                                  return [&](void) {
-                                                    switch (bool_dec(b7, b15)) {
-                                                    case sumbool::left: {
-                                                      return sumbool::left;
-                                                    }
-                                                    case sumbool::right: {
-                                                      return sumbool::right;
-                                                    }
-                                                    }
-                                                  }();
+                                                  return sumbool::left;
                                                 }
                                                 case sumbool::right: {
                                                   return sumbool::right;
@@ -233,7 +225,13 @@ struct Ascii {
                         }
                         }
                       }();
-                    }},
+                    }
+                    case sumbool::right: {
+                      return sumbool::right;
+                    }
+                    }
+                  }();
+                }},
                 b->v());
           }},
           this->v());
@@ -309,6 +307,10 @@ struct String {
           this->v());
     }
   };
+};
+
+struct Bool {
+  static sumbool bool_dec(const bool0 b1, const bool0 b2);
 };
 
 struct Levenshtein {
@@ -695,10 +697,10 @@ struct Levenshtein {
     std::shared_ptr<Nat::nat> n2 = f(y);
     std::shared_ptr<Nat::nat> n3 = f(z);
     return [&](void) {
-      switch (leb(n1, n2)) {
+      switch (Nat::leb(n1, n2)) {
       case bool0::true0: {
         return [&](void) {
-          switch (leb(std::move(n1), std::move(n3))) {
+          switch (Nat::leb(std::move(n1), std::move(n3))) {
           case bool0::true0: {
             return x;
           }
@@ -710,7 +712,7 @@ struct Levenshtein {
       }
       case bool0::false0: {
         return [&](void) {
-          switch (leb(std::move(n2), std::move(n3))) {
+          switch (Nat::leb(std::move(n2), std::move(n3))) {
           case bool0::true0: {
             return y;
           }
@@ -737,3 +739,8 @@ struct Levenshtein {
   levenshtein(const std::shared_ptr<String::string> &,
               const std::shared_ptr<String::string> &);
 };
+
+bool0 leb(const std::shared_ptr<Nat::nat> &n,
+          const std::shared_ptr<Nat::nat> &m);
+
+sumbool bool_dec(const bool0 b1, const bool0 b2);

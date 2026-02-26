@@ -59,7 +59,7 @@ unsigned int Nat::div2(const unsigned int n) {
 
 unsigned int Equations::collatz_steps(const unsigned int _x0) {
   return [](const T1 _x0) {
-    return FixWf<unsigned int>(collatz_steps_functional, _x0);
+    return Subterm::FixWf<unsigned int>(collatz_steps_functional, _x0);
   }(_x0);
 }
 
@@ -89,7 +89,7 @@ unsigned int Equations::collatz_steps_unfold(const unsigned int n) {
 
 std::shared_ptr<Equations::collatz_steps_graph>
 Equations::collatz_steps_graph_correct(const unsigned int n) {
-  return FixWf<unsigned int>(
+  return Subterm::FixWf<unsigned int>(
       [](unsigned int x,
          std::function<std::shared_ptr<Equations::collatz_steps_graph>(
              unsigned int)>
@@ -124,7 +124,8 @@ Equations::collatz_steps_graph_correct(const unsigned int n) {
 
 unsigned int Equations::gcd(const std::pair<unsigned int, unsigned int> _x0) {
   return [](const T1 _x0) {
-    return FixWf<std::pair<unsigned int, unsigned int>>(gcd_functional, _x0);
+    return Subterm::FixWf<std::pair<unsigned int, unsigned int>>(gcd_functional,
+                                                                 _x0);
   }(_x0);
 }
 
@@ -164,7 +165,7 @@ Equations::gcd_unfold(const std::pair<unsigned int, unsigned int> p) {
 
 std::shared_ptr<Equations::gcd_graph>
 Equations::gcd_graph_correct(const std::pair<unsigned int, unsigned int> p) {
-  return FixWf<std::pair<unsigned int, unsigned int>>(
+  return Subterm::FixWf<std::pair<unsigned int, unsigned int>>(
       [](std::pair<unsigned int, unsigned int> x,
          std::function<std::shared_ptr<Equations::gcd_graph>(
              std::pair<unsigned int, unsigned int>)>

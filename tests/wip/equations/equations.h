@@ -33,10 +33,10 @@ concept FunctionalInduction = requires {
   { I::fun_ind_prf() } -> std::convertible_to<std::any>;
 };
 
-template <typename T1, typename T2, MapsTo<T2, T1, std::function<T2(T1)>> F0>
-T2 FixWf(F0 &&step, const T1 x) {
-  return step(x, [&](T1 y) { return FixWf<T1, T2>(step, y); });
-}
+struct Subterm {
+  template <typename T1, typename T2, MapsTo<T2, T1, std::function<T2(T1)>> F0>
+  static T2 FixWf(F0 &&step, const T1 x);
+};
 
 struct Equations {
   template <MapsTo<unsigned int, unsigned int> F2>
@@ -780,3 +780,8 @@ struct Equations {
   static inline const unsigned int test_collatz =
       collatz_steps(((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
 };
+
+template <typename T1, typename T2, MapsTo<T2, T1, std::function<T2(T1)>> F0>
+T2 Subterm::FixWf(F0 &&step, const T1 x) {
+  return step(x, [&](T1 y) { return Subterm::FixWf<T1, T2>(step, y); });
+}

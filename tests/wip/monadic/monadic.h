@@ -56,27 +56,19 @@ struct List {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+  static T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                      const T1 a0);
 };
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
+struct Nat {
+  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                                      const unsigned int y,
+                                                      const unsigned int q,
+                                                      const unsigned int u);
 
-unsigned int div(const unsigned int x, const unsigned int y);
-
-template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
-T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
-  return std::visit(
-      Overloaded{
-          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
-          [&](const typename List::list<T2>::cons _args) -> T1 {
-            T2 b = _args._a0;
-            std::shared_ptr<List::list<T2>> l0 = _args._a1;
-            return fold_left<T1, T2>(f, std::move(l0), f(a0, b));
-          }},
-      l->v());
-}
+  static unsigned int div(const unsigned int x, const unsigned int y);
+};
 
 struct Monadic {
   template <typename T1> static std::optional<T1> option_return(const T1 x) {
@@ -132,7 +124,7 @@ struct Monadic {
   template <typename T1>
   static State<unsigned int, unsigned int>
   count_elements(const std::shared_ptr<List::list<T1>> &l) {
-    return fold_left<State<unsigned int, unsigned int>, T1>(
+    return List::fold_left<State<unsigned int, unsigned int>, T1>(
         [](std::function<std::pair<unsigned int, unsigned int>(unsigned int)>
                acc,
            T1 _x) {
@@ -255,3 +247,24 @@ struct Monadic {
                               List::list<unsigned int>::ctor::nil_()))))),
           0);
 };
+
+std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                             const unsigned int y,
+                                             const unsigned int q,
+                                             const unsigned int u);
+
+unsigned int div(const unsigned int x, const unsigned int y);
+
+template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+T1 List::fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                   const T1 a0) {
+  return std::visit(
+      Overloaded{
+          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
+          [&](const typename List::list<T2>::cons _args) -> T1 {
+            T2 b = _args._a0;
+            std::shared_ptr<List::list<T2>> l0 = _args._a1;
+            return List::fold_left<T1, T2>(f, std::move(l0), f(a0, b));
+          }},
+      l->v());
+}

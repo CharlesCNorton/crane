@@ -53,6 +53,11 @@ struct Nat {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  static std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
+                                       std::shared_ptr<Nat::nat> m);
+
+  static std::shared_ptr<Nat::nat> max(std::shared_ptr<Nat::nat> n,
+                                       std::shared_ptr<Nat::nat> m);
 };
 
 struct List {
@@ -106,12 +111,6 @@ struct List {
     }
   };
 };
-
-std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
-                              std::shared_ptr<Nat::nat> m);
-
-std::shared_ptr<Nat::nat> max(std::shared_ptr<Nat::nat> n,
-                              std::shared_ptr<Nat::nat> m);
 
 struct Tree {
   template <typename A> struct tree {
@@ -202,9 +201,10 @@ struct Tree {
                          -> std::shared_ptr<Nat::nat> {
                        std::shared_ptr<tree<A>> l = _args._a0;
                        std::shared_ptr<tree<A>> r = _args._a2;
-                       return add(add(Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
-                                      std::move(l)->size()),
-                                  std::move(r)->size());
+                       return Nat::add(
+                           Nat::add(Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
+                                    std::move(l)->size()),
+                           std::move(r)->size());
                      }},
           this->v());
     }
@@ -218,9 +218,9 @@ struct Tree {
                          -> std::shared_ptr<Nat::nat> {
                        std::shared_ptr<tree<A>> l = _args._a0;
                        std::shared_ptr<tree<A>> r = _args._a2;
-                       return add(
-                           Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
-                           max(std::move(l)->height(), std::move(r)->height()));
+                       return Nat::add(Nat::nat::ctor::S_(Nat::nat::ctor::O_()),
+                                       Nat::max(std::move(l)->height(),
+                                                std::move(r)->height()));
                      }},
           this->v());
     }
@@ -317,3 +317,9 @@ struct Tree {
                   Nat::nat::ctor::S_(Nat::nat::ctor::S_(Nat::nat::ctor::O_())),
                   tree<std::shared_ptr<Nat::nat>>::ctor::leaf_())));
 };
+
+std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
+                              std::shared_ptr<Nat::nat> m);
+
+std::shared_ptr<Nat::nat> max(std::shared_ptr<Nat::nat> n,
+                              std::shared_ptr<Nat::nat> m);

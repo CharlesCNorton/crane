@@ -19,7 +19,9 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 enum class comparison { Eq, Lt, Gt };
 
-comparison compare(const unsigned int n, const unsigned int m);
+struct Nat {
+  static comparison compare(const unsigned int n, const unsigned int m);
+};
 
 template <typename M>
 concept BaseType = requires { typename M::t; };
@@ -215,3 +217,5 @@ const NatMap::t mymap = NatMap::add(
               1) +
              1),
             NatMap::empty)));
+
+comparison compare(const unsigned int n, const unsigned int m);

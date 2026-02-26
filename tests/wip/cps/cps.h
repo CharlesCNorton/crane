@@ -67,7 +67,9 @@ struct List {
   };
 };
 
-bool even(const unsigned int n);
+struct Nat {
+  static bool even(const unsigned int n);
+};
 
 struct CPS {
   template <MapsTo<unsigned int, unsigned int> F1>
@@ -319,3 +321,5 @@ struct CPS {
                               ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
                               List::list<unsigned int>::ctor::nil_())))))));
 };
+
+bool even(const unsigned int n);

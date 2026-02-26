@@ -68,7 +68,9 @@ struct List {
   };
 };
 
-bool le_lt_dec(const unsigned int n, const unsigned int m);
+struct Compare_dec {
+  static bool le_lt_dec(const unsigned int n, const unsigned int m);
+};
 
 struct MergeSort {
   static std::pair<std::shared_ptr<List::list<unsigned int>>,
@@ -86,3 +88,5 @@ struct MergeSort {
   static std::shared_ptr<List::list<unsigned int>>
   msort(const std::shared_ptr<List::list<unsigned int>> &l);
 };
+
+bool le_lt_dec(const unsigned int n, const unsigned int m);

@@ -10,59 +10,6 @@
 #include <string>
 #include <variant>
 
-bool0 leb(const std::shared_ptr<Nat::nat> &n,
-          const std::shared_ptr<Nat::nat> &m) {
-  return std::visit(
-      Overloaded{[](const typename Nat::nat::O _args) -> bool0 {
-                   return bool0::true0;
-                 },
-                 [&](const typename Nat::nat::S _args) -> bool0 {
-                   std::shared_ptr<Nat::nat> n_ = _args._a0;
-                   return std::visit(
-                       Overloaded{
-                           [](const typename Nat::nat::O _args) -> bool0 {
-                             return bool0::false0;
-                           },
-                           [&](const typename Nat::nat::S _args) -> bool0 {
-                             std::shared_ptr<Nat::nat> m_ = _args._a0;
-                             return leb(std::move(n_), std::move(m_));
-                           }},
-                       m->v());
-                 }},
-      n->v());
-}
-
-sumbool bool_dec(const bool0 b1, const bool0 b2) {
-  return [&](void) {
-    switch (b1) {
-    case bool0::true0: {
-      return [&](void) {
-        switch (b2) {
-        case bool0::true0: {
-          return sumbool::left;
-        }
-        case bool0::false0: {
-          return sumbool::right;
-        }
-        }
-      }();
-    }
-    case bool0::false0: {
-      return [&](void) {
-        switch (b2) {
-        case bool0::true0: {
-          return sumbool::right;
-        }
-        case bool0::false0: {
-          return sumbool::left;
-        }
-        }
-      }();
-    }
-    }
-  }();
-}
-
 std::shared_ptr<Levenshtein::chain>
 Levenshtein::same_chain(const std::shared_ptr<String::string> &s) {
   return std::visit(
@@ -475,4 +422,57 @@ std::shared_ptr<Nat::nat>
 Levenshtein::levenshtein(const std::shared_ptr<String::string> &_x0,
                          const std::shared_ptr<String::string> &_x1) {
   return levenshtein_computed(_x0, _x1);
+}
+
+bool0 Nat::leb(const std::shared_ptr<Nat::nat> &n,
+               const std::shared_ptr<Nat::nat> &m) {
+  return std::visit(
+      Overloaded{[](const typename Nat::nat::O _args) -> bool0 {
+                   return bool0::true0;
+                 },
+                 [&](const typename Nat::nat::S _args) -> bool0 {
+                   std::shared_ptr<Nat::nat> n_ = _args._a0;
+                   return std::visit(
+                       Overloaded{
+                           [](const typename Nat::nat::O _args) -> bool0 {
+                             return bool0::false0;
+                           },
+                           [&](const typename Nat::nat::S _args) -> bool0 {
+                             std::shared_ptr<Nat::nat> m_ = _args._a0;
+                             return Nat::leb(std::move(n_), std::move(m_));
+                           }},
+                       m->v());
+                 }},
+      n->v());
+}
+
+sumbool Bool::bool_dec(const bool0 b1, const bool0 b2) {
+  return [&](void) {
+    switch (b1) {
+    case bool0::true0: {
+      return [&](void) {
+        switch (b2) {
+        case bool0::true0: {
+          return sumbool::left;
+        }
+        case bool0::false0: {
+          return sumbool::right;
+        }
+        }
+      }();
+    }
+    case bool0::false0: {
+      return [&](void) {
+        switch (b2) {
+        case bool0::true0: {
+          return sumbool::right;
+        }
+        case bool0::false0: {
+          return sumbool::left;
+        }
+        }
+      }();
+    }
+    }
+  }();
 }

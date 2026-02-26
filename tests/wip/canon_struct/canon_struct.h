@@ -17,7 +17,9 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-bool eqb(const bool b1, const bool b2);
+struct Bool {
+  static bool eqb(const bool b1, const bool b2);
+};
 
 struct CanonStruct {
   struct eqType {
@@ -57,7 +59,7 @@ struct CanonStruct {
         return (_x0 == _x1);
       };
 
-  static inline const std::shared_ptr<eqType> bool_eqType = eqb;
+  static inline const std::shared_ptr<eqType> bool_eqType = Bool::eqb;
 
   static bool same(const std::shared_ptr<eqType> &, const carrier,
                    const carrier);
@@ -67,3 +69,5 @@ struct CanonStruct {
 
   static inline const bool test_bool = same(bool_eqType, true, false);
 };
+
+bool eqb(const bool b1, const bool b2);

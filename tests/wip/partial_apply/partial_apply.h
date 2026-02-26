@@ -54,37 +54,16 @@ struct List {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+  static T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                      const T1 a0);
 };
 
-template <typename T1, typename T2, MapsTo<T2, T1> F0>
-std::shared_ptr<List::list<T2>> map(F0 &&f,
-                                    const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 return List::list<T2>::ctor::nil_();
-                               },
-                               [&](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 T1 a = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
-                                 return List::list<T2>::ctor::cons_(
-                                     f(a), map<T1, T2>(f, std::move(l0)));
-                               }},
-                    l->v());
-}
-
-template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
-T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
-  return std::visit(
-      Overloaded{
-          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
-          [&](const typename List::list<T2>::cons _args) -> T1 {
-            T2 b = _args._a0;
-            std::shared_ptr<List::list<T2>> l0 = _args._a1;
-            return fold_left<T1, T2>(f, std::move(l0), f(a0, b));
-          }},
-      l->v());
-}
+struct ListDef {
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static std::shared_ptr<List::list<T2>>
+  map(F0 &&f, const std::shared_ptr<List::list<T1>> &l);
+};
 
 struct PartialApply {
   static std::shared_ptr<List::list<unsigned int>>
@@ -227,3 +206,35 @@ struct PartialApply {
 
  static inline const unsigned int test_sum = sum_with_init(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<unsigned int>::ctor::cons_((0 + 1), List::list<unsigned int>::ctor::cons_(((0 + 1) + 1), List::list<unsigned int>::ctor::cons_((((0 + 1) + 1) + 1), List::list<unsigned int>::ctor::nil_()))));
 };
+
+template <typename T1, typename T2, MapsTo<T2, T1> F0>
+std::shared_ptr<List::list<T2>>
+ListDef::map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 return List::list<T2>::ctor::nil_();
+                               },
+                               [&](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 T1 a = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
+                                 return List::list<T2>::ctor::cons_(
+                                     f(a),
+                                     ListDef::map<T1, T2>(f, std::move(l0)));
+                               }},
+                    l->v());
+}
+
+template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+T1 List::fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                   const T1 a0) {
+  return std::visit(
+      Overloaded{
+          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
+          [&](const typename List::list<T2>::cons _args) -> T1 {
+            T2 b = _args._a0;
+            std::shared_ptr<List::list<T2>> l0 = _args._a1;
+            return List::fold_left<T1, T2>(f, std::move(l0), f(a0, b));
+          }},
+      l->v());
+}

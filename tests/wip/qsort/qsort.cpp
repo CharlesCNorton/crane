@@ -11,37 +11,6 @@
 #include <utility>
 #include <variant>
 
-bool le_lt_dec(const unsigned int n, const unsigned int m) {
-  if (n <= 0) {
-    return true;
-  } else {
-    unsigned int n0 = n - 1;
-    if (m <= 0) {
-      return false;
-    } else {
-      unsigned int n1 = m - 1;
-      if (le_lt_dec(n0, n1)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-}
-
-bool le_gt_dec(const unsigned int _x0, const unsigned int _x1) {
-  return le_lt_dec(_x0, _x1);
-}
-
-bool le_dec(const unsigned int n, const unsigned int m) {
-  bool s = le_gt_dec(n, m);
-  if (s) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 std::shared_ptr<Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
 Sort::sort_cons_prog(const unsigned int a,
                      const std::shared_ptr<List::list<unsigned int>> &_x,
@@ -58,7 +27,7 @@ Sort::sort_cons_prog(const unsigned int a,
             std::shared_ptr<
                 Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
                 s = sort_cons_prog(std::move(a), l, l);
-            bool s0 = ::le_lt_dec(std::move(a), y);
+            bool s0 = Compare_dec::le_lt_dec(std::move(a), y);
             if (s0) {
               return List::list<unsigned int>::ctor::cons_(
                   std::move(a),
@@ -114,7 +83,7 @@ Sort::merge(std::shared_ptr<List::list<unsigned int>> l1,
                         unsigned int a2 = _args._a0;
                         std::shared_ptr<List::list<unsigned int>> l2_ =
                             _args._a1;
-                        if (::le_lt_dec(a1, a2)) {
+                        if (Compare_dec::le_lt_dec(a1, a2)) {
                           return List::list<unsigned int>::ctor::cons_(
                               std::move(a1),
                               merge(std::move(l1_), std::move(l3)));
@@ -168,7 +137,7 @@ Sort::psort(const std::shared_ptr<List::list<unsigned int>> &_x0) {
               a, List::list<unsigned int>::ctor::nil_());
         },
         [](unsigned int a1, unsigned int a2) {
-          bool s = ::le_lt_dec(a1, a2);
+          bool s = Compare_dec::le_lt_dec(a1, a2);
           if (s) {
             return List::list<unsigned int>::ctor::cons_(
                 a1, List::list<unsigned int>::ctor::cons_(
@@ -195,7 +164,7 @@ std::shared_ptr<Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
 Sort::qsort(const std::shared_ptr<List::list<unsigned int>> &_x0) {
   return [](const std::shared_ptr<List::list<T1>> _x0) {
     return div_conq_pivot<unsigned int>(
-        ::le_dec, List::list<unsigned int>::ctor::nil_(),
+        Compare_dec::le_dec, List::list<unsigned int>::ctor::nil_(),
         [](unsigned int a, std::shared_ptr<List::list<unsigned int>> _x,
            std::shared_ptr<
                Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
@@ -207,4 +176,35 @@ Sort::qsort(const std::shared_ptr<List::list<unsigned int>> &_x0) {
         },
         _x0);
   }(_x0);
+}
+
+bool Compare_dec::le_lt_dec(const unsigned int n, const unsigned int m) {
+  if (n <= 0) {
+    return true;
+  } else {
+    unsigned int n0 = n - 1;
+    if (m <= 0) {
+      return false;
+    } else {
+      unsigned int n1 = m - 1;
+      if (Compare_dec::le_lt_dec(n0, n1)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+}
+
+bool Compare_dec::le_gt_dec(const unsigned int _x0, const unsigned int _x1) {
+  return Compare_dec::le_lt_dec(_x0, _x1);
+}
+
+bool Compare_dec::le_dec(const unsigned int n, const unsigned int m) {
+  bool s = Compare_dec::le_gt_dec(n, m);
+  if (s) {
+    return true;
+  } else {
+    return false;
+  }
 }

@@ -54,44 +54,25 @@ struct List {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+  static T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                      const T1 a0);
 };
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
+struct Nat {
+  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                                      const unsigned int y,
+                                                      const unsigned int q,
+                                                      const unsigned int u);
 
-unsigned int div(const unsigned int x, const unsigned int y);
+  static unsigned int div(const unsigned int x, const unsigned int y);
+};
 
-template <typename T1, typename T2, MapsTo<T2, T1> F0>
-std::shared_ptr<List::list<T2>> map(F0 &&f,
-                                    const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 return List::list<T2>::ctor::nil_();
-                               },
-                               [&](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T2>> {
-                                 T1 a = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
-                                 return List::list<T2>::ctor::cons_(
-                                     f(a), map<T1, T2>(f, std::move(l0)));
-                               }},
-                    l->v());
-}
-
-template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
-T1 fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l, const T1 a0) {
-  return std::visit(
-      Overloaded{
-          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
-          [&](const typename List::list<T2>::cons _args) -> T1 {
-            T2 b = _args._a0;
-            std::shared_ptr<List::list<T2>> l0 = _args._a1;
-            return fold_left<T1, T2>(f, std::move(l0), f(a0, b));
-          }},
-      l->v());
-}
+struct ListDef {
+  template <typename T1, typename T2, MapsTo<T2, T1> F0>
+  static std::shared_ptr<List::list<T2>>
+  map(F0 &&f, const std::shared_ptr<List::list<T1>> &l);
+};
 
 struct ClosuresInData {
   static inline const std::shared_ptr<
@@ -125,7 +106,7 @@ struct ClosuresInData {
   static inline const std::shared_ptr<transform> double_transform =
       std::make_shared<transform>(
           transform{[](unsigned int x) { return (x + x); },
-                    [](unsigned int x) { return div(x, ((0 + 1) + 1)); }});
+                    [](unsigned int x) { return Nat::div(x, ((0 + 1) + 1)); }});
 
   static unsigned int apply_forward(const std::shared_ptr<transform> &t,
                                     const unsigned int x);
@@ -260,3 +241,42 @@ struct ClosuresInData {
         1) +
        1));
 };
+
+std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                             const unsigned int y,
+                                             const unsigned int q,
+                                             const unsigned int u);
+
+unsigned int div(const unsigned int x, const unsigned int y);
+
+template <typename T1, typename T2, MapsTo<T2, T1> F0>
+std::shared_ptr<List::list<T2>>
+ListDef::map(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 return List::list<T2>::ctor::nil_();
+                               },
+                               [&](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T2>> {
+                                 T1 a = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
+                                 return List::list<T2>::ctor::cons_(
+                                     f(a),
+                                     ListDef::map<T1, T2>(f, std::move(l0)));
+                               }},
+                    l->v());
+}
+
+template <typename T1, typename T2, MapsTo<T1, T1, T2> F0>
+T1 List::fold_left(F0 &&f, const std::shared_ptr<List::list<T2>> &l,
+                   const T1 a0) {
+  return std::visit(
+      Overloaded{
+          [&](const typename List::list<T2>::nil _args) -> T1 { return a0; },
+          [&](const typename List::list<T2>::cons _args) -> T1 {
+            T2 b = _args._a0;
+            std::shared_ptr<List::list<T2>> l0 = _args._a1;
+            return List::fold_left<T1, T2>(f, std::move(l0), f(a0, b));
+          }},
+      l->v());
+}

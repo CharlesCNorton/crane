@@ -95,11 +95,13 @@ struct Sig0 {
   };
 };
 
-bool le_lt_dec(const unsigned int n, const unsigned int m);
+struct Compare_dec {
+  static bool le_lt_dec(const unsigned int n, const unsigned int m);
 
-bool le_gt_dec(const unsigned int, const unsigned int);
+  static bool le_gt_dec(const unsigned int, const unsigned int);
 
-bool le_dec(const unsigned int n, const unsigned int m);
+  static bool le_dec(const unsigned int n, const unsigned int m);
+};
 
 struct Sort {
   template <typename T1, typename T2,
@@ -111,7 +113,7 @@ struct Sort {
             MapsTo<T2, std::shared_ptr<List::list<T1>>, T2, T2> F3>
   static T2 div_conq(F0 &&splitF, const T2 x, F2 &&x0, F3 &&x1,
                      const std::shared_ptr<List::list<T1>> &ls) {
-    bool s = le_lt_dec(((0 + 1) + 1), ls->length());
+    bool s = Compare_dec::le_lt_dec(((0 + 1) + 1), ls->length());
     if (s) {
       return x1(ls, div_conq<T1, T2>(splitF, x, x0, x1, splitF(ls).first),
                 div_conq<T1, T2>(splitF, x, x0, x1, splitF(ls).second));
@@ -319,3 +321,9 @@ struct Sort {
   static std::shared_ptr<Sig0::sig0<std::shared_ptr<List::list<unsigned int>>>>
   qsort(const std::shared_ptr<List::list<unsigned int>> &);
 };
+
+bool le_lt_dec(const unsigned int n, const unsigned int m);
+
+bool le_gt_dec(const unsigned int, const unsigned int);
+
+bool le_dec(const unsigned int n, const unsigned int m);

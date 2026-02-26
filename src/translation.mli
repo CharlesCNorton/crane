@@ -67,6 +67,18 @@ val gen_dfuns : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * en
 (** Generate C++ headers (declarations) for a group of mutually recursive functions. *)
 val gen_dfuns_header : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
 
+(** Generate forward declarations matching the full definition signatures.
+    Unlike gen_dfuns_header which may simplify signatures for non-template functions,
+    this always derives specs from gen_decl_for_dfuns for signature consistency. *)
+val gen_dfuns_spec : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
+
+(** Convert a definition (Dfundef) to a declaration (Dfundecl) by stripping the body. *)
+val decl_to_spec : cpp_decl -> cpp_decl
+
+(** Clear and return any pending lifted declarations.
+    Used to prevent stale lifted decls from leaking between extraction passes. *)
+val take_lifted_decls : unit -> cpp_decl list
+
 (** {2 Inductive Type Generation} *)
 
 (** Generate C++ code for an inductive type (older style with make functions). *)

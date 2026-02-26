@@ -18,12 +18,14 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u);
+struct Nat {
+  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                                      const unsigned int y,
+                                                      const unsigned int q,
+                                                      const unsigned int u);
 
-unsigned int div(const unsigned int x, const unsigned int y);
+  static unsigned int div(const unsigned int x, const unsigned int y);
+};
 
 struct SPropTest {
   template <typename T1>
@@ -114,3 +116,10 @@ struct SPropTest {
       safe_div(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
                (((0 + 1) + 1) + 1));
 };
+
+std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
+                                             const unsigned int y,
+                                             const unsigned int q,
+                                             const unsigned int u);
+
+unsigned int div(const unsigned int x, const unsigned int y);

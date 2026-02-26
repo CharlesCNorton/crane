@@ -11,24 +11,6 @@
 #include <utility>
 #include <variant>
 
-bool le_lt_dec(const unsigned int n, const unsigned int m) {
-  if (n <= 0) {
-    return true;
-  } else {
-    unsigned int n0 = n - 1;
-    if (m <= 0) {
-      return false;
-    } else {
-      unsigned int n1 = m - 1;
-      if (le_lt_dec(n0, n1)) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-}
-
 std::pair<std::shared_ptr<List::list<unsigned int>>,
           std::shared_ptr<List::list<unsigned int>>>
 MergeSort::split(const std::shared_ptr<List::list<unsigned int>> &l) {
@@ -108,7 +90,7 @@ MergeSort::merge(std::shared_ptr<List::list<unsigned int>> l1,
                         unsigned int a2 = _args._a0;
                         std::shared_ptr<List::list<unsigned int>> l2_ =
                             _args._a1;
-                        if (::le_lt_dec(a1, a2)) {
+                        if (Compare_dec::le_lt_dec(a1, a2)) {
                           return List::list<unsigned int>::ctor::cons_(
                               std::move(a1),
                               merge(std::move(l1_), std::move(l3)));
@@ -166,4 +148,22 @@ MergeSort::msort_go(const unsigned int fuel,
 std::shared_ptr<List::list<unsigned int>>
 MergeSort::msort(const std::shared_ptr<List::list<unsigned int>> &l) {
   return msort_go(l->length(), l);
+}
+
+bool Compare_dec::le_lt_dec(const unsigned int n, const unsigned int m) {
+  if (n <= 0) {
+    return true;
+  } else {
+    unsigned int n0 = n - 1;
+    if (m <= 0) {
+      return false;
+    } else {
+      unsigned int n1 = m - 1;
+      if (Compare_dec::le_lt_dec(n0, n1)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
 }

@@ -97,24 +97,10 @@ struct List {
           this->v());
     }
   };
+  template <typename T1>
+  static std::shared_ptr<List::list<T1>>
+  rev(const std::shared_ptr<List::list<T1>> &l);
 };
-
-template <typename T1>
-std::shared_ptr<List::list<T1>> rev(const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 return List::list<T1>::ctor::nil_();
-                               },
-                               [](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 T1 x = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l_ = _args._a1;
-                                 return rev<T1>(std::move(l_))
-                                     ->app(List::list<T1>::ctor::cons_(
-                                         x, List::list<T1>::ctor::nil_()));
-                               }},
-                    l->v());
-}
 
 template <typename T1, typename T2>
 std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>
@@ -134,7 +120,8 @@ better_zip(const std::shared_ptr<List::list<T1>> &la,
             [&](const typename List::list<T1>::nil _args)
                 -> std::shared_ptr<
                     List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
-              return rev<std::shared_ptr<Prod::prod<T1, T2>>>(std::move(acc));
+              return List::rev<std::shared_ptr<Prod::prod<T1, T2>>>(
+                  std::move(acc));
             },
             [&](const typename List::list<T1>::cons _args)
                 -> std::shared_ptr<
@@ -146,7 +133,7 @@ better_zip(const std::shared_ptr<List::list<T1>> &la,
                       [&](const typename List::list<T2>::nil _args)
                           -> std::shared_ptr<
                               List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
-                        return rev<std::shared_ptr<Prod::prod<T1, T2>>>(
+                        return List::rev<std::shared_ptr<Prod::prod<T1, T2>>>(
                             std::move(acc));
                       },
                       [&](const typename List::list<T2>::cons _args)
@@ -167,4 +154,22 @@ better_zip(const std::shared_ptr<List::list<T1>> &la,
   };
   return go(la, lb,
             List::list<std::shared_ptr<Prod::prod<T1, T2>>>::ctor::nil_());
+}
+
+template <typename T1>
+std::shared_ptr<List::list<T1>>
+List::rev(const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 return List::list<T1>::ctor::nil_();
+                               },
+                               [](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 T1 x = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l_ = _args._a1;
+                                 return List::rev<T1>(std::move(l_))
+                                     ->app(List::list<T1>::ctor::cons_(
+                                         x, List::list<T1>::ctor::nil_()));
+                               }},
+                    l->v());
 }

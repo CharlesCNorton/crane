@@ -101,6 +101,35 @@ let eponymous_record : (GlobRef.t * GlobRef.t option list * Miniml.ml_ind_packet
    This allows cross-module method call transformation. *)
 let global_method_registry : (GlobRef.t, GlobRef.t * int) Hashtbl.t = Hashtbl.create 100
 
+(* Wrapper module table: maps ModPath.t of imported modules to their
+   wrapper struct name. When a module like Stdlib.Init.Nat is wrapped
+   in 'struct Nat { ... }', this table records the mapping so that
+   references to functions in that module get properly qualified. *)
+let wrapper_module_table : (ModPath.t, string) Hashtbl.t = Hashtbl.create 16
+
+(* Pending wrapper declarations: maps a Dnspace struct name (e.g., "Nat") to
+   pre-rendered forward declarations (specs) that should be injected into that struct.
+   Full definitions are rendered separately in PASS 3 after all types are defined.
+   Populated during do_struct_with_decl_tracking PASS 1.
+   Consumed during Dnspace rendering in PASS 2. *)
+let pending_wrapper_decls : (string, Pp.t) Hashtbl.t = Hashtbl.create 16
+
+(* Check if a GlobRef belongs to a wrapper module and return the qualified name.
+   If the reference's module path matches a wrapper module, prepend the struct name.
+   Only qualify ConstRef globals (actual Coq constants from modules).
+   VarRef globals are lifted declarations (like _foo_aux) that should not be
+   qualified with a wrapper struct name — their modpath comes from Lib.make_kn
+   which reflects the current library, not the wrapper module. *)
+let wrapper_qualify_name (r : GlobRef.t) (name : string) : string =
+  match r with
+  | GlobRef.VarRef _ -> name  (* Lifted declarations: never qualify *)
+  | _ ->
+    let mp = modpath_of_r r in
+    match Hashtbl.find_opt wrapper_module_table mp with
+    | Some struct_name when not (String.contains name ':') ->
+      struct_name ^ "::" ^ name
+    | _ -> name
+
 let register_method (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) =
   Hashtbl.replace global_method_registry func_ref (epon_ref, this_pos)
 
@@ -181,7 +210,9 @@ let reset_cpp_state () =
   method_candidates := [];
   current_structure_decls := [];
   Hashtbl.clear global_method_registry;
-  Hashtbl.clear global_eponymous_record_registry
+  Hashtbl.clear global_eponymous_record_registry;
+  Hashtbl.clear wrapper_module_table;
+  Hashtbl.clear pending_wrapper_decls
 
 (* Pre-register all methods from the entire structure before code generation.
    This ensures that cross-module method calls (like List.app from stmtest)
@@ -454,8 +485,12 @@ let pp_inductive_type_name r =
       (* Local inductive: use lowercase name directly *)
       str (String.uncapitalize_ascii (str_global Type r))
   | GlobRef.IndRef _ when is_enum_inductive r ->
-      (* Enum inductive: use lowercase name directly (no namespace wrapper) *)
-      str (String.uncapitalize_ascii (str_global Type r))
+      (* Enum inductive: use lowercase name directly (no namespace wrapper).
+         If already module-qualified (e.g., "Outer::color"), use as-is to
+         avoid lowercasing the module prefix. *)
+      let name = str_global Type r in
+      if is_qualified_name name then str name
+      else str (String.uncapitalize_ascii name)
   | GlobRef.IndRef _ ->
       let base = str_global Type r in
       if is_qualified_name base then
@@ -888,9 +923,13 @@ let rec pp_cpp_type par vl t =
                 Use pp_global_name to get just the base name, not the qualified path. *)
              str (String.capitalize_ascii (Common.pp_global_name Type r')) ++ templates
            else if is_enum_inductive r' then
-             (* Enum inductives have no wrapper struct - just the enum name *)
-             let inner_name = String.uncapitalize_ascii type_name_str in
-             str inner_name ++ templates
+             (* Enum inductives have no wrapper struct - just the enum name.
+                If the name is already module-qualified (e.g., "Outer::color"),
+                use it as-is; otherwise uncapitalize the base name only. *)
+             if is_qualified_name type_name_str then
+               str type_name_str ++ templates
+             else
+               str (String.uncapitalize_ascii type_name_str) ++ templates
            else if is_qualified_name type_name_str then
              (* Already qualified (e.g., C::t from module parameter): add typename if in template *)
              typename_prefix_for type_name_str ++ str type_name_str ++ templates
@@ -906,11 +945,17 @@ let rec pp_cpp_type par vl t =
            C++ templates require 'typename' to access nested types from dependent base types. *)
         let base_str = match base_ty with
           | Tglob (r, _, _) ->
-            let (ns_name, needs_ns) = inductive_name_info r in
-            if needs_ns then
-              ns_name ++ str "::" ++ pp_rec false base_ty
-            else
+            let type_name_str = str_global Type r in
+            if is_qualified_name type_name_str then
+              (* Name already module-qualified (e.g., "NestedTree::tree"):
+                 use pp_rec which handles the qualification correctly *)
               pp_rec false base_ty
+            else
+              let (ns_name, needs_ns) = inductive_name_info r in
+              if needs_ns then
+                ns_name ++ str "::" ++ pp_rec false base_ty
+              else
+                pp_rec false base_ty
           | _ -> pp_rec false base_ty
         in
         str "typename " ++ base_str ++ str "::" ++ Id.print nested_id
@@ -1014,7 +1059,12 @@ and pp_cpp_expr env args t =
            str (String.capitalize_ascii struct_name) ++ str "<" ++ str placeholder_args ++ str ">::" ++ str func_name
          | None, _ ->
            (* Normal case: function not in eponymous struct *)
-           if needs_global_qualifier x then
+           let name = str_global Term x in
+           let qualified_name = wrapper_qualify_name x name in
+           if qualified_name <> name then
+             (* Name was qualified by wrapper module (e.g., Nat::div) *)
+             str qualified_name
+           else if needs_global_qualifier x then
              str "::" ++ pp_global Term x
            else
              pp_global Term x)
@@ -1228,10 +1278,15 @@ and pp_cpp_expr env args t =
         else str "([&]() -> auto { throw std::logic_error(\"" ++ str msg ++ str "\"); })()"
   | CPPenum_val (ind, ctor) ->
       (* Generate EnumType::Constructor for enum class values.
-         Use pp_global_name to get the unqualified base name, since str_global
-         may return a module-qualified name like "Unit::unit" in .cpp context. *)
-      let base = Common.pp_global_name Type ind in
-      str (String.uncapitalize_ascii base) ++ str "::" ++ Id.print ctor
+         Use str_global for proper module qualification (e.g., Outer::color::Red).
+         Only uncapitalize the last component of the name. *)
+      let full_name = str_global Type ind in
+      let enum_name = match String.rindex_opt full_name ':' with
+        | Some i -> String.sub full_name 0 (i + 1) ^
+                     String.uncapitalize_ascii (String.sub full_name (i + 1) (String.length full_name - i - 1))
+        | None -> String.uncapitalize_ascii full_name
+      in
+      str enum_name ++ str "::" ++ Id.print ctor
   (* Low-level constructs for reuse optimization *)
   | CPPraw code -> str code
   | CPPbinop (op, lhs, rhs) ->
@@ -1501,13 +1556,24 @@ function
     (* Capitalize the struct name. The inner inductive struct is lowercase,
        so capitalization creates different names: struct List { struct list { ... }; };
        For already capitalized names like 'Ordering', inner becomes 'ordering'. *)
-    let struct_name = match id with
+    let struct_name_str = match id with
       | GlobRef.IndRef (kn, i) ->
-          let base = str_global Type id in
-          str (String.capitalize_ascii base)
-      | _ -> pp_global Type id
+          String.capitalize_ascii (str_global Type id)
+      | _ -> string_of_ppcmds (pp_global Type id)
     in
-    h (str "struct " ++ struct_name ++ str " {") ++ fnl () ++ ds ++ fnl () ++ str "};"
+    (* Check for pending wrapper declarations that should be injected into this struct.
+       This handles the case where a module (e.g., Nat with add/div functions) has the
+       same struct name as a Dnspace-wrapped inductive (e.g., nat → struct Nat).
+       Only forward declarations (specs) are injected here. Full definitions are
+       deferred until after all structs are emitted, because template function bodies
+       may reference types (like ListDef) defined in later structs. *)
+    let pending_fwd = match Hashtbl.find_opt pending_wrapper_decls struct_name_str with
+      | Some specs ->
+        Hashtbl.remove pending_wrapper_decls struct_name_str;
+        fnl () ++ specs
+      | None -> mt ()
+    in
+    h (str "struct " ++ str struct_name_str ++ str " {") ++ fnl () ++ ds ++ pending_fwd ++ fnl () ++ str "};"
 | Dfundef (ids, ret_ty, params, body) ->
     let params_s =
       pp_list (fun (id, ty) ->
@@ -1518,9 +1584,13 @@ function
       | [] -> pp_global Type n
       | _ -> pp_global Type n ++ str "<" ++ (pp_list (pp_cpp_type false []) tys) ++ str ">")) ids
       in
-    (* If generating out-of-struct definitions, prepend struct name *)
+    (* If generating out-of-struct definitions, prepend struct name.
+       Skip for VarRef (lifted declarations like _foo_aux) which don't belong to the struct. *)
+    let is_lifted = match ids with
+      | (GlobRef.VarRef _, _) :: _ -> true
+      | _ -> false in
     let name = match !current_struct_name with
-      | Some struct_name when not !in_struct_context -> struct_name ++ str "::" ++ base_name
+      | Some struct_name when not !in_struct_context && not is_lifted -> struct_name ++ str "::" ++ base_name
       | _ -> base_name
       in
     let body_s = pp_list_stmt (pp_cpp_stmt env []) body in
@@ -2072,6 +2142,56 @@ let pp_hdecl = function
             pp_list_stmt (fun(ds, env, _) ->  pp_cpp_decl env ds) (gen_dfuns (rv, defs, typs))
           else
             pp_list_stmt (fun(ds, env) ->  pp_cpp_decl env ds) (gen_dfuns_header (rv, defs, typs))
+
+(* Like pp_hdecl but always generates forward declarations (specs), even for
+   template functions. Used for wrapper struct injection into Dnspace structs
+   where the full definitions are emitted later to avoid forward reference issues. *)
+let pp_hdecl_spec_only = function
+    | Dtype (r,_,_) when is_any_inline_custom r -> mt ()
+    | Dterm (r,_,_) when is_any_inline_custom r -> mt ()
+    | Dterm (r,_,_) when is_eponymous_record_projection r -> mt ()
+    | Dind (kn,i) -> pp_cpp_ind_header kn i
+    | Dtype (r, l, t) ->
+        let name = pp_global Type r in
+        let l = rename_tvars keywords l in
+        let ids, def =
+          try
+            let ids,s = find_type_custom r in
+            pp_string_parameters ids, str " =" ++ spc () ++ str s
+          with Not_found ->
+            pp_parameters l,
+            if t == Taxiom then str " (* AXIOM TO BE REALIZED *)"
+            else str " =" ++ spc () ++ pp_type false l t
+        in
+        pp_tydef l name def
+    | Dterm (r, _, _) when List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env r r') !method_candidates -> mt ()
+    | Dterm (r, _, _) when is_registered_method r <> None -> mt ()
+    | Dterm (r, a, Tglob (ty, args,e)) when is_monad ty -> mt () (* skip monadic for spec *)
+    | Dterm (r, a, t) when Translation.is_typeclass_instance a t -> mt () (* skip typeclasses for spec *)
+    | Dterm (r, a, t) ->
+        (* Use gen_decl_for_pp to get the same signature as the full definition,
+           then convert to a spec. This ensures forward declarations match
+           out-of-line definitions, including concept-constrained template params. *)
+        let (ds, env, tvars) = gen_decl_for_pp r a t in
+        begin match ds, tvars with
+        | Some ds, _::_ ->
+            pp_cpp_decl env (Translation.decl_to_spec ds)
+        | _ ->
+            let (ds, env) = gen_spec r a t in pp_cpp_decl env ds
+        end
+    | Dfix (rv,defs,typs) ->
+          let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
+          let is_global_method x = is_registered_method x <> None in
+          let filter = Array.to_list (Array.map (fun x -> not (is_inline_custom x) && not (is_method_candidate x) && not (is_global_method x) && not (is_eponymous_record_projection x)) rv) in
+          let rv = Array.filter_with filter rv in
+          let defs = Array.filter_with filter defs in
+          let typs = Array.filter_with filter typs in
+          if Array.length rv = 0 then mt ()
+          else
+            (* Generate specs derived from the full definition signatures (gen_dfuns_spec)
+               to ensure forward declarations match the out-of-line definitions,
+               including concept-constrained template parameters. *)
+            pp_list_stmt (fun (ds, env) -> pp_cpp_decl env ds) (gen_dfuns_spec (rv, defs, typs))
 
 
 let pp_spec = function
@@ -2696,27 +2816,184 @@ let rec pre_register_enum_inductives (sel : (Label.t * Miniml.ml_structure_elem)
     | _ -> ()
   ) sel
 
-let do_struct_with_decl_tracking f s =
+let do_struct_with_decl_tracking ~is_header f s =
+  (* Clear any stale lifted declarations from previous extraction passes.
+     The extraction framework calls pp_struct/pp_hstruct multiple times
+     (dry run, impl, intf) and lifted decls can leak between passes. *)
+  ignore (Translation.take_lifted_decls ());
   (* Pre-register all methods from the entire structure BEFORE any code generation.
      This ensures cross-module method calls (like List.app from stmtest) are
      recognized correctly when generating code. *)
   List.iter (fun (_mp, sel) -> pre_register_methods_from_structure ~at_top_level:true [] sel) s;
   (* Pre-register enum inductives so type conversion and code gen see them *)
   List.iter (fun (_mp, sel) -> pre_register_enum_inductives sel) s;
-  let ppl (mp,sel) =
-    push_visible mp [];
-    (* Track structure declarations for sibling access during inductive generation *)
+  (* The main module is the last entry in the structure list.
+     Only imported dependency modules should get wrapper structs. *)
+  let main_mp = match List.rev s with
+    | (mp, _) :: _ -> Some mp
+    | [] -> None in
+  (* Classify which modules need wrapper structs.
+     Imported modules (like Stdlib.Init.Nat) contribute bare SEdecl entries,
+     while the main extraction module uses SEmodule which already wraps in a struct.
+     To avoid struct name collisions (e.g., both inductive `nat` via Dnspace and
+     module `Nat` producing `struct Nat`), we separate type and function declarations:
+     - Type declarations (inductives) render normally with Dnspace wrapping
+     - Function declarations are stored in pending_wrapper_decls for injection
+       into the matching Dnspace struct, or emitted as a standalone wrapper struct
+       if no Dnspace struct with that name exists. *)
+  let is_func_decl (_, se) = match se with
+    | SEdecl (Dterm _ | Dfix _) -> true
+    | _ -> false in
+  let classify_module (mp, sel) =
+    let has_func = List.exists is_func_decl sel in
+    let has_bare = List.exists (fun (_, se) -> match se with SEdecl _ -> true | _ -> false) sel in
+    let all_bare = not (List.exists (fun (_, se) -> match se with SEmodule _ | SEmodtype _ -> true | _ -> false) sel) in
+    let is_main = match main_mp with Some m -> ModPath.equal mp m | None -> false in
+    if has_bare && all_bare && is_modfile mp && has_func && not is_main then begin
+      let name = String.capitalize_ascii (string_of_modfile mp) in
+      Hashtbl.replace wrapper_module_table mp name;
+      Some name
+    end else
+      None in
+  (* Pre-compute wrapper names for all modules *)
+  let wrapper_names = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
+  (* PASS 1: Pre-render function declarations from wrapper modules.
+     This must happen BEFORE rendering type declarations, because Dnspace structs
+     (created during type rendering) need to pick up pending function declarations.
+
+     We generate TWO renderings for each wrapper module's functions:
+     1. Forward declarations (specs) — injected into the Dnspace struct
+     2. Full out-of-line definitions — emitted after all structs are defined
+
+     This split is necessary because template function bodies may reference types
+     (like ListDef) defined in later structs. Forward declarations don't have bodies,
+     so they can safely appear inside the struct. Full definitions are placed after
+     all struct definitions where all types are visible.
+
+     For non-template functions, the spec is a forward declaration and the full
+     definition goes into the .cpp file (already handled by the normal rendering).
+     For template functions, both the spec and full definition go into the .h file. *)
+  let f_spec = pp_structure_elem ~is_header:true pp_hdecl_spec_only in
+  (* PASS 1: Only render forward declarations (specs) for wrapper modules.
+     Full definitions are deferred to PASS 3 (after all types are defined)
+     to avoid both forward reference issues and lifted declaration leaking. *)
+  List.iter (fun ((mp, sel), wrapper_name) ->
+    match wrapper_name with
+    | Some name ->
+      push_visible mp [];
+      let func_sels = List.filter is_func_decl sel in
+      let old_decls = !current_structure_decls in
+      current_structure_decls := sel;
+      let old_context = !in_struct_context in
+      in_struct_context := true;
+      let p_specs = prlist_sep_nonempty cut2 f_spec func_sels in
+      in_struct_context := old_context;
+      current_structure_decls := old_decls;
+      (* Clear any lifted decls created during spec rendering *)
+      ignore (Translation.take_lifted_decls ());
+      if not (Pp.ismt p_specs) then
+        Hashtbl.replace pending_wrapper_decls name p_specs;
+      pop_visible ()
+    | None -> ()
+  ) wrapper_names;
+  (* PASS 2: Render all modules. For wrapper modules, only render non-function
+     declarations (inductives, types). For non-wrapper modules, render everything
+     normally. Dnspace rendering picks up pending_wrapper_decls entries.
+
+     IMPORTANT: We keep the same push_visible/pop_visible pattern as the original code.
+     All modules push visibility, and for non-modular mode, visibility is only
+     popped at the end. This ensures that when rendering the main module (e.g.,
+     TopSort), references to imported module functions (e.g., map) are resolved
+     correctly without spurious module qualification.
+
+     Remaining standalone wrapper structs (not consumed by any Dnspace) are emitted
+     just before the first non-wrapper module (main module). This ensures all types
+     referenced by wrapper struct specs are already defined, and all wrapper structs
+     are defined before the main module references them. *)
+  let ppl ((mp, sel), wrapper_name) =
     let old_decls = !current_structure_decls in
     current_structure_decls := sel;
-    let p = prlist_sep_nonempty cut2 f sel in
+    push_visible mp [];
+    let p = match wrapper_name with
+      | Some _name ->
+        (* Only render non-function declarations. Functions were pre-rendered
+           and stored in pending_wrapper_decls for Dnspace injection. *)
+        let type_sels = List.filter (fun x -> not (is_func_decl x)) sel in
+        prlist_sep_nonempty cut2 f type_sels
+      | None ->
+        prlist_sep_nonempty cut2 f sel
+    in
     current_structure_decls := old_decls;
-    (* for monolithic extraction, we try to simulate the unavailability
-       of [MPfile] in names by artificially nesting these [MPfile] *)
-    (if modular () then pop_visible ()); p
+    (if modular () then pop_visible ());
+    p
   in
-  let p = prlist_sep_nonempty cut2 ppl s in
-  (if not (modular ()) then repeat (List.length s) pop_visible ());
-  v 0 p ++ fnl ()
+  (* Render all modules in original order *)
+  let rendered = List.map (fun wn -> (wn, ppl wn)) wrapper_names in
+  (* Find the last non-wrapper entry (main module) and insert remaining_wrappers before it.
+     Remaining wrapper structs are standalone wrappers not consumed by any Dnspace struct.
+     They must be emitted after all imported types are defined but before the main module. *)
+  let remaining_wrappers =
+    if is_header then
+      Hashtbl.fold (fun name specs acc ->
+        let wrapper = str "struct " ++ str name ++ str " {" ++ fnl () ++ specs ++ fnl () ++ str "};" in
+        acc ++ cut2 () ++ wrapper
+      ) pending_wrapper_decls (mt ())
+    else
+      mt ()
+  in
+  Hashtbl.clear pending_wrapper_decls;
+  (* Find insertion point: before the LAST non-wrapper entry (the main module).
+     All other entries (wrapper and non-wrapper alike) go before remaining_wrappers. *)
+  let rev_rendered = List.rev rendered in
+  let (main_entry, pre_entries) = match rev_rendered with
+    | (((_,_), None), p) :: rest -> (Some p, List.rev rest)
+    | _ -> (None, rendered)  (* No main module found; shouldn't happen *)
+  in
+  let p_pre = prlist_sep_nonempty cut2 snd pre_entries in
+  let p = match main_entry with
+    | Some main_p ->
+      prlist_sep_nonempty cut2 (fun x -> x) (List.filter (fun x -> not (Pp.ismt x)) [p_pre; remaining_wrappers; main_p])
+    | None ->
+      if Pp.ismt remaining_wrappers then p_pre
+      else if Pp.ismt p_pre then remaining_wrappers
+      else p_pre ++ cut2 () ++ remaining_wrappers
+  in
+  (* PASS 3: Render full out-of-line definitions for wrapper module functions.
+     This must happen AFTER PASS 2 so that:
+     1. All types (like ListDef) are defined and visible
+     2. Lifted declarations from main module processing don't leak into wrapper defs
+     For header mode: template function definitions with Struct:: prefix
+     For source mode: non-template function definitions with Struct:: prefix *)
+  (* Emit any lifted declarations from PASS 2 (e.g., _foo_aux from foo's code gen).
+     These are template helper functions that were created during main module rendering
+     but not yet collected by any gen_dfuns_header call because the consuming function
+     (e.g., repeat) is in a wrapper module deferred to PASS 3. *)
+  let pass2_lifted = Translation.take_lifted_decls () in
+  let pass2_lifted_pp = if is_header then
+    prlist_sep_nonempty cut2 (fun d -> pp_cpp_decl (empty_env ()) d) pass2_lifted
+  else mt () in
+  let deferred_defs = List.fold_left (fun acc ((mp, sel), wrapper_name) ->
+    match wrapper_name with
+    | Some name ->
+      push_visible mp [];
+      let func_sels = List.filter is_func_decl sel in
+      let old_decls = !current_structure_decls in
+      current_structure_decls := sel;
+      let old_struct_name = !current_struct_name in
+      current_struct_name := Some (str name);
+      let p_defs = prlist_sep_nonempty cut2 f func_sels in
+      current_struct_name := old_struct_name;
+      current_structure_decls := old_decls;
+      (* Clear lifted decls created by this wrapper's rendering to prevent leaking *)
+      ignore (Translation.take_lifted_decls ());
+      pop_visible ();
+      if Pp.ismt p_defs then acc else acc ++ cut2 () ++ p_defs
+    | None -> acc
+  ) (mt ()) wrapper_names in
+  (* For non-modular mode, pop remaining visible entries. *)
+  (if not (modular ()) then
+    repeat (List.length wrapper_names) pop_visible ());
+  v 0 (p ++ pass2_lifted_pp ++ deferred_defs) ++ fnl ()
 
 let do_struct f s =
   let ppl (mp,sel) =
@@ -2730,8 +3007,8 @@ let do_struct f s =
   (if not (modular ()) then repeat (List.length s) pop_visible ());
   v 0 p ++ fnl ()
 
-let pp_struct s = do_struct_with_decl_tracking (pp_structure_elem ~is_header:false pp_decl) s
-let pp_hstruct s = do_struct_with_decl_tracking (pp_structure_elem ~is_header:true pp_hdecl) s
+let pp_struct s = do_struct_with_decl_tracking ~is_header:false (pp_structure_elem ~is_header:false pp_decl) s
+let pp_hstruct s = do_struct_with_decl_tracking ~is_header:true (pp_structure_elem ~is_header:true pp_hdecl) s
 
 let pp_signature s = do_struct pp_specif s
 

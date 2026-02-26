@@ -11,39 +11,13 @@
 #include <utility>
 #include <variant>
 
-std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                             const unsigned int y,
-                                             const unsigned int q,
-                                             const unsigned int u) {
-  if (x <= 0) {
-    return std::make_pair(std::move(q), std::move(u));
-  } else {
-    unsigned int x_ = x - 1;
-    if (u <= 0) {
-      return divmod(std::move(x_), y, (q + 1), y);
-    } else {
-      unsigned int u_ = u - 1;
-      return divmod(std::move(x_), y, q, std::move(u_));
-    }
-  }
-}
-
-unsigned int div(const unsigned int x, const unsigned int y) {
-  if (y <= 0) {
-    return std::move(y);
-  } else {
-    unsigned int y_ = y - 1;
-    return divmod(x, y_, 0, y_).first;
-  }
-}
-
 std::optional<unsigned int> Monadic::safe_div(const unsigned int n,
                                               const unsigned int m) {
   if (m <= 0) {
     return std::nullopt;
   } else {
     unsigned int m_ = m - 1;
-    return std::make_optional<unsigned int>(::div(n, (m_ + 1)));
+    return std::make_optional<unsigned int>(Nat::div(n, (m_ + 1)));
   }
 }
 
@@ -67,4 +41,30 @@ std::optional<unsigned int> Monadic::div_then_sub(const unsigned int a,
         return option_bind<unsigned int, unsigned int>(
             safe_sub(x, c), option_return<unsigned int>);
       });
+}
+
+std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
+                                                  const unsigned int y,
+                                                  const unsigned int q,
+                                                  const unsigned int u) {
+  if (x <= 0) {
+    return std::make_pair(std::move(q), std::move(u));
+  } else {
+    unsigned int x_ = x - 1;
+    if (u <= 0) {
+      return Nat::divmod(std::move(x_), y, (q + 1), y);
+    } else {
+      unsigned int u_ = u - 1;
+      return Nat::divmod(std::move(x_), y, q, std::move(u_));
+    }
+  }
+}
+
+unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+  if (y <= 0) {
+    return std::move(y);
+  } else {
+    unsigned int y_ = y - 1;
+    return Nat::divmod(x, y_, 0, y_).first;
+  }
 }

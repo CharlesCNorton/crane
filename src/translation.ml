@@ -2427,6 +2427,29 @@ let gen_dfuns_header (ns,bs,tys) =
     lifted_results @ [main_result]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
+(* Convert a Dfundef (definition with body) to a Dfundecl (declaration without body).
+   Recursively handles Dtemplate wrappers. Used to generate forward declarations
+   that match the full definition's signature (including concept constraints). *)
+let rec decl_to_spec (d : cpp_decl) : cpp_decl =
+  match d with
+  | Dfundef (ids, ret_ty, params, _body) ->
+    Dfundecl (ids, ret_ty, List.map (fun (id, ty) -> (Some id, ty)) params)
+  | Dtemplate (temps, cstr, inner) ->
+    Dtemplate (temps, cstr, decl_to_spec inner)
+  | _ -> d  (* Already a declaration, return as-is *)
+
+(* Generate forward declarations (specs) for a group of mutually recursive functions,
+   using the SAME signature as the full definitions. This ensures the specs match
+   the out-of-line definitions (including concept-constrained template parameters).
+   Unlike gen_dfuns_header which may use gen_spec_for_sfuns (producing simpler signatures),
+   this always derives the spec from gen_decl_for_dfuns. *)
+let gen_dfuns_spec (ns,bs,tys) =
+  List.concat_map (fun (i, name) ->
+    let (ds, _env, _tvars) = gen_decl_for_dfuns name bs.(i) tys.(i) in
+    ignore (take_lifted_decls ());
+    [(decl_to_spec ds, empty_env ())]
+  ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
+
 let gen_ind_header vars name cnames tys =
   let templates = List.map (fun n -> (TTtypename, n)) vars in
   let add_templates d = match templates with

@@ -51,6 +51,8 @@ struct Nat {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  static std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
+                                       std::shared_ptr<Nat::nat> m);
 };
 
 struct List {
@@ -103,17 +105,25 @@ struct List {
   };
 };
 
+struct ListDef {
+  template <typename T1>
+  static std::shared_ptr<List::list<T1>>
+  repeat(const T1 x, const std::shared_ptr<Nat::nat> &n);
+};
+
+std::shared_ptr<Nat::nat> foo(std::shared_ptr<Nat::nat> n, const bool b);
 template <typename T1>
 std::shared_ptr<Nat::nat> _foo_aux(const T1 a,
                                    const std::shared_ptr<Nat::nat> &n) {
-  return repeat<T1>(a, n)->length();
+  return ListDef::repeat<T1>(a, n)->length();
 }
+
 std::shared_ptr<Nat::nat> add(const std::shared_ptr<Nat::nat> &n,
                               std::shared_ptr<Nat::nat> m);
 
 template <typename T1>
-std::shared_ptr<List::list<T1>> repeat(const T1 x,
-                                       const std::shared_ptr<Nat::nat> &n) {
+std::shared_ptr<List::list<T1>>
+ListDef::repeat(const T1 x, const std::shared_ptr<Nat::nat> &n) {
   return std::visit(Overloaded{[](const typename Nat::nat::O _args)
                                    -> std::shared_ptr<List::list<T1>> {
                                  return List::list<T1>::ctor::nil_();
@@ -122,9 +132,7 @@ std::shared_ptr<List::list<T1>> repeat(const T1 x,
                                    -> std::shared_ptr<List::list<T1>> {
                                  std::shared_ptr<Nat::nat> k = _args._a0;
                                  return List::list<T1>::ctor::cons_(
-                                     x, repeat<T1>(x, std::move(k)));
+                                     x, ListDef::repeat<T1>(x, std::move(k)));
                                }},
                     n->v());
 }
-
-std::shared_ptr<Nat::nat> foo(std::shared_ptr<Nat::nat> n, const bool b);

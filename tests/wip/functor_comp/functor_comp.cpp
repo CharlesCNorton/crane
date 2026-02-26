@@ -93,7 +93,7 @@ std::optional<std::pair<unsigned int, t>> FunctorComp::Queue::pop(
                                   std::move(rest),
                                   List::list<unsigned int>::ctor::nil_())));
                     }},
-                ::rev<unsigned int>(back)->v());
+                List::rev<unsigned int>(back)->v());
           },
           [&](const typename List::list<unsigned int>::cons _args)
               -> std::optional<std::pair<

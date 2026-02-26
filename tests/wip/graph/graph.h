@@ -53,28 +53,10 @@ struct List {
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
+  template <typename T1, MapsTo<bool, T1> F0>
+  static std::shared_ptr<List::list<T1>>
+  filter(F0 &&f, const std::shared_ptr<List::list<T1>> &l);
 };
-
-template <typename T1, MapsTo<bool, T1> F0>
-std::shared_ptr<List::list<T1>>
-filter(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
-  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 return List::list<T1>::ctor::nil_();
-                               },
-                               [&](const typename List::list<T1>::cons _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 T1 x = _args._a0;
-                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
-                                 if (f(x)) {
-                                   return List::list<T1>::ctor::cons_(
-                                       x, filter<T1>(f, std::move(l0)));
-                                 } else {
-                                   return filter<T1>(f, std::move(l0));
-                                 }
-                               }},
-                    l->v());
-}
 
 template <typename I, typename A>
 concept Eq = requires(A a0, A a1) {
@@ -185,7 +167,7 @@ struct Graph {
         },
         [](std::shared_ptr<Directed<std::any>> g) { return g->directed_nodes; },
         [&](std::shared_ptr<Directed<std::any>> g, _tcI0 n) {
-          return filter<std::shared_ptr<DirectedEdge<_tcI0>>>(
+          return List::filter<std::shared_ptr<DirectedEdge<_tcI0>>>(
               [&](const std::shared_ptr<DirectedEdge<_tcI0>> _x0) {
                 return directed_originates<_tcI0, _tcI0>(n, _x0);
               },
@@ -264,7 +246,7 @@ struct Graph {
               return g->undirected_nodes;
             },
             [&](std::shared_ptr<Undirected<std::any>> g, _tcI0 n) {
-              return filter<std::shared_ptr<UndirectedEdge<_tcI0>>>(
+              return List::filter<std::shared_ptr<UndirectedEdge<_tcI0>>>(
                   [&](const std::shared_ptr<UndirectedEdge<_tcI0>> _x0) {
                     return undirected_originates<_tcI0, _tcI0>(n, _x0);
                   },
@@ -278,3 +260,24 @@ struct Graph {
             }});
   }
 };
+
+template <typename T1, MapsTo<bool, T1> F0>
+std::shared_ptr<List::list<T1>>
+List::filter(F0 &&f, const std::shared_ptr<List::list<T1>> &l) {
+  return std::visit(Overloaded{[](const typename List::list<T1>::nil _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 return List::list<T1>::ctor::nil_();
+                               },
+                               [&](const typename List::list<T1>::cons _args)
+                                   -> std::shared_ptr<List::list<T1>> {
+                                 T1 x = _args._a0;
+                                 std::shared_ptr<List::list<T1>> l0 = _args._a1;
+                                 if (f(x)) {
+                                   return List::list<T1>::ctor::cons_(
+                                       x, List::filter<T1>(f, std::move(l0)));
+                                 } else {
+                                   return List::filter<T1>(f, std::move(l0));
+                                 }
+                               }},
+                    l->v());
+}

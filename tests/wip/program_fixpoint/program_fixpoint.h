@@ -128,17 +128,17 @@ struct SigT {
   };
 };
 
-template <typename T1, typename T2,
-          MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F0>
-T2 Fix_F_sub(F0 &&f_sub, const T1 x) {
-  return f_sub(x, [&](axiom x0) { return Fix_F_sub<T1, T2>(f_sub, x0); });
-}
+struct Wf {
+  template <
+      typename T1, typename T2,
+      MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F0>
+  static T2 Fix_F_sub(F0 &&f_sub, const T1 x);
 
-template <typename T1, typename T2,
-          MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F1>
-T2 Fix_sub(const T1 _x0, F1 &&_x1) {
-  return Fix_F_sub<T1>(_x0, _x1);
-}
+  template <
+      typename T1, typename T2,
+      MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F1>
+  static T2 Fix_sub(const T1 _x0, F1 &&_x1);
+};
 
 struct ProgFix {
   static std::shared_ptr<List::list<unsigned int>>
@@ -165,3 +165,15 @@ struct ProgFix {
                                      ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
                                      List::list<unsigned int>::ctor::nil_()))));
 };
+
+template <typename T1, typename T2,
+          MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F0>
+T2 Wf::Fix_F_sub(F0 &&f_sub, const T1 x) {
+  return f_sub(x, [&](axiom x0) { return Wf::Fix_F_sub<T1, T2>(f_sub, x0); });
+}
+
+template <typename T1, typename T2,
+          MapsTo<T2, T1, std::function<T2(std::shared_ptr<Sig0::sig0<T1>>)>> F1>
+T2 Wf::Fix_sub(const T1 _x0, F1 &&_x1) {
+  return Wf::Fix_F_sub<T1>(_x0, _x1);
+}
