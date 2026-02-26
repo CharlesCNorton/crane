@@ -2222,6 +2222,49 @@ let pp_spec = function
       in
         pp_tydef l name def
 
+(* Parse a custom type template string (e.g., "std::optional<%t0>", "std::vector<%t0>",
+   "std::pair<%t0,%t1>") and recursively qualify type arguments using the provided
+   qualify_type function.
+
+   This allows any parametric custom type to have its inner type arguments properly
+   qualified with "typename M::" when used in module signature requires clauses. *)
+let qualify_custom_template custom_str args qualify_type =
+  let len = String.length custom_str in
+  let rec parse i result =
+    if i >= len then result
+    else if i <= len - 3 && custom_str.[i] = '%' && custom_str.[i+1] = 't' then
+      (* Found %tN - extract the number *)
+      let digit_start = i + 2 in
+      let rec find_digit_end j =
+        if j < len && (custom_str.[j] >= '0' && custom_str.[j] <= '9')
+        then find_digit_end (j + 1)
+        else j
+      in
+      let digit_end = find_digit_end digit_start in
+      if digit_end > digit_start then
+        (* Found a number - parse it *)
+        let num_str = String.sub custom_str digit_start (digit_end - digit_start) in
+        let idx = int_of_string num_str in
+        if idx < List.length args then
+          (* Substitute with recursively qualified type *)
+          parse digit_end (result ++ qualify_type (List.nth args idx))
+        else
+          (* Index out of bounds - keep as literal (shouldn't happen) *)
+          parse digit_end (result ++ str (String.sub custom_str i (digit_end - i)))
+      else
+        (* No number after %t - keep as literal *)
+        parse (i + 1) (result ++ str (String.make 1 custom_str.[i]))
+    else
+      (* Regular character - find next % or end of string *)
+      let rec find_next j =
+        if j >= len then len
+        else if custom_str.[j] = '%' then j
+        else find_next (j + 1)
+      in
+      let next = find_next (i + 1) in
+      parse next (result ++ str (String.sub custom_str i (next - i)))
+  in
+  parse 0 (mt ())
 
 let rec pp_specif = function
   | (_,Spec (Sval _ as s)) -> pp_spec s
@@ -2287,10 +2330,8 @@ and pp_spec_as_requirement = function
               (match find_custom_opt r with
               | Some custom_str ->
                   if String.contains custom_str '%' then
-                    (match args with
-                    | [arg] when custom_str = "std::optional<%t0>" ->
-                        str "std::optional<" ++ qualify_type arg ++ str ">"
-                    | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
+                    (* Parametric custom type - recursively qualify type arguments *)
+                    qualify_custom_template custom_str args qualify_type
                   else
                     str custom_str
               | None ->
@@ -2326,10 +2367,8 @@ and pp_spec_as_requirement = function
               (match find_custom_opt r with
               | Some custom_str ->
                   if String.contains custom_str '%' then
-                    (match args with
-                    | [arg] when custom_str = "std::optional<%t0>" ->
-                        str "std::optional<" ++ qualify_type arg ++ str ">"
-                    | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
+                    (* Parametric custom type - recursively qualify type arguments *)
+                    qualify_custom_template custom_str args qualify_type
                   else
                     str custom_str
               | None ->

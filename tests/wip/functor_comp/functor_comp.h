@@ -100,7 +100,7 @@ struct FunctorComp {
     } -> std::same_as<typename M::t>;
     {
       M::pop(std::declval<typename M::t>())
-    } -> std::same_as<std::optional<std::pair<unsigned int, t>>>;
+    } -> std::same_as<std::optional<std::pair<unsigned int, typename M::t>>>;
     { M::size(std::declval<typename M::t>()) } -> std::same_as<unsigned int>;
   };
 
