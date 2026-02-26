@@ -2320,6 +2320,12 @@ and pp_spec_as_requirement = function
       if args = [] then
         (* For non-function values, generate a requires expression to check the value exists *)
         let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ret_ty in
+        (* Determine stdlib namespace prefix based on configuration *)
+        let (stdlib_ns, same_as, remove_cvref) =
+          if Table.std_lib () = "BDE"
+          then ("bsl::", "same_as", "bsl::remove_cvref_t")
+          else ("std::", "std::same_as", "std::remove_cvref_t")
+        in
         (* Helper to qualify type names with M:: *)
         let rec qualify_type = function
           | Tglob (r, [], _) when not (is_custom r) ->
@@ -2338,25 +2344,26 @@ and pp_spec_as_requirement = function
                   (* This shouldn't happen due to earlier guards, but handle gracefully *)
                   pp_cpp_type false [] (Tglob (r, args, [])))
           | Tshared_ptr ty ->
-              str "std::shared_ptr<" ++ qualify_type ty ++ str ">"
+              str stdlib_ns ++ str "shared_ptr<" ++ qualify_type ty ++ str ">"
           | Tunique_ptr ty ->
-              str "std::unique_ptr<" ++ qualify_type ty ++ str ">"
+              str stdlib_ns ++ str "unique_ptr<" ++ qualify_type ty ++ str ">"
           | Tvariant tys ->
-              str "std::variant<" ++ prlist_with_sep (fun () -> str ", ") qualify_type tys ++ str ">"
+              str stdlib_ns ++ str "variant<" ++ prlist_with_sep (fun () -> str ", ") qualify_type tys ++ str ">"
           | Tnamespace (r, ty) ->
               pp_cpp_type false [] (Tnamespace (r, ty))
           | ty -> pp_cpp_type false [] ty
-        in
-        let (same_as, remove_cvref) =
-          if Table.std_lib () = "BDE"
-          then ("same_as", "bsl::remove_cvref_t")
-          else ("std::same_as", "std::remove_cvref_t")
         in
         str "requires " ++ str same_as ++ str "<" ++ str remove_cvref ++ str "<decltype(M::" ++ name ++ str ")>, " ++ qualify_type cpp_ret ++ str ">;" ++ fnl ()
       else
         (* For functions, generate requires expression with parameters and return type *)
         let cpp_args = List.map (convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty []) args in
         let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ret_ty in
+        (* Determine stdlib namespace prefix based on configuration *)
+        let (stdlib_ns, same_as, declval) =
+          if Table.std_lib () = "BDE"
+          then ("bsl::", "same_as", "bsl::declval")
+          else ("std::", "std::same_as", "std::declval")
+        in
         (* Helper to qualify type names with M:: *)
         let rec qualify_type = function
           | Tglob (r, [], _) when not (is_custom r) ->
@@ -2375,21 +2382,16 @@ and pp_spec_as_requirement = function
                   (* This shouldn't happen due to earlier guards, but handle gracefully *)
                   pp_cpp_type false [] (Tglob (r, args, [])))
           | Tshared_ptr ty ->
-              str "std::shared_ptr<" ++ qualify_type ty ++ str ">"
+              str stdlib_ns ++ str "shared_ptr<" ++ qualify_type ty ++ str ">"
           | Tunique_ptr ty ->
-              str "std::unique_ptr<" ++ qualify_type ty ++ str ">"
+              str stdlib_ns ++ str "unique_ptr<" ++ qualify_type ty ++ str ">"
           | Tvariant tys ->
-              str "std::variant<" ++ prlist_with_sep (fun () -> str ", ") qualify_type tys ++ str ">"
+              str stdlib_ns ++ str "variant<" ++ prlist_with_sep (fun () -> str ", ") qualify_type tys ++ str ">"
           | Tnamespace (r, ty) ->
               pp_cpp_type false [] (Tnamespace (r, ty))
           | ty -> pp_cpp_type false [] ty
         in
         (* Generate: { M::name(std::declval<arg1>(), ...) } -> std::same_as<ret_ty>; *)
-        let (same_as, declval) =
-          if Table.std_lib () = "BDE"
-          then ("same_as", "bsl::declval")
-          else ("std::same_as", "std::declval")
-        in
         let declvals = List.map (fun arg_ty ->
           str declval ++ str "<" ++ qualify_type arg_ty ++ str ">()"
         ) cpp_args in
