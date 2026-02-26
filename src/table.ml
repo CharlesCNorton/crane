@@ -1039,6 +1039,13 @@ let find_custom r =
   mark_custom_used r;
   snd (Refmap'.find r !customs)
 
+let find_custom_opt r =
+  match Refmap'.find_opt r !customs with
+  | Some (ids, s) ->
+      mark_custom_used r;
+      Some s
+  | None -> None
+
 let find_type_custom r = Refmap'.find r !customs
 
 let custom_matchs = Summary.ref Refmap'.empty ~name:"CraneExtrCustomMatchs"

@@ -346,7 +346,9 @@ let is_eponymous_record_projection r =
 *)
 
 let str_global_with_key k key r =
-  if is_inline_custom r then find_custom r else Common.pp_global_with_key k key r
+  match find_custom_opt r with
+  | Some custom_str when to_inline r -> custom_str
+  | _ -> Common.pp_global_with_key k key r
 
 let str_global k r = str_global_with_key k (repr_of_r r) r
 
@@ -383,20 +385,21 @@ let substring_all_opchars s start stop =
   check_char start
 
 let is_infix r =
-  is_inline_custom r &&
-  (let s = find_custom r in
-   let len = String.length s in
-   len >= 3 &&
-   (* parenthesized *)
-   (s.[0] == '(' && s.[len-1] == ')' &&
-      let inparens = String.trim (String.sub s 1 (len - 2)) in
-      let inparens_len = String.length inparens in
-      (* either, begins with infix symbol, any remainder is all operator chars *)
-      (List.mem inparens.[0] infix_symbols && substring_all_opchars inparens 1 inparens_len) ||
-      (* or, starts with #, at least one more char, all are operator chars *)
-      (inparens.[0] == '#' && inparens_len >= 2 && substring_all_opchars inparens 1 inparens_len) ||
-      (* or, is an OCaml built-in infix *)
-      (List.mem inparens builtin_infixes)))
+  match find_custom_opt r with
+  | Some s when to_inline r ->
+      let len = String.length s in
+      len >= 3 &&
+      (* parenthesized *)
+      (s.[0] == '(' && s.[len-1] == ')' &&
+         let inparens = String.trim (String.sub s 1 (len - 2)) in
+         let inparens_len = String.length inparens in
+         (* either, begins with infix symbol, any remainder is all operator chars *)
+         (List.mem inparens.[0] infix_symbols && substring_all_opchars inparens 1 inparens_len) ||
+         (* or, starts with #, at least one more char, all are operator chars *)
+         (inparens.[0] == '#' && inparens_len >= 2 && substring_all_opchars inparens 1 inparens_len) ||
+         (* or, is an OCaml built-in infix *)
+         (List.mem inparens builtin_infixes))
+  | _ -> false
 
 let get_infix r =
   let s = find_custom r in
@@ -873,24 +876,25 @@ let rec pp_cpp_type par vl t =
        Can be parameterized like generic types: Leaf<int> *)
     | Tid (id, []) -> Id.print id
     | Tid (id, args) -> Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">"
-    | Tglob (r,tys, args) when is_inline_custom r ->
-    let s = find_custom r in
-    let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
-    let cmds = List.fold_left
-    (fun prev curr -> match curr with
-                      | CCstring s -> prev @ (parse_numbered_args "t" (fun i -> CCty_arg i) s)
-                      | _ -> prev @ [curr]) [] cmds in
-    pp_custom (Pp.string_of_ppcmds (GlobRef.print r) ^ " := " ^ s) (empty_env ()) None None tys [] args [] vl cmds
-    | Tglob (r,[],_) ->
-      (* Use pp_inductive_type_name for inductives to get Wrapper::lowercase pattern *)
-      let type_name = pp_inductive_type_name r in
-      let name_str = Pp.string_of_ppcmds type_name in
-      typename_prefix_for name_str ++ struct_qualifier_for r name_str ++ type_name
-    | Tglob (r,l,_) ->
-      let type_name = pp_inductive_type_name r in
-      let name_str = Pp.string_of_ppcmds type_name in
-      typename_prefix_for name_str ++ struct_qualifier_for r name_str ++
-      type_name ++ str "<" ++ pp_list (pp_rec false) l ++ str ">"
+    | Tglob (r, tys, args) ->
+        (match find_custom_opt r with
+        | Some s when to_inline r ->
+            let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
+            let cmds = List.fold_left
+            (fun prev curr -> match curr with
+                              | CCstring s -> prev @ (parse_numbered_args "t" (fun i -> CCty_arg i) s)
+                              | _ -> prev @ [curr]) [] cmds in
+            pp_custom (Pp.string_of_ppcmds (GlobRef.print r) ^ " := " ^ s) (empty_env ()) None None tys [] args [] vl cmds
+        | _ ->
+            (* Non-custom cases *)
+            let type_name = pp_inductive_type_name r in
+            let name_str = Pp.string_of_ppcmds type_name in
+            match tys with
+            | [] ->
+                typename_prefix_for name_str ++ struct_qualifier_for r name_str ++ type_name
+            | l ->
+                typename_prefix_for name_str ++ struct_qualifier_for r name_str ++
+                type_name ++ str "<" ++ pp_list (pp_rec false) l ++ str ">")
     | Tfun (d,c) -> std_angle "function" (pp_rec false c ++ pp_par true (pp_list (pp_rec false) d))
     | Tstruct (id, args) ->
       let id_str = Pp.string_of_ppcmds (pp_global Type id) in
@@ -2279,15 +2283,19 @@ and pp_spec_as_requirement = function
               str "typename M::" ++ pp_global Type r
           | Tglob (r, args, _) when not (is_custom r) ->
               pp_global Type r ++ str "<" ++ prlist_with_sep (fun () -> str ", ") qualify_type args ++ str ">"
-          | Tglob (r, args, _) when is_custom r ->
-              let custom_str = find_custom r in
-              if String.contains custom_str '%' then
-                (match args with
-                | [arg] when custom_str = "std::optional<%t0>" ->
-                    str "std::optional<" ++ qualify_type arg ++ str ">"
-                | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
-              else
-                str custom_str
+          | Tglob (r, args, _) ->
+              (match find_custom_opt r with
+              | Some custom_str ->
+                  if String.contains custom_str '%' then
+                    (match args with
+                    | [arg] when custom_str = "std::optional<%t0>" ->
+                        str "std::optional<" ++ qualify_type arg ++ str ">"
+                    | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
+                  else
+                    str custom_str
+              | None ->
+                  (* This shouldn't happen due to earlier guards, but handle gracefully *)
+                  pp_cpp_type false [] (Tglob (r, args, [])))
           | Tshared_ptr ty ->
               str "std::shared_ptr<" ++ qualify_type ty ++ str ">"
           | Tunique_ptr ty ->
@@ -2314,15 +2322,19 @@ and pp_spec_as_requirement = function
               str "typename M::" ++ pp_global Type r
           | Tglob (r, args, _) when not (is_custom r) ->
               pp_global Type r ++ str "<" ++ prlist_with_sep (fun () -> str ", ") qualify_type args ++ str ">"
-          | Tglob (r, args, _) when is_custom r ->
-              let custom_str = find_custom r in
-              if String.contains custom_str '%' then
-                (match args with
-                | [arg] when custom_str = "std::optional<%t0>" ->
-                    str "std::optional<" ++ qualify_type arg ++ str ">"
-                | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
-              else
-                str custom_str
+          | Tglob (r, args, _) ->
+              (match find_custom_opt r with
+              | Some custom_str ->
+                  if String.contains custom_str '%' then
+                    (match args with
+                    | [arg] when custom_str = "std::optional<%t0>" ->
+                        str "std::optional<" ++ qualify_type arg ++ str ">"
+                    | _ -> pp_cpp_type false [] (Tglob (r, args, [])))
+                  else
+                    str custom_str
+              | None ->
+                  (* This shouldn't happen due to earlier guards, but handle gracefully *)
+                  pp_cpp_type false [] (Tglob (r, args, [])))
           | Tshared_ptr ty ->
               str "std::shared_ptr<" ++ qualify_type ty ++ str ">"
           | Tunique_ptr ty ->

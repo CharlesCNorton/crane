@@ -1710,8 +1710,8 @@ and gen_fix env (n,ty) f =
 (* TODO: REDO NAMESPACE AS PART OF NAMES!!! *)
 
 let gen_ind_cpp vars name cnames tys =
-  let constrdecl = List.map snd (List.filter fst (Array.to_list (Array.mapi
-    (fun i tys ->
+  let constrdecl =
+    Array.to_list (Array.mapi (fun i tys ->
       let c = cnames.(i) in
       (* eventually incorporate given names when they exist *)
       let constr = List.mapi (fun i x -> (Id.of_string ("_a" ^ string_of_int i) , convert_ml_type_to_cpp_type (empty_env ()) (Refset'.add name Refset'.empty) vars x)) tys in
@@ -1720,7 +1720,9 @@ let gen_ind_cpp vars name cnames tys =
       let make = Dfundef ([c, []; GlobRef.VarRef (Id.of_string "make"), []], Tshared_ptr (Tglob (name, ty_vars, [])), List.rev constr,
         [Sreturn (CPPfun_call (CPPmk_shared (Tglob (name, ty_vars, [])), [CPPstruct (c, ty_vars, make_args)]))]) in
       (ty_vars == [], make))
-    tys))) in
+    tys)
+    |> List.filter_map (fun (keep, make) -> if keep then Some make else None)
+  in
   Dnspace (Some name, constrdecl)
 
 let gen_record_cpp name fields ind =

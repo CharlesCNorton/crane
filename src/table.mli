@@ -224,6 +224,7 @@ val is_inline_custom : GlobRef.t -> bool
 val is_foreign_custom : GlobRef.t -> bool
 val find_callback : GlobRef.t -> string option
 val find_custom : GlobRef.t -> string
+val find_custom_opt : GlobRef.t -> string option
 val find_type_custom : GlobRef.t -> string list * string
 
 val is_custom_match : ml_branch array -> bool
