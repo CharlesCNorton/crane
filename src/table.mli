@@ -183,7 +183,7 @@ val file_comment : unit -> string
 
 (*s Target language. *)
 
-type lang = Cpp (* | Rust *)
+type lang = Cpp
 type benchmark_lang = BenchmarkOCaml | BenchmarkCpp
 
 val lang : unit -> lang
