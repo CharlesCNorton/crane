@@ -2088,6 +2088,18 @@ let gen_dfun n b dom cod ty temps =
     let n_missing = max 0 (List.length d - List.length a) in
     List.firstn n_missing d in
   let missing = List.rev (List.mapi (fun i t -> (Id (Id.of_string ("_x" ^ string_of_int i)), t)) (get_missing mldom ids)) in
+  (* Unify body lambda parameter types with the function signature types.
+     When optimize_fix promotes a let-fix to a top-level Dfix, the body's lambda
+     parameter types may have unresolved metas that correspond to the function's
+     type variables (Tvars). Unifying them ensures the metas get resolved. *)
+  let n_missing = List.length missing in
+  let sig_types_for_ids = List.of_seq (Seq.drop n_missing (List.to_seq mldom)) in
+  let rec unify_param_types body_params sig_types = match body_params, sig_types with
+    | (id, body_ty) :: rest_params, sig_ty :: rest_sig ->
+      (try try_mgu body_ty sig_ty with _ -> ());
+      (id, body_ty) :: unify_param_types rest_params rest_sig
+    | _ -> body_params in
+  let ids = unify_param_types ids sig_types_for_ids in
   let all_params = missing @ ids in
   (* Type class instance parameters become C++ template type parameters.
      We assign unique names (_tcI0, _tcI1, ...) to avoid collision with:

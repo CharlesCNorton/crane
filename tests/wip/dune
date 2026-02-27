@@ -335,17 +335,6 @@
   (deps functor_comp.t.exe)
   (action (run ./functor_comp.t.exe))))
 
-(subdir let_fix
- (rule
-  (targets let_fix.t.exe)
-  (deps LetFix.vo let_fix.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} let_fix.t.exe let_fix.cpp let_fix.t.cpp)))
- (rule
-  (alias runtest)
-  (deps let_fix.t.exe)
-  (action (run ./let_fix.t.exe))))
-
 (subdir monadic
  (rule
   (targets monadic.t.exe)

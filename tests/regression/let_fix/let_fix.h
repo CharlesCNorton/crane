@@ -92,16 +92,16 @@ struct LetFix {
                         const std::shared_ptr<List::list<unsigned int>> &l);
 
   template <typename T1>
-  static unsigned int
-  local_length(const std::shared_ptr<List::list<std::any>> &xs) {
+  static unsigned int local_length(const std::shared_ptr<List::list<T1>> &xs) {
     return std::visit(
-        Overloaded{[](const typename List::list<std::any>::nil _args)
-                       -> unsigned int { return 0; },
-                   [](const typename List::list<std::any>::cons _args)
-                       -> unsigned int {
-                     std::shared_ptr<List::list<std::any>> rest = _args._a1;
-                     return (local_length<T1>(std::move(rest)) + 1);
-                   }},
+        Overloaded{
+            [](const typename List::list<T1>::nil _args) -> unsigned int {
+              return 0;
+            },
+            [](const typename List::list<T1>::cons _args) -> unsigned int {
+              std::shared_ptr<List::list<T1>> rest = _args._a1;
+              return (local_length<T1>(std::move(rest)) + 1);
+            }},
         xs->v());
   }
 
