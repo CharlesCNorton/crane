@@ -54,9 +54,13 @@ int main() {
     }
 
     // Test 4: abs
+    // Coq's int is unsigned 63-bit, so ltb x 0 is always false.
+    // i_abs is effectively the identity function: i_abs x = x.
+    // sub 0 42 wraps to 2^63 - 42, and i_abs returns it unchanged.
     {
+        constexpr int64_t mask63 = 0x7FFFFFFFFFFFFFFFLL;
         ASSERT(Int63Arith::test_abs_pos == 42);
-        ASSERT(Int63Arith::test_abs_neg == 42);
+        ASSERT(Int63Arith::test_abs_neg == (mask63 - 42 + 1));
         std::cout << "Test 4 (abs): PASSED" << std::endl;
     }
 
