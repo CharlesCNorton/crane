@@ -1314,7 +1314,19 @@ let extract_constant access env kn cb =
   in
   let mk_ax () =
     let t = extract_axiom env sg kn typ in
-    Dterm (r, MLaxiom (Constant.to_string kn), t)
+    (* If all arguments of this axiom are dummy (Prop/SProp), the function
+       can never be called with real values — treat it as logical. *)
+    let rec all_args_dummy = function
+      | Tarr (t1, t2) ->
+        if isTdummy t1 then all_args_dummy t2
+        else false
+      | _ -> true  (* no more arrows: all args (if any) were dummy *)
+    in
+    let has_args = match t with Tarr _ -> true | _ -> false in
+    if has_args && all_args_dummy t then
+      Dterm (r, MLdummy Kprop, Tdummy Kprop)
+    else
+      Dterm (r, MLaxiom (Constant.to_string kn), t)
   in
   let mk_def c =
     let e,t = extract_std_constant env sg kn c typ in

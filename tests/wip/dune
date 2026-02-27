@@ -278,17 +278,6 @@
   (deps rec_record.t.exe)
   (action (run ./rec_record.t.exe))))
 
-(subdir sprop
- (rule
-  (targets sprop.t.exe)
-  (deps SProp.vo sprop.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} sprop.t.exe sprop.cpp sprop.t.cpp)))
- (rule
-  (alias runtest)
-  (deps sprop.t.exe)
-  (action (run ./sprop.t.exe))))
-
 (subdir string_match
  (rule
   (targets string_match.t.exe)

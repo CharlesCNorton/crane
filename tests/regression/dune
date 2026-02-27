@@ -430,3 +430,14 @@
   (alias runtest)
   (deps nested_mod.t.exe)
   (action (run ./nested_mod.t.exe))))
+
+(subdir sprop
+ (rule
+  (targets sprop.t.exe)
+  (deps SProp.vo sprop.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sprop.t.exe sprop.cpp sprop.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sprop.t.exe)
+  (action (run ./sprop.t.exe))))

@@ -30,11 +30,11 @@ struct Nat {
 struct SPropTest {
   template <typename T1>
   static inline const T1 sFalse_rect =
-      [](axiom _x) { throw std::logic_error("absurd case"); };
+      [](void) { throw std::logic_error("absurd case"); }();
 
   template <typename T1>
   static inline const T1 sFalse_rec =
-      [](axiom _x) { throw std::logic_error("absurd case"); };
+      [](void) { throw std::logic_error("absurd case"); }();
 
   template <typename A> struct box {
   public:

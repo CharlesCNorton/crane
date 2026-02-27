@@ -1334,7 +1334,7 @@ let term_expunge s (ids,c) =
     let ids,c = kill_some_lams (List.rev s) (ids,c) in
     if List.is_empty ids &&
        sign_kind s == UnsafeLogicalSig
-    then MLlam (Dummy, Taxiom, ast_lift 1 c) (* TODO: Taxiom is probs bad *)
+    then MLlam (Dummy, Tdummy Kprop, ast_lift 1 c)
     else named_lams ids c
 
 (*s [kill_dummy_args (ids,bl) r t] looks for occurrences of [MLrel r] in [t]
