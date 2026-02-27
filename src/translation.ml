@@ -715,13 +715,26 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       | Some fld -> CPPfun_call (make_field_access (gen_expr env t) fld, List.rev_map (gen_expr env') args)
       | _ -> CPPstring (Pstring.unsafe_of_string "TODOrecordProj"))
     | _ ->
-      let _,env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
-      let asgns = List.mapi (fun i (id, ty) ->
+      (* Destructure record fields into local variables, then evaluate the
+         body in an IIFE.  push_vars' may rename variables to avoid shadowing
+         identifiers already in scope — e.g. when a record has a field
+         [rn_value] and the enclosing struct also has an accessor method
+         [rn_value], push_vars' renames the local to [rn_value0].
+
+         We must use the renamed ids from push_vars' for the assignment
+         declarations so that they are consistent with env' (which the body
+         is generated under).  Otherwise the declarations would use the
+         original names while the body references the renamed ones. *)
+      let renamed_ids,env' = push_vars' (List.rev_map (fun (x, ty) -> (remove_prime_id (id_of_mlid x), ty)) ids) env in
+      (* renamed_ids is in reversed order (from List.rev_map above).
+         Reverse it back so it aligns with ids (constructor / field order). *)
+      let renamed_ids_fwd = List.rev renamed_ids in
+      let asgns = List.mapi (fun i ((renamed_name, _), (_, ty)) ->
         let fld = List.nth (record_fields_of_type typ) i in
         let e = (match fld with
           | Some fld -> make_field_access (gen_expr env t) fld
           | _ -> CPPstring (Pstring.unsafe_of_string "TODOrecordProj")) in
-        Sasgn (remove_prime_id (id_of_mlid id), Some (convert_ml_type_to_cpp_type env Refset'.empty [] ty), e)) ids in
+        Sasgn (renamed_name, Some (convert_ml_type_to_cpp_type env Refset'.empty [] ty), e)) (List.combine renamed_ids_fwd ids) in
       CPPfun_call (CPPlambda([], None, asgns @ gen_stmts env' (fun x -> Sreturn x) body, false), []))
       (* TODO: ugly. should better attempt when generating statements! *)
       (* TODO: we don't currently support the fancy thing of pattern matching on record fields at the same time *)
@@ -2089,9 +2102,26 @@ let gen_dfun n b dom cod ty temps =
     List.firstn n_missing d in
   let missing = List.rev (List.mapi (fun i t -> (Id (Id.of_string ("_x" ^ string_of_int i)), t)) (get_missing mldom ids)) in
   (* Unify body lambda parameter types with the function signature types.
-     When optimize_fix promotes a let-fix to a top-level Dfix, the body's lambda
-     parameter types may have unresolved metas that correspond to the function's
-     type variables (Tvars). Unifying them ensures the metas get resolved. *)
+
+     When optimize_fix (mlutil.ml) promotes a polymorphic let-fix into a
+     top-level Dfix, the body's lambda parameter types may still contain
+     unresolved Tmeta cells left over from extraction.  For example:
+
+       Definition local_length {A} (l : list A) : nat :=
+         let fix go (xs : list A) := ... in go l.
+
+     After optimize_fix, the outer function IS the fixpoint, but the lambda
+     parameter type for [xs] still holds the original unresolved meta for A,
+     while the function's signature type [ty] correctly has Tvar 1 for A.
+     Without unification, convert_ml_type_to_cpp_type maps the unresolved
+     meta to Tany (std::any), producing e.g. list<std::any> instead of
+     list<T1>.
+
+     By unifying each body parameter type with the corresponding signature
+     type via try_mgu, we resolve the shared Tmeta cells in-place.  Because
+     metas are mutable references shared across the entire body AST, this
+     single unification step also fixes every other occurrence of the same
+     meta inside the function body (match annotations, recursive calls, etc.). *)
   let n_missing = List.length missing in
   let sig_types_for_ids = List.of_seq (Seq.drop n_missing (List.to_seq mldom)) in
   let rec unify_param_types body_params sig_types = match body_params, sig_types with

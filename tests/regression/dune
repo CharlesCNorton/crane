@@ -452,3 +452,14 @@
   (alias runtest)
   (deps let_fix.t.exe)
   (action (run ./let_fix.t.exe))))
+
+(subdir rec_record
+ (rule
+  (targets rec_record.t.exe)
+  (deps RecRecord.vo rec_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} rec_record.t.exe rec_record.cpp rec_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps rec_record.t.exe)
+  (action (run ./rec_record.t.exe))))
