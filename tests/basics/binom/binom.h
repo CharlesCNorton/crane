@@ -18,42 +18,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct Priqueue {
@@ -130,50 +128,47 @@ struct Priqueue {
         t->v());
   }
 
-  using priqueue = std::shared_ptr<List::list<std::shared_ptr<tree>>>;
+  using priqueue = std::shared_ptr<List<std::shared_ptr<tree>>>;
 
   static inline const priqueue empty =
-      List::list<std::shared_ptr<tree>>::ctor::nil_();
+      List<std::shared_ptr<tree>>::ctor::nil_();
 
   static std::shared_ptr<tree> smash(const std::shared_ptr<tree> &t,
                                      const std::shared_ptr<tree> &u);
 
-  static std::shared_ptr<List::list<std::shared_ptr<tree>>>
-  carry(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q,
+  static std::shared_ptr<List<std::shared_ptr<tree>>>
+  carry(const std::shared_ptr<List<std::shared_ptr<tree>>> &q,
         std::shared_ptr<tree> t);
 
-  static priqueue
-  insert(const unsigned int x,
-         const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q);
+  static priqueue insert(const unsigned int x,
+                         const std::shared_ptr<List<std::shared_ptr<tree>>> &q);
 
-  static priqueue
-  join(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &p,
-       const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q,
-       std::shared_ptr<tree> c);
+  static priqueue join(const std::shared_ptr<List<std::shared_ptr<tree>>> &p,
+                       const std::shared_ptr<List<std::shared_ptr<tree>>> &q,
+                       std::shared_ptr<tree> c);
 
-  template <MapsTo<std::shared_ptr<List::list<std::shared_ptr<tree>>>,
-                   std::shared_ptr<List::list<std::shared_ptr<tree>>>>
+  template <MapsTo<std::shared_ptr<List<std::shared_ptr<tree>>>,
+                   std::shared_ptr<List<std::shared_ptr<tree>>>>
                 F1>
   static priqueue unzip(const std::shared_ptr<tree> &t, F1 &&cont) {
     return std::visit(
         Overloaded{
             [&](const typename tree::Node _args)
-                -> std::shared_ptr<List::list<std::shared_ptr<tree>>> {
+                -> std::shared_ptr<List<std::shared_ptr<tree>>> {
               unsigned int x = _args._a0;
               std::shared_ptr<tree> t1 = _args._a1;
               std::shared_ptr<tree> t2 = _args._a2;
-              std::function<std::shared_ptr<List::list<std::shared_ptr<tree>>>(
-                  std::shared_ptr<List::list<std::shared_ptr<tree>>>)>
-                  f = [&](std::shared_ptr<List::list<std::shared_ptr<tree>>>
-                              q) {
-                    return List::list<std::shared_ptr<tree>>::ctor::cons_(
+              std::function<std::shared_ptr<List<std::shared_ptr<tree>>>(
+                  std::shared_ptr<List<std::shared_ptr<tree>>>)>
+                  f = [&](std::shared_ptr<List<std::shared_ptr<tree>>> q) {
+                    return List<std::shared_ptr<tree>>::ctor::cons_(
                         tree::ctor::Node_(x, t1, tree::ctor::Leaf_()), cont(q));
                   };
               return unzip(std::move(t2), f);
             },
             [&](const typename tree::Leaf _args)
-                -> std::shared_ptr<List::list<std::shared_ptr<tree>>> {
-              return cont(List::list<std::shared_ptr<tree>>::ctor::nil_());
+                -> std::shared_ptr<List<std::shared_ptr<tree>>> {
+              return cont(List<std::shared_ptr<tree>>::ctor::nil_());
             }},
         t->v());
   }
@@ -182,52 +177,50 @@ struct Priqueue {
 
   static key
   find_max_helper(const unsigned int current,
-                  const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q);
+                  const std::shared_ptr<List<std::shared_ptr<tree>>> &q);
 
   static std::optional<key>
-  find_max(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q);
+  find_max(const std::shared_ptr<List<std::shared_ptr<tree>>> &q);
 
   static std::pair<priqueue, priqueue>
   delete_max_aux(const unsigned int m,
-                 const std::shared_ptr<List::list<std::shared_ptr<tree>>> &p);
+                 const std::shared_ptr<List<std::shared_ptr<tree>>> &p);
 
   static std::optional<std::pair<key, priqueue>>
-  delete_max(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q);
+  delete_max(const std::shared_ptr<List<std::shared_ptr<tree>>> &q);
 
-  static priqueue
-  merge(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &p,
-        const std::shared_ptr<List::list<std::shared_ptr<tree>>> &q);
+  static priqueue merge(const std::shared_ptr<List<std::shared_ptr<tree>>> &p,
+                        const std::shared_ptr<List<std::shared_ptr<tree>>> &q);
 
-  static priqueue
-  insert_list(const std::shared_ptr<List::list<unsigned int>> &l,
-              std::shared_ptr<List::list<std::shared_ptr<tree>>> q);
+  static priqueue insert_list(const std::shared_ptr<List<unsigned int>> &l,
+                              std::shared_ptr<List<std::shared_ptr<tree>>> q);
 
-  static std::shared_ptr<List::list<unsigned int>>
-  make_list(const unsigned int n, std::shared_ptr<List::list<unsigned int>> l);
+  static std::shared_ptr<List<unsigned int>>
+  make_list(const unsigned int n, std::shared_ptr<List<unsigned int>> l);
 
-  static key help(const std::shared_ptr<List::list<std::shared_ptr<tree>>> &c);
+  static key help(const std::shared_ptr<List<std::shared_ptr<tree>>> &c);
 
   static inline const key example1 = help(merge(
       insert((((((0 + 1) + 1) + 1) + 1) + 1),
              insert((((0 + 1) + 1) + 1),
                     insert((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                           List::list<std::shared_ptr<tree>>::ctor::nil_()))),
+                           List<std::shared_ptr<tree>>::ctor::nil_()))),
       insert(
           (((0 + 1) + 1) + 1),
           insert(((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
                  insert((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                        List::list<std::shared_ptr<tree>>::ctor::nil_())))));
+                        List<std::shared_ptr<tree>>::ctor::nil_())))));
 
   static inline const key example2 = help(merge(
       insert_list(
           make_list(
               ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-              List::list<unsigned int>::ctor::nil_()),
-          List::list<std::shared_ptr<tree>>::ctor::nil_()),
+              List<unsigned int>::ctor::nil_()),
+          List<std::shared_ptr<tree>>::ctor::nil_()),
       insert_list(
           make_list(
               (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                1),
-              List::list<unsigned int>::ctor::nil_()),
-          List::list<std::shared_ptr<tree>>::ctor::nil_())));
+              List<unsigned int>::ctor::nil_()),
+          List<std::shared_ptr<tree>>::ctor::nil_())));
 };

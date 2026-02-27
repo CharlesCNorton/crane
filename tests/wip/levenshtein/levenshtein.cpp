@@ -11,14 +11,14 @@
 #include <variant>
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::same_chain(const std::shared_ptr<String::string> &s) {
+Levenshtein::same_chain(const std::shared_ptr<String> &s) {
   return std::visit(
-      Overloaded{[](const typename String::string::EmptyString _args) -> auto {
+      Overloaded{[](const typename String::EmptyString _args) -> auto {
                    return chain::ctor::empty_();
                  },
-                 [](const typename String::string::String _args) -> auto {
-                   std::shared_ptr<Ascii::ascii> a = _args._a0;
-                   std::shared_ptr<String::string> s0 = _args._a1;
+                 [](const typename String::String _args) -> auto {
+                   std::shared_ptr<Ascii> a = _args._a0;
+                   std::shared_ptr<String> s0 = _args._a1;
                    return chain::ctor::skip_(std::move(a), s0, s0,
                                              Nat::nat::ctor::O_(),
                                              same_chain(s0));
@@ -26,26 +26,27 @@ Levenshtein::same_chain(const std::shared_ptr<String::string> &s) {
       s->v());
 }
 
-std::shared_ptr<Levenshtein::chain> Levenshtein::insert_chain(
-    std::shared_ptr<Ascii::ascii> c, std::shared_ptr<String::string> s1,
-    std::shared_ptr<String::string> s2, std::shared_ptr<Nat::nat> n,
-    std::shared_ptr<Levenshtein::chain> c0) {
-  return chain::ctor::change_(s1, String::string::ctor::String_(c, s1),
-                              String::string::ctor::String_(c, s2), n,
+std::shared_ptr<Levenshtein::chain>
+Levenshtein::insert_chain(std::shared_ptr<Ascii> c, std::shared_ptr<String> s1,
+                          std::shared_ptr<String> s2,
+                          std::shared_ptr<Nat::nat> n,
+                          std::shared_ptr<Levenshtein::chain> c0) {
+  return chain::ctor::change_(s1, String::ctor::String_(c, s1),
+                              String::ctor::String_(c, s2), n,
                               edit::ctor::insertion_(c, s1),
                               chain::ctor::skip_(c, s1, s2, n, std::move(c0)));
 }
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::inserts_chain(const std::shared_ptr<String::string> &s1,
-                           const std::shared_ptr<String::string> &s2) {
+Levenshtein::inserts_chain(const std::shared_ptr<String> &s1,
+                           const std::shared_ptr<String> &s2) {
   return std::visit(
-      Overloaded{[&](const typename String::string::EmptyString _args) -> auto {
+      Overloaded{[&](const typename String::EmptyString _args) -> auto {
                    return _inserts_chain_F(s2);
                  },
-                 [&](const typename String::string::String _args) -> auto {
-                   std::shared_ptr<Ascii::ascii> a = _args._a0;
-                   std::shared_ptr<String::string> s = _args._a1;
+                 [&](const typename String::String _args) -> auto {
+                   std::shared_ptr<Ascii> a = _args._a0;
+                   std::shared_ptr<String> s = _args._a1;
                    return insert_chain(std::move(a), s2, s->append(s2),
                                        s->length(), inserts_chain(s, s2));
                  }},
@@ -53,40 +54,41 @@ Levenshtein::inserts_chain(const std::shared_ptr<String::string> &s1,
 }
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::inserts_chain_empty(const std::shared_ptr<String::string> &s) {
+Levenshtein::inserts_chain_empty(const std::shared_ptr<String> &s) {
   return std::visit(
-      Overloaded{[](const typename String::string::EmptyString _args) -> auto {
+      Overloaded{[](const typename String::EmptyString _args) -> auto {
                    return chain::ctor::empty_();
                  },
-                 [](const typename String::string::String _args) -> auto {
-                   std::shared_ptr<Ascii::ascii> a = _args._a0;
-                   std::shared_ptr<String::string> s0 = _args._a1;
+                 [](const typename String::String _args) -> auto {
+                   std::shared_ptr<Ascii> a = _args._a0;
+                   std::shared_ptr<String> s0 = _args._a1;
                    return insert_chain(std::move(a),
-                                       String::string::ctor::EmptyString_(), s0,
+                                       String::ctor::EmptyString_(), s0,
                                        s0->length(), inserts_chain_empty(s0));
                  }},
       s->v());
 }
 
-std::shared_ptr<Levenshtein::chain> Levenshtein::delete_chain(
-    std::shared_ptr<Ascii::ascii> c, std::shared_ptr<String::string> s1,
-    std::shared_ptr<String::string> s2, std::shared_ptr<Nat::nat> n,
-    std::shared_ptr<Levenshtein::chain> c0) {
-  return chain::ctor::change_(String::string::ctor::String_(c, s1), s1,
-                              std::move(s2), std::move(n),
-                              edit::ctor::deletion_(c, s1), std::move(c0));
+std::shared_ptr<Levenshtein::chain>
+Levenshtein::delete_chain(std::shared_ptr<Ascii> c, std::shared_ptr<String> s1,
+                          std::shared_ptr<String> s2,
+                          std::shared_ptr<Nat::nat> n,
+                          std::shared_ptr<Levenshtein::chain> c0) {
+  return chain::ctor::change_(String::ctor::String_(c, s1), s1, std::move(s2),
+                              std::move(n), edit::ctor::deletion_(c, s1),
+                              std::move(c0));
 }
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::deletes_chain(const std::shared_ptr<String::string> &s1,
-                           const std::shared_ptr<String::string> &s2) {
+Levenshtein::deletes_chain(const std::shared_ptr<String> &s1,
+                           const std::shared_ptr<String> &s2) {
   return std::visit(
-      Overloaded{[&](const typename String::string::EmptyString _args) -> auto {
+      Overloaded{[&](const typename String::EmptyString _args) -> auto {
                    return same_chain(s2);
                  },
-                 [&](const typename String::string::String _args) -> auto {
-                   std::shared_ptr<Ascii::ascii> a = _args._a0;
-                   std::shared_ptr<String::string> s = _args._a1;
+                 [&](const typename String::String _args) -> auto {
+                   std::shared_ptr<Ascii> a = _args._a0;
+                   std::shared_ptr<String> s = _args._a1;
                    return delete_chain(std::move(a), s->append(s2), s2,
                                        s->length(), deletes_chain(s, s2));
                  }},
@@ -94,170 +96,160 @@ Levenshtein::deletes_chain(const std::shared_ptr<String::string> &s1,
 }
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::deletes_chain_empty(const std::shared_ptr<String::string> &s) {
+Levenshtein::deletes_chain_empty(const std::shared_ptr<String> &s) {
   return std::visit(
-      Overloaded{[](const typename String::string::EmptyString _args) -> auto {
+      Overloaded{[](const typename String::EmptyString _args) -> auto {
                    return chain::ctor::empty_();
                  },
-                 [](const typename String::string::String _args) -> auto {
-                   std::shared_ptr<Ascii::ascii> a = _args._a0;
-                   std::shared_ptr<String::string> s0 = _args._a1;
+                 [](const typename String::String _args) -> auto {
+                   std::shared_ptr<Ascii> a = _args._a0;
+                   std::shared_ptr<String> s0 = _args._a1;
                    return delete_chain(std::move(a), s0,
-                                       String::string::ctor::EmptyString_(),
+                                       String::ctor::EmptyString_(),
                                        s0->length(), deletes_chain_empty(s0));
                  }},
       s->v());
 }
 
 std::shared_ptr<Levenshtein::chain> Levenshtein::update_chain(
-    std::shared_ptr<Ascii::ascii> c, std::shared_ptr<Ascii::ascii> c_,
-    std::shared_ptr<String::string> s1, std::shared_ptr<String::string> s2,
+    std::shared_ptr<Ascii> c, std::shared_ptr<Ascii> c_,
+    std::shared_ptr<String> s1, std::shared_ptr<String> s2,
     std::shared_ptr<Nat::nat> n, std::shared_ptr<Levenshtein::chain> c0) {
-  return chain::ctor::change_(String::string::ctor::String_(c, s1),
-                              String::string::ctor::String_(c_, s1),
-                              String::string::ctor::String_(c_, s2), n,
-                              edit::ctor::update_(c, c_, s1),
-                              chain::ctor::skip_(c_, s1, s2, n, std::move(c0)));
+  return chain::ctor::change_(
+      String::ctor::String_(c, s1), String::ctor::String_(c_, s1),
+      String::ctor::String_(c_, s2), n, edit::ctor::update_(c, c_, s1),
+      chain::ctor::skip_(c_, s1, s2, n, std::move(c0)));
 }
 
 std::shared_ptr<Levenshtein::chain> Levenshtein::aux_insert(
-    const std::shared_ptr<String::string> &_x,
-    const std::shared_ptr<String::string> &_x0, std::shared_ptr<Ascii::ascii> x,
-    std::shared_ptr<String::string> xs, const std::shared_ptr<Ascii::ascii> &y,
-    const std::shared_ptr<String::string> &ys,
+    const std::shared_ptr<String> &_x, const std::shared_ptr<String> &_x0,
+    std::shared_ptr<Ascii> x, std::shared_ptr<String> xs,
+    const std::shared_ptr<Ascii> &y, const std::shared_ptr<String> &ys,
     const std::shared_ptr<Nat::nat> &n,
     const std::shared_ptr<Levenshtein::chain> &r1) {
-  return insert_chain(
-      y, String::string::ctor::String_(std::move(x), std::move(xs)), ys, n, r1);
+  return insert_chain(y, String::ctor::String_(std::move(x), std::move(xs)), ys,
+                      n, r1);
 }
 
 std::shared_ptr<Levenshtein::chain> Levenshtein::aux_delete(
-    const std::shared_ptr<String::string> &_x,
-    const std::shared_ptr<String::string> &_x0,
-    const std::shared_ptr<Ascii::ascii> &x,
-    const std::shared_ptr<String::string> &xs, std::shared_ptr<Ascii::ascii> y,
-    std::shared_ptr<String::string> ys, const std::shared_ptr<Nat::nat> &n,
+    const std::shared_ptr<String> &_x, const std::shared_ptr<String> &_x0,
+    const std::shared_ptr<Ascii> &x, const std::shared_ptr<String> &xs,
+    std::shared_ptr<Ascii> y, std::shared_ptr<String> ys,
+    const std::shared_ptr<Nat::nat> &n,
     const std::shared_ptr<Levenshtein::chain> &r2) {
-  return delete_chain(
-      x, xs, String::string::ctor::String_(std::move(y), std::move(ys)), n, r2);
+  return delete_chain(x, xs, String::ctor::String_(std::move(y), std::move(ys)),
+                      n, r2);
 }
 
-std::shared_ptr<Levenshtein::chain>
-Levenshtein::aux_update(const std::shared_ptr<String::string> &_x,
-                        const std::shared_ptr<String::string> &_x0,
-                        const std::shared_ptr<Ascii::ascii> &x,
-                        const std::shared_ptr<String::string> &xs,
-                        const std::shared_ptr<Ascii::ascii> &y,
-                        const std::shared_ptr<String::string> &ys,
-                        const std::shared_ptr<Nat::nat> &n,
-                        const std::shared_ptr<Levenshtein::chain> &r3) {
+std::shared_ptr<Levenshtein::chain> Levenshtein::aux_update(
+    const std::shared_ptr<String> &_x, const std::shared_ptr<String> &_x0,
+    const std::shared_ptr<Ascii> &x, const std::shared_ptr<String> &xs,
+    const std::shared_ptr<Ascii> &y, const std::shared_ptr<String> &ys,
+    const std::shared_ptr<Nat::nat> &n,
+    const std::shared_ptr<Levenshtein::chain> &r3) {
   return update_chain(x, y, xs, ys, n, r3);
 }
 
 std::shared_ptr<Levenshtein::chain> Levenshtein::aux_eq_char(
-    const std::shared_ptr<String::string> &_x,
-    const std::shared_ptr<String::string> &_x0,
-    const std::shared_ptr<Ascii::ascii> &_x1,
-    std::shared_ptr<String::string> xs, std::shared_ptr<Ascii::ascii> y,
-    std::shared_ptr<String::string> ys, std::shared_ptr<Nat::nat> n,
-    std::shared_ptr<Levenshtein::chain> c) {
+    const std::shared_ptr<String> &_x, const std::shared_ptr<String> &_x0,
+    const std::shared_ptr<Ascii> &_x1, std::shared_ptr<String> xs,
+    std::shared_ptr<Ascii> y, std::shared_ptr<String> ys,
+    std::shared_ptr<Nat::nat> n, std::shared_ptr<Levenshtein::chain> c) {
   return chain::ctor::skip_(std::move(y), std::move(xs), std::move(ys),
                             std::move(n), std::move(c));
 }
 
 std::shared_ptr<Levenshtein::chain>
-Levenshtein::aux_both_empty(const std::shared_ptr<String::string> &_x,
-                            const std::shared_ptr<String::string> &_x0) {
+Levenshtein::aux_both_empty(const std::shared_ptr<String> &_x,
+                            const std::shared_ptr<String> &_x0) {
   return chain::ctor::empty_();
 }
 
 std::shared_ptr<
-    SigT::sigT<std::shared_ptr<Nat::nat>, std::shared_ptr<Levenshtein::chain>>>
-Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
-                               std::shared_ptr<String::string> _x0) {
-  std::function<std::shared_ptr<SigT::sigT<
-      std::shared_ptr<Nat::nat>, std::shared_ptr<Levenshtein::chain>>>(
-      std::shared_ptr<String::string>)>
+    SigT<std::shared_ptr<Nat::nat>, std::shared_ptr<Levenshtein::chain>>>
+Levenshtein::levenshtein_chain(const std::shared_ptr<String> &s,
+                               std::shared_ptr<String> _x0) {
+  std::function<std::shared_ptr<
+      SigT<std::shared_ptr<Nat::nat>, std::shared_ptr<Levenshtein::chain>>>(
+      std::shared_ptr<String>)>
       levenshtein_chain1;
-  levenshtein_chain1 = [&](std::shared_ptr<String::string> t)
-      -> std::shared_ptr<SigT::sigT<std::shared_ptr<Nat::nat>,
-                                    std::shared_ptr<Levenshtein::chain>>> {
+  levenshtein_chain1 = [&](std::shared_ptr<String> t)
+      -> std::shared_ptr<SigT<std::shared_ptr<Nat::nat>,
+                              std::shared_ptr<Levenshtein::chain>>> {
     return std::visit(
         Overloaded{
-            [&](const typename String::string::EmptyString _args)
-                -> std::function<std::shared_ptr<
-                    SigT::sigT<std::shared_ptr<Nat::nat>,
-                               std::shared_ptr<Levenshtein::chain>>>(
-                    dummy_prop, dummy_prop)> {
+            [&](const typename String::EmptyString _args)
+                -> std::function<
+                    std::shared_ptr<SigT<std::shared_ptr<Nat::nat>,
+                                         std::shared_ptr<Levenshtein::chain>>>(
+                        dummy_prop, dummy_prop)> {
               return std::visit(
                   Overloaded{
-                      [&](const typename String::string::EmptyString _args)
+                      [&](const typename String::EmptyString _args)
                           -> std::function<std::shared_ptr<
-                              SigT::sigT<std::shared_ptr<Nat::nat>,
-                                         std::shared_ptr<Levenshtein::chain>>>(
+                              SigT<std::shared_ptr<Nat::nat>,
+                                   std::shared_ptr<Levenshtein::chain>>>(
                               dummy_prop, dummy_prop)> {
-                        return SigT::sigT<std::shared_ptr<Nat::nat>,
-                                          std::shared_ptr<Levenshtein::chain>>::
-                            ctor::existT_(Nat::nat::ctor::O_(),
-                                          aux_both_empty(s, std::move(t)));
+                        return SigT<std::shared_ptr<Nat::nat>,
+                                    std::shared_ptr<Levenshtein::chain>>::ctor::
+                            existT_(Nat::nat::ctor::O_(),
+                                    aux_both_empty(s, std::move(t)));
                       },
-                      [&](const typename String::string::String _args)
+                      [&](const typename String::String _args)
                           -> std::function<std::shared_ptr<
-                              SigT::sigT<std::shared_ptr<Nat::nat>,
-                                         std::shared_ptr<Levenshtein::chain>>>(
+                              SigT<std::shared_ptr<Nat::nat>,
+                                   std::shared_ptr<Levenshtein::chain>>>(
                               dummy_prop, dummy_prop)> {
-                        return SigT::sigT<std::shared_ptr<Nat::nat>,
-                                          std::shared_ptr<Levenshtein::chain>>::
-                            ctor::existT_(t->length(), inserts_chain_empty(t));
+                        return SigT<std::shared_ptr<Nat::nat>,
+                                    std::shared_ptr<Levenshtein::chain>>::ctor::
+                            existT_(t->length(), inserts_chain_empty(t));
                       }},
                   t->v());
             },
-            [&](const typename String::string::String _args)
-                -> std::function<std::shared_ptr<
-                    SigT::sigT<std::shared_ptr<Nat::nat>,
-                               std::shared_ptr<Levenshtein::chain>>>(
-                    dummy_prop, dummy_prop)> {
-              std::shared_ptr<Ascii::ascii> x = _args._a0;
-              std::shared_ptr<String::string> xs = _args._a1;
+            [&](const typename String::String _args)
+                -> std::function<
+                    std::shared_ptr<SigT<std::shared_ptr<Nat::nat>,
+                                         std::shared_ptr<Levenshtein::chain>>>(
+                        dummy_prop, dummy_prop)> {
+              std::shared_ptr<Ascii> x = _args._a0;
+              std::shared_ptr<String> xs = _args._a1;
               return std::visit(
                   Overloaded{
-                      [&](const typename String::string::EmptyString _args)
+                      [&](const typename String::EmptyString _args)
                           -> std::function<std::shared_ptr<
-                              SigT::sigT<std::shared_ptr<Nat::nat>,
-                                         std::shared_ptr<Levenshtein::chain>>>(
+                              SigT<std::shared_ptr<Nat::nat>,
+                                   std::shared_ptr<Levenshtein::chain>>>(
                               dummy_prop, dummy_prop)> {
-                        return SigT::sigT<std::shared_ptr<Nat::nat>,
-                                          std::shared_ptr<Levenshtein::chain>>::
-                            ctor::existT_(
-                                s->length(),
-                                deletes_chain_empty(
-                                    String::string::ctor::String_(
+                        return SigT<std::shared_ptr<Nat::nat>,
+                                    std::shared_ptr<Levenshtein::chain>>::ctor::
+                            existT_(s->length(),
+                                    deletes_chain_empty(String::ctor::String_(
                                         std::move(x), std::move(xs))));
                       },
-                      [&](const typename String::string::String _args)
+                      [&](const typename String::String _args)
                           -> std::function<std::shared_ptr<
-                              SigT::sigT<std::shared_ptr<Nat::nat>,
-                                         std::shared_ptr<Levenshtein::chain>>>(
+                              SigT<std::shared_ptr<Nat::nat>,
+                                   std::shared_ptr<Levenshtein::chain>>>(
                               dummy_prop, dummy_prop)> {
-                        std::shared_ptr<Ascii::ascii> y = _args._a0;
-                        std::shared_ptr<String::string> ys = _args._a1;
+                        std::shared_ptr<Ascii> y = _args._a0;
+                        std::shared_ptr<String> ys = _args._a1;
                         return [&](void) {
                           switch (x->ascii_dec(y)) {
                           case sumbool::left: {
                             return std::visit(
                                 Overloaded{
-                                    [&](const typename SigT::sigT<
+                                    [&](const typename SigT<
                                         std::shared_ptr<Nat::nat>,
                                         std::shared_ptr<Levenshtein::chain>>::
                                             existT _args)
-                                        -> std::shared_ptr<SigT::sigT<
-                                            std::shared_ptr<Nat::nat>,
-                                            std::shared_ptr<
-                                                Levenshtein::chain>>> {
+                                        -> std::shared_ptr<
+                                            SigT<std::shared_ptr<Nat::nat>,
+                                                 std::shared_ptr<
+                                                     Levenshtein::chain>>> {
                                       std::shared_ptr<Nat::nat> n = _args._a0;
                                       std::shared_ptr<Levenshtein::chain> c =
                                           _args._a1;
-                                      return SigT::sigT<
+                                      return SigT<
                                           std::shared_ptr<Nat::nat>,
                                           std::shared_ptr<Levenshtein::chain>>::
                                           ctor::existT_(
@@ -272,12 +264,12 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
                           }
                           case sumbool::right: {
                             return std::visit(
-                                Overloaded{[&](const typename SigT::sigT<
+                                Overloaded{[&](const typename SigT<
                                                std::shared_ptr<Nat::nat>,
                                                std::shared_ptr<
                                                    Levenshtein::chain>>::existT
                                                    _args)
-                                               -> std::shared_ptr<SigT::sigT<
+                                               -> std::shared_ptr<SigT<
                                                    std::shared_ptr<Nat::nat>,
                                                    std::shared_ptr<
                                                        Levenshtein::chain>>> {
@@ -285,36 +277,34 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
                                   std::shared_ptr<Levenshtein::chain> r1 =
                                       _args._a1;
                                   return std::visit(
-                                      Overloaded{[&](const typename SigT::sigT<
+                                      Overloaded{[&](const typename SigT<
                                                      std::shared_ptr<Nat::nat>,
                                                      std::shared_ptr<
                                                          Levenshtein::chain>>::
                                                          existT _args)
                                                      -> std::shared_ptr<
-                                                         SigT::sigT<
-                                                             std::shared_ptr<
-                                                                 Nat::nat>,
-                                                             std::shared_ptr<
-                                                                 Levenshtein::
-                                                                     chain>>> {
+                                                         SigT<std::shared_ptr<
+                                                                  Nat::nat>,
+                                                              std::shared_ptr<
+                                                                  Levenshtein::
+                                                                      chain>>> {
                                         std::shared_ptr<Nat::nat> n2 =
                                             _args._a0;
                                         std::shared_ptr<Levenshtein::chain> r2 =
                                             _args._a1;
                                         return std::visit(
                                             Overloaded{
-                                                [&](const typename SigT::sigT<
+                                                [&](const typename SigT<
                                                     std::shared_ptr<Nat::nat>,
                                                     std::shared_ptr<
                                                         Levenshtein::chain>>::
                                                         existT _args)
                                                     -> std::shared_ptr<
-                                                        SigT::sigT<
-                                                            std::shared_ptr<
-                                                                Nat::nat>,
-                                                            std::shared_ptr<
-                                                                Levenshtein::
-                                                                    chain>>> {
+                                                        SigT<std::shared_ptr<
+                                                                 Nat::nat>,
+                                                             std::shared_ptr<
+                                                                 Levenshtein::
+                                                                     chain>>> {
                                                   std::shared_ptr<Nat::nat> n3 =
                                                       _args._a0;
                                                   std::shared_ptr<
@@ -351,41 +341,37 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
                                                           std::move(n3),
                                                           std::move(r3));
                                                   return min3_app<
-                                                      std::shared_ptr<
-                                                          SigT::sigT<
-                                                              std::shared_ptr<
-                                                                  Nat::nat>,
-                                                              std::shared_ptr<
-                                                                  Levenshtein::
-                                                                      chain>>>>(
-                                                      SigT::sigT<
+                                                      std::shared_ptr<SigT<
                                                           std::shared_ptr<
                                                               Nat::nat>,
                                                           std::shared_ptr<
                                                               Levenshtein::
-                                                                  chain>>::
+                                                                  chain>>>>(
+                                                      SigT<std::shared_ptr<
+                                                               Nat::nat>,
+                                                           std::shared_ptr<
+                                                               Levenshtein::
+                                                                   chain>>::
                                                           ctor::existT_(
                                                               Nat::nat::ctor::
                                                                   S_(std::move(
                                                                       n1)),
                                                               std::move(r1_)),
-                                                      SigT::sigT<
-                                                          std::shared_ptr<
-                                                              Nat::nat>,
-                                                          std::shared_ptr<
-                                                              Levenshtein::
-                                                                  chain>>::
+                                                      SigT<std::shared_ptr<
+                                                               Nat::nat>,
+                                                           std::shared_ptr<
+                                                               Levenshtein::
+                                                                   chain>>::
                                                           ctor::existT_(
                                                               Nat::nat::ctor::
                                                                   S_(std::move(
                                                                       n2)),
                                                               std::move(r2_)),
-                                                      SigT::sigT<
-                                                          std::shared_ptr<
-                                                              Nat::nat>,
-                                                          std::shared_ptr<
-                                                              Levenshtein::
-                                                                  chain>>::
+                                                      SigT<std::shared_ptr<
+                                                               Nat::nat>,
+                                                           std::shared_ptr<
+                                                               Levenshtein::
+                                                                   chain>>::
                                                           ctor::existT_(
                                                               Nat::nat::ctor::
                                                                   S_(std::move(
@@ -396,8 +382,7 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
                                             levenshtein_chain(xs, ys)->v());
                                       }},
                                       levenshtein_chain(
-                                          xs,
-                                          String::string::ctor::String_(y, ys))
+                                          xs, String::ctor::String_(y, ys))
                                           ->v());
                                 }},
                                 levenshtein_chain1(ys)->v());
@@ -413,14 +398,14 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String::string> &s,
 }
 
 std::shared_ptr<Nat::nat>
-Levenshtein::levenshtein_computed(const std::shared_ptr<String::string> &s,
-                                  const std::shared_ptr<String::string> &t) {
+Levenshtein::levenshtein_computed(const std::shared_ptr<String> &s,
+                                  const std::shared_ptr<String> &t) {
   return levenshtein_chain(s, t)->projT1();
 }
 
 std::shared_ptr<Nat::nat>
-Levenshtein::levenshtein(const std::shared_ptr<String::string> &_x0,
-                         const std::shared_ptr<String::string> &_x1) {
+Levenshtein::levenshtein(const std::shared_ptr<String> &_x0,
+                         const std::shared_ptr<String> &_x1) {
   return levenshtein_computed(_x0, _x1);
 }
 

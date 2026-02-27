@@ -39,11 +39,11 @@ int64_t bindreturn::test4() {
   return v.size();
 }
 
-std::shared_ptr<List::list<int64_t>> bindreturn::intToList(const int64_t n) {
-  return List::list<int64_t>::ctor::cons_(n, List::list<int64_t>::ctor::nil_());
+std::shared_ptr<List<int64_t>> bindreturn::intToList(const int64_t n) {
+  return List<int64_t>::ctor::cons_(n, List<int64_t>::ctor::nil_());
 }
 
-std::shared_ptr<List::list<int64_t>> bindreturn::test5() {
+std::shared_ptr<List<int64_t>> bindreturn::test5() {
   int64_t x = int64_t(1);
   return intToList(x);
 }

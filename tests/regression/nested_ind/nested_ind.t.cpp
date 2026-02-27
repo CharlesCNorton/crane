@@ -26,18 +26,18 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
-// Helper: convert List::list<unsigned int> to std::vector
+// Helper: convert List<unsigned int> to std::vector
 std::vector<unsigned int>
-to_vector(const std::shared_ptr<List::list<unsigned int>> &l) {
+to_vector(const std::shared_ptr<List<unsigned int>> &l) {
     std::vector<unsigned int> result;
     auto cur = l;
     while (true) {
         auto ok = std::visit(
             Overloaded{
-                [&](const List::list<unsigned int>::nil) -> bool {
+                [&](const List<unsigned int>::nil) -> bool {
                     return false;
                 },
-                [&](const List::list<unsigned int>::cons args) -> bool {
+                [&](const List<unsigned int>::cons args) -> bool {
                     result.push_back(args._a0);
                     cur = args._a1;
                     return true;

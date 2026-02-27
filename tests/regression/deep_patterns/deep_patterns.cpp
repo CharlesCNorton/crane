@@ -45,48 +45,45 @@ DeepPatterns::deep_pair(const std::pair<std::pair<unsigned int, unsigned int>,
 }
 
 unsigned int
-DeepPatterns::list_shape(const std::shared_ptr<List::list<unsigned int>> &l) {
+DeepPatterns::list_shape(const std::shared_ptr<List<unsigned int>> &l) {
   return std::visit(
       Overloaded{
-          [](const typename List::list<unsigned int>::nil _args)
-              -> unsigned int { return 0; },
-          [](const typename List::list<unsigned int>::cons _args)
-              -> unsigned int {
+          [](const typename List<unsigned int>::nil _args) -> unsigned int {
+            return 0;
+          },
+          [](const typename List<unsigned int>::cons _args) -> unsigned int {
             unsigned int x = _args._a0;
-            std::shared_ptr<List::list<unsigned int>> l0 = _args._a1;
+            std::shared_ptr<List<unsigned int>> l0 = _args._a1;
             return std::visit(
                 Overloaded{
-                    [&](const typename List::list<unsigned int>::nil _args)
+                    [&](const typename List<unsigned int>::nil _args)
                         -> unsigned int { return std::move(x); },
-                    [&](const typename List::list<unsigned int>::cons _args)
+                    [&](const typename List<unsigned int>::cons _args)
                         -> unsigned int {
                       unsigned int y = _args._a0;
-                      std::shared_ptr<List::list<unsigned int>> l1 = _args._a1;
+                      std::shared_ptr<List<unsigned int>> l1 = _args._a1;
                       return std::visit(
                           Overloaded{
-                              [&](const typename List::list<unsigned int>::nil
-                                      _args) -> unsigned int {
+                              [&](const typename List<unsigned int>::nil _args)
+                                  -> unsigned int {
                                 return (std::move(x) + std::move(y));
                               },
-                              [&](const typename List::list<unsigned int>::cons
-                                      _args) -> unsigned int {
+                              [&](const typename List<unsigned int>::cons _args)
+                                  -> unsigned int {
                                 unsigned int z = _args._a0;
-                                std::shared_ptr<List::list<unsigned int>> l2 =
+                                std::shared_ptr<List<unsigned int>> l2 =
                                     _args._a1;
                                 return std::visit(
                                     Overloaded{
-                                        [&](const typename List::list<
-                                            unsigned int>::nil _args)
-                                            -> unsigned int {
+                                        [&](const typename List<unsigned int>::
+                                                nil _args) -> unsigned int {
                                           return (
                                               (std::move(x) + std::move(y)) +
                                               std::move(z));
                                         },
-                                        [&](const typename List::list<
-                                            unsigned int>::cons _args)
-                                            -> unsigned int {
-                                          std::shared_ptr<
-                                              List::list<unsigned int>>
+                                        [&](const typename List<unsigned int>::
+                                                cons _args) -> unsigned int {
+                                          std::shared_ptr<List<unsigned int>>
                                               rest = _args._a1;
                                           return (
                                               ((std::move(x) + std::move(y)) +
@@ -134,28 +131,27 @@ DeepPatterns::deep_sum(const std::shared_ptr<DeepPatterns::outer> &o) {
 
 unsigned int DeepPatterns::complex_match(
     const std::optional<
-        std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
+        std::pair<unsigned int, std::shared_ptr<List<unsigned int>>>>
         x) {
   if (x.has_value()) {
-    std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>> p = *x;
+    std::pair<unsigned int, std::shared_ptr<List<unsigned int>>> p = *x;
     unsigned int n = p.first;
-    std::shared_ptr<List::list<unsigned int>> l = p.second;
+    std::shared_ptr<List<unsigned int>> l = p.second;
     return std::visit(
         Overloaded{
-            [&](const typename List::list<unsigned int>::nil _args)
-                -> unsigned int { return n; },
-            [&](const typename List::list<unsigned int>::cons _args)
-                -> unsigned int {
+            [&](const typename List<unsigned int>::nil _args) -> unsigned int {
+              return n;
+            },
+            [&](const typename List<unsigned int>::cons _args) -> unsigned int {
               unsigned int m = _args._a0;
-              std::shared_ptr<List::list<unsigned int>> l0 = _args._a1;
+              std::shared_ptr<List<unsigned int>> l0 = _args._a1;
               return std::visit(
                   Overloaded{
-                      [&](const typename List::list<unsigned int>::nil _args)
+                      [&](const typename List<unsigned int>::nil _args)
                           -> unsigned int { return (n + std::move(m)); },
-                      [&](const typename List::list<unsigned int>::cons _args)
+                      [&](const typename List<unsigned int>::cons _args)
                           -> unsigned int {
-                        std::shared_ptr<List::list<unsigned int>> rest =
-                            _args._a1;
+                        std::shared_ptr<List<unsigned int>> rest = _args._a1;
                         return ((n + std::move(m)) + std::move(rest)->length());
                       }},
                   std::move(l0)->v());

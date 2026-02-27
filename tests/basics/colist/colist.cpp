@@ -10,11 +10,11 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<Colist::colist<std::shared_ptr<Nat::nat>>>
-Colist::nats(std::shared_ptr<Nat::nat> n) {
-  return colist<std::shared_ptr<Nat::nat>>::ctor::lazy_(
-      [=](void) -> std::shared_ptr<Colist::colist<std::shared_ptr<Nat::nat>>> {
-        return colist<std::shared_ptr<Nat::nat>>::ctor::cocons_(
-            n, nats(Nat::nat::ctor::S_(n)));
+std::shared_ptr<Colist::colist<std::shared_ptr<Nat>>>
+Colist::nats(std::shared_ptr<Nat> n) {
+  return colist<std::shared_ptr<Nat>>::ctor::lazy_(
+      [=](void) -> std::shared_ptr<Colist::colist<std::shared_ptr<Nat>>> {
+        return colist<std::shared_ptr<Nat>>::ctor::cocons_(
+            n, nats(Nat::ctor::S_(n)));
       });
 }

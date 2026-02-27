@@ -37,13 +37,13 @@ int main() {
   std::cout << "Testing PString functions...\n";
 
   // Test nat_to_int
-  auto zero_nat = Nat::nat::ctor::O_();
+  auto zero_nat = Nat::ctor::O_();
   ASSERT(PString::nat_to_int(zero_nat) == 0);
 
-  auto one_nat = Nat::nat::ctor::S_(zero_nat);
+  auto one_nat = Nat::ctor::S_(zero_nat);
   ASSERT(PString::nat_to_int(one_nat) == 1);
 
-  auto two_nat = Nat::nat::ctor::S_(one_nat);
+  auto two_nat = Nat::ctor::S_(one_nat);
   ASSERT(PString::nat_to_int(two_nat) == 2);
 
   if (testStatus == 0) {

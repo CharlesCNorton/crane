@@ -24,15 +24,15 @@ struct IndParam {
     {
       M::t_rect(std::declval<T1>(), std::declval<std::function<T1(elem)>>(),
                 std::declval<std::function<T1(elem, elem)>>(),
-                std::declval<std::shared_ptr<T::t>>())
+                std::declval<std::shared_ptr<T>>())
     } -> std::same_as<T1>;
     {
       M::t_rec(std::declval<T1>(), std::declval<std::function<T1(elem)>>(),
                std::declval<std::function<T1(elem, elem)>>(),
-               std::declval<std::shared_ptr<T::t>>())
+               std::declval<std::shared_ptr<T>>())
     } -> std::same_as<T1>;
     {
-      M::size(std::declval<std::shared_ptr<T::t>>())
+      M::size(std::declval<std::shared_ptr<T>>())
     } -> std::same_as<unsigned int>;
   };
 

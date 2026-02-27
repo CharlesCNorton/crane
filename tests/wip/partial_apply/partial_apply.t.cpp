@@ -21,14 +21,14 @@ void aSsErT(bool condition, const char *message, int line)
 }
 
 template <typename A>
-A list_nth(const std::shared_ptr<List::list<A>> &l, unsigned int n) {
+A list_nth(const std::shared_ptr<List<A>> &l, unsigned int n) {
     auto cur = l;
     for (unsigned int i = 0; i < n; ++i) {
         auto &v = cur->v();
-        auto &c = std::get<typename List::list<A>::cons>(v);
+        auto &c = std::get<typename List<A>::cons>(v);
         cur = c._a1;
     }
-    return std::get<typename List::list<A>::cons>(cur->v())._a0;
+    return std::get<typename List<A>::cons>(cur->v())._a0;
 }
 
 }  // close unnamed namespace

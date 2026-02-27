@@ -19,77 +19,72 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Nat {
-  struct nat {
-  public:
-    struct O {};
-    struct S {
-      std::shared_ptr<Nat::nat> _a0;
-    };
-    using variant_t = std::variant<O, S>;
-
-  private:
-    variant_t v_;
-    explicit nat(O _v) : v_(std::move(_v)) {}
-    explicit nat(S _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Nat::nat> O_() {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::shared_ptr<Nat::nat> S_(const std::shared_ptr<Nat::nat> &a0) {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-      static std::unique_ptr<Nat::nat> O_uptr() {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::unique_ptr<Nat::nat>
-      S_uptr(const std::shared_ptr<Nat::nat> &a0) {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+public:
+  struct O {};
+  struct S {
+    std::shared_ptr<Nat> _a0;
   };
+  using variant_t = std::variant<O, S>;
+
+private:
+  variant_t v_;
+  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Nat> O_() {
+      return std::shared_ptr<Nat>(new Nat(O{}));
+    }
+    static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
+      return std::shared_ptr<Nat>(new Nat(S{a0}));
+    }
+    static std::unique_ptr<Nat> O_uptr() {
+      return std::unique_ptr<Nat>(new Nat(O{}));
+    }
+    static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
+      return std::unique_ptr<Nat>(new Nat(S{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct Colist {
@@ -138,31 +133,29 @@ struct Colist {
       }
     };
     const variant_t &v() const { return lazy_v_.force(); }
-    std::shared_ptr<List::list<A>>
-    list_of_colist(const std::shared_ptr<Nat::nat> &fuel) const {
+    std::shared_ptr<List<A>>
+    list_of_colist(const std::shared_ptr<Nat> &fuel) const {
       return std::visit(
-          Overloaded{[](const typename Nat::nat::O _args)
-                         -> std::shared_ptr<List::list<A>> {
-                       return List::list<A>::ctor::nil_();
-                     },
-                     [&](const typename Nat::nat::S _args)
-                         -> std::shared_ptr<List::list<A>> {
-                       std::shared_ptr<Nat::nat> fuel_ = _args._a0;
-                       return std::visit(
-                           Overloaded{
-                               [](const typename colist<A>::conil _args)
-                                   -> std::shared_ptr<List::list<A>> {
-                                 return List::list<A>::ctor::nil_();
+          Overloaded{
+              [](const typename Nat::O _args) -> std::shared_ptr<List<A>> {
+                return List<A>::ctor::nil_();
+              },
+              [&](const typename Nat::S _args) -> std::shared_ptr<List<A>> {
+                std::shared_ptr<Nat> fuel_ = _args._a0;
+                return std::visit(
+                    Overloaded{[](const typename colist<A>::conil _args)
+                                   -> std::shared_ptr<List<A>> {
+                                 return List<A>::ctor::nil_();
                                },
                                [&](const typename colist<A>::cocons _args)
-                                   -> std::shared_ptr<List::list<A>> {
+                                   -> std::shared_ptr<List<A>> {
                                  A x = _args._a0;
                                  std::shared_ptr<colist<A>> xs = _args._a1;
-                                 return List::list<A>::ctor::cons_(
+                                 return List<A>::ctor::cons_(
                                      x, xs->list_of_colist(std::move(fuel_)));
                                }},
-                           this->v());
-                     }},
+                    this->v());
+              }},
           fuel->v());
     }
     template <typename T2, MapsTo<T2, A> F0>
@@ -184,11 +177,11 @@ struct Colist {
     }
   };
 
-  static std::shared_ptr<colist<std::shared_ptr<Nat::nat>>>
-  nats(std::shared_ptr<Nat::nat> n);
+  static std::shared_ptr<colist<std::shared_ptr<Nat>>>
+  nats(std::shared_ptr<Nat> n);
 
-  static inline const std::shared_ptr<List::list<std::shared_ptr<Nat::nat>>>
-      first_three = nats(Nat::nat::ctor::O_())
-                        ->list_of_colist(Nat::nat::ctor::S_(Nat::nat::ctor::S_(
-                            Nat::nat::ctor::S_(Nat::nat::ctor::O_()))));
+  static inline const std::shared_ptr<List<std::shared_ptr<Nat>>> first_three =
+      nats(Nat::ctor::O_())
+          ->list_of_colist(
+              Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))));
 };

@@ -954,22 +954,23 @@ Matcher::deriv(const std::shared_ptr<Matcher::regexp> &r, const int64_t c) {
 
 std::shared_ptr<Matcher::regexp>
 Matcher::derivs(std::shared_ptr<Matcher::regexp> r,
-                const std::shared_ptr<List::list<int64_t>> &cs) {
-  return std::visit(
-      Overloaded{
-          [&](const typename List::list<int64_t>::nil _args)
-              -> std::shared_ptr<Matcher::regexp> { return std::move(r); },
-          [&](const typename List::list<int64_t>::cons _args)
-              -> std::shared_ptr<Matcher::regexp> {
-            int64_t c = _args._a0;
-            std::shared_ptr<List::list<int64_t>> cs_ = _args._a1;
-            return derivs(deriv(std::move(r), c), std::move(cs_));
-          }},
-      cs->v());
+                const std::shared_ptr<List<int64_t>> &cs) {
+  return std::visit(Overloaded{[&](const typename List<int64_t>::nil _args)
+                                   -> std::shared_ptr<Matcher::regexp> {
+                                 return std::move(r);
+                               },
+                               [&](const typename List<int64_t>::cons _args)
+                                   -> std::shared_ptr<Matcher::regexp> {
+                                 int64_t c = _args._a0;
+                                 std::shared_ptr<List<int64_t>> cs_ = _args._a1;
+                                 return derivs(deriv(std::move(r), c),
+                                               std::move(cs_));
+                               }},
+                    cs->v());
 }
 
 bool Matcher::deriv_parse(const std::shared_ptr<Matcher::regexp> &r,
-                          const std::shared_ptr<List::list<int64_t>> &cs) {
+                          const std::shared_ptr<List<int64_t>> &cs) {
   if (accepts_null(derivs(r, cs))) {
     return true;
   } else {
@@ -1032,7 +1033,7 @@ bool Matcher::NullEpsOrZero(const std::shared_ptr<Matcher::regexp> &r) {
 }
 
 bool Matcher::parse(const std::shared_ptr<Matcher::regexp> &r,
-                    const std::shared_ptr<List::list<int64_t>> &cs) {
+                    const std::shared_ptr<List<int64_t>> &cs) {
   bool b = deriv_parse(r, cs);
   if (b) {
     return true;
@@ -1042,7 +1043,7 @@ bool Matcher::parse(const std::shared_ptr<Matcher::regexp> &r,
 }
 
 bool Matcher::parse_bool(const std::shared_ptr<Matcher::regexp> &r,
-                         const std::shared_ptr<List::list<int64_t>> &cs) {
+                         const std::shared_ptr<List<int64_t>> &cs) {
   if (parse(r, cs)) {
     return true;
   } else {

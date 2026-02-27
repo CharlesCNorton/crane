@@ -11,7 +11,7 @@
 #include <variant>
 
 unsigned int HigherKinded::tree_sum(
-    const std::shared_ptr<HigherKinded::tree<unsigned int>> &t) {
+    const std::shared_ptr<HigherKinded::Tree<unsigned int>> &t) {
   return tree_fold<unsigned int, unsigned int>(
       [](unsigned int x) { return x; },
       [](const unsigned int _x0, const unsigned int _x1) {

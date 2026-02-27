@@ -17,56 +17,52 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
+  };
+  using variant_t = std::variant<nil, cons>;
 
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
 
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
-    std::shared_ptr<List::list<A>>
-    app(const std::shared_ptr<List::list<A>> &m) const {
-      return std::visit(
-          Overloaded{[&](const typename List::list<A>::nil _args)
-                         -> std::shared_ptr<List::list<A>> { return m; },
-                     [&](const typename List::list<A>::cons _args)
-                         -> std::shared_ptr<List::list<A>> {
-                       A a = _args._a0;
-                       std::shared_ptr<List::list<A>> l1 = _args._a1;
-                       return List::list<A>::ctor::cons_(a,
-                                                         std::move(l1)->app(m));
-                     }},
-          this->v());
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
+  std::shared_ptr<List<A>> app(const std::shared_ptr<List<A>> &m) const {
+    return std::visit(Overloaded{[&](const typename List<A>::nil _args)
+                                     -> std::shared_ptr<List<A>> { return m; },
+                                 [&](const typename List<A>::cons _args)
+                                     -> std::shared_ptr<List<A>> {
+                                   A a = _args._a0;
+                                   std::shared_ptr<List<A>> l1 = _args._a1;
+                                   return List<A>::ctor::cons_(
+                                       a, std::move(l1)->app(m));
+                                 }},
+                      this->v());
+  }
 };
 
 struct NestedInd {
@@ -76,10 +72,10 @@ struct NestedInd {
       unsigned int _a0;
     };
     struct Add {
-      std::shared_ptr<List::list<std::shared_ptr<expr>>> _a0;
+      std::shared_ptr<List<std::shared_ptr<expr>>> _a0;
     };
     struct Mul {
-      std::shared_ptr<List::list<std::shared_ptr<expr>>> _a0;
+      std::shared_ptr<List<std::shared_ptr<expr>>> _a0;
     };
     using variant_t = std::variant<Lit, Add, Mul>;
 
@@ -96,22 +92,22 @@ struct NestedInd {
         return std::shared_ptr<expr>(new expr(Lit{a0}));
       }
       static std::shared_ptr<expr>
-      Add_(const std::shared_ptr<List::list<std::shared_ptr<expr>>> &a0) {
+      Add_(const std::shared_ptr<List<std::shared_ptr<expr>>> &a0) {
         return std::shared_ptr<expr>(new expr(Add{a0}));
       }
       static std::shared_ptr<expr>
-      Mul_(const std::shared_ptr<List::list<std::shared_ptr<expr>>> &a0) {
+      Mul_(const std::shared_ptr<List<std::shared_ptr<expr>>> &a0) {
         return std::shared_ptr<expr>(new expr(Mul{a0}));
       }
       static std::unique_ptr<expr> Lit_uptr(unsigned int a0) {
         return std::unique_ptr<expr>(new expr(Lit{a0}));
       }
       static std::unique_ptr<expr>
-      Add_uptr(const std::shared_ptr<List::list<std::shared_ptr<expr>>> &a0) {
+      Add_uptr(const std::shared_ptr<List<std::shared_ptr<expr>>> &a0) {
         return std::unique_ptr<expr>(new expr(Add{a0}));
       }
       static std::unique_ptr<expr>
-      Mul_uptr(const std::shared_ptr<List::list<std::shared_ptr<expr>>> &a0) {
+      Mul_uptr(const std::shared_ptr<List<std::shared_ptr<expr>>> &a0) {
         return std::unique_ptr<expr>(new expr(Mul{a0}));
       }
     };
@@ -120,8 +116,8 @@ struct NestedInd {
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
-            MapsTo<T1, std::shared_ptr<List::list<std::shared_ptr<expr>>>> F1,
-            MapsTo<T1, std::shared_ptr<List::list<std::shared_ptr<expr>>>> F2>
+            MapsTo<T1, std::shared_ptr<List<std::shared_ptr<expr>>>> F1,
+            MapsTo<T1, std::shared_ptr<List<std::shared_ptr<expr>>>> F2>
   static T1 expr_rect(F0 &&f, F1 &&f0, F2 &&f1,
                       const std::shared_ptr<expr> &e) {
     return std::visit(
@@ -130,21 +126,19 @@ struct NestedInd {
                      return f(std::move(n));
                    },
                    [&](const typename expr::Add _args) -> T1 {
-                     std::shared_ptr<List::list<std::shared_ptr<expr>>> l =
-                         _args._a0;
+                     std::shared_ptr<List<std::shared_ptr<expr>>> l = _args._a0;
                      return f0(std::move(l));
                    },
                    [&](const typename expr::Mul _args) -> T1 {
-                     std::shared_ptr<List::list<std::shared_ptr<expr>>> l =
-                         _args._a0;
+                     std::shared_ptr<List<std::shared_ptr<expr>>> l = _args._a0;
                      return f1(std::move(l));
                    }},
         e->v());
   }
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
-            MapsTo<T1, std::shared_ptr<List::list<std::shared_ptr<expr>>>> F1,
-            MapsTo<T1, std::shared_ptr<List::list<std::shared_ptr<expr>>>> F2>
+            MapsTo<T1, std::shared_ptr<List<std::shared_ptr<expr>>>> F1,
+            MapsTo<T1, std::shared_ptr<List<std::shared_ptr<expr>>>> F2>
   static T1 expr_rec(F0 &&f, F1 &&f0, F2 &&f1, const std::shared_ptr<expr> &e) {
     return std::visit(
         Overloaded{[&](const typename expr::Lit _args) -> T1 {
@@ -152,13 +146,11 @@ struct NestedInd {
                      return f(std::move(n));
                    },
                    [&](const typename expr::Add _args) -> T1 {
-                     std::shared_ptr<List::list<std::shared_ptr<expr>>> l =
-                         _args._a0;
+                     std::shared_ptr<List<std::shared_ptr<expr>>> l = _args._a0;
                      return f0(std::move(l));
                    },
                    [&](const typename expr::Mul _args) -> T1 {
-                     std::shared_ptr<List::list<std::shared_ptr<expr>>> l =
-                         _args._a0;
+                     std::shared_ptr<List<std::shared_ptr<expr>>> l = _args._a0;
                      return f1(std::move(l));
                    }},
         e->v());
@@ -170,7 +162,7 @@ struct NestedInd {
 
   static unsigned int expr_depth(const std::shared_ptr<expr> &e);
 
-  static std::shared_ptr<List::list<unsigned int>>
+  static std::shared_ptr<List<unsigned int>>
   literals(const std::shared_ptr<expr> &e);
 
   template <MapsTo<unsigned int, unsigned int> F0>
@@ -182,33 +174,29 @@ struct NestedInd {
               return expr::ctor::Lit_(f(std::move(n)));
             },
             [&](const typename expr::Add _args) -> std::shared_ptr<expr> {
-              std::shared_ptr<List::list<std::shared_ptr<expr>>> es = _args._a0;
+              std::shared_ptr<List<std::shared_ptr<expr>>> es = _args._a0;
               return expr::ctor::Add_([&](void) {
-                std::function<
-                    std::shared_ptr<List::list<std::shared_ptr<expr>>>(
-                        std::shared_ptr<List::list<std::shared_ptr<expr>>>)>
+                std::function<std::shared_ptr<List<std::shared_ptr<expr>>>(
+                    std::shared_ptr<List<std::shared_ptr<expr>>>)>
                     aux;
-                aux = [&](std::shared_ptr<List::list<std::shared_ptr<expr>>> l)
-                    -> std::shared_ptr<List::list<std::shared_ptr<expr>>> {
+                aux = [&](std::shared_ptr<List<std::shared_ptr<expr>>> l)
+                    -> std::shared_ptr<List<std::shared_ptr<expr>>> {
                   return std::visit(
                       Overloaded{
-                          [](const typename List::list<
-                              std::shared_ptr<expr>>::nil _args)
-                              -> std::shared_ptr<
-                                  List::list<std::shared_ptr<expr>>> {
-                            return List::list<
-                                std::shared_ptr<expr>>::ctor::nil_();
+                          [](const typename List<std::shared_ptr<expr>>::nil
+                                 _args)
+                              -> std::shared_ptr<List<std::shared_ptr<expr>>> {
+                            return List<std::shared_ptr<expr>>::ctor::nil_();
                           },
-                          [&](const typename List::list<
-                              std::shared_ptr<expr>>::cons _args)
-                              -> std::shared_ptr<
-                                  List::list<std::shared_ptr<expr>>> {
+                          [&](const typename List<std::shared_ptr<expr>>::cons
+                                  _args)
+                              -> std::shared_ptr<List<std::shared_ptr<expr>>> {
                             std::shared_ptr<expr> e_ = _args._a0;
-                            std::shared_ptr<List::list<std::shared_ptr<expr>>>
-                                rest = _args._a1;
-                            return List::list<std::shared_ptr<expr>>::ctor::
-                                cons_(lit_map(f, std::move(e_)),
-                                      aux(std::move(rest)));
+                            std::shared_ptr<List<std::shared_ptr<expr>>> rest =
+                                _args._a1;
+                            return List<std::shared_ptr<expr>>::ctor::cons_(
+                                lit_map(f, std::move(e_)),
+                                aux(std::move(rest)));
                           }},
                       l->v());
                 };
@@ -216,33 +204,29 @@ struct NestedInd {
               }());
             },
             [&](const typename expr::Mul _args) -> std::shared_ptr<expr> {
-              std::shared_ptr<List::list<std::shared_ptr<expr>>> es = _args._a0;
+              std::shared_ptr<List<std::shared_ptr<expr>>> es = _args._a0;
               return expr::ctor::Mul_([&](void) {
-                std::function<
-                    std::shared_ptr<List::list<std::shared_ptr<expr>>>(
-                        std::shared_ptr<List::list<std::shared_ptr<expr>>>)>
+                std::function<std::shared_ptr<List<std::shared_ptr<expr>>>(
+                    std::shared_ptr<List<std::shared_ptr<expr>>>)>
                     aux;
-                aux = [&](std::shared_ptr<List::list<std::shared_ptr<expr>>> l)
-                    -> std::shared_ptr<List::list<std::shared_ptr<expr>>> {
+                aux = [&](std::shared_ptr<List<std::shared_ptr<expr>>> l)
+                    -> std::shared_ptr<List<std::shared_ptr<expr>>> {
                   return std::visit(
                       Overloaded{
-                          [](const typename List::list<
-                              std::shared_ptr<expr>>::nil _args)
-                              -> std::shared_ptr<
-                                  List::list<std::shared_ptr<expr>>> {
-                            return List::list<
-                                std::shared_ptr<expr>>::ctor::nil_();
+                          [](const typename List<std::shared_ptr<expr>>::nil
+                                 _args)
+                              -> std::shared_ptr<List<std::shared_ptr<expr>>> {
+                            return List<std::shared_ptr<expr>>::ctor::nil_();
                           },
-                          [&](const typename List::list<
-                              std::shared_ptr<expr>>::cons _args)
-                              -> std::shared_ptr<
-                                  List::list<std::shared_ptr<expr>>> {
+                          [&](const typename List<std::shared_ptr<expr>>::cons
+                                  _args)
+                              -> std::shared_ptr<List<std::shared_ptr<expr>>> {
                             std::shared_ptr<expr> e_ = _args._a0;
-                            std::shared_ptr<List::list<std::shared_ptr<expr>>>
-                                rest = _args._a1;
-                            return List::list<std::shared_ptr<expr>>::ctor::
-                                cons_(lit_map(f, std::move(e_)),
-                                      aux(std::move(rest)));
+                            std::shared_ptr<List<std::shared_ptr<expr>>> rest =
+                                _args._a1;
+                            return List<std::shared_ptr<expr>>::ctor::cons_(
+                                lit_map(f, std::move(e_)),
+                                aux(std::move(rest)));
                           }},
                       l->v());
                 };
@@ -253,37 +237,37 @@ struct NestedInd {
   }
 
   static inline const std::shared_ptr<expr> test_add =
-      expr::ctor::Add_(List::list<std::shared_ptr<expr>>::ctor::cons_(
+      expr::ctor::Add_(List<std::shared_ptr<expr>>::ctor::cons_(
           expr::ctor::Lit_((0 + 1)),
-          List::list<std::shared_ptr<expr>>::ctor::cons_(
+          List<std::shared_ptr<expr>>::ctor::cons_(
               expr::ctor::Lit_(((0 + 1) + 1)),
-              List::list<std::shared_ptr<expr>>::ctor::cons_(
+              List<std::shared_ptr<expr>>::ctor::cons_(
                   expr::ctor::Lit_((((0 + 1) + 1) + 1)),
-                  List::list<std::shared_ptr<expr>>::ctor::nil_()))));
+                  List<std::shared_ptr<expr>>::ctor::nil_()))));
 
   static inline const std::shared_ptr<expr> test_mul =
-      expr::ctor::Mul_(List::list<std::shared_ptr<expr>>::ctor::cons_(
+      expr::ctor::Mul_(List<std::shared_ptr<expr>>::ctor::cons_(
           expr::ctor::Lit_(((0 + 1) + 1)),
-          List::list<std::shared_ptr<expr>>::ctor::cons_(
+          List<std::shared_ptr<expr>>::ctor::cons_(
               expr::ctor::Lit_((((0 + 1) + 1) + 1)),
-              List::list<std::shared_ptr<expr>>::ctor::cons_(
+              List<std::shared_ptr<expr>>::ctor::cons_(
                   expr::ctor::Lit_(((((0 + 1) + 1) + 1) + 1)),
-                  List::list<std::shared_ptr<expr>>::ctor::nil_()))));
+                  List<std::shared_ptr<expr>>::ctor::nil_()))));
 
   static inline const std::shared_ptr<expr> test_nested =
-      expr::ctor::Mul_(List::list<std::shared_ptr<expr>>::ctor::cons_(
-          expr::ctor::Add_(List::list<std::shared_ptr<expr>>::ctor::cons_(
+      expr::ctor::Mul_(List<std::shared_ptr<expr>>::ctor::cons_(
+          expr::ctor::Add_(List<std::shared_ptr<expr>>::ctor::cons_(
               expr::ctor::Lit_((0 + 1)),
-              List::list<std::shared_ptr<expr>>::ctor::cons_(
+              List<std::shared_ptr<expr>>::ctor::cons_(
                   expr::ctor::Lit_(((0 + 1) + 1)),
-                  List::list<std::shared_ptr<expr>>::ctor::nil_()))),
-          List::list<std::shared_ptr<expr>>::ctor::cons_(
-              expr::ctor::Add_(List::list<std::shared_ptr<expr>>::ctor::cons_(
+                  List<std::shared_ptr<expr>>::ctor::nil_()))),
+          List<std::shared_ptr<expr>>::ctor::cons_(
+              expr::ctor::Add_(List<std::shared_ptr<expr>>::ctor::cons_(
                   expr::ctor::Lit_((((0 + 1) + 1) + 1)),
-                  List::list<std::shared_ptr<expr>>::ctor::cons_(
+                  List<std::shared_ptr<expr>>::ctor::cons_(
                       expr::ctor::Lit_(((((0 + 1) + 1) + 1) + 1)),
-                      List::list<std::shared_ptr<expr>>::ctor::nil_()))),
-              List::list<std::shared_ptr<expr>>::ctor::nil_())));
+                      List<std::shared_ptr<expr>>::ctor::nil_()))),
+              List<std::shared_ptr<expr>>::ctor::nil_())));
 
   static inline const unsigned int test_eval_add = eval(test_add);
 
@@ -295,7 +279,7 @@ struct NestedInd {
 
   static inline const unsigned int test_depth_nested = expr_depth(test_nested);
 
-  static inline const std::shared_ptr<List::list<unsigned int>> test_literals =
+  static inline const std::shared_ptr<List<unsigned int>> test_literals =
       literals(test_nested);
 
   static inline const unsigned int test_doubled = eval(

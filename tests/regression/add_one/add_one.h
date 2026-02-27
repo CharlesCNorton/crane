@@ -18,39 +18,36 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Nat {
-  struct nat {
-  public:
-    struct O {};
-    struct S {
-      std::shared_ptr<Nat::nat> _a0;
-    };
-    using variant_t = std::variant<O, S>;
-
-  private:
-    variant_t v_;
-    explicit nat(O _v) : v_(std::move(_v)) {}
-    explicit nat(S _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Nat::nat> O_() {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::shared_ptr<Nat::nat> S_(const std::shared_ptr<Nat::nat> &a0) {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-      static std::unique_ptr<Nat::nat> O_uptr() {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::unique_ptr<Nat::nat>
-      S_uptr(const std::shared_ptr<Nat::nat> &a0) {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+public:
+  struct O {};
+  struct S {
+    std::shared_ptr<Nat> _a0;
   };
+  using variant_t = std::variant<O, S>;
+
+private:
+  variant_t v_;
+  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Nat> O_() {
+      return std::shared_ptr<Nat>(new Nat(O{}));
+    }
+    static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
+      return std::shared_ptr<Nat>(new Nat(S{a0}));
+    }
+    static std::unique_ptr<Nat> O_uptr() {
+      return std::unique_ptr<Nat>(new Nat(O{}));
+    }
+    static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
+      return std::unique_ptr<Nat>(new Nat(S{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
-const std::shared_ptr<Nat::nat> one = Nat::nat::ctor::S_(Nat::nat::ctor::O_());
+const std::shared_ptr<Nat> one = Nat::ctor::S_(Nat::ctor::O_());

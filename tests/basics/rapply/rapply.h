@@ -18,56 +18,53 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct Nat {
-  struct nat {
-  public:
-    struct O {};
-    struct S {
-      std::shared_ptr<Nat::nat> _a0;
-    };
-    using variant_t = std::variant<O, S>;
-
-  private:
-    variant_t v_;
-    explicit nat(O _v) : v_(std::move(_v)) {}
-    explicit nat(S _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Nat::nat> O_() {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::shared_ptr<Nat::nat> S_(const std::shared_ptr<Nat::nat> &a0) {
-        return std::shared_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-      static std::unique_ptr<Nat::nat> O_uptr() {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(O{}));
-      }
-      static std::unique_ptr<Nat::nat>
-      S_uptr(const std::shared_ptr<Nat::nat> &a0) {
-        return std::unique_ptr<Nat::nat>(new Nat::nat(S{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+public:
+  struct O {};
+  struct S {
+    std::shared_ptr<Nat> _a0;
   };
+  using variant_t = std::variant<O, S>;
+
+private:
+  variant_t v_;
+  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Nat> O_() {
+      return std::shared_ptr<Nat>(new Nat(O{}));
+    }
+    static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
+      return std::shared_ptr<Nat>(new Nat(S{a0}));
+    }
+    static std::unique_ptr<Nat> O_uptr() {
+      return std::unique_ptr<Nat>(new Nat(O{}));
+    }
+    static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
+      return std::unique_ptr<Nat>(new Nat(S{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct RApply {
   struct R {
-    std::function<std::shared_ptr<Nat::nat>(std::shared_ptr<Nat::nat>,
-                                            std::shared_ptr<Nat::nat>)>
+    std::function<std::shared_ptr<Nat>(std::shared_ptr<Nat>,
+                                       std::shared_ptr<Nat>)>
         f;
-    std::shared_ptr<Nat::nat> _tag;
+    std::shared_ptr<Nat> _tag;
   };
 
-  static std::shared_ptr<Nat::nat> f(const std::shared_ptr<R> &,
-                                     const std::shared_ptr<Nat::nat> &,
-                                     const std::shared_ptr<Nat::nat> &);
+  static std::shared_ptr<Nat> f(const std::shared_ptr<R> &,
+                                const std::shared_ptr<Nat> &,
+                                const std::shared_ptr<Nat> &);
 
-  static std::shared_ptr<Nat::nat> _tag(const std::shared_ptr<R> &r);
+  static std::shared_ptr<Nat> _tag(const std::shared_ptr<R> &r);
 
-  static std::shared_ptr<Nat::nat>
-  apply_record(const std::shared_ptr<R> &r, const std::shared_ptr<Nat::nat> &a,
-               const std::shared_ptr<Nat::nat> &b);
+  static std::shared_ptr<Nat> apply_record(const std::shared_ptr<R> &r,
+                                           const std::shared_ptr<Nat> &a,
+                                           const std::shared_ptr<Nat> &b);
 };

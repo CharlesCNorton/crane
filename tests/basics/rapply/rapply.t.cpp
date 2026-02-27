@@ -21,21 +21,21 @@ void aSsErT(bool condition, const char *message, int line)
 }
 
 // Helper to convert nat to unsigned int
-unsigned int nat_to_uint(const std::shared_ptr<Nat::nat>& n) {
+unsigned int nat_to_uint(const std::shared_ptr<Nat>& n) {
     unsigned int result = 0;
     auto current = n;
-    while (std::holds_alternative<Nat::nat::S>(current->v())) {
+    while (std::holds_alternative<Nat::S>(current->v())) {
         result++;
-        current = std::get<Nat::nat::S>(current->v())._a0;
+        current = std::get<Nat::S>(current->v())._a0;
     }
     return result;
 }
 
 // Helper to convert unsigned int to nat
-std::shared_ptr<Nat::nat> uint_to_nat(unsigned int n) {
-    auto result = Nat::nat::ctor::O_();
+std::shared_ptr<Nat> uint_to_nat(unsigned int n) {
+    auto result = Nat::ctor::O_();
     for (unsigned int i = 0; i < n; i++) {
-        result = Nat::nat::ctor::S_(result);
+        result = Nat::ctor::S_(result);
     }
     return result;
 }
@@ -47,7 +47,7 @@ std::shared_ptr<Nat::nat> uint_to_nat(unsigned int n) {
 
 int main() {
     // Create a record with an addition function (using Peano nats)
-    auto add_fn = [](std::shared_ptr<Nat::nat> a, std::shared_ptr<Nat::nat> b) -> std::shared_ptr<Nat::nat> {
+    auto add_fn = [](std::shared_ptr<Nat> a, std::shared_ptr<Nat> b) -> std::shared_ptr<Nat> {
         // Simple Peano addition: just return a for now (testing structure, not correctness)
         unsigned int av = nat_to_uint(a);
         unsigned int bv = nat_to_uint(b);

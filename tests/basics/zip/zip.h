@@ -17,34 +17,30 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Prod {
-  template <typename A, typename B> struct prod {
-  public:
-    struct pair {
-      A _a0;
-      B _a1;
-    };
-    using variant_t = std::variant<pair>;
-
-  private:
-    variant_t v_;
-    explicit prod(pair _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Prod::prod<A, B>> pair_(A a0, B a1) {
-        return std::shared_ptr<Prod::prod<A, B>>(
-            new Prod::prod<A, B>(pair{a0, a1}));
-      }
-      static std::unique_ptr<Prod::prod<A, B>> pair_uptr(A a0, B a1) {
-        return std::unique_ptr<Prod::prod<A, B>>(
-            new Prod::prod<A, B>(pair{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A, typename B> struct Prod {
+public:
+  struct pair {
+    A _a0;
+    B _a1;
   };
+  using variant_t = std::variant<pair>;
+
+private:
+  variant_t v_;
+  explicit Prod(pair _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Prod<A, B>> pair_(A a0, B a1) {
+      return std::shared_ptr<Prod<A, B>>(new Prod<A, B>(pair{a0, a1}));
+    }
+    static std::unique_ptr<Prod<A, B>> pair_uptr(A a0, B a1) {
+      return std::unique_ptr<Prod<A, B>>(new Prod<A, B>(pair{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct List {
@@ -103,57 +99,51 @@ struct List {
 };
 
 template <typename T1, typename T2>
-std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>
+std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>>
 better_zip(const std::shared_ptr<List::list<T1>> &la,
            const std::shared_ptr<List::list<T2>> &lb) {
-  std::function<
-      std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>(
-          std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T2>>,
-          std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>>)>
+  std::function<std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>>(
+      std::shared_ptr<List::list<T1>>, std::shared_ptr<List::list<T2>>,
+      std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>>)>
       go;
   go = [&](std::shared_ptr<List::list<T1>> la0,
            std::shared_ptr<List::list<T2>> lb0,
-           std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>> acc)
-      -> std::shared_ptr<List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
+           std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>> acc)
+      -> std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>> {
     return std::visit(
         Overloaded{
             [&](const typename List::list<T1>::nil _args)
-                -> std::shared_ptr<
-                    List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
-              return List::rev<std::shared_ptr<Prod::prod<T1, T2>>>(
-                  std::move(acc));
+                -> std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>> {
+              return List::rev<std::shared_ptr<Prod<T1, T2>>>(std::move(acc));
             },
             [&](const typename List::list<T1>::cons _args)
-                -> std::shared_ptr<
-                    List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
+                -> std::shared_ptr<List::list<std::shared_ptr<Prod<T1, T2>>>> {
               T1 x = _args._a0;
               std::shared_ptr<List::list<T1>> xs = _args._a1;
               return std::visit(
                   Overloaded{
                       [&](const typename List::list<T2>::nil _args)
                           -> std::shared_ptr<
-                              List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
-                        return List::rev<std::shared_ptr<Prod::prod<T1, T2>>>(
+                              List::list<std::shared_ptr<Prod<T1, T2>>>> {
+                        return List::rev<std::shared_ptr<Prod<T1, T2>>>(
                             std::move(acc));
                       },
                       [&](const typename List::list<T2>::cons _args)
                           -> std::shared_ptr<
-                              List::list<std::shared_ptr<Prod::prod<T1, T2>>>> {
+                              List::list<std::shared_ptr<Prod<T1, T2>>>> {
                         T2 y = _args._a0;
                         std::shared_ptr<List::list<T2>> ys = _args._a1;
                         return go(
                             std::move(xs), std::move(ys),
-                            List::list<std::shared_ptr<Prod::prod<T1, T2>>>::
-                                ctor::cons_(
-                                    Prod::prod<T1, T2>::ctor::pair_(x, y),
-                                    std::move(acc)));
+                            List::list<std::shared_ptr<Prod<T1, T2>>>::ctor::
+                                cons_(Prod<T1, T2>::ctor::pair_(x, y),
+                                      std::move(acc)));
                       }},
                   lb0->v());
             }},
         la0->v());
   };
-  return go(la, lb,
-            List::list<std::shared_ptr<Prod::prod<T1, T2>>>::ctor::nil_());
+  return go(la, lb, List::list<std::shared_ptr<Prod<T1, T2>>>::ctor::nil_());
 }
 
 template <typename T1>

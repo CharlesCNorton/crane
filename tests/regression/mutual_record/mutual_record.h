@@ -17,42 +17,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct MutualRecord {
@@ -62,7 +60,7 @@ struct MutualRecord {
   public:
     struct mk_department {
       unsigned int _a0;
-      std::shared_ptr<List::list<std::shared_ptr<employee>>> _a1;
+      std::shared_ptr<List<std::shared_ptr<employee>>> _a1;
     };
     using variant_t = std::variant<mk_department>;
 
@@ -75,13 +73,13 @@ struct MutualRecord {
       ctor() = delete;
       static std::shared_ptr<department> mk_department_(
           unsigned int a0,
-          const std::shared_ptr<List::list<std::shared_ptr<employee>>> &a1) {
+          const std::shared_ptr<List<std::shared_ptr<employee>>> &a1) {
         return std::shared_ptr<department>(
             new department(mk_department{a0, a1}));
       }
       static std::unique_ptr<department> mk_department_uptr(
           unsigned int a0,
-          const std::shared_ptr<List::list<std::shared_ptr<employee>>> &a1) {
+          const std::shared_ptr<List<std::shared_ptr<employee>>> &a1) {
         return std::unique_ptr<department>(
             new department(mk_department{a0, a1}));
       }
@@ -117,29 +115,29 @@ struct MutualRecord {
     variant_t &v_mut() { return v_; }
   };
 
-  template <typename T1,
-            MapsTo<T1, unsigned int,
-                   std::shared_ptr<List::list<std::shared_ptr<employee>>>>
-                F0>
+  template <
+      typename T1,
+      MapsTo<T1, unsigned int, std::shared_ptr<List<std::shared_ptr<employee>>>>
+          F0>
   static T1 department_rect(F0 &&f, const std::shared_ptr<department> &d) {
     return std::visit(
         Overloaded{[&](const typename department::mk_department _args) -> T1 {
           unsigned int n = _args._a0;
-          std::shared_ptr<List::list<std::shared_ptr<employee>>> l = _args._a1;
+          std::shared_ptr<List<std::shared_ptr<employee>>> l = _args._a1;
           return f(std::move(n), std::move(l));
         }},
         d->v());
   }
 
-  template <typename T1,
-            MapsTo<T1, unsigned int,
-                   std::shared_ptr<List::list<std::shared_ptr<employee>>>>
-                F0>
+  template <
+      typename T1,
+      MapsTo<T1, unsigned int, std::shared_ptr<List<std::shared_ptr<employee>>>>
+          F0>
   static T1 department_rec(F0 &&f, const std::shared_ptr<department> &d) {
     return std::visit(
         Overloaded{[&](const typename department::mk_department _args) -> T1 {
           unsigned int n = _args._a0;
-          std::shared_ptr<List::list<std::shared_ptr<employee>>> l = _args._a1;
+          std::shared_ptr<List<std::shared_ptr<employee>>> l = _args._a1;
           return f(std::move(n), std::move(l));
         }},
         d->v());
@@ -169,7 +167,7 @@ struct MutualRecord {
 
   static unsigned int dept_id(const std::shared_ptr<department> &d);
 
-  static std::shared_ptr<List::list<std::shared_ptr<employee>>>
+  static std::shared_ptr<List<std::shared_ptr<employee>>>
   dept_employees(const std::shared_ptr<department> &d);
 
   static unsigned int emp_id(const std::shared_ptr<employee> &e);
@@ -177,12 +175,12 @@ struct MutualRecord {
   static unsigned int emp_salary(const std::shared_ptr<employee> &e);
 
   static unsigned int dept_total_salary(const std::shared_ptr<department> &d);
-  static unsigned int emp_list_salary(
-      const std::shared_ptr<List::list<std::shared_ptr<employee>>> &l);
+  static unsigned int
+  emp_list_salary(const std::shared_ptr<List<std::shared_ptr<employee>>> &l);
 
   static unsigned int dept_count(const std::shared_ptr<department> &d);
-  static unsigned int emp_list_count(
-      const std::shared_ptr<List::list<std::shared_ptr<employee>>> &l);
+  static unsigned int
+  emp_list_count(const std::shared_ptr<List<std::shared_ptr<employee>>> &l);
 
  static inline const std::shared_ptr<employee> emp1 = employee::ctor::mk_employee_((0 + 1), ((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
@@ -190,7 +188,7 @@ struct MutualRecord {
 
  static inline const std::shared_ptr<employee> emp3 = employee::ctor::mk_employee_((((0 + 1) + 1) + 1), ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
- static inline const std::shared_ptr<department> test_dept = department::ctor::mk_department_(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List::list<std::shared_ptr<employee>>::ctor::cons_(emp1, List::list<std::shared_ptr<employee>>::ctor::cons_(emp2, List::list<std::shared_ptr<employee>>::ctor::cons_(emp3, List::list<std::shared_ptr<employee>>::ctor::nil_()))));
+ static inline const std::shared_ptr<department> test_dept = department::ctor::mk_department_(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<std::shared_ptr<employee>>::ctor::cons_(emp1, List<std::shared_ptr<employee>>::ctor::cons_(emp2, List<std::shared_ptr<employee>>::ctor::cons_(emp3, List<std::shared_ptr<employee>>::ctor::nil_()))));
 
  static inline const unsigned int test_total_salary =
      dept_total_salary(test_dept);

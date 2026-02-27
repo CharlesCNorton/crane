@@ -9,6 +9,6 @@ Axiom add_one : nat -> nat.
 Definition one : nat := add_one zero.
 
 Require Crane.Extraction.
-Crane Extract Inlined Constant zero => "Nat::nat::ctor::O_()" From "functional".
-Crane Extract Inlined Constant add_one => "Nat::nat::ctor::S_(%a0)".
+Crane Extract Inlined Constant zero => "Nat::ctor::O_()" From "functional".
+Crane Extract Inlined Constant add_one => "Nat::ctor::S_(%a0)".
 Crane Extraction "add_one" one.

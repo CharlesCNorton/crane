@@ -17,42 +17,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct CompProof {
@@ -68,12 +66,12 @@ struct CompProof {
 
   static unsigned int max_dec(const unsigned int n, const unsigned int m);
 
-  static std::shared_ptr<List::list<unsigned int>>
+  static std::shared_ptr<List<unsigned int>>
   insert_dec(const unsigned int x,
-             const std::shared_ptr<List::list<unsigned int>> &l);
+             const std::shared_ptr<List<unsigned int>> &l);
 
-  static std::shared_ptr<List::list<unsigned int>>
-  isort_dec(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<List<unsigned int>>
+  isort_dec(const std::shared_ptr<List<unsigned int>> &l);
 
   static inline const bool test_eq_true = nat_eqb_dec(
       (((((0 + 1) + 1) + 1) + 1) + 1), (((((0 + 1) + 1) + 1) + 1) + 1));
@@ -95,15 +93,15 @@ struct CompProof {
       max_dec(((((0 + 1) + 1) + 1) + 1),
               (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
-  static inline const std::shared_ptr<List::list<unsigned int>> test_sort =
-      isort_dec(List::list<unsigned int>::ctor::cons_(
+  static inline const std::shared_ptr<List<unsigned int>> test_sort =
+      isort_dec(List<unsigned int>::ctor::cons_(
           (((((0 + 1) + 1) + 1) + 1) + 1),
-          List::list<unsigned int>::ctor::cons_(
-              (0 + 1), List::list<unsigned int>::ctor::cons_(
-                           ((((0 + 1) + 1) + 1) + 1),
-                           List::list<unsigned int>::ctor::cons_(
-                               ((0 + 1) + 1),
-                               List::list<unsigned int>::ctor::cons_(
-                                   (((0 + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_()))))));
+          List<unsigned int>::ctor::cons_(
+              (0 + 1),
+              List<unsigned int>::ctor::cons_(
+                  ((((0 + 1) + 1) + 1) + 1),
+                  List<unsigned int>::ctor::cons_(
+                      ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
+                                         (((0 + 1) + 1) + 1),
+                                         List<unsigned int>::ctor::nil_()))))));
 };

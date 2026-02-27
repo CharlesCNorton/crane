@@ -17,31 +17,29 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Sig0 {
-  template <typename A> struct sig0 {
-  public:
-    struct exist {
-      A _a0;
-    };
-    using variant_t = std::variant<exist>;
-
-  private:
-    variant_t v_;
-    explicit sig0(exist _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Sig0::sig0<A>> exist_(A a0) {
-        return std::shared_ptr<Sig0::sig0<A>>(new Sig0::sig0<A>(exist{a0}));
-      }
-      static std::unique_ptr<Sig0::sig0<A>> exist_uptr(A a0) {
-        return std::unique_ptr<Sig0::sig0<A>>(new Sig0::sig0<A>(exist{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct Sig0 {
+public:
+  struct exist {
+    A _a0;
   };
+  using variant_t = std::variant<exist>;
+
+private:
+  variant_t v_;
+  explicit Sig0(exist _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Sig0<A>> exist_(A a0) {
+      return std::shared_ptr<Sig0<A>>(new Sig0<A>(exist{a0}));
+    }
+    static std::unique_ptr<Sig0<A>> exist_uptr(A a0) {
+      return std::unique_ptr<Sig0<A>>(new Sig0<A>(exist{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct Opaque {
@@ -53,7 +51,7 @@ struct Opaque {
 
   static bool are_equal(const unsigned int n, const unsigned int m);
 
-  static std::shared_ptr<Sig0::sig0<unsigned int>>
+  static std::shared_ptr<Sig0<unsigned int>>
   bounded_add(const unsigned int, const unsigned int, const unsigned int);
 
   static inline const unsigned int test_safe_pred =

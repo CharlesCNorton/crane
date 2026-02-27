@@ -55,60 +55,59 @@ struct Nat {
                                        std::shared_ptr<Nat::nat> m);
 };
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
+  };
+  using variant_t = std::variant<nil, cons>;
 
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
 
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
-    std::shared_ptr<Nat::nat> length() const {
-      return std::visit(
-          Overloaded{
-              [](const typename List::list<A>::nil _args)
-                  -> std::shared_ptr<Nat::nat> { return Nat::nat::ctor::O_(); },
-              [](const typename List::list<A>::cons _args)
-                  -> std::shared_ptr<Nat::nat> {
-                std::shared_ptr<List::list<A>> l_ = _args._a1;
-                return Nat::nat::ctor::S_(std::move(l_)->length());
-              }},
-          this->v());
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
+  std::shared_ptr<Nat::nat> length() const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<A>::nil _args) -> std::shared_ptr<Nat::nat> {
+              return Nat::nat::ctor::O_();
+            },
+            [](const typename List<A>::cons _args)
+                -> std::shared_ptr<Nat::nat> {
+              std::shared_ptr<List<A>> l_ = _args._a1;
+              return Nat::nat::ctor::S_(std::move(l_)->length());
+            }},
+        this->v());
+  }
 };
 
 struct ListDef {
   template <typename T1>
-  static std::shared_ptr<List::list<T1>>
-  repeat(const T1 x, const std::shared_ptr<Nat::nat> &n);
+  static std::shared_ptr<List<T1>> repeat(const T1 x,
+                                          const std::shared_ptr<Nat::nat> &n);
 };
 
 std::shared_ptr<Nat::nat> foo(std::shared_ptr<Nat::nat> n, const bool b);
@@ -119,17 +118,17 @@ std::shared_ptr<Nat::nat> _foo_aux(const T1 a,
 }
 
 template <typename T1>
-std::shared_ptr<List::list<T1>>
-ListDef::repeat(const T1 x, const std::shared_ptr<Nat::nat> &n) {
-  return std::visit(Overloaded{[](const typename Nat::nat::O _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 return List::list<T1>::ctor::nil_();
-                               },
-                               [&](const typename Nat::nat::S _args)
-                                   -> std::shared_ptr<List::list<T1>> {
-                                 std::shared_ptr<Nat::nat> k = _args._a0;
-                                 return List::list<T1>::ctor::cons_(
-                                     x, ListDef::repeat<T1>(x, std::move(k)));
-                               }},
-                    n->v());
+std::shared_ptr<List<T1>> ListDef::repeat(const T1 x,
+                                          const std::shared_ptr<Nat::nat> &n) {
+  return std::visit(
+      Overloaded{
+          [](const typename Nat::nat::O _args) -> std::shared_ptr<List<T1>> {
+            return List<T1>::ctor::nil_();
+          },
+          [&](const typename Nat::nat::S _args) -> std::shared_ptr<List<T1>> {
+            std::shared_ptr<Nat::nat> k = _args._a0;
+            return List<T1>::ctor::cons_(x,
+                                         ListDef::repeat<T1>(x, std::move(k)));
+          }},
+      n->v());
 }

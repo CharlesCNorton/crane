@@ -22,15 +22,15 @@ MutualRecord::dept_id(const std::shared_ptr<MutualRecord::department> &d) {
       d->v());
 }
 
-std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
+std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>>
 MutualRecord::dept_employees(
     const std::shared_ptr<MutualRecord::department> &d) {
   return std::visit(
       Overloaded{
           [](const typename MutualRecord::department::mk_department _args)
               -> std::shared_ptr<
-                  List::list<std::shared_ptr<MutualRecord::employee>>> {
-            std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
+                  List<std::shared_ptr<MutualRecord::employee>>> {
+            std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>>
                 emps = _args._a1;
             return std::move(emps);
           }},
@@ -62,28 +62,24 @@ MutualRecord::emp_salary(const std::shared_ptr<MutualRecord::employee> &e) {
 unsigned int MutualRecord::dept_total_salary(
     const std::shared_ptr<MutualRecord::department> &d) {
   return std::visit(
-      Overloaded{
-          [](const typename MutualRecord::department::mk_department _args)
-              -> unsigned int {
-            std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
-                emps = _args._a1;
-            return emp_list_salary(std::move(emps));
-          }},
+      Overloaded{[](const typename MutualRecord::department::mk_department
+                        _args) -> unsigned int {
+        std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> emps =
+            _args._a1;
+        return emp_list_salary(std::move(emps));
+      }},
       d->v());
 }
 unsigned int MutualRecord::emp_list_salary(
-    const std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
-        &l) {
+    const std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> &l) {
   return std::visit(
       Overloaded{
-          [](const typename List::list<
-              std::shared_ptr<MutualRecord::employee>>::nil _args)
-              -> unsigned int { return 0; },
-          [](const typename List::list<
-              std::shared_ptr<MutualRecord::employee>>::cons _args)
-              -> unsigned int {
+          [](const typename List<std::shared_ptr<MutualRecord::employee>>::nil
+                 _args) -> unsigned int { return 0; },
+          [](const typename List<std::shared_ptr<MutualRecord::employee>>::cons
+                 _args) -> unsigned int {
             std::shared_ptr<MutualRecord::employee> e = _args._a0;
-            std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
+            std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>>
                 rest = _args._a1;
             return (emp_salary(std::move(e)) +
                     emp_list_salary(std::move(rest)));
@@ -94,27 +90,23 @@ unsigned int MutualRecord::emp_list_salary(
 unsigned int
 MutualRecord::dept_count(const std::shared_ptr<MutualRecord::department> &d) {
   return std::visit(
-      Overloaded{
-          [](const typename MutualRecord::department::mk_department _args)
-              -> unsigned int {
-            std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
-                emps = _args._a1;
-            return emp_list_count(std::move(emps));
-          }},
+      Overloaded{[](const typename MutualRecord::department::mk_department
+                        _args) -> unsigned int {
+        std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> emps =
+            _args._a1;
+        return emp_list_count(std::move(emps));
+      }},
       d->v());
 }
 unsigned int MutualRecord::emp_list_count(
-    const std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
-        &l) {
+    const std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> &l) {
   return std::visit(
       Overloaded{
-          [](const typename List::list<
-              std::shared_ptr<MutualRecord::employee>>::nil _args)
-              -> unsigned int { return 0; },
-          [](const typename List::list<
-              std::shared_ptr<MutualRecord::employee>>::cons _args)
-              -> unsigned int {
-            std::shared_ptr<List::list<std::shared_ptr<MutualRecord::employee>>>
+          [](const typename List<std::shared_ptr<MutualRecord::employee>>::nil
+                 _args) -> unsigned int { return 0; },
+          [](const typename List<std::shared_ptr<MutualRecord::employee>>::cons
+                 _args) -> unsigned int {
+            std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>>
                 rest = _args._a1;
             return ((0 + 1) + emp_list_count(std::move(rest)));
           }},

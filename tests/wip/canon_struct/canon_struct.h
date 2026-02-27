@@ -22,7 +22,7 @@ struct Bool {
 };
 
 struct CanonStruct {
-  struct eqType {
+  struct EqType {
   public:
     struct mkEqType {
       std::function<bool(std::any, std::any)> _a0;
@@ -31,18 +31,18 @@ struct CanonStruct {
 
   private:
     variant_t v_;
-    explicit eqType(mkEqType _v) : v_(std::move(_v)) {}
+    explicit EqType(mkEqType _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<eqType>
+      static std::shared_ptr<EqType>
       mkEqType_(std::function<bool(std::any, std::any)> a0) {
-        return std::shared_ptr<eqType>(new eqType(mkEqType{a0}));
+        return std::shared_ptr<EqType>(new EqType(mkEqType{a0}));
       }
-      static std::unique_ptr<eqType>
+      static std::unique_ptr<EqType>
       mkEqType_uptr(std::function<bool(std::any, std::any)> a0) {
-        return std::unique_ptr<eqType>(new eqType(mkEqType{a0}));
+        return std::unique_ptr<EqType>(new EqType(mkEqType{a0}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -51,17 +51,17 @@ struct CanonStruct {
 
   using carrier = std::any;
 
-  static bool eqb(const std::shared_ptr<eqType> &, const carrier,
+  static bool eqb(const std::shared_ptr<EqType> &, const carrier,
                   const carrier);
 
-  static inline const std::shared_ptr<eqType> nat_eqType =
+  static inline const std::shared_ptr<EqType> nat_eqType =
       [](const unsigned int _x0, const unsigned int _x1) {
         return (_x0 == _x1);
       };
 
-  static inline const std::shared_ptr<eqType> bool_eqType = Bool::eqb;
+  static inline const std::shared_ptr<EqType> bool_eqType = Bool::eqb;
 
-  static bool same(const std::shared_ptr<eqType> &, const carrier,
+  static bool same(const std::shared_ptr<EqType> &, const carrier,
                    const carrier);
 
   static inline const bool test_nat =

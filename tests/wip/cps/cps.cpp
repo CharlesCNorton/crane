@@ -22,17 +22,15 @@ unsigned int CPS::tree_sum(const std::shared_ptr<CPS::tree> &t) {
   return tree_sum_cps(t, [](unsigned int x) { return x; });
 }
 
-unsigned int CPS::list_sum(const std::shared_ptr<List::list<unsigned int>> &l) {
+unsigned int CPS::list_sum(const std::shared_ptr<List<unsigned int>> &l) {
   return sum_cps(l, [](unsigned int x) { return x; });
 }
 
-unsigned int
-CPS::count_evens(const std::shared_ptr<List::list<unsigned int>> &l) {
-  return partition_cps(Nat::even, l,
-                       [](std::shared_ptr<List::list<unsigned int>> yes,
-                          std::shared_ptr<List::list<unsigned int>> _x) {
-                         return yes->length();
-                       });
+unsigned int CPS::count_evens(const std::shared_ptr<List<unsigned int>> &l) {
+  return partition_cps(
+      Nat::even, l,
+      [](std::shared_ptr<List<unsigned int>> yes,
+         std::shared_ptr<List<unsigned int>> _x) { return yes->length(); });
 }
 
 bool Nat::even(const unsigned int n) {

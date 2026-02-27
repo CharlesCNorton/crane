@@ -17,69 +17,65 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
-struct Sig0 {
-  template <typename A> struct sig0 {
-  public:
-    struct exist {
-      A _a0;
-    };
-    using variant_t = std::variant<exist>;
-
-  private:
-    variant_t v_;
-    explicit sig0(exist _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<Sig0::sig0<A>> exist_(A a0) {
-        return std::shared_ptr<Sig0::sig0<A>>(new Sig0::sig0<A>(exist{a0}));
-      }
-      static std::unique_ptr<Sig0::sig0<A>> exist_uptr(A a0) {
-        return std::unique_ptr<Sig0::sig0<A>>(new Sig0::sig0<A>(exist{a0}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct Sig0 {
+public:
+  struct exist {
+    A _a0;
   };
+  using variant_t = std::variant<exist>;
+
+private:
+  variant_t v_;
+  explicit Sig0(exist _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Sig0<A>> exist_(A a0) {
+      return std::shared_ptr<Sig0<A>>(new Sig0<A>(exist{a0}));
+    }
+    static std::unique_ptr<Sig0<A>> exist_uptr(A a0) {
+      return std::unique_ptr<Sig0<A>>(new Sig0<A>(exist{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct FuncVernac {
@@ -98,12 +94,12 @@ struct FuncVernac {
     }
   }
 
-  static std::shared_ptr<Sig0::sig0<unsigned int>>
+  static std::shared_ptr<Sig0<unsigned int>>
   div2_terminate(const unsigned int n);
 
   static unsigned int div2(const unsigned int);
 
-  struct r_div2 {
+  struct R_div2 {
   public:
     struct R_div2_0 {
       unsigned int _a0;
@@ -115,40 +111,40 @@ struct FuncVernac {
       unsigned int _a0;
       unsigned int _a1;
       unsigned int _a2;
-      std::shared_ptr<r_div2> _a3;
+      std::shared_ptr<R_div2> _a3;
     };
     using variant_t = std::variant<R_div2_0, R_div2_1, R_div2_2>;
 
   private:
     variant_t v_;
-    explicit r_div2(R_div2_0 _v) : v_(std::move(_v)) {}
-    explicit r_div2(R_div2_1 _v) : v_(std::move(_v)) {}
-    explicit r_div2(R_div2_2 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_0 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_1 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_2 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<r_div2> R_div2_0_(unsigned int a0) {
-        return std::shared_ptr<r_div2>(new r_div2(R_div2_0{a0}));
+      static std::shared_ptr<R_div2> R_div2_0_(unsigned int a0) {
+        return std::shared_ptr<R_div2>(new R_div2(R_div2_0{a0}));
       }
-      static std::shared_ptr<r_div2> R_div2_1_(unsigned int a0) {
-        return std::shared_ptr<r_div2>(new r_div2(R_div2_1{a0}));
+      static std::shared_ptr<R_div2> R_div2_1_(unsigned int a0) {
+        return std::shared_ptr<R_div2>(new R_div2(R_div2_1{a0}));
       }
-      static std::shared_ptr<r_div2>
+      static std::shared_ptr<R_div2>
       R_div2_2_(unsigned int a0, unsigned int a1, unsigned int a2,
-                const std::shared_ptr<r_div2> &a3) {
-        return std::shared_ptr<r_div2>(new r_div2(R_div2_2{a0, a1, a2, a3}));
+                const std::shared_ptr<R_div2> &a3) {
+        return std::shared_ptr<R_div2>(new R_div2(R_div2_2{a0, a1, a2, a3}));
       }
-      static std::unique_ptr<r_div2> R_div2_0_uptr(unsigned int a0) {
-        return std::unique_ptr<r_div2>(new r_div2(R_div2_0{a0}));
+      static std::unique_ptr<R_div2> R_div2_0_uptr(unsigned int a0) {
+        return std::unique_ptr<R_div2>(new R_div2(R_div2_0{a0}));
       }
-      static std::unique_ptr<r_div2> R_div2_1_uptr(unsigned int a0) {
-        return std::unique_ptr<r_div2>(new r_div2(R_div2_1{a0}));
+      static std::unique_ptr<R_div2> R_div2_1_uptr(unsigned int a0) {
+        return std::unique_ptr<R_div2>(new R_div2(R_div2_1{a0}));
       }
-      static std::unique_ptr<r_div2>
+      static std::unique_ptr<R_div2>
       R_div2_2_uptr(unsigned int a0, unsigned int a1, unsigned int a2,
-                    const std::shared_ptr<r_div2> &a3) {
-        return std::unique_ptr<r_div2>(new r_div2(R_div2_2{a0, a1, a2, a3}));
+                    const std::shared_ptr<R_div2> &a3) {
+        return std::unique_ptr<R_div2>(new R_div2(R_div2_2{a0, a1, a2, a3}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -158,25 +154,25 @@ struct FuncVernac {
   template <typename T1, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, unsigned int> F1,
             MapsTo<T1, unsigned int, unsigned int, unsigned int,
-                   std::shared_ptr<r_div2>, T1>
+                   std::shared_ptr<R_div2>, T1>
                 F2>
   static T1 R_div2_rect(F0 &&f, F1 &&f0, F2 &&f1, const unsigned int _x,
                         const unsigned int _x0,
-                        const std::shared_ptr<r_div2> &r) {
+                        const std::shared_ptr<R_div2> &r) {
     return std::visit(
-        Overloaded{[&](const typename r_div2::R_div2_0 _args) -> T1 {
+        Overloaded{[&](const typename R_div2::R_div2_0 _args) -> T1 {
                      unsigned int n = _args._a0;
                      return f(std::move(n), "dummy");
                    },
-                   [&](const typename r_div2::R_div2_1 _args) -> T1 {
+                   [&](const typename R_div2::R_div2_1 _args) -> T1 {
                      unsigned int n = _args._a0;
                      return f0(std::move(n), "dummy");
                    },
-                   [&](const typename r_div2::R_div2_2 _args) -> T1 {
+                   [&](const typename R_div2::R_div2_2 _args) -> T1 {
                      unsigned int n = _args._a0;
                      unsigned int p = _args._a1;
                      unsigned int _res = _args._a2;
-                     std::shared_ptr<r_div2> r0 = _args._a3;
+                     std::shared_ptr<R_div2> r0 = _args._a3;
                      return f1(std::move(n), p, "dummy", _res, r0,
                                R_div2_rect<T1>(f, f0, f1, p, _res, r0));
                    }},
@@ -186,25 +182,25 @@ struct FuncVernac {
   template <typename T1, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, unsigned int> F1,
             MapsTo<T1, unsigned int, unsigned int, unsigned int,
-                   std::shared_ptr<r_div2>, T1>
+                   std::shared_ptr<R_div2>, T1>
                 F2>
   static T1 R_div2_rec(F0 &&f, F1 &&f0, F2 &&f1, const unsigned int _x,
                        const unsigned int _x0,
-                       const std::shared_ptr<r_div2> &r) {
+                       const std::shared_ptr<R_div2> &r) {
     return std::visit(
-        Overloaded{[&](const typename r_div2::R_div2_0 _args) -> T1 {
+        Overloaded{[&](const typename R_div2::R_div2_0 _args) -> T1 {
                      unsigned int n = _args._a0;
                      return f(std::move(n), "dummy");
                    },
-                   [&](const typename r_div2::R_div2_1 _args) -> T1 {
+                   [&](const typename R_div2::R_div2_1 _args) -> T1 {
                      unsigned int n = _args._a0;
                      return f0(std::move(n), "dummy");
                    },
-                   [&](const typename r_div2::R_div2_2 _args) -> T1 {
+                   [&](const typename R_div2::R_div2_2 _args) -> T1 {
                      unsigned int n = _args._a0;
                      unsigned int p = _args._a1;
                      unsigned int _res = _args._a2;
-                     std::shared_ptr<r_div2> r0 = _args._a3;
+                     std::shared_ptr<R_div2> r0 = _args._a3;
                      return f1(std::move(n), p, "dummy", _res, r0,
                                R_div2_rec<T1>(f, f0, f1, p, _res, r0));
                    }},
@@ -239,197 +235,190 @@ struct FuncVernac {
     return div2_rect(_x0, _x1, _x2, _x3);
   }
 
-  static std::shared_ptr<r_div2> R_div2_correct(const unsigned int n,
+  static std::shared_ptr<R_div2> R_div2_correct(const unsigned int n,
                                                 const unsigned int _res);
 
-  template <MapsTo<unsigned int, std::shared_ptr<List::list<unsigned int>>> F0>
-  static unsigned int
-  list_sum_F(F0 &&list_sum0,
-             const std::shared_ptr<List::list<unsigned int>> &l) {
+  template <MapsTo<unsigned int, std::shared_ptr<List<unsigned int>>> F0>
+  static unsigned int list_sum_F(F0 &&list_sum0,
+                                 const std::shared_ptr<List<unsigned int>> &l) {
     return std::visit(
-        Overloaded{[](const typename List::list<unsigned int>::nil _args)
-                       -> unsigned int { return 0; },
-                   [&](const typename List::list<unsigned int>::cons _args)
-                       -> unsigned int {
-                     unsigned int x = _args._a0;
-                     std::shared_ptr<List::list<unsigned int>> xs = _args._a1;
-                     return (std::move(x) + list_sum0(std::move(xs)));
-                   }},
+        Overloaded{
+            [](const typename List<unsigned int>::nil _args) -> unsigned int {
+              return 0;
+            },
+            [&](const typename List<unsigned int>::cons _args) -> unsigned int {
+              unsigned int x = _args._a0;
+              std::shared_ptr<List<unsigned int>> xs = _args._a1;
+              return (std::move(x) + list_sum0(std::move(xs)));
+            }},
         l->v());
   }
 
-  static std::shared_ptr<Sig0::sig0<unsigned int>>
-  list_sum_terminate(const std::shared_ptr<List::list<unsigned int>> &l);
+  static std::shared_ptr<Sig0<unsigned int>>
+  list_sum_terminate(const std::shared_ptr<List<unsigned int>> &l);
 
-  static unsigned int
-  list_sum(const std::shared_ptr<List::list<unsigned int>> &);
+  static unsigned int list_sum(const std::shared_ptr<List<unsigned int>> &);
 
-  struct r_list_sum {
+  struct R_list_sum {
   public:
     struct R_list_sum_0 {
-      std::shared_ptr<List::list<unsigned int>> _a0;
+      std::shared_ptr<List<unsigned int>> _a0;
     };
     struct R_list_sum_1 {
-      std::shared_ptr<List::list<unsigned int>> _a0;
+      std::shared_ptr<List<unsigned int>> _a0;
       unsigned int _a1;
-      std::shared_ptr<List::list<unsigned int>> _a2;
+      std::shared_ptr<List<unsigned int>> _a2;
       unsigned int _a3;
-      std::shared_ptr<r_list_sum> _a4;
+      std::shared_ptr<R_list_sum> _a4;
     };
     using variant_t = std::variant<R_list_sum_0, R_list_sum_1>;
 
   private:
     variant_t v_;
-    explicit r_list_sum(R_list_sum_0 _v) : v_(std::move(_v)) {}
-    explicit r_list_sum(R_list_sum_1 _v) : v_(std::move(_v)) {}
+    explicit R_list_sum(R_list_sum_0 _v) : v_(std::move(_v)) {}
+    explicit R_list_sum(R_list_sum_1 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<r_list_sum>
-      R_list_sum_0_(const std::shared_ptr<List::list<unsigned int>> &a0) {
-        return std::shared_ptr<r_list_sum>(new r_list_sum(R_list_sum_0{a0}));
+      static std::shared_ptr<R_list_sum>
+      R_list_sum_0_(const std::shared_ptr<List<unsigned int>> &a0) {
+        return std::shared_ptr<R_list_sum>(new R_list_sum(R_list_sum_0{a0}));
       }
-      static std::shared_ptr<r_list_sum>
-      R_list_sum_1_(const std::shared_ptr<List::list<unsigned int>> &a0,
+      static std::shared_ptr<R_list_sum>
+      R_list_sum_1_(const std::shared_ptr<List<unsigned int>> &a0,
                     unsigned int a1,
-                    const std::shared_ptr<List::list<unsigned int>> &a2,
-                    unsigned int a3, const std::shared_ptr<r_list_sum> &a4) {
-        return std::shared_ptr<r_list_sum>(
-            new r_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
+                    const std::shared_ptr<List<unsigned int>> &a2,
+                    unsigned int a3, const std::shared_ptr<R_list_sum> &a4) {
+        return std::shared_ptr<R_list_sum>(
+            new R_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
       }
-      static std::unique_ptr<r_list_sum>
-      R_list_sum_0_uptr(const std::shared_ptr<List::list<unsigned int>> &a0) {
-        return std::unique_ptr<r_list_sum>(new r_list_sum(R_list_sum_0{a0}));
+      static std::unique_ptr<R_list_sum>
+      R_list_sum_0_uptr(const std::shared_ptr<List<unsigned int>> &a0) {
+        return std::unique_ptr<R_list_sum>(new R_list_sum(R_list_sum_0{a0}));
       }
-      static std::unique_ptr<r_list_sum> R_list_sum_1_uptr(
-          const std::shared_ptr<List::list<unsigned int>> &a0, unsigned int a1,
-          const std::shared_ptr<List::list<unsigned int>> &a2, unsigned int a3,
-          const std::shared_ptr<r_list_sum> &a4) {
-        return std::unique_ptr<r_list_sum>(
-            new r_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
+      static std::unique_ptr<R_list_sum> R_list_sum_1_uptr(
+          const std::shared_ptr<List<unsigned int>> &a0, unsigned int a1,
+          const std::shared_ptr<List<unsigned int>> &a2, unsigned int a3,
+          const std::shared_ptr<R_list_sum> &a4) {
+        return std::unique_ptr<R_list_sum>(
+            new R_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
 
-  template <typename T1,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>> F0,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<r_list_sum>, T1>
+  template <typename T1, MapsTo<T1, std::shared_ptr<List<unsigned int>>> F0,
+            MapsTo<T1, std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<R_list_sum>, T1>
                 F1>
   static T1 R_list_sum_rect(F0 &&f, F1 &&f0,
-                            const std::shared_ptr<List::list<unsigned int>> &_x,
+                            const std::shared_ptr<List<unsigned int>> &_x,
                             const unsigned int _x0,
-                            const std::shared_ptr<r_list_sum> &r) {
+                            const std::shared_ptr<R_list_sum> &r) {
     return std::visit(
-        Overloaded{[&](const typename r_list_sum::R_list_sum_0 _args) -> T1 {
-                     std::shared_ptr<List::list<unsigned int>> l = _args._a0;
+        Overloaded{[&](const typename R_list_sum::R_list_sum_0 _args) -> T1 {
+                     std::shared_ptr<List<unsigned int>> l = _args._a0;
                      return f(std::move(l), "dummy");
                    },
-                   [&](const typename r_list_sum::R_list_sum_1 _args) -> T1 {
-                     std::shared_ptr<List::list<unsigned int>> l = _args._a0;
+                   [&](const typename R_list_sum::R_list_sum_1 _args) -> T1 {
+                     std::shared_ptr<List<unsigned int>> l = _args._a0;
                      unsigned int x = _args._a1;
-                     std::shared_ptr<List::list<unsigned int>> xs = _args._a2;
+                     std::shared_ptr<List<unsigned int>> xs = _args._a2;
                      unsigned int _res = _args._a3;
-                     std::shared_ptr<r_list_sum> r0 = _args._a4;
+                     std::shared_ptr<R_list_sum> r0 = _args._a4;
                      return f0(std::move(l), std::move(x), xs, "dummy", _res,
                                r0, R_list_sum_rect<T1>(f, f0, xs, _res, r0));
                    }},
         r->v());
   }
 
-  template <typename T1,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>> F0,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<r_list_sum>, T1>
+  template <typename T1, MapsTo<T1, std::shared_ptr<List<unsigned int>>> F0,
+            MapsTo<T1, std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<R_list_sum>, T1>
                 F1>
-  static T1 R_list_sum_rec(F0 &&f, F1 &&f0,
-                           const std::shared_ptr<List::list<unsigned int>> &_x,
-                           const unsigned int _x0,
-                           const std::shared_ptr<r_list_sum> &r) {
+  static T1
+  R_list_sum_rec(F0 &&f, F1 &&f0, const std::shared_ptr<List<unsigned int>> &_x,
+                 const unsigned int _x0, const std::shared_ptr<R_list_sum> &r) {
     return std::visit(
-        Overloaded{[&](const typename r_list_sum::R_list_sum_0 _args) -> T1 {
-                     std::shared_ptr<List::list<unsigned int>> l = _args._a0;
+        Overloaded{[&](const typename R_list_sum::R_list_sum_0 _args) -> T1 {
+                     std::shared_ptr<List<unsigned int>> l = _args._a0;
                      return f(std::move(l), "dummy");
                    },
-                   [&](const typename r_list_sum::R_list_sum_1 _args) -> T1 {
-                     std::shared_ptr<List::list<unsigned int>> l = _args._a0;
+                   [&](const typename R_list_sum::R_list_sum_1 _args) -> T1 {
+                     std::shared_ptr<List<unsigned int>> l = _args._a0;
                      unsigned int x = _args._a1;
-                     std::shared_ptr<List::list<unsigned int>> xs = _args._a2;
+                     std::shared_ptr<List<unsigned int>> xs = _args._a2;
                      unsigned int _res = _args._a3;
-                     std::shared_ptr<r_list_sum> r0 = _args._a4;
+                     std::shared_ptr<R_list_sum> r0 = _args._a4;
                      return f0(std::move(l), std::move(x), xs, "dummy", _res,
                                r0, R_list_sum_rec<T1>(f, f0, xs, _res, r0));
                    }},
         r->v());
   }
 
-  template <typename T1,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>> F0,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<List::list<unsigned int>>, T1>
+  template <typename T1, MapsTo<T1, std::shared_ptr<List<unsigned int>>> F0,
+            MapsTo<T1, std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<List<unsigned int>>, T1>
                 F1>
   static T1 list_sum_rect(F0 &&f, F1 &&f0,
-                          const std::shared_ptr<List::list<unsigned int>> &l) {
-    std::function<T1(unsigned int, std::shared_ptr<List::list<unsigned int>>,
-                     T1)>
+                          const std::shared_ptr<List<unsigned int>> &l) {
+    std::function<T1(unsigned int, std::shared_ptr<List<unsigned int>>, T1)>
         f1 = f0(l);
     T1 f2 = f(l);
     return std::visit(
-        Overloaded{[&](const typename List::list<unsigned int>::nil _args)
-                       -> std::function<T1(
-                           dummy_prop,
-                           std::function<T1(
-                               unsigned int,
-                               std::shared_ptr<List::list<unsigned int>>, T1)>,
-                           T1)> { return f2("dummy"); },
-                   [&](const typename List::list<unsigned int>::cons _args)
-                       -> std::function<T1(
-                           dummy_prop,
-                           std::function<T1(
-                               unsigned int,
-                               std::shared_ptr<List::list<unsigned int>>, T1)>,
-                           T1)> {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<List::list<unsigned int>> l0 = _args._a1;
-                     std::function<T1(T1)> f3 =
-                         f1(std::move(n), std::move(l0), "dummy");
-                     T1 hrec = list_sum_rect<T1>(f, f0, std::move(l0));
-                     return f3(hrec);
-                   }},
+        Overloaded{
+            [&](const typename List<unsigned int>::nil _args)
+                -> std::function<T1(
+                    dummy_prop,
+                    std::function<T1(unsigned int,
+                                     std::shared_ptr<List<unsigned int>>, T1)>,
+                    T1)> { return f2("dummy"); },
+            [&](const typename List<unsigned int>::cons _args)
+                -> std::function<T1(
+                    dummy_prop,
+                    std::function<T1(unsigned int,
+                                     std::shared_ptr<List<unsigned int>>, T1)>,
+                    T1)> {
+              unsigned int n = _args._a0;
+              std::shared_ptr<List<unsigned int>> l0 = _args._a1;
+              std::function<T1(T1)> f3 =
+                  f1(std::move(n), std::move(l0), "dummy");
+              T1 hrec = list_sum_rect<T1>(f, f0, std::move(l0));
+              return f3(hrec);
+            }},
         l->v());
   }
 
   template <typename T1,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>, unsigned int,
-                   std::shared_ptr<List::list<unsigned int>>, T1>
+            MapsTo<T1, std::shared_ptr<List<unsigned int>>, unsigned int,
+                   std::shared_ptr<List<unsigned int>>, T1>
                 F1,
-            MapsTo<T1, std::shared_ptr<List::list<unsigned int>>> F2>
-  static T1 list_sum_rec(const std::shared_ptr<List::list<unsigned int>> &_x0,
+            MapsTo<T1, std::shared_ptr<List<unsigned int>>> F2>
+  static T1 list_sum_rec(const std::shared_ptr<List<unsigned int>> &_x0,
                          F1 &&_x1, F2 &&_x2) {
     return list_sum_rect(_x0, _x1, _x2);
   }
 
-  static std::shared_ptr<r_list_sum>
-  R_list_sum_correct(const std::shared_ptr<List::list<unsigned int>> &l,
+  static std::shared_ptr<R_list_sum>
+  R_list_sum_correct(const std::shared_ptr<List<unsigned int>> &l,
                      const unsigned int _res);
 
   static inline const unsigned int test_div2 =
       div2(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
 
   static inline const unsigned int test_sum =
-      list_sum(List::list<unsigned int>::ctor::cons_(
-          (0 + 1), List::list<unsigned int>::ctor::cons_(
-                       ((0 + 1) + 1),
-                       List::list<unsigned int>::ctor::cons_(
-                           (((0 + 1) + 1) + 1),
-                           List::list<unsigned int>::ctor::cons_(
-                               ((((0 + 1) + 1) + 1) + 1),
-                               List::list<unsigned int>::ctor::cons_(
-                                   (((((0 + 1) + 1) + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_()))))));
+      list_sum(List<unsigned int>::ctor::cons_(
+          (0 + 1),
+          List<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
+                                 (((0 + 1) + 1) + 1),
+                                 List<unsigned int>::ctor::cons_(
+                                     ((((0 + 1) + 1) + 1) + 1),
+                                     List<unsigned int>::ctor::cons_(
+                                         (((((0 + 1) + 1) + 1) + 1) + 1),
+                                         List<unsigned int>::ctor::nil_()))))));
 };

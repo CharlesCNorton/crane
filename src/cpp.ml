@@ -114,6 +114,13 @@ let wrapper_module_table : (ModPath.t, string) Hashtbl.t = Hashtbl.create 16
    Consumed during Dnspace rendering in PASS 2. *)
 let pending_wrapper_decls : (string, Pp.t) Hashtbl.t = Hashtbl.create 16
 
+(* Set of wrapper struct names that have pending declarations and thus cannot be merged.
+   Populated alongside pending_wrapper_decls during PASS 1.
+   Used during type/expression rendering to decide between merged (List<A>)
+   and unmerged (List::list<A>) name formats. Not consumed during rendering. *)
+let unmerged_wrappers : (string, unit) Hashtbl.t = Hashtbl.create 16
+
+
 (* Check if a GlobRef belongs to a wrapper module and return the qualified name.
    If the reference's module path matches a wrapper module, prepend the struct name.
    Only qualify ConstRef globals (actual Coq constants from modules).
@@ -212,7 +219,8 @@ let reset_cpp_state () =
   Hashtbl.clear global_method_registry;
   Hashtbl.clear global_eponymous_record_registry;
   Hashtbl.clear wrapper_module_table;
-  Hashtbl.clear pending_wrapper_decls
+  Hashtbl.clear pending_wrapper_decls;
+  Hashtbl.clear unmerged_wrappers
 
 (* Pre-register all methods from the entire structure before code generation.
    This ensures that cross-module method calls (like List.app from stmtest)
@@ -364,6 +372,14 @@ let pp_global_name k r = str (Common.pp_global k r)
 
 let pp_modname mp = str (Common.pp_module mp)
 
+(* Check if a non-local inductive's Dnspace wrapper was merged with its inner struct.
+   Returns true if the wrapper WAS merged (no pending declarations → use List<A>).
+   Returns false if it was NOT merged (has pending declarations → use List::list<A>). *)
+let is_merged_inductive (r : GlobRef.t) : bool =
+  let base = str_global Type r in
+  let wrapper_name = String.capitalize_ascii base in
+  not (Hashtbl.mem unmerged_wrappers wrapper_name)
+
 (* grammar from OCaml 4.06 manual, "Prefix and infix symbols" *)
 
 let infix_symbols =
@@ -442,11 +458,11 @@ let is_local_inductive r =
   List.exists (Environ.QGlobRef.equal Environ.empty_env r) (get_local_inductives ())
 
 (* Get the appropriate name for an inductive reference.
-   - Local inductives: lowercase name directly (e.g., "list")
-   - Non-local inductives: capitalized namespace prefix (e.g., "List::list")
+   - Local inductives: original name directly (e.g., "list", "EvenTree")
+   - Non-local inductives: capitalized name (e.g., "List", "Nat")
    Returns (name_pp, needs_namespace) where:
-   - name_pp is the printed name for namespace prefix
-   - needs_namespace indicates if namespace qualification is needed *)
+   - name_pp is the printed name
+   - needs_namespace indicates if this is a non-local inductive (capitalized) *)
 let inductive_name_info r =
   match r with
   | GlobRef.IndRef _ when is_eponymous_record_global r ->
@@ -465,15 +481,10 @@ let inductive_name_info r =
       (pp_global Type r, false)
 
 (* Format an inductive type name for type references.
-   For inductives wrapped in namespace structs (Dnspace), the pattern is:
-   - Wrapper struct: capitalized (e.g., "List", "Ordering")
-   - Inner type: lowercase (e.g., "list", "ordering")
-   So "Ordering::Ordering" becomes "Ordering::ordering".
-   Non-inductives and local inductives are unchanged.
-   EXCEPTION 1: Eponymous records (module M with record M) are merged into the
-   module struct, so we use just the capitalized name (e.g., "CHT" not "CHT::cHT").
-   EXCEPTION 2: Regular records (not eponymous) keep their original case because
-   they don't get wrapped in namespace structs. *)
+   Non-local inductives use capitalized name directly (e.g., "List", "Nat").
+   Local inductives use original Rocq name (e.g., "list", "EvenTree").
+   EXCEPTION 1: Eponymous records (module M with record M) use capitalized name.
+   EXCEPTION 2: Regular records (not eponymous) keep their original case. *)
 let pp_inductive_type_name r =
   let result = match r with
   | GlobRef.IndRef _ when is_eponymous_record_global r ->
@@ -485,26 +496,25 @@ let pp_inductive_type_name r =
       (* Regular records: keep original case (no namespace wrapper) *)
       pp_global Type r
   | GlobRef.IndRef _ when is_local_inductive r ->
-      (* Local inductive: use lowercase name directly *)
-      str (String.uncapitalize_ascii (str_global Type r))
+      (* Local inductive: use original name directly *)
+      pp_global Type r
   | GlobRef.IndRef _ when is_enum_inductive r ->
-      (* Enum inductive: use lowercase name directly (no namespace wrapper).
-         If already module-qualified (e.g., "Outer::color"), use as-is to
-         avoid lowercasing the module prefix. *)
+      (* Enum inductive: use original name directly (no namespace wrapper).
+         If already module-qualified (e.g., "Outer::color"), use as-is. *)
       let name = str_global Type r in
-      if is_qualified_name name then str name
-      else str (String.uncapitalize_ascii name)
+      str name
   | GlobRef.IndRef _ ->
       let base = str_global Type r in
       if is_qualified_name base then
         (* Already qualified (e.g., C::t from module parameter): use as-is *)
         str base
+      else if is_merged_inductive r then
+        (* Merged non-local inductive: use capitalized name directly *)
+        str (String.capitalize_ascii base)
       else
-        (* Non-local, unqualified inductive: Wrapper::lowercase_inner
-           The wrapper is capitalized, inner is lowercase *)
+        (* Unmerged non-local inductive: Wrapper::inner *)
         let wrapper = String.capitalize_ascii base in
-        let inner = String.uncapitalize_ascii base in
-        str (wrapper ^ "::" ^ inner)
+        str (wrapper ^ "::" ^ base)
   | _ ->
       (* Non-inductive: use as-is *)
       pp_global Type r
@@ -927,20 +937,17 @@ let rec pp_cpp_type par vl t =
                 Use pp_global_name to get just the base name, not the qualified path. *)
              str (String.capitalize_ascii (Common.pp_global_name Type r')) ++ templates
            else if is_enum_inductive r' then
-             (* Enum inductives have no wrapper struct - just the enum name.
-                If the name is already module-qualified (e.g., "Outer::color"),
-                use it as-is; otherwise uncapitalize the base name only. *)
-             if is_qualified_name type_name_str then
-               str type_name_str ++ templates
-             else
-               str (String.uncapitalize_ascii type_name_str) ++ templates
+             (* Enum inductives have no wrapper struct - just the enum name. *)
+             str type_name_str ++ templates
            else if is_qualified_name type_name_str then
              (* Already qualified (e.g., C::t from module parameter): add typename if in template *)
              typename_prefix_for type_name_str ++ str type_name_str ++ templates
+           else if is_merged_inductive r' then
+             (* Merged: use capitalized name directly *)
+             name ++ templates
            else
-             (* Use lowercase inner name: List::list, Ordering::ordering *)
-             let inner_name = String.uncapitalize_ascii type_name_str in
-             name ++ str "::" ++ str inner_name ++ templates
+             (* Unmerged: use Wrapper::inner<args> *)
+             name ++ str "::" ++ str type_name_str ++ templates
          | _ ->
            (* Fallback: generic namespace-qualified type *)
            str "typename " ++ name ++ str "::" ++ pp_rec false t)
@@ -951,12 +958,11 @@ let rec pp_cpp_type par vl t =
           | Tglob (r, _, _) ->
             let type_name_str = str_global Type r in
             if is_qualified_name type_name_str then
-              (* Name already module-qualified (e.g., "NestedTree::tree"):
-                 use pp_rec which handles the qualification correctly *)
               pp_rec false base_ty
             else
               let (ns_name, needs_ns) = inductive_name_info r in
-              if needs_ns then
+              if needs_ns && not (is_merged_inductive r) then
+                (* Unmerged: need wrapper prefix *)
                 ns_name ++ str "::" ++ pp_rec false base_ty
               else
                 pp_rec false base_ty
@@ -1014,12 +1020,15 @@ and pp_cpp_expr env args t =
              Do NOT lowercase - the qualifier (like module param C) should keep case *)
           str type_name_str
         else if needs_ns then
-          (* Non-local, unqualified inductive: add capitalized namespace prefix, lowercase inner *)
-          let inner_name = str (String.uncapitalize_ascii type_name_str) in
-          ns_name ++ str "::" ++ inner_name
+          if is_merged_inductive x then
+            (* Merged non-local inductive: use capitalized name directly *)
+            ns_name
+          else
+            (* Unmerged non-local inductive: Wrapper::inner *)
+            ns_name ++ str "::" ++ str type_name_str
         else
-          (* Local inductive: use lowercase name directly *)
-          str (String.uncapitalize_ascii type_name_str)
+          (* Local inductive: use original name directly *)
+          str type_name_str
       | GlobRef.VarRef _ ->
         (* Local variable reference - no prefix *)
         pp_global Term x
@@ -1181,14 +1190,11 @@ and pp_cpp_expr env args t =
         (match tys with
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
-      (* Match Dstruct naming: records keep original case, inductives are lowercased. *)
       let struct_name = match id with
         | GlobRef.IndRef _ when is_record_inductive id ->
-            (* Records keep original case - no namespace wrapper *)
             pp_global Type id
         | GlobRef.IndRef _ ->
-            let base = str_global Type id in
-            str (String.uncapitalize_ascii base)
+            pp_global Type id
         | _ -> pp_global Type id
       in
       struct_name ++  templates ++ str "::make(" ++ es_s ++ str ")"
@@ -1198,14 +1204,11 @@ and pp_cpp_expr env args t =
         (match tys with
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
-      (* Match Dstruct naming: records keep original case, inductives are lowercased. *)
       let struct_name = match id with
         | GlobRef.IndRef _ when is_record_inductive id ->
-            (* Records keep original case - no namespace wrapper *)
             pp_global Type id
         | GlobRef.IndRef _ ->
-            let base = str_global Type id in
-            str (String.uncapitalize_ascii base)
+            pp_global Type id
         | _ -> pp_global Type id
       in
       struct_name ++ templates ++ str "{" ++ es_s ++ str "}"
@@ -1282,15 +1285,9 @@ and pp_cpp_expr env args t =
         else str "([&]() -> auto { throw std::logic_error(\"" ++ str msg ++ str "\"); })()"
   | CPPenum_val (ind, ctor) ->
       (* Generate EnumType::Constructor for enum class values.
-         Use str_global for proper module qualification (e.g., Outer::color::Red).
-         Only uncapitalize the last component of the name. *)
+         Use str_global for proper module qualification (e.g., Outer::color::Red). *)
       let full_name = str_global Type ind in
-      let enum_name = match String.rindex_opt full_name ':' with
-        | Some i -> String.sub full_name 0 (i + 1) ^
-                     String.uncapitalize_ascii (String.sub full_name (i + 1) (String.length full_name - i - 1))
-        | None -> String.uncapitalize_ascii full_name
-      in
-      str enum_name ++ str "::" ++ Id.print ctor
+      str full_name ++ str "::" ++ Id.print ctor
   (* Low-level constructs for reuse optimization *)
   | CPPraw code -> str code
   | CPPbinop (op, lhs, rhs) ->
@@ -1315,7 +1312,7 @@ and pp_cpp_stmt env args = function
     (* Generate switch statement for enum class matching.
        Use pp_global_name to get the unqualified base name. *)
     let base = Common.pp_global_name Type ind in
-    let type_name = str (String.uncapitalize_ascii base) in
+    let type_name = str base in
     let pp_branch (ctor, stmts) =
       str "case " ++ type_name ++ str "::" ++ Id.print ctor ++ str ": {" ++ fnl () ++
       pp_list_stmt (pp_cpp_stmt env args) stmts ++ fnl () ++
@@ -1541,43 +1538,54 @@ function
     let ds = pp_list_stmt (pp_cpp_decl env) decls in
     h (str "namespace " ++ str "{") ++ fnl () ++ ds ++ fnl () ++ str "};"
 | Dnspace (Some id, decls) ->
-    (* CRITICAL DESIGN: Transform namespaces into structs
-       This is the key innovation enabling module support in C++.
-
-       Why:
-       1. C++ doesn't allow namespaces inside structs, but we need inductives to be nested
-       2. Using structs instead of namespaces gives us scoped type definitions
-       3. This aligns with the goal of generating modules as template structs
-
-       Context tracking: Set in_struct_context so nested declarations know they're inside
-       a struct and can apply appropriate transformations (static keywords, nested inductives). *)
-    let old_context = !in_struct_context in
-    in_struct_context := true;
-    let ds = pp_list_stmt (pp_cpp_decl env) decls in
-    in_struct_context := old_context;
-
-    (* Generate as struct to allow nesting inside other structs/modules *)
-    (* Capitalize the struct name. The inner inductive struct is lowercase,
-       so capitalization creates different names: struct List { struct list { ... }; };
-       For already capitalized names like 'Ordering', inner becomes 'ordering'. *)
     let struct_name_str = match id with
-      | GlobRef.IndRef (kn, i) ->
-          String.capitalize_ascii (str_global Type id)
+      | GlobRef.IndRef _ -> String.capitalize_ascii (str_global Type id)
       | _ -> string_of_ppcmds (pp_global Type id)
     in
-    (* Check for pending wrapper declarations that should be injected into this struct.
-       This handles the case where a module (e.g., Nat with add/div functions) has the
-       same struct name as a Dnspace-wrapped inductive (e.g., nat → struct Nat).
-       Only forward declarations (specs) are injected here. Full definitions are
-       deferred until after all structs are emitted, because template function bodies
-       may reference types (like ListDef) defined in later structs. *)
-    let pending_fwd = match Hashtbl.find_opt pending_wrapper_decls struct_name_str with
-      | Some specs ->
-        Hashtbl.remove pending_wrapper_decls struct_name_str;
-        fnl () ++ specs
-      | None -> mt ()
-    in
-    h (str "struct " ++ str struct_name_str ++ str " {") ++ fnl () ++ ds ++ pending_fwd ++ fnl () ++ str "};"
+    let has_pending = Hashtbl.mem pending_wrapper_decls struct_name_str in
+    (* MERGE: When a Dnspace has a single Dstruct (or Dtemplate wrapping a Dstruct)
+       and no pending wrapper declarations, merge the inner struct into the wrapper.
+       This eliminates the redundant nesting: struct Nat { struct nat { ... }; }
+       becomes just struct Nat { ... }.
+       When there ARE pending wrapper declarations (e.g., module functions like rev),
+       keep the two-level structure so wrapper functions can reference the template class. *)
+    (match decls, has_pending with
+    | [Dstruct (_inner_id, fields)], false ->
+      (* MERGE non-template: struct Nat { ... } *)
+      let struct_name = str struct_name_str in
+      let old_context = !in_struct_context in
+      in_struct_context := true;
+      let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
+      in_struct_context := old_context;
+      str "struct " ++ struct_name ++ str " {" ++ fnl ()
+        ++ f_s ++ fnl () ++ str "};"
+    | [Dtemplate (temps, cstr, Dstruct (_inner_id, fields))], false ->
+      (* MERGE template: template<typename A> struct List { ... } *)
+      let struct_name = str struct_name_str in
+      let old_context = !in_struct_context in
+      in_struct_context := true;
+      let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
+      in_struct_context := old_context;
+      let args = pp_list (fun (tt, id) -> pp_template_type tt ++ spc () ++ Id.print id) temps in
+      h (str "template <" ++ args ++ str ">")
+      ++ (match cstr with
+          | None -> fnl ()
+          | Some c -> pp_cpp_expr env [] c ++ fnl ())
+      ++ str "struct " ++ struct_name ++ str " {" ++ fnl ()
+        ++ f_s ++ fnl () ++ str "};"
+    | _ ->
+      (* No merge: keep wrapper struct (has pending decls or multiple children) *)
+      let old_context = !in_struct_context in
+      in_struct_context := true;
+      let ds = pp_list_stmt (pp_cpp_decl env) decls in
+      in_struct_context := old_context;
+      let pending_fwd = match Hashtbl.find_opt pending_wrapper_decls struct_name_str with
+        | Some specs ->
+          Hashtbl.remove pending_wrapper_decls struct_name_str;
+          fnl () ++ specs
+        | None -> mt ()
+      in
+      h (str "struct " ++ str struct_name_str ++ str " {") ++ fnl () ++ ds ++ pending_fwd ++ fnl () ++ str "};")
 | Dfundef (ids, ret_ty, params, body) ->
     let params_s =
       pp_list (fun (id, ty) ->
@@ -1632,14 +1640,11 @@ function
     let static_kw = if is_struct_member then str "static " else mt () in
     h (static_kw ++ (pp_cpp_type false [] ret_ty) ++ str " " ++ name ++ pp_par true params_s) ++ str ";"
 | Dstruct (id, fields) ->
-    (* For regular inductives, use lowercase struct name to avoid conflict with
-       the wrapper namespace struct (which is capitalized).
-       Pattern: struct List { struct list { ... }; };
-       EXCEPTION 1: Records don't get wrapped in namespace structs, so they
-       keep their original case to avoid name collision with values.
-       EXCEPTION 2: Eponymous records are merged into the module struct,
-       so they use the capitalized name directly.
-       Check eponymous FIRST, then records, then default to lowercase. *)
+    (* Struct name for inductive types.
+       Regular inductives use their original Rocq name.
+       EXCEPTION 1: Records keep their original case.
+       EXCEPTION 2: Eponymous records use the capitalized name directly.
+       Check eponymous FIRST, then records, then default. *)
     let struct_name = match id with
       | GlobRef.IndRef _ when is_eponymous_record_global id ->
           (* Use pp_global_name to get just the base name, not the qualified path. *)
@@ -1648,8 +1653,7 @@ function
           (* Records keep original case - no namespace wrapper *)
           pp_global Type id
       | GlobRef.IndRef _ ->
-          let base = str_global Type id in
-          str (String.uncapitalize_ascii base)
+          pp_global Type id
       | _ -> pp_global Type id
     in
     let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
@@ -1707,8 +1711,7 @@ function
 | Denum (name, ctors) ->
     let struct_name = match name with
       | GlobRef.IndRef _ ->
-          let base = Common.pp_global_name Type name in
-          str (String.uncapitalize_ascii base)
+          str (Common.pp_global_name Type name)
       | _ -> pp_global Type name
     in
     let ctors_s = prlist_with_sep (fun () -> str "," ++ fnl () ++ str "  ")
@@ -1872,6 +1875,8 @@ let pp_cpp_ind_header kn ind =
               let param_sign = List.firstn ind.ind_nparams p.ip_sign in
               let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
               let param_vars = List.firstn num_param_vars p.ip_vars in
+              (* Use the same name as the struct definition (see Dstruct
+                 printing below) so forward declarations match their definitions. *)
               let name = pp_global Type names.(i) in
               let tmpl = match param_vars with
                 | [] -> mt ()
@@ -3133,8 +3138,10 @@ let do_struct_with_decl_tracking ~is_header f s =
       (* Store forward declarations in pending_wrapper_decls for Dnspace injection during PASS 2.
          When a Dnspace struct with matching name is rendered (e.g., struct List),
          it consumes the forward declarations from this table and injects them as member declarations. *)
-      if not (Pp.ismt p_specs) then
+      if not (Pp.ismt p_specs) then begin
         Hashtbl.replace pending_wrapper_decls name p_specs;
+        Hashtbl.replace unmerged_wrappers name ()
+      end;
 
       (* Accumulate definitions for emission AFTER PASS 2 (after all types are defined).
          Template definitions reference types that may be defined in later structs, so

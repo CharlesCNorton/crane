@@ -18,42 +18,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 struct Matcher {
@@ -235,41 +233,38 @@ struct Matcher {
                                        const int64_t c);
 
   static std::shared_ptr<regexp>
-  derivs(std::shared_ptr<regexp> r,
-         const std::shared_ptr<List::list<int64_t>> &cs);
+  derivs(std::shared_ptr<regexp> r, const std::shared_ptr<List<int64_t>> &cs);
 
   static bool deriv_parse(const std::shared_ptr<regexp> &r,
-                          const std::shared_ptr<List::list<int64_t>> &cs);
+                          const std::shared_ptr<List<int64_t>> &cs);
 
   static bool NullEpsOrZero(const std::shared_ptr<regexp> &r);
 
   static bool parse(const std::shared_ptr<regexp> &r,
-                    const std::shared_ptr<List::list<int64_t>> &cs);
+                    const std::shared_ptr<List<int64_t>> &cs);
 
   static bool parse_bool(const std::shared_ptr<regexp> &r,
-                         const std::shared_ptr<List::list<int64_t>> &cs);
+                         const std::shared_ptr<List<int64_t>> &cs);
 
   static inline const std::shared_ptr<regexp> r1 =
       regexp::ctor::Cat_(regexp::ctor::Star_(regexp::ctor::Char_(int64_t(0))),
                          regexp::ctor::Char_(int64_t(1)));
 
-  static inline const std::shared_ptr<List::list<int64_t>> s1 =
-      List::list<int64_t>::ctor::cons_(
-          int64_t(0), List::list<int64_t>::ctor::cons_(
-                          int64_t(1), List::list<int64_t>::ctor::nil_()));
-
-  static inline const std::shared_ptr<List::list<int64_t>> s2 =
-      List::list<int64_t>::ctor::cons_(int64_t(1),
-                                       List::list<int64_t>::ctor::nil_());
-
-  static inline const std::shared_ptr<List::list<int64_t>> s3 =
-      List::list<int64_t>::ctor::cons_(
+  static inline const std::shared_ptr<List<int64_t>> s1 =
+      List<int64_t>::ctor::cons_(
           int64_t(0),
-          List::list<int64_t>::ctor::cons_(
-              int64_t(0), List::list<int64_t>::ctor::cons_(
-                              int64_t(1), List::list<int64_t>::ctor::nil_())));
+          List<int64_t>::ctor::cons_(int64_t(1), List<int64_t>::ctor::nil_()));
 
-  static inline const std::shared_ptr<List::list<int64_t>> s4 =
-      List::list<int64_t>::ctor::cons_(int64_t(0),
-                                       List::list<int64_t>::ctor::nil_());
+  static inline const std::shared_ptr<List<int64_t>> s2 =
+      List<int64_t>::ctor::cons_(int64_t(1), List<int64_t>::ctor::nil_());
+
+  static inline const std::shared_ptr<List<int64_t>> s3 =
+      List<int64_t>::ctor::cons_(
+          int64_t(0),
+          List<int64_t>::ctor::cons_(
+              int64_t(0), List<int64_t>::ctor::cons_(
+                              int64_t(1), List<int64_t>::ctor::nil_())));
+
+  static inline const std::shared_ptr<List<int64_t>> s4 =
+      List<int64_t>::ctor::cons_(int64_t(0), List<int64_t>::ctor::nil_());
 };

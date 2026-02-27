@@ -36,7 +36,7 @@ struct SPropTest {
   static inline const T1 sFalse_rec =
       [](void) { throw std::logic_error("absurd case"); }();
 
-  template <typename A> struct box {
+  template <typename A> struct Box {
   public:
     struct mkBox {
       A _a0;
@@ -45,23 +45,23 @@ struct SPropTest {
 
   private:
     variant_t v_;
-    explicit box(mkBox _v) : v_(std::move(_v)) {}
+    explicit Box(mkBox _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<box<A>> mkBox_(A a0) {
-        return std::shared_ptr<box<A>>(new box<A>(mkBox{a0}));
+      static std::shared_ptr<Box<A>> mkBox_(A a0) {
+        return std::shared_ptr<Box<A>>(new Box<A>(mkBox{a0}));
       }
-      static std::unique_ptr<box<A>> mkBox_uptr(A a0) {
-        return std::unique_ptr<box<A>>(new box<A>(mkBox{a0}));
+      static std::unique_ptr<Box<A>> mkBox_uptr(A a0) {
+        return std::unique_ptr<Box<A>>(new Box<A>(mkBox{a0}));
       }
     };
     const variant_t &v() const { return v_; }
     variant_t &v_mut() { return v_; }
   };
 
-  template <typename T1> static T1 box_value(std::shared_ptr<box<T1>> b) {
+  template <typename T1> static T1 box_value(std::shared_ptr<Box<T1>> b) {
     return std::move(b);
   }
 

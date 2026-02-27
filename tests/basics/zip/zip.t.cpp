@@ -71,11 +71,11 @@ std::shared_ptr<List::list<T>> vector_to_list(const std::vector<T>& vec) {
 
 // Helper to convert pair to std::pair
 template<typename A, typename B>
-std::pair<A, B> prod_to_pair(const std::shared_ptr<Prod::prod<A, B>>& p) {
+std::pair<A, B> prod_to_pair(const std::shared_ptr<Prod<A, B>>& p) {
   std::pair<A, B> result;
   std::visit(
     Overloaded{
-      [&](const typename Prod::prod<A, B>::pair& pr) {
+      [&](const typename Prod<A, B>::pair& pr) {
         result = std::make_pair(pr._a0, pr._a1);
       }
     },
@@ -86,7 +86,7 @@ std::pair<A, B> prod_to_pair(const std::shared_ptr<Prod::prod<A, B>>& p) {
 
 // Helper to convert list of prods to vector of pairs
 template<typename A, typename B>
-std::vector<std::pair<A, B>> list_to_pairs(const std::shared_ptr<List::list<std::shared_ptr<Prod::prod<A, B>>>>& l) {
+std::vector<std::pair<A, B>> list_to_pairs(const std::shared_ptr<List::list<std::shared_ptr<Prod<A, B>>>>& l) {
   auto prods = list_to_vector(l);
   std::vector<std::pair<A, B>> result;
   for (const auto& p : prods) {

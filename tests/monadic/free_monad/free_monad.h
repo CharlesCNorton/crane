@@ -20,14 +20,14 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 enum class unit { tt };
 
 struct FreeMonad {
-  struct iO {
+  struct IO {
   public:
     struct pure {
       std::any _a0;
     };
     struct bind {
-      std::shared_ptr<iO> _a0;
-      std::function<std::shared_ptr<iO>(std::any)> _a1;
+      std::shared_ptr<IO> _a0;
+      std::function<std::shared_ptr<IO>(std::any)> _a1;
     };
     struct get_line {};
     struct print {
@@ -37,41 +37,41 @@ struct FreeMonad {
 
   private:
     variant_t v_;
-    explicit iO(pure _v) : v_(std::move(_v)) {}
-    explicit iO(bind _v) : v_(std::move(_v)) {}
-    explicit iO(get_line _v) : v_(std::move(_v)) {}
-    explicit iO(print _v) : v_(std::move(_v)) {}
+    explicit IO(pure _v) : v_(std::move(_v)) {}
+    explicit IO(bind _v) : v_(std::move(_v)) {}
+    explicit IO(get_line _v) : v_(std::move(_v)) {}
+    explicit IO(print _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<iO> pure_(std::any a0) {
-        return std::shared_ptr<iO>(new iO(pure{a0}));
+      static std::shared_ptr<IO> pure_(std::any a0) {
+        return std::shared_ptr<IO>(new IO(pure{a0}));
       }
-      static std::shared_ptr<iO>
-      bind_(const std::shared_ptr<iO> &a0,
-            std::function<std::shared_ptr<iO>(std::any)> a1) {
-        return std::shared_ptr<iO>(new iO(bind{a0, a1}));
+      static std::shared_ptr<IO>
+      bind_(const std::shared_ptr<IO> &a0,
+            std::function<std::shared_ptr<IO>(std::any)> a1) {
+        return std::shared_ptr<IO>(new IO(bind{a0, a1}));
       }
-      static std::shared_ptr<iO> get_line_() {
-        return std::shared_ptr<iO>(new iO(get_line{}));
+      static std::shared_ptr<IO> get_line_() {
+        return std::shared_ptr<IO>(new IO(get_line{}));
       }
-      static std::shared_ptr<iO> print_(std::string a0) {
-        return std::shared_ptr<iO>(new iO(print{a0}));
+      static std::shared_ptr<IO> print_(std::string a0) {
+        return std::shared_ptr<IO>(new IO(print{a0}));
       }
-      static std::unique_ptr<iO> pure_uptr(std::any a0) {
-        return std::unique_ptr<iO>(new iO(pure{a0}));
+      static std::unique_ptr<IO> pure_uptr(std::any a0) {
+        return std::unique_ptr<IO>(new IO(pure{a0}));
       }
-      static std::unique_ptr<iO>
-      bind_uptr(const std::shared_ptr<iO> &a0,
-                std::function<std::shared_ptr<iO>(std::any)> a1) {
-        return std::unique_ptr<iO>(new iO(bind{a0, a1}));
+      static std::unique_ptr<IO>
+      bind_uptr(const std::shared_ptr<IO> &a0,
+                std::function<std::shared_ptr<IO>(std::any)> a1) {
+        return std::unique_ptr<IO>(new IO(bind{a0, a1}));
       }
-      static std::unique_ptr<iO> get_line_uptr() {
-        return std::unique_ptr<iO>(new iO(get_line{}));
+      static std::unique_ptr<IO> get_line_uptr() {
+        return std::unique_ptr<IO>(new IO(get_line{}));
       }
-      static std::unique_ptr<iO> print_uptr(std::string a0) {
-        return std::unique_ptr<iO>(new iO(print{a0}));
+      static std::unique_ptr<IO> print_uptr(std::string a0) {
+        return std::unique_ptr<IO>(new IO(print{a0}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -79,21 +79,21 @@ struct FreeMonad {
   };
 
   template <typename T1, MapsTo<T1, std::any> F0,
-            MapsTo<T1, std::shared_ptr<iO>, T1,
-                   std::function<std::shared_ptr<iO>(std::any)>,
+            MapsTo<T1, std::shared_ptr<IO>, T1,
+                   std::function<std::shared_ptr<IO>(std::any)>,
                    std::function<T1(std::any)>>
                 F1,
             MapsTo<T1, std::string> F3>
   static T1 IO_rect(F0 &&f, F1 &&f0, const T1 f1, F3 &&f2,
-                    const std::shared_ptr<iO> &i) {
+                    const std::shared_ptr<IO> &i) {
     return std::visit(
-        Overloaded{[&](const typename iO::pure _args) -> T1 {
+        Overloaded{[&](const typename IO::pure _args) -> T1 {
                      std::any a = _args._a0;
                      return f("dummy", a);
                    },
-                   [&](const typename iO::bind _args) -> T1 {
-                     std::shared_ptr<iO> i0 = _args._a0;
-                     std::function<std::shared_ptr<iO>(std::any)> i1 =
+                   [&](const typename IO::bind _args) -> T1 {
+                     std::shared_ptr<IO> i0 = _args._a0;
+                     std::function<std::shared_ptr<IO>(std::any)> i1 =
                          _args._a1;
                      return f0("dummy", "dummy", i0,
                                IO_rect<T1>(f, f0, f1, f2, i0), i1,
@@ -101,8 +101,8 @@ struct FreeMonad {
                                  return IO_rect<T1>(f, f0, f1, f2, i1(a));
                                });
                    },
-                   [&](const typename iO::get_line _args) -> T1 { return f1; },
-                   [&](const typename iO::print _args) -> T1 {
+                   [&](const typename IO::get_line _args) -> T1 { return f1; },
+                   [&](const typename IO::print _args) -> T1 {
                      std::string s = _args._a0;
                      return f2(s);
                    }},
@@ -110,21 +110,21 @@ struct FreeMonad {
   }
 
   template <typename T1, MapsTo<T1, std::any> F0,
-            MapsTo<T1, std::shared_ptr<iO>, T1,
-                   std::function<std::shared_ptr<iO>(std::any)>,
+            MapsTo<T1, std::shared_ptr<IO>, T1,
+                   std::function<std::shared_ptr<IO>(std::any)>,
                    std::function<T1(std::any)>>
                 F1,
             MapsTo<T1, std::string> F3>
   static T1 IO_rec(F0 &&f, F1 &&f0, const T1 f1, F3 &&f2,
-                   const std::shared_ptr<iO> &i) {
+                   const std::shared_ptr<IO> &i) {
     return std::visit(
-        Overloaded{[&](const typename iO::pure _args) -> T1 {
+        Overloaded{[&](const typename IO::pure _args) -> T1 {
                      std::any a = _args._a0;
                      return f("dummy", a);
                    },
-                   [&](const typename iO::bind _args) -> T1 {
-                     std::shared_ptr<iO> i0 = _args._a0;
-                     std::function<std::shared_ptr<iO>(std::any)> i1 =
+                   [&](const typename IO::bind _args) -> T1 {
+                     std::shared_ptr<IO> i0 = _args._a0;
+                     std::function<std::shared_ptr<IO>(std::any)> i1 =
                          _args._a1;
                      return f0("dummy", "dummy", i0,
                                IO_rec<T1>(f, f0, f1, f2, i0), i1,
@@ -132,13 +132,13 @@ struct FreeMonad {
                                  return IO_rec<T1>(f, f0, f1, f2, i1(a));
                                });
                    },
-                   [&](const typename iO::get_line _args) -> T1 { return f1; },
-                   [&](const typename iO::print _args) -> T1 {
+                   [&](const typename IO::get_line _args) -> T1 { return f1; },
+                   [&](const typename IO::print _args) -> T1 {
                      std::string s = _args._a0;
                      return f2(s);
                    }},
         i->v());
   }
 
-  static inline const std::shared_ptr<iO> test = iO::ctor::pure_(unit::tt);
+  static inline const std::shared_ptr<IO> test = IO::ctor::pure_(unit::tt);
 };

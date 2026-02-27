@@ -38,23 +38,23 @@ int main() {
 
   // Test 1: Simple natural number literal
   // eval (ENat 42) = 42
-  auto e1 = Expr::expr::ctor::ENat_(42);
+  auto e1 = Expr::ctor::ENat_(42);
   auto r1 = e1->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r1) == 42);
   std::cout << "Test 1 passed: ENat 42 evaluates to 42\n";
 
   // Test 2: Simple boolean literal
   // eval (EBool true) = true
-  auto e2 = Expr::expr::ctor::EBool_(true);
+  auto e2 = Expr::ctor::EBool_(true);
   auto r2 = e2->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r2) == true);
   std::cout << "Test 2 passed: EBool true evaluates to true\n";
 
   // Test 3: Addition
   // eval (EAdd (ENat 10) (ENat 32)) = 42
-  auto e3 = Expr::expr::ctor::EAdd_(
-    Expr::expr::ctor::ENat_(10),
-    Expr::expr::ctor::ENat_(32)
+  auto e3 = Expr::ctor::EAdd_(
+    Expr::ctor::ENat_(10),
+    Expr::ctor::ENat_(32)
   );
   auto r3 = e3->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r3) == 42);
@@ -62,9 +62,9 @@ int main() {
 
   // Test 4: Equality (true case)
   // eval (EEq (ENat 5) (ENat 5)) = true
-  auto e4 = Expr::expr::ctor::EEq_(
-    Expr::expr::ctor::ENat_(5),
-    Expr::expr::ctor::ENat_(5)
+  auto e4 = Expr::ctor::EEq_(
+    Expr::ctor::ENat_(5),
+    Expr::ctor::ENat_(5)
   );
   auto r4 = e4->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r4) == true);
@@ -72,9 +72,9 @@ int main() {
 
   // Test 5: Equality (false case)
   // eval (EEq (ENat 3) (ENat 7)) = false
-  auto e5 = Expr::expr::ctor::EEq_(
-    Expr::expr::ctor::ENat_(3),
-    Expr::expr::ctor::ENat_(7)
+  auto e5 = Expr::ctor::EEq_(
+    Expr::ctor::ENat_(3),
+    Expr::ctor::ENat_(7)
   );
   auto r5 = e5->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r5) == false);
@@ -82,11 +82,11 @@ int main() {
 
   // Test 6: If-then-else (true branch)
   // eval (EIf TNat (EBool true) (ENat 100) (ENat 200)) = 100
-  auto e6 = Expr::expr::ctor::EIf_(
+  auto e6 = Expr::ctor::EIf_(
     ty::TNat,
-    Expr::expr::ctor::EBool_(true),
-    Expr::expr::ctor::ENat_(100),
-    Expr::expr::ctor::ENat_(200)
+    Expr::ctor::EBool_(true),
+    Expr::ctor::ENat_(100),
+    Expr::ctor::ENat_(200)
   );
   auto r6 = e6->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r6) == 100);
@@ -94,11 +94,11 @@ int main() {
 
   // Test 7: If-then-else (false branch)
   // eval (EIf TNat (EBool false) (ENat 100) (ENat 200)) = 200
-  auto e7 = Expr::expr::ctor::EIf_(
+  auto e7 = Expr::ctor::EIf_(
     ty::TNat,
-    Expr::expr::ctor::EBool_(false),
-    Expr::expr::ctor::ENat_(100),
-    Expr::expr::ctor::ENat_(200)
+    Expr::ctor::EBool_(false),
+    Expr::ctor::ENat_(100),
+    Expr::ctor::ENat_(200)
   );
   auto r7 = e7->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r7) == 200);
@@ -106,17 +106,17 @@ int main() {
 
   // Test 8: Complex expression combining multiple operations
   // eval (EIf TNat (EEq (EAdd (ENat 2) (ENat 3)) (ENat 5)) (ENat 42) (ENat 0)) = 42
-  auto e8 = Expr::expr::ctor::EIf_(
+  auto e8 = Expr::ctor::EIf_(
     ty::TNat,
-    Expr::expr::ctor::EEq_(
-      Expr::expr::ctor::EAdd_(
-        Expr::expr::ctor::ENat_(2),
-        Expr::expr::ctor::ENat_(3)
+    Expr::ctor::EEq_(
+      Expr::ctor::EAdd_(
+        Expr::ctor::ENat_(2),
+        Expr::ctor::ENat_(3)
       ),
-      Expr::expr::ctor::ENat_(5)
+      Expr::ctor::ENat_(5)
     ),
-    Expr::expr::ctor::ENat_(42),
-    Expr::expr::ctor::ENat_(0)
+    Expr::ctor::ENat_(42),
+    Expr::ctor::ENat_(0)
   );
   auto r8 = e8->eval(ty::TNat);
   ASSERT(std::any_cast<unsigned int>(r8) == 42);
@@ -124,11 +124,11 @@ int main() {
 
   // Test 9: Nested conditionals
   // eval (EIf TBool (EBool true) (EBool false) (EBool true)) = false
-  auto e9 = Expr::expr::ctor::EIf_(
+  auto e9 = Expr::ctor::EIf_(
     ty::TBool,
-    Expr::expr::ctor::EBool_(true),
-    Expr::expr::ctor::EBool_(false),
-    Expr::expr::ctor::EBool_(true)
+    Expr::ctor::EBool_(true),
+    Expr::ctor::EBool_(false),
+    Expr::ctor::EBool_(true)
   );
   auto r9 = e9->eval(ty::TBool);
   ASSERT(std::any_cast<bool>(r9) == false);

@@ -40,9 +40,9 @@ int main() {
     ASSERT(test_lt_false == false);
 
     // Test compare function
-    ASSERT(test_compare_lt == ordering::LT);
-    ASSERT(test_compare_eq == ordering::EQ);
-    ASSERT(test_compare_gt == ordering::GT);
+    ASSERT(test_compare_lt == Ordering::LT);
+    ASSERT(test_compare_eq == Ordering::EQ);
+    ASSERT(test_compare_gt == Ordering::GT);
 
     // Test Show class
     ASSERT(test_show == "<nat>");

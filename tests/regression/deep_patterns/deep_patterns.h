@@ -18,54 +18,50 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
+  };
+  using variant_t = std::variant<nil, cons>;
 
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
 
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
-    unsigned int length() const {
-      return std::visit(
-          Overloaded{
-              [](const typename List::list<A>::nil _args) -> unsigned int {
-                return 0;
-              },
-              [](const typename List::list<A>::cons _args) -> unsigned int {
-                std::shared_ptr<List::list<A>> l_ = _args._a1;
-                return (std::move(l_)->length() + 1);
-              }},
-          this->v());
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
+  unsigned int length() const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<A>::nil _args) -> unsigned int { return 0; },
+            [](const typename List<A>::cons _args) -> unsigned int {
+              std::shared_ptr<List<A>> l_ = _args._a1;
+              return (std::move(l_)->length() + 1);
+            }},
+        this->v());
+  }
 };
 
 struct DeepPatterns {
@@ -77,8 +73,7 @@ struct DeepPatterns {
                             std::pair<unsigned int, unsigned int>>
                 p);
 
-  static unsigned int
-  list_shape(const std::shared_ptr<List::list<unsigned int>> &l);
+  static unsigned int list_shape(const std::shared_ptr<List<unsigned int>> &l);
 
   struct outer;
   struct inner;
@@ -208,10 +203,10 @@ struct DeepPatterns {
 
   static unsigned int deep_sum(const std::shared_ptr<outer> &o);
 
-  static unsigned int complex_match(
-      const std::optional<
-          std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>
-          x);
+  static unsigned int
+  complex_match(const std::optional<
+                std::pair<unsigned int, std::shared_ptr<List<unsigned int>>>>
+                    x);
 
   static unsigned int
   guarded_match(const std::pair<unsigned int, unsigned int> p);
@@ -269,9 +264,9 @@ struct DeepPatterns {
       std::make_pair((((0 + 1) + 1) + 1), ((((0 + 1) + 1) + 1) + 1))));
 
   static inline const unsigned int test_shape_3 =
-      list_shape(List::list<unsigned int>::ctor::cons_(
+      list_shape(List<unsigned int>::ctor::cons_(
           ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-          List::list<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::cons_(
               ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                           1) +
                          1) +
@@ -285,7 +280,7 @@ struct DeepPatterns {
                  1) +
                 1) +
                1),
-              List::list<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::cons_(
                   ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
                                            1) +
                                           1) +
@@ -312,33 +307,32 @@ struct DeepPatterns {
                      1) +
                     1) +
                    1),
-                  List::list<unsigned int>::ctor::nil_()))));
+                  List<unsigned int>::ctor::nil_()))));
 
   static inline const unsigned int test_shape_long =
-      list_shape(List::list<unsigned int>::ctor::cons_(
-          (0 + 1),
-          List::list<unsigned int>::ctor::cons_(
-              ((0 + 1) + 1),
-              List::list<unsigned int>::ctor::cons_(
-                  (((0 + 1) + 1) + 1),
-                  List::list<unsigned int>::ctor::cons_(
-                      ((((0 + 1) + 1) + 1) + 1),
-                      List::list<unsigned int>::ctor::cons_(
-                          (((((0 + 1) + 1) + 1) + 1) + 1),
-                          List::list<unsigned int>::ctor::cons_(
-                              ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                              List::list<unsigned int>::ctor::nil_())))))));
+      list_shape(List<unsigned int>::ctor::cons_(
+          (0 + 1), List<unsigned int>::ctor::cons_(
+                       ((0 + 1) + 1),
+                       List<unsigned int>::ctor::cons_(
+                           (((0 + 1) + 1) + 1),
+                           List<unsigned int>::ctor::cons_(
+                               ((((0 + 1) + 1) + 1) + 1),
+                               List<unsigned int>::ctor::cons_(
+                                   (((((0 + 1) + 1) + 1) + 1) + 1),
+                                   List<unsigned int>::ctor::cons_(
+                                       ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
+                                       List<unsigned int>::ctor::nil_())))))));
 
  static inline const unsigned int test_deep_sum = deep_sum(outer::ctor::OLeft_(inner::ctor::ILeft_((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1))));
 
  static inline const unsigned int test_complex = complex_match(
      std::make_optional<
-         std::pair<unsigned int, std::shared_ptr<List::list<unsigned int>>>>(
+         std::pair<unsigned int, std::shared_ptr<List<unsigned int>>>>(
          std::make_pair(
              (((((0 + 1) + 1) + 1) + 1) + 1),
-             List::list<unsigned int>::ctor::cons_(
+             List<unsigned int>::ctor::cons_(
                  ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                 List::list<unsigned int>::ctor::cons_(
+                 List<unsigned int>::ctor::cons_(
                      ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                                   1) +
                                  1) +
@@ -353,7 +347,7 @@ struct DeepPatterns {
                         1) +
                        1) +
                       1),
-                     List::list<unsigned int>::ctor::cons_(
+                     List<unsigned int>::ctor::cons_(
                          ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) +
                                                    1) +
                                                   1) +
@@ -381,7 +375,7 @@ struct DeepPatterns {
                             1) +
                            1) +
                           1),
-                         List::list<unsigned int>::ctor::nil_()))))));
+                         List<unsigned int>::ctor::nil_()))))));
 
  static inline const unsigned int test_guarded = guarded_match(std::make_pair(
      (((0 + 1) + 1) + 1), (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1)));

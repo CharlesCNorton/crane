@@ -74,17 +74,17 @@ bool is_less_or_equal(const T1 x, const T1 y) {
   return _tcI0::le(x, y);
 }
 
-enum class ordering { LT, EQ, GT };
+enum class Ordering { LT, EQ, GT };
 
 template <typename _tcI0, typename _tcI1, typename T1>
-ordering compare(const T1 x, const T1 y) {
+Ordering compare(const T1 x, const T1 y) {
   if (_tcI0::lt(x, y)) {
-    return ordering::LT;
+    return Ordering::LT;
   } else {
     if (_tcI1::eqb(x, y)) {
-      return ordering::EQ;
+      return Ordering::EQ;
     } else {
-      return ordering::GT;
+      return Ordering::GT;
     }
   }
 }
@@ -127,10 +127,10 @@ const bool test_lt_true = is_less_than<NatOrd, NatEq, unsigned int>(10u, 20u);
 
 const bool test_lt_false = is_less_than<NatOrd, NatEq, unsigned int>(20u, 10u);
 
-const ordering test_compare_lt = compare<NatOrd, NatEq, unsigned int>(10u, 20u);
+const Ordering test_compare_lt = compare<NatOrd, NatEq, unsigned int>(10u, 20u);
 
-const ordering test_compare_eq = compare<NatOrd, NatEq, unsigned int>(15u, 15u);
+const Ordering test_compare_eq = compare<NatOrd, NatEq, unsigned int>(15u, 15u);
 
-const ordering test_compare_gt = compare<NatOrd, NatEq, unsigned int>(20u, 10u);
+const Ordering test_compare_gt = compare<NatOrd, NatEq, unsigned int>(20u, 10u);
 
 const std::string test_show = to_string<NatShow, unsigned int>(42u);

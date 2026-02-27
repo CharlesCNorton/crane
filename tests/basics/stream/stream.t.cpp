@@ -28,21 +28,21 @@ void aSsErT(bool condition, const char *message, int line)
 #define ASSERT(X)                                              \
     aSsErT(!(X), #X, __LINE__);
 
-int nat_to_int(const std::shared_ptr<Nat::nat>& n) {
+int nat_to_int(const std::shared_ptr<Nat>& n) {
   return std::visit(Overloaded{
-    [](const Nat::nat::O) -> int { return 0; },
-    [](const Nat::nat::S s) -> int { return 1 + nat_to_int(s._a0); }
+    [](const Nat::O) -> int { return 0; },
+    [](const Nat::S s) -> int { return 1 + nat_to_int(s._a0); }
   }, n->v());
 }
 
 template <typename A>
-std::vector<A> list_to_vec(const std::shared_ptr<List::list<A>>& l) {
+std::vector<A> list_to_vec(const std::shared_ptr<List<A>>& l) {
   std::vector<A> result;
   auto cur = l;
   while (true) {
     bool done = std::visit(Overloaded{
-      [&](const typename List::list<A>::nil) -> bool { return true; },
-      [&](const typename List::list<A>::cons c) -> bool {
+      [&](const typename List<A>::nil) -> bool { return true; },
+      [&](const typename List<A>::cons c) -> bool {
         result.push_back(c._a0);
         cur = c._a1;
         return false;
@@ -53,15 +53,15 @@ std::vector<A> list_to_vec(const std::shared_ptr<List::list<A>>& l) {
   return result;
 }
 
-std::shared_ptr<Nat::nat> int_to_nat(int x) {
-  if (x <= 0) return Nat::nat::ctor::O_();
-  return Nat::nat::ctor::S_(int_to_nat(x - 1));
+std::shared_ptr<Nat> int_to_nat(int x) {
+  if (x <= 0) return Nat::ctor::O_();
+  return Nat::ctor::S_(int_to_nat(x - 1));
 }
 
 int main() {
   // Test 1: first_five_nats should be [0, 1, 2, 3, 4]
   auto nats_list = Stream::first_five_nats;
-  auto vec = list_to_vec<std::shared_ptr<Nat::nat>>(nats_list);
+  auto vec = list_to_vec<std::shared_ptr<Nat>>(nats_list);
   ASSERT(vec.size() == 5);
   for (int i = 0; i < 5; i++) {
     ASSERT(nat_to_int(vec[i]) == i);
@@ -69,7 +69,7 @@ int main() {
 
   // Test 2: first_five_ones should be [1, 1, 1, 1, 1]
   auto ones_list = Stream::first_five_ones;
-  auto vec_ones = list_to_vec<std::shared_ptr<Nat::nat>>(ones_list);
+  auto vec_ones = list_to_vec<std::shared_ptr<Nat>>(ones_list);
   ASSERT(vec_ones.size() == 5);
   for (int i = 0; i < 5; i++) {
     ASSERT(nat_to_int(vec_ones[i]) == 1);
@@ -77,7 +77,7 @@ int main() {
 
   // Test 3: interleaved should be [0, 7, 1, 7, 2, 7, 3, 7]
   auto interleaved_list = Stream::interleaved;
-  auto vec_i = list_to_vec<std::shared_ptr<Nat::nat>>(interleaved_list);
+  auto vec_i = list_to_vec<std::shared_ptr<Nat>>(interleaved_list);
   ASSERT(vec_i.size() == 8);
   ASSERT(nat_to_int(vec_i[0]) == 0);
   ASSERT(nat_to_int(vec_i[1]) == 7);
@@ -91,7 +91,7 @@ int main() {
   // Test 4: nats_from creates infinite stream that doesn't diverge
   auto stream10 = Stream::nats_from(int_to_nat(10));
   auto ten_list = stream10->take(int_to_nat(3));
-  auto vec10 = list_to_vec<std::shared_ptr<Nat::nat>>(ten_list);
+  auto vec10 = list_to_vec<std::shared_ptr<Nat>>(ten_list);
   ASSERT(vec10.size() == 3);
   ASSERT(nat_to_int(vec10[0]) == 10);
   ASSERT(nat_to_int(vec10[1]) == 11);
@@ -100,7 +100,7 @@ int main() {
   // Test 5: repeat creates infinite constant stream
   auto fives = Stream::repeat(int_to_nat(5));
   auto five_list = fives->take(int_to_nat(4));
-  auto vec5 = list_to_vec<std::shared_ptr<Nat::nat>>(five_list);
+  auto vec5 = list_to_vec<std::shared_ptr<Nat>>(five_list);
   ASSERT(vec5.size() == 4);
   for (int i = 0; i < 4; i++) {
     ASSERT(nat_to_int(vec5[i]) == 5);
@@ -111,7 +111,7 @@ int main() {
   auto odds = Stream::nats_from(int_to_nat(100));
   auto mixed = evens->interleave(odds);
   auto mixed_list = mixed->take(int_to_nat(6));
-  auto vec_m = list_to_vec<std::shared_ptr<Nat::nat>>(mixed_list);
+  auto vec_m = list_to_vec<std::shared_ptr<Nat>>(mixed_list);
   ASSERT(vec_m.size() == 6);
   ASSERT(nat_to_int(vec_m[0]) == 0);
   ASSERT(nat_to_int(vec_m[1]) == 100);

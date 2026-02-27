@@ -51,20 +51,17 @@ unsigned int Nat::modulo(const unsigned int x, const unsigned int y) {
   }
 }
 
-std::shared_ptr<List::list<unsigned int>>
+std::shared_ptr<List<unsigned int>>
 AccRect::countdown_acc(const unsigned int n) {
   if (n <= 0) {
-    return List::list<unsigned int>::ctor::cons_(
-        0, List::list<unsigned int>::ctor::nil_());
+    return List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::nil_());
   } else {
     unsigned int m = n - 1;
-    return List::list<unsigned int>::ctor::cons_(n,
-                                                 countdown_acc(std::move(m)));
+    return List<unsigned int>::ctor::cons_(n, countdown_acc(std::move(m)));
   }
 }
 
-std::shared_ptr<List::list<unsigned int>>
-AccRect::countdown(const unsigned int _x0) {
+std::shared_ptr<List<unsigned int>> AccRect::countdown(const unsigned int _x0) {
   return countdown_acc(_x0);
 }
 

@@ -84,25 +84,25 @@ unsigned int CompProof::max_dec(const unsigned int n, const unsigned int m) {
   }
 }
 
-std::shared_ptr<List::list<unsigned int>>
+std::shared_ptr<List<unsigned int>>
 CompProof::insert_dec(const unsigned int x,
-                      const std::shared_ptr<List::list<unsigned int>> &l) {
+                      const std::shared_ptr<List<unsigned int>> &l) {
   return std::visit(
-      Overloaded{[&](const typename List::list<unsigned int>::nil _args)
-                     -> std::shared_ptr<List::list<unsigned int>> {
-                   return List::list<unsigned int>::ctor::cons_(
-                       std::move(x), List::list<unsigned int>::ctor::nil_());
+      Overloaded{[&](const typename List<unsigned int>::nil _args)
+                     -> std::shared_ptr<List<unsigned int>> {
+                   return List<unsigned int>::ctor::cons_(
+                       std::move(x), List<unsigned int>::ctor::nil_());
                  },
-                 [&](const typename List::list<unsigned int>::cons _args)
-                     -> std::shared_ptr<List::list<unsigned int>> {
+                 [&](const typename List<unsigned int>::cons _args)
+                     -> std::shared_ptr<List<unsigned int>> {
                    unsigned int y = _args._a0;
-                   std::shared_ptr<List::list<unsigned int>> rest = _args._a1;
+                   std::shared_ptr<List<unsigned int>> rest = _args._a1;
                    if (le_dec(x, y)) {
-                     return List::list<unsigned int>::ctor::cons_(
-                         std::move(x), List::list<unsigned int>::ctor::cons_(
+                     return List<unsigned int>::ctor::cons_(
+                         std::move(x), List<unsigned int>::ctor::cons_(
                                            std::move(y), std::move(rest)));
                    } else {
-                     return List::list<unsigned int>::ctor::cons_(
+                     return List<unsigned int>::ctor::cons_(
                          std::move(y),
                          insert_dec(std::move(x), std::move(rest)));
                    }
@@ -110,17 +110,17 @@ CompProof::insert_dec(const unsigned int x,
       l->v());
 }
 
-std::shared_ptr<List::list<unsigned int>>
-CompProof::isort_dec(const std::shared_ptr<List::list<unsigned int>> &l) {
+std::shared_ptr<List<unsigned int>>
+CompProof::isort_dec(const std::shared_ptr<List<unsigned int>> &l) {
   return std::visit(
-      Overloaded{[](const typename List::list<unsigned int>::nil _args)
-                     -> std::shared_ptr<List::list<unsigned int>> {
-                   return List::list<unsigned int>::ctor::nil_();
+      Overloaded{[](const typename List<unsigned int>::nil _args)
+                     -> std::shared_ptr<List<unsigned int>> {
+                   return List<unsigned int>::ctor::nil_();
                  },
-                 [](const typename List::list<unsigned int>::cons _args)
-                     -> std::shared_ptr<List::list<unsigned int>> {
+                 [](const typename List<unsigned int>::cons _args)
+                     -> std::shared_ptr<List<unsigned int>> {
                    unsigned int x = _args._a0;
-                   std::shared_ptr<List::list<unsigned int>> rest = _args._a1;
+                   std::shared_ptr<List<unsigned int>> rest = _args._a1;
                    return insert_dec(std::move(x), isort_dec(std::move(rest)));
                  }},
       l->v());

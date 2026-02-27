@@ -18,42 +18,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct List {
-  template <typename A> struct list {
-  public:
-    struct nil {};
-    struct cons {
-      A _a0;
-      std::shared_ptr<List::list<A>> _a1;
-    };
-    using variant_t = std::variant<nil, cons>;
-
-  private:
-    variant_t v_;
-    explicit list(nil _v) : v_(std::move(_v)) {}
-    explicit list(cons _v) : v_(std::move(_v)) {}
-
-  public:
-    struct ctor {
-      ctor() = delete;
-      static std::shared_ptr<List::list<A>> nil_() {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::shared_ptr<List::list<A>>
-      cons_(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::shared_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-      static std::unique_ptr<List::list<A>> nil_uptr() {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(nil{}));
-      }
-      static std::unique_ptr<List::list<A>>
-      cons_uptr(A a0, const std::shared_ptr<List::list<A>> &a1) {
-        return std::unique_ptr<List::list<A>>(new List::list<A>(cons{a0, a1}));
-      }
-    };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+template <typename A> struct List {
+public:
+  struct nil {};
+  struct cons {
+    A _a0;
+    std::shared_ptr<List<A>> _a1;
   };
+  using variant_t = std::variant<nil, cons>;
+
+private:
+  variant_t v_;
+  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(cons _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<List<A>> nil_() {
+      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::shared_ptr<List<A>> cons_(A a0,
+                                          const std::shared_ptr<List<A>> &a1) {
+      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+    static std::unique_ptr<List<A>> nil_uptr() {
+      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    }
+    static std::unique_ptr<List<A>>
+    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
+      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
 };
 
 template <typename I, typename A>
@@ -105,19 +103,18 @@ struct Typeclasses {
   }
 
   template <typename _tcI0, typename T1>
-  static std::shared_ptr<Numeric<std::shared_ptr<List::list<T1>>>> numList() {
-    return std::make_shared<Numeric<std::shared_ptr<List::list<T1>>>>(
-        Numeric<std::shared_ptr<List::list<T1>>>{[&](void) {
-          std::function<unsigned int(std::shared_ptr<List::list<_tcI0>>)> sum;
-          sum = [&](std::shared_ptr<List::list<_tcI0>> l) -> unsigned int {
+  static std::shared_ptr<Numeric<std::shared_ptr<List<T1>>>> numList() {
+    return std::make_shared<Numeric<std::shared_ptr<List<T1>>>>(
+        Numeric<std::shared_ptr<List<T1>>>{[&](void) {
+          std::function<unsigned int(std::shared_ptr<List<_tcI0>>)> sum;
+          sum = [&](std::shared_ptr<List<_tcI0>> l) -> unsigned int {
             return std::visit(
-                Overloaded{[](const typename List::list<_tcI0>::nil _args)
+                Overloaded{[](const typename List<_tcI0>::nil _args)
                                -> unsigned int { return 0; },
-                           [&](const typename List::list<_tcI0>::cons _args)
+                           [&](const typename List<_tcI0>::cons _args)
                                -> unsigned int {
                              _tcI0 x = _args._a0;
-                             std::shared_ptr<List::list<_tcI0>> rest =
-                                 _args._a1;
+                             std::shared_ptr<List<_tcI0>> rest = _args._a1;
                              return (_tcI0::to_nat(x) + sum(std::move(rest)));
                            }},
                 l->v());
@@ -127,7 +124,7 @@ struct Typeclasses {
   }
 
   template <typename _tcI0, typename T1>
-  static unsigned int numeric_sum(const std::shared_ptr<List::list<T1>> &l) {
+  static unsigned int numeric_sum(const std::shared_ptr<List<T1>> &l) {
     return numList<_tcI0, _tcI0>()::to_nat(l);
   }
 
@@ -243,20 +240,19 @@ struct Typeclasses {
       numOption<numNat, unsigned int>()::to_nat(std::nullopt);
 
   static inline const unsigned int test_list =
-      numList<numNat, unsigned int>()::to_nat(
-          List::list<unsigned int>::ctor::cons_(
-              (0 + 1), List::list<unsigned int>::ctor::cons_(
-                           ((0 + 1) + 1),
-                           List::list<unsigned int>::ctor::cons_(
-                               (((0 + 1) + 1) + 1),
-                               List::list<unsigned int>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List::list<unsigned int>::ctor::nil_())))));
+      numList<numNat, unsigned int>()::to_nat(List<unsigned int>::ctor::cons_(
+          (0 + 1),
+          List<unsigned int>::ctor::cons_(
+              ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
+                                 (((0 + 1) + 1) + 1),
+                                 List<unsigned int>::ctor::cons_(
+                                     ((((0 + 1) + 1) + 1) + 1),
+                                     List<unsigned int>::ctor::nil_())))));
 
   static inline const unsigned int test_sum = numeric_sum<
-      numNat, unsigned int>(List::list<unsigned int>::ctor::cons_(
+      numNat, unsigned int>(List<unsigned int>::ctor::cons_(
       ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-      List::list<unsigned int>::ctor::cons_(
+      List<unsigned int>::ctor::cons_(
           ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
                      1) +
                     1) +
@@ -269,7 +265,7 @@ struct Typeclasses {
              1) +
             1) +
            1),
-          List::list<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::cons_(
               ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
                                       1) +
                                      1) +
@@ -295,7 +291,7 @@ struct Typeclasses {
                  1) +
                 1) +
                1),
-              List::list<unsigned int>::ctor::nil_()))));
+              List<unsigned int>::ctor::nil_()))));
 
   static inline const unsigned int test_double =
       numeric_double<numNat, unsigned int>(
