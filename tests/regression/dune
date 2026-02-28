@@ -485,3 +485,14 @@
   (alias runtest)
   (deps mutual_indexed.t.exe)
   (action (run ./mutual_indexed.t.exe))))
+
+(subdir cps
+ (rule
+  (targets cps.t.exe)
+  (deps CPS.vo cps.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} cps.t.exe cps.cpp cps.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps cps.t.exe)
+  (action (run ./cps.t.exe))))

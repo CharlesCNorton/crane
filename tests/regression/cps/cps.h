@@ -68,8 +68,9 @@ struct Nat {
 };
 
 struct CPS {
-  template <MapsTo<unsigned int, unsigned int> F1>
-  static unsigned int fact_cps(const unsigned int n, F1 &&k) {
+  static unsigned int
+  fact_cps(const unsigned int n,
+           const std::function<unsigned int(unsigned int)> k) {
     if (n <= 0) {
       return k((0 + 1));
     } else {
@@ -80,8 +81,9 @@ struct CPS {
 
   static unsigned int factorial(const unsigned int n);
 
-  template <MapsTo<unsigned int, unsigned int> F1>
-  static unsigned int fib_cps(const unsigned int n, F1 &&k) {
+  static unsigned int
+  fib_cps(const unsigned int n,
+          const std::function<unsigned int(unsigned int)> k) {
     if (n <= 0) {
       return k(0);
     } else {
@@ -169,8 +171,9 @@ struct CPS {
                       t->v());
   }
 
-  template <MapsTo<unsigned int, unsigned int> F1>
-  static unsigned int tree_sum_cps(const std::shared_ptr<tree> &t, F1 &&k) {
+  static unsigned int
+  tree_sum_cps(const std::shared_ptr<tree> &t,
+               const std::function<unsigned int(unsigned int)> k) {
     return std::visit(
         Overloaded{[&](const typename tree::Leaf _args) -> unsigned int {
                      unsigned int n = _args._a0;
@@ -189,9 +192,9 @@ struct CPS {
 
   static unsigned int tree_sum(const std::shared_ptr<tree> &t);
 
-  template <MapsTo<unsigned int, unsigned int> F1>
-  static unsigned int sum_cps(const std::shared_ptr<List<unsigned int>> &l,
-                              F1 &&k) {
+  static unsigned int
+  sum_cps(const std::shared_ptr<List<unsigned int>> &l,
+          const std::function<unsigned int(unsigned int)> k) {
     return std::visit(
         Overloaded{
             [&](const typename List<unsigned int>::nil _args) -> unsigned int {
@@ -208,12 +211,12 @@ struct CPS {
 
   static unsigned int list_sum(const std::shared_ptr<List<unsigned int>> &l);
 
-  template <MapsTo<bool, unsigned int> F0,
-            MapsTo<unsigned int, std::shared_ptr<List<unsigned int>>,
-                   std::shared_ptr<List<unsigned int>>>
-                F2>
-  static unsigned int
-  partition_cps(F0 &&p, const std::shared_ptr<List<unsigned int>> &l, F2 &&k) {
+  template <MapsTo<bool, unsigned int> F0>
+  static unsigned int partition_cps(
+      F0 &&p, const std::shared_ptr<List<unsigned int>> &l,
+      const std::function<unsigned int(std::shared_ptr<List<unsigned int>>,
+                                       std::shared_ptr<List<unsigned int>>)>
+          k) {
     return std::visit(
         Overloaded{
             [&](const typename List<unsigned int>::nil _args) -> unsigned int {

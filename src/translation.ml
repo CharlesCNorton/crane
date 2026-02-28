@@ -2075,6 +2075,91 @@ and tvar_subst_stmt (tvars : Id.t list) (s : cpp_stmt) : cpp_stmt =
   | Sassign_field (obj, field, e) ->
       Sassign_field (subst_e obj, field, subst_e e)
 
+(** Detect function-typed parameter positions that receive a freshly
+    constructed lambda in a self-recursive call.
+
+    Higher-order function parameters are normally emitted as C++ template
+    parameters constrained with a [MapsTo] concept:
+
+      template <MapsTo<T1, unsigned int> F0,
+                MapsTo<T1, shared_ptr<tree>, T1, shared_ptr<tree>, T1> F1>
+      static T1 tree_rect(F0 &&f, F1 &&f0, const shared_ptr<tree> &t);
+
+    This is preferred because template parameters preserve the exact lambda
+    type, enabling the compiler to inline the call — there is no
+    type-erasure overhead as there would be with [std::function].
+
+    However, this breaks when a self-recursive function passes a *new*
+    lambda at a function-typed parameter position in its own recursive
+    call.  This is the continuation-passing style (CPS) pattern:
+
+      template <MapsTo<unsigned int, unsigned int> F1>
+      static unsigned int fact_cps(unsigned int n, F1 &&k) {
+        ...
+        return fact_cps(n_, [&](unsigned int r) { return k(n_ * r); });
+      }
+
+    Each recursive call wraps [k] inside a fresh lambda with a unique
+    type.  Because [F1] is a template parameter, the compiler must
+    instantiate a new specialization of [fact_cps] for every nesting
+    depth.  That creates an infinite chain of template instantiations
+    and the compiler rejects the program.
+
+    The fix is to emit those specific parameters as [std::function]
+    instead.  [std::function] is a concrete type — the continuation's
+    type is always [std::function<unsigned int(unsigned int)>] regardless
+    of how many lambdas are wrapped around it, so the recursive call
+    resolves to the same function and no new instantiation is needed:
+
+      static unsigned int fact_cps(
+          unsigned int n,
+          const std::function<unsigned int(unsigned int)> k) {
+        ...
+        return fact_cps(n_, [&](unsigned int r) { return k(n_ * r); });
+      }
+
+    Only parameters that actually exhibit this pattern are affected.
+    For example, in [partition_cps p l k], the predicate [p] is passed
+    unchanged to the recursive call ([partition_cps p rest (fun ...)]),
+    so [p] stays as a template parameter while [k] becomes
+    [std::function].  Similarly, non-recursive higher-order functions
+    like [tree_rect] never trigger this issue and keep full template
+    parameters throughout.
+
+    The detection works by walking the function body's ML AST, looking
+    for self-recursive calls [MLapp(MLglob(self_ref, _), args)].  For
+    each such call, we check which argument positions contain a lambda
+    ([MLlam]).  Those positions are the CPS parameters that must use
+    [std::function]. *)
+let detect_cps_params (self_ref : GlobRef.t) (n_params : int) (body : ml_ast) : int list =
+  let cps_set = Hashtbl.create 4 in
+  let rec walk = function
+    | MLapp (MLglob (r, _), args) when Environ.QGlobRef.equal Environ.empty_env r self_ref ->
+      List.iteri (fun i arg ->
+        if i < n_params && contains_lambda arg then
+          Hashtbl.replace cps_set i true) args
+    | MLapp (f, args) -> walk f; List.iter walk args
+    | MLlam (_, _, body) -> walk body
+    | MLletin (_, _, e1, e2) -> walk e1; walk e2
+    | MLcase (_, scrut, branches) ->
+      walk scrut;
+      Array.iter (fun (_, _, _, body) -> walk body) branches
+    | MLcons (_, _, args) -> List.iter walk args
+    | MLtuple args -> List.iter walk args
+    | MLfix (_, _, bodies, _) -> Array.iter walk bodies
+    | MLmagic e -> walk e
+    | MLparray (elts, def) -> Array.iter walk elts; walk def
+    | MLrel _ | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
+    | MLuint _ | MLfloat _ | MLstring _ -> ()
+  and contains_lambda = function
+    | MLlam _ -> true
+    | MLletin (_, _, _, body) -> contains_lambda body
+    | MLmagic e -> contains_lambda e
+    | _ -> false
+  in
+  walk body;
+  Hashtbl.fold (fun k _ acc -> k :: acc) cps_set []
+
 (* TODO: CLEANUP: dom and cod are redundant with ty *)
 let gen_dfun n b dom cod ty temps =
   let ids,b = collect_lams b in
@@ -2130,6 +2215,25 @@ let gen_dfun n b dom cod ty temps =
       (id, body_ty) :: unify_param_types rest_params rest_sig
     | _ -> body_params in
   let ids = unify_param_types ids sig_types_for_ids in
+  (* Detect which function-typed parameters are CPS parameters (see
+     [detect_cps_params] above for the full explanation).  These are
+     excluded from template-parameter promotion below — they keep their
+     [Tmod(TMconst, Tfun(dom, cod))] type which prints as
+     [const std::function<R(Args...)>].
+
+     [detect_cps_params] returns source-order indices (param 0 = first
+     Rocq parameter).  We need two index-checking helpers because the
+     parameter list [ids] is in de Bruijn order (innermost first = last
+     source param first), while [List.rev ids] is in source order:
+
+       Source order (Rocq):      p0  p1  p2       indices 0, 1, 2
+       De Bruijn order (ids):    p2  p1  p0       indices 0, 1, 2
+
+     So CPS source index [i] maps to de Bruijn index [n_ids - 1 - i]. *)
+  let cps_param_indices = detect_cps_params n (List.length ids) b in
+  let is_cps_param_source i = List.mem i cps_param_indices in
+  let n_ids = List.length ids in
+  let is_cps_param_db i = List.mem (n_ids - 1 - i) cps_param_indices in
   let all_params = missing @ ids in
   (* Type class instance parameters become C++ template type parameters.
      We assign unique names (_tcI0, _tcI1, ...) to avoid collision with:
@@ -2198,13 +2302,52 @@ let gen_dfun n b dom cod ty temps =
       | _ -> Tmod (TMconst, cpp_ty)  (* const T *)
     in
     (x, wrapped)) ids_with_owned in
+  (* Promote non-CPS function-typed parameters to C++ template parameters.
+
+     Function-typed parameters (those with C++ type [Tmod(TMconst, Tfun(...))])
+     are normally promoted to template parameters with [MapsTo] concept
+     constraints.  This replaces [const std::function<R(Args...)>] with a
+     template type variable [F&&], giving the compiler the exact lambda
+     type so it can inline the call body — no type-erasure overhead.
+
+     For example, [tree_rect]'s two function parameters become:
+
+       template <MapsTo<T1, unsigned int> F0,
+                 MapsTo<T1, shared_ptr<tree>, T1, shared_ptr<tree>, T1> F1>
+       static T1 tree_rect(F0 &&f, F1 &&f0, ...);
+
+     This works for [tree_rect] because its recursive calls pass [f] and
+     [f0] unchanged — the template type stays the same at every recursion
+     depth.
+
+     CPS parameters are excluded from this promotion.  A CPS parameter
+     receives a *new* lambda at each recursive call site, which means the
+     template type would be different at each recursion depth, causing
+     infinite template instantiation.  These parameters keep their
+     [const std::function<R(Args...)>] type, which is a concrete
+     (non-template) type that stays the same regardless of lambda wrapping.
+
+     For example, [partition_cps p l k] has three parameters:
+     - [p] is passed unchanged to the recursive call → template [F0 &&p]
+     - [l] is not function-typed → stays as-is
+     - [k] receives a new lambda at the recursive call → [const std::function<...> k]
+
+     This loop iterates [List.rev ids] which is in source order,
+     so we use [is_cps_param_source] for the CPS guard. *)
   let fun_tys = List.filter_map (fun (x, ty, i) ->
       match ty with
-      |  (Tmod (TMconst, Tfun (dom, cod))) -> Some (x, TTfun (dom, cod), Id.of_string ("F" ^ (string_of_int i)))
+      |  (Tmod (TMconst, Tfun (dom, cod))) when not (is_cps_param_source i) ->
+        Some (x, TTfun (dom, cod), Id.of_string ("F" ^ (string_of_int i)))
       | _ -> None) (List.mapi (fun i (x, ty) -> (x, ty, i)) (List.rev ids)) in
+  (* Replace the parameter type of promoted (non-CPS) function params with
+     the template type variable [F&&].  CPS params are left untouched — they
+     keep [Tmod(TMconst, Tfun(dom, cod))] which prints as
+     [const std::function<R(Args...)>].
+     This loop iterates [ids] which is in de Bruijn order,
+     so we use [is_cps_param_db] for the CPS guard. *)
   let ids = List.mapi (fun i (x, ty) ->
       match ty with
-      |  (Tmod (TMconst, Tfun (dom, cod))) ->
+      |  (Tmod (TMconst, Tfun (dom, cod))) when not (is_cps_param_db i) ->
         (x, Tref (Tref (Tvar (0, Some (Id.of_string ("F" ^ (string_of_int ((List.length ids) - i - 1))))))))
       | _ -> (x, ty)) ids in
   (* TODO: below is needed for lambdas in recursive positions, but is badddddd. *)
