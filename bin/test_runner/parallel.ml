@@ -57,14 +57,23 @@ let build_batch targets =
   end
 
 let build_all_tests _config tests =
-  (* Build each test executable individually so that a compilation failure
-     in one test cannot prevent other tests from being built. Each call to
-     dune is a separate process; dune's file-level caching keeps this fast
-     since shared dependencies (plugin, theories) are only built once. *)
-  List.iter (fun t ->
-    let target = Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name in
-    ignore (build_batch [target])
-  ) tests
+  (* Group tests by category. Non-wip categories are expected to compile
+     cleanly, so we batch them into a single dune invocation for parallel
+     C++ compilation. Wip tests often have compile errors, so we build
+     those individually to prevent one failure from blocking others. *)
+  let wip, non_wip = List.partition (fun t -> t.category = "wip") tests in
+  let target_of t =
+    Printf.sprintf "tests/%s/%s/%s.t.exe" t.category t.name t.name
+  in
+  (* Batch-build all non-wip tests in one dune call *)
+  if non_wip <> [] then begin
+    let targets = List.map target_of non_wip in
+    if not (build_batch targets) then
+      (* Unexpected failure — fall back to individual builds *)
+      List.iter (fun t -> ignore (build_batch [target_of t])) non_wip
+  end;
+  (* Build wip tests individually *)
+  List.iter (fun t -> ignore (build_batch [target_of t])) wip
 
 let run_test config test =
   let test_dir = Printf.sprintf "%s/_build/default/tests/%s/%s" config.project_root test.category test.name in

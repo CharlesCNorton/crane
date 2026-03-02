@@ -9,21 +9,19 @@ all: extract
 
 # Extract: build plugin/theories and generate all test C++ files (without compiling them)
 # Continues even if some extractions fail (pre-existing plugin bugs)
-# Builds one category at a time to avoid exceeding dune's argument limit
+# Builds all .vo files in a single dune invocation for maximum parallelism
 extract: build
 	@echo "Extracting all tests..."
-	@for category in basics monadic regression wip; do \
-		vo_targets=""; \
-		for vfile in tests/$$category/*/*.v; do \
-			if [ -f "$$vfile" ]; then \
-				vo_target=$$(echo "$$vfile" | sed 's/\.v$$/.vo/'); \
-				vo_targets="$$vo_targets $$vo_target"; \
-			fi; \
-		done; \
-		if [ -n "$$vo_targets" ]; then \
-			dune build $$vo_targets 2>/dev/null || true; \
+	@vo_targets=""; \
+	for vfile in tests/*/*/*.v; do \
+		if [ -f "$$vfile" ]; then \
+			vo_target=$$(echo "$$vfile" | sed 's/\.v$$/.vo/'); \
+			vo_targets="$$vo_targets $$vo_target"; \
 		fi; \
-	done
+	done; \
+	if [ -n "$$vo_targets" ]; then \
+		dune build $$vo_targets 2>/dev/null || true; \
+	fi
 
 # Build just the plugin
 plugin:
@@ -42,11 +40,13 @@ install:
 # extract first to ensure generated .cpp/.h files exist before compiling tests
 test: extract
 	@./scripts/check-dune-rules.sh
-	@dune exec bin/test_runner/main.exe
+	@dune build bin/test_runner/main.exe
+	@./_build/default/bin/test_runner/main.exe
 
 # Build and run tests with verbose error output (parallel)
 test-verbose: extract
-	@dune exec bin/test_runner/main.exe -- --verbose
+	@dune build bin/test_runner/main.exe
+	@./_build/default/bin/test_runner/main.exe --verbose
 
 # Run tests sequentially (old bash script)
 test-sequential:
