@@ -2,39 +2,77 @@ Crane comes with a base library of mappings, and types for monadic effects. The 
 
 ---
 
+## Core
+
+### `Extraction.v`
+
+Declares the Crane ML module that provides the extraction plugin.
+
+---
+
 ## Mappings
 
 ### `Mapping/Shared.v`
 
 Defines common extraction mappings for boolean and basic types shared across library variants.
 
+- **`bool`** — Extracted to C++ `bool` with `true`/`false` constructors
+- **`sumbool`** — Extracted to C++ `bool`
+- **`negb`, `andb`, `orb`** — Boolean operations (`!`, `&&`, `||`)
+- **`void`** — Unit type for effects (with constructor `ghost`)
+- **`PrimArray.array`** — Persistent copy-on-write arrays (`persistent_array<T>`)
+- **`PrimArray.make`, `get`, `set`, `length`, `copy`** — Array operations
+
 ### `Mapping/Std.v`
 
 Provides extraction mappings from Rocq types to C++ standard library types.
+
+Imports and re-exports `Mapping/Shared.v`.
+
+**Type mappings:**
+- **`option`** → `std::optional<T>`
+- **`prod`** → `std::pair<T, U>`
+- **`fst`, `snd`** → `.first`, `.second`
+- **`PrimString.char63`** → `char`
+- **`PrimString.string`** → `std::string`
+- **`PrimInt63.int`** → `int64_t` (with 63-bit masking for arithmetic operations)
+- **`PrimFloat.float`** → `double`
 
 ### `Mapping/BDE.v`
 
 Provides extraction mappings from Rocq types to Bloomberg's BDE library types.
 
+Imports and re-exports `Mapping/Shared.v`.
+
+**Type mappings:**
+- **`option`** → `bsl::optional<T>`
+- **`prod`** → `bsl::pair<T, U>`
+- **`fst`, `snd`** → `.first`, `.second`
+- **`PrimString.char63`** → `char`
+- **`PrimString.string`** → `std::string` (via `bsl_string.h`)
+- **`PrimInt63.int`** → `int64_t` (via `bsl_cstdint.h`, no masking)
+- **`PrimFloat.float`** → `double`
+
 ### `Mapping/NatIntStd.v`
 
-Maps Rocq's `nat` type to `unsigned int`.
+Maps Rocq's `nat` type to `unsigned int` with std library operations.
+
+Imports and re-exports `Mapping/Std.v`.
 
 **Warning**: This mapping is unsafe for serious use. `nat` is infinite while `unsigned int` is bounded; use for testing and prototyping only.
+
+**Additional functions:**
+- **`nat_of_int : int -> nat`** — Convert int63 to nat (with axioms)
+- **`string_of_nat : nat -> string`** — Convert nat to string
+- Defines literal constants `zero` through `one_hundred_fifty` as nat values
 
 ### `Mapping/NatIntBDE.v`
 
 Maps Rocq's `nat` type to `unsigned int` with BDE library operations.
 
-### `Mapping/ArrayStd.v`
+Imports and re-exports `Mapping/BDE.v`.
 
-Defines a dependent array type with extraction mappings for fixed-size arrays.
-
-- **`array (A : Type) (x : int) : Type`** — Array of A with length x (defined using dependent vectors)
-- **`length {A : Type} {x : int} (v : array A x) : int`** — Returns the array length
-- **`make {A : Type} (x : int) (a : A) : array A x`** — Creates array of length x filled with value a
-- **`get_nth {A : Type} {x : int} (v : array A x) (n : int) : option A`** — Returns element at index n, or None if out of bounds
-- **`set_nth {A : Type} {x : int} (v : array A x) (n : int) (s : A) : array A x`** — Returns array with element at index n replaced
+Same structure and warnings as `NatIntStd.v`, but uses BDE library functions (`bsl::max`, `bsl::min`, etc.).
 
 ---
 
@@ -88,7 +126,12 @@ Defines the Software Transactional Memory monad for concurrent, atomic operation
 
 ### `Monads/STMBDE.v`
 
-BDE variant of the STM monad with identical structure.
+BDE variant of the STM monad with similar structure to `STM.v`, using BDE library types.
+
+**Differences from STM.v:**
+- Uses `bsl::shared_ptr` instead of `std::shared_ptr` for TVar
+- TVar operations (`readTVar`, `writeTVar`) extracted as standalone functions instead of member functions
+- `orElse` extraction is commented out
 
 ### `Monads/Thread.v`
 
@@ -145,21 +188,31 @@ BDE variant of the vector type with identical structure.
 
 ### `External/StringViewStd.v`
 
-Defines a string view type for non-owning string references.
+Defines a string view type for non-owning string references with axiomatic properties.
 
-- **`string_view : Type`** — Non-owning string view
+**Basic operations:**
+- **`string_view : Type`** — Non-owning string view (extracts to `std::basic_string_view<char>`)
 - **`empty (sv : string_view) : bool`** — Check if view is empty
 - **`empty_sv : string_view`** — The empty string view
 - **`sv_eq (sv1 sv2 : string_view) : bool`** — Equality check
 - **`length (sv : string_view) : int`** — View length
-- **`substr (sv : string_view) (i j : int) : string_view`** — Substring view
-- **`sv_get (sv : string_view) (i : int) : char63`** — Character access
-- **`sv_at (sv : string_view) (i : int) : char63`** — Bounds-checked character access
+- **`substr (sv : string_view) (i j : int) : string_view`** — Substring view from position i with length j
+- **`sv_get (sv : string_view) (i : int) : char63`** — Character access (unchecked)
+- **`sv_at (sv : string_view) (i : int) : char63`** — Character access (bounds-checked)
 - **`sv_of_string (s : string) : string_view`** — Convert string to view
 - **`contains (sv : string_view) (c : char63) : bool`** — Check if view contains character
+
+**Axiomatic properties:**
 - **`sv_eq_rel : relation string_view`** — Equivalence relation on string views
 - **`sv_eq_rel_equiv : equivalence string_view sv_eq_rel`** — String view equality is an equivalence relation
 - **`empty_substr (sv : string_view) (i : int) : empty (substr sv i 0) = true`** — Zero-length substring is always empty
 - **`empty_length (sv : string_view) : empty sv = true ↔ length sv = 0`** — View is empty iff its length is zero
-- **`length_of_string (s : string) : length (sv_of_string s) = length s`** — String view length equals string length
-- **`substr_of_string_comm (s : string) (i j : int) : substr (sv_of_string s) i (j - i) = sv_of_string (substr s i j)`** — Substring operations commute with string conversion
+- **`length_of_string (s : string) : length (sv_of_string s) = PrimString.length s`** — String view length equals string length
+- **`substr_of_string_comm (s : string) (i j : int) : compare i j <> Gt → compare j (PrimString.length s) <> Gt → substr (sv_of_string s) i (sub j i) = sv_of_string (PrimString.sub s i j)`** — Substring operations commute with string conversion
+- **`contains_iff_exists_get (sv : string_view) (c : char63) : contains sv c = true ↔ ∃ i, leb 0 i = true ∧ ltb i (length sv) = true ∧ sv_get sv i = c`** — A string_view contains a character iff that character appears at some valid position
+- **`sv_get_substr (sv : string_view) (start len i : int) : leb 0 i = true → ltb i len = true → ltb (add start i) (length sv) = true → sv_get (substr sv start len) i = sv_get sv (add start i)`** — Characters in a prefix substr are exactly those in the corresponding positions of the original
+- **`length_substr (sv : string_view) (start len : int) : leb 0 start = true → leb 0 len = true → length (substr sv start len) = if ltb (add start len) (length sv) then len else if leb start (length sv) then sub (length sv) start else 0`** — Length of a substr is bounded by the requested length
+- **`length_substr_prefix (sv : string_view) (len : int) : leb 0 len = true → leb len (length sv) = true → length (substr sv 0 len) = len`** — Simpler axiom for prefix case: length of substr from 0
+- **`contains_substr_prefix_false (sv : string_view) (n : int) (c : char63) : leb 0 n = true → leb n (length sv) = true → (∀ i, leb 0 i = true → ltb i n = true → sv_get sv i <> c) → contains (substr sv 0 n) c = false`** — If no position in [0, n) contains a character c, then contains returns false
+- **`contains_substr_prefix_true (sv : string_view) (n c i : int) : leb 0 n = true → leb n (length sv) = true → leb 0 i = true → ltb i n = true → sv_get sv i = c → contains (substr sv 0 n) c = true`** — Conversely, if some position contains c, then contains returns true
+- **`length_nonneg (sv : string_view) : leb 0 (length sv) = true`** — Length is always non-negative
