@@ -10,6 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int KeywordDoubleGlobal::double(const unsigned int n) {
+unsigned int KeywordDoubleGlobal::double_(const unsigned int n) {
   return (n + n);
 }

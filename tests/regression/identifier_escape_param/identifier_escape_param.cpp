@@ -10,11 +10,11 @@
 #include <string>
 #include <variant>
 
-unsigned int IdentifierEscapeParam::id_from_param(const unsigned int double) {
-  return std::move(double);
+unsigned int IdentifierEscapeParam::id_from_param(const unsigned int double0) {
+  return std::move(double0);
 }
 
 unsigned int
-IdentifierEscapeParam::add_one_from_param(const unsigned int double) {
-  return (id_from_param(std::move(double)) + 1);
+IdentifierEscapeParam::add_one_from_param(const unsigned int double0) {
+  return (id_from_param(std::move(double0)) + 1);
 }

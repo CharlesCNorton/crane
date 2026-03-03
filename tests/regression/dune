@@ -745,7 +745,7 @@
   (targets bool_dec_bde.t.exe)
   (deps BoolDecBde.vo bool_dec_bde.t.cpp (source_tree .))
   (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} bool_dec_bde.t.exe bool_dec_bde.cpp bool_dec_bde.t.cpp)))
+   (run %{project_root}/scripts/compile-bde.sh %{project_root} bool_dec_bde.t.exe bool_dec_bde.cpp bool_dec_bde.t.cpp)))
  (rule
   (alias runtest)
   (deps bool_dec_bde.t.exe)
@@ -761,3 +761,36 @@
   (alias runtest)
   (deps move_capture_reuse.t.exe)
   (action (run ./move_capture_reuse.t.exe))))
+
+(subdir typeclasses
+ (rule
+  (targets typeclasses.t.exe)
+  (deps Typeclasses.vo typeclasses.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} typeclasses.t.exe typeclasses.cpp typeclasses.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps typeclasses.t.exe)
+  (action (run ./typeclasses.t.exe))))
+
+(subdir identifier_escape_param
+ (rule
+  (targets identifier_escape_param.t.exe)
+  (deps IdentifierEscapeParam.vo identifier_escape_param.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} identifier_escape_param.t.exe identifier_escape_param.cpp identifier_escape_param.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps identifier_escape_param.t.exe)
+  (action (run ./identifier_escape_param.t.exe))))
+
+(subdir keyword_double_global
+ (rule
+  (targets keyword_double_global.t.exe)
+  (deps KeywordDoubleGlobal.vo keyword_double_global.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} keyword_double_global.t.exe keyword_double_global.cpp keyword_double_global.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps keyword_double_global.t.exe)
+  (action (run ./keyword_double_global.t.exe))))

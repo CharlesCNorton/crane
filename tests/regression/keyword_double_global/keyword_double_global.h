@@ -17,11 +17,8 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct IdentifierEscapeParam {
-  static unsigned int id_from_param(const unsigned int double);
+struct KeywordDoubleGlobal {
+  static unsigned int double_(const unsigned int n);
 
-  static unsigned int add_one_from_param(const unsigned int double);
-
-  static inline const unsigned int t =
-      add_one_from_param(((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const unsigned int t = double_((((0 + 1) + 1) + 1));
 };
