@@ -816,3 +816,58 @@
   (alias runtest)
   (deps functor_comp.t.exe)
   (action (run ./functor_comp.t.exe))))
+
+(subdir wrapper_collision_pos_pair
+ (rule
+  (targets wrapper_collision_pos_pair.t.exe)
+  (deps WrapperCollisionPosPair.vo wrapper_collision_pos_pair.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} wrapper_collision_pos_pair.t.exe wrapper_collision_pos_pair.cpp wrapper_collision_pos_pair.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps wrapper_collision_pos_pair.t.exe)
+  (action (run ./wrapper_collision_pos_pair.t.exe))))
+
+(subdir func_only_submodule_ab
+ (rule
+  (targets func_only_submodule_ab.t.exe)
+  (deps FuncOnlySubmoduleAb.vo func_only_submodule_ab.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} func_only_submodule_ab.t.exe func_only_submodule_ab.cpp func_only_submodule_ab.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps func_only_submodule_ab.t.exe)
+  (action (run ./func_only_submodule_ab.t.exe))))
+
+(subdir keyword_param_virtual
+ (rule
+  (targets keyword_param_virtual.t.exe)
+  (deps KeywordParamVirtual.vo keyword_param_virtual.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} keyword_param_virtual.t.exe keyword_param_virtual.cpp keyword_param_virtual.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps keyword_param_virtual.t.exe)
+  (action (run ./keyword_param_virtual.t.exe))))
+
+(subdir keyword_global_class
+ (rule
+  (targets keyword_global_class.t.exe)
+  (deps KeywordGlobalClass.vo keyword_global_class.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} keyword_global_class.t.exe keyword_global_class.cpp keyword_global_class.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps keyword_global_class.t.exe)
+  (action (run ./keyword_global_class.t.exe))))
+
+(subdir enum_switch_color_flip
+ (rule
+  (targets enum_switch_color_flip.t.exe)
+  (deps EnumSwitchColorFlip.vo enum_switch_color_flip.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} enum_switch_color_flip.t.exe enum_switch_color_flip.cpp enum_switch_color_flip.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps enum_switch_color_flip.t.exe)
+  (action (run ./enum_switch_color_flip.t.exe))))
