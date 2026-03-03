@@ -10,7 +10,8 @@
 #include <string>
 #include <variant>
 
-color EnumSwitchQualified::Outer::flip(const color c) {
+EnumSwitchQualified::Outer::color
+EnumSwitchQualified::Outer::flip(const EnumSwitchQualified::Outer::color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {
@@ -23,7 +24,8 @@ color EnumSwitchQualified::Outer::flip(const color c) {
   }();
 }
 
-unsigned int EnumSwitchQualified::Outer::code(const color c) {
+unsigned int
+EnumSwitchQualified::Outer::code(const EnumSwitchQualified::Outer::color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {

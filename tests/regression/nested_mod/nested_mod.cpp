@@ -11,28 +11,32 @@
 #include <utility>
 #include <variant>
 
-unsigned int NestedMod::Outer::Inner::area(const std::shared_ptr<shape> &s) {
+unsigned int NestedMod::Outer::Inner::area(
+    const std::shared_ptr<NestedMod::Outer::Inner::shape> &s) {
   return std::visit(
-      Overloaded{[](const typename shape::Circle _args) -> unsigned int {
-                   unsigned int r = _args._a0;
-                   return ((r * r) * (((0 + 1) + 1) + 1));
-                 },
-                 [](const typename shape::Square _args) -> unsigned int {
-                   unsigned int side = _args._a0;
-                   return (side * side);
-                 },
-                 [](const typename shape::Triangle _args) -> unsigned int {
-                   unsigned int a = _args._a0;
-                   unsigned int b = _args._a1;
-                   return Nat::div((std::move(a) * std::move(b)),
-                                   ((0 + 1) + 1));
-                 }},
+      Overloaded{
+          [](const typename NestedMod::Outer::Inner::shape::Circle _args)
+              -> unsigned int {
+            unsigned int r = _args._a0;
+            return ((r * r) * (((0 + 1) + 1) + 1));
+          },
+          [](const typename NestedMod::Outer::Inner::shape::Square _args)
+              -> unsigned int {
+            unsigned int side = _args._a0;
+            return (side * side);
+          },
+          [](const typename NestedMod::Outer::Inner::shape::Triangle _args)
+              -> unsigned int {
+            unsigned int a = _args._a0;
+            unsigned int b = _args._a1;
+            return Nat::div((std::move(a) * std::move(b)), ((0 + 1) + 1));
+          }},
       s->v());
 }
 
 unsigned int
 NestedMod::Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
-                                   const color c) {
+                                   const NestedMod::Outer::color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {
@@ -48,7 +52,7 @@ NestedMod::Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
   }();
 }
 
-unsigned int NestedMod::Outer::color_code(const color c) {
+unsigned int NestedMod::Outer::color_code(const NestedMod::Outer::color c) {
   return [&](void) {
     switch (c) {
     case color::Red: {

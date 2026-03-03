@@ -710,8 +710,10 @@ let struct_qualifier_for r name_str =
   | Some struct_name when not (is_qualified_name name_str) ->
       let full_path = Pp.string_of_ppcmds (GlobRef.print r) in
       let struct_name_str = Pp.string_of_ppcmds struct_name in
+      (* Normalize C++ :: separators to dots for comparison with Rocq paths *)
+      let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
       (* Only qualify if the type belongs to the current struct *)
-      if Common.contains_substring full_path struct_name_str then
+      if Common.contains_substring full_path struct_name_dotted then
         struct_name ++ str "::"
       else
         mt ()
@@ -728,8 +730,10 @@ let needs_global_qualifier x =
       else
         let full_path = Pp.string_of_ppcmds (GlobRef.print x) in
         let struct_name_str = Pp.string_of_ppcmds struct_name in
+        (* Normalize C++ :: separators to dots for comparison with Rocq paths *)
+        let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
         (* Function is external if its path doesn't contain struct name *)
-        not (Common.contains_substring full_path struct_name_str)
+        not (Common.contains_substring full_path struct_name_dotted)
   | None -> false
 
 (* Look up method info for a function reference.

@@ -127,17 +127,6 @@
 
 
 
-(subdir functor_comp
- (rule
-  (targets functor_comp.t.exe)
-  (deps FunctorComp.vo functor_comp.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} functor_comp.t.exe functor_comp.cpp functor_comp.t.cpp)))
- (rule
-  (alias runtest)
-  (deps functor_comp.t.exe)
-  (action (run ./functor_comp.t.exe))))
-
 (subdir monadic
  (rule
   (targets monadic.t.exe)
@@ -170,15 +159,4 @@
   (alias runtest)
   (deps qualified_shadow_ascii.t.exe)
   (action (run ./qualified_shadow_ascii.t.exe))))
-
-(subdir enum_switch_qualified
- (rule
-  (targets enum_switch_qualified.t.exe)
-  (deps EnumSwitchQualified.vo enum_switch_qualified.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} enum_switch_qualified.t.exe enum_switch_qualified.cpp enum_switch_qualified.t.cpp)))
- (rule
-  (alias runtest)
-  (deps enum_switch_qualified.t.exe)
-  (action (run ./enum_switch_qualified.t.exe))))
 
