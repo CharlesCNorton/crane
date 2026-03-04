@@ -1,6 +1,6 @@
 // Copyright 2025 Bloomberg Finance L.P.
 // Distributed under the terms of the GNU LGPL v2.1 license.
-#include "qsort.h"
+#include "msort.h"
 
 #include <functional>
 #include <iostream>
@@ -71,8 +71,8 @@ int main() {
   // Test 1: Sort empty list
   {
     auto empty = List<unsigned int>::ctor::nil_();
-    auto result = Sort::qsort(empty);
-    auto sorted_list = result->_a0;
+    auto result = Sort::msort(empty);
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 0);
     std::cout << "Test 1 (empty list): PASSED" << std::endl;
@@ -81,8 +81,8 @@ int main() {
   // Test 2: Sort single element
   {
     auto single = List<unsigned int>::ctor::cons_(5, List<unsigned int>::ctor::nil_());
-    auto result = Sort::qsort(single);
-    auto sorted_list = result->_a0;
+    auto result = Sort::msort(single);
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
     ASSERT(vec[0] == 5);
@@ -91,12 +91,12 @@ int main() {
 
   // Test 3: Sort already sorted list
   {
-    auto input = vector_to_list({1, 2, 3, 4, 5, 6, 7});
-    auto result = Sort::qsort(input);
-    auto sorted_list = result->_a0;
+    auto input = vector_to_list({1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = Sort::msort(input);
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
-    ASSERT(vec.size() == 7);
-    for (size_t i = 0; i < 7; ++i) {
+    ASSERT(vec.size() == 8);
+    for (size_t i = 0; i < 8; ++i) {
       ASSERT(vec[i] == i + 1);
     }
     std::cout << "Test 3 (already sorted): PASSED" << std::endl;
@@ -104,33 +104,33 @@ int main() {
 
   // Test 4: Sort reverse sorted list
   {
-    auto input = vector_to_list({7, 6, 5, 4, 3, 2, 1});
-    auto result = Sort::qsort(input);
-    auto sorted_list = result->_a0;
+    auto input = vector_to_list({8, 7, 6, 5, 4, 3, 2, 1});
+    auto result = Sort::msort(input);
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
-    ASSERT(vec.size() == 7);
-    for (size_t i = 0; i < 7; ++i) {
+    ASSERT(vec.size() == 8);
+    for (size_t i = 0; i < 8; ++i) {
       ASSERT(vec[i] == i + 1);
     }
     std::cout << "Test 4 (reverse sorted): PASSED" << std::endl;
   }
 
-  // Test 5: Sort unsorted list with duplicates
+  // Test 5: Sort unsorted list
   {
-    auto input = vector_to_list({5, 2, 8, 1, 9, 3, 7, 4, 6, 5});
-    auto result = Sort::qsort(input);
-    auto sorted_list = result->_a0;
+    auto input = vector_to_list({3, 1, 4, 1, 5, 9, 2, 6, 5, 3});
+    auto result = Sort::msort(input);
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 10);
     // Check sorted
     for (size_t i = 1; i < vec.size(); ++i) {
       ASSERT(vec[i-1] <= vec[i]);
     }
-    std::cout << "Test 5 (unsorted list with duplicates): PASSED" << std::endl;
+    std::cout << "Test 5 (unsorted list): PASSED" << std::endl;
   }
 
   if (testStatus == 0) {
-    std::cout << "\nAll quicksort tests passed!" << std::endl;
+    std::cout << "\nAll merge sort tests passed!" << std::endl;
   } else {
     std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
   }

@@ -72,7 +72,7 @@ int main() {
   {
     auto empty = List<unsigned int>::ctor::nil_();
     auto result = Sort::psort(empty);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 0);
     std::cout << "Test 1 (empty list): PASSED" << std::endl;
@@ -82,7 +82,7 @@ int main() {
   {
     auto single = List<unsigned int>::ctor::cons_(5, List<unsigned int>::ctor::nil_());
     auto result = Sort::psort(single);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
     ASSERT(vec[0] == 5);
@@ -93,7 +93,7 @@ int main() {
   {
     auto input = vector_to_list({2, 1});
     auto result = Sort::psort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 2);
     ASSERT(vec[0] == 1 && vec[1] == 2);
@@ -104,7 +104,7 @@ int main() {
   {
     auto input = vector_to_list({1, 2, 3, 4, 5, 6});
     auto result = Sort::psort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 6);
     for (size_t i = 0; i < 6; ++i) {
@@ -117,7 +117,7 @@ int main() {
   {
     auto input = vector_to_list({6, 5, 4, 3, 2, 1});
     auto result = Sort::psort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 6);
     for (size_t i = 0; i < 6; ++i) {
@@ -130,7 +130,7 @@ int main() {
   {
     auto input = vector_to_list({4, 2, 7, 1, 8, 3, 6, 5});
     auto result = Sort::psort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 8);
     // Check sorted

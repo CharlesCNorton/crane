@@ -1203,3 +1203,36 @@
   (alias runtest)
   (deps ram_accessor_namespace.t.exe)
   (action (run ./ram_accessor_namespace.t.exe))))
+
+(subdir msort
+ (rule
+  (targets msort.t.exe)
+  (deps Sort.vo msort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} msort.t.exe msort.cpp msort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps msort.t.exe)
+  (action (run ./msort.t.exe))))
+
+(subdir psort
+ (rule
+  (targets psort.t.exe)
+  (deps Sort.vo psort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} psort.t.exe psort.cpp psort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps psort.t.exe)
+  (action (run ./psort.t.exe))))
+
+(subdir qsort
+ (rule
+  (targets qsort.t.exe)
+  (deps Sort.vo qsort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} qsort.t.exe qsort.cpp qsort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps qsort.t.exe)
+  (action (run ./qsort.t.exe))))
