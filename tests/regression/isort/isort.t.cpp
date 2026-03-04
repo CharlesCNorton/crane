@@ -73,7 +73,7 @@ int main() {
     auto empty = List<unsigned int>::ctor::nil_();
     auto result = Sort::isort(empty);
     // Extract the list from the sigma type
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 0);
     std::cout << "Test 1 (empty list): PASSED" << std::endl;
@@ -83,7 +83,7 @@ int main() {
   {
     auto single = List<unsigned int>::ctor::cons_(5, List<unsigned int>::ctor::nil_());
     auto result = Sort::isort(single);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
     ASSERT(vec[0] == 5);
@@ -94,7 +94,7 @@ int main() {
   {
     auto input = vector_to_list({1, 2, 3, 4, 5});
     auto result = Sort::isort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 5);
     ASSERT(vec[0] == 1 && vec[1] == 2 && vec[2] == 3 && vec[3] == 4 && vec[4] == 5);
@@ -105,7 +105,7 @@ int main() {
   {
     auto input = vector_to_list({5, 4, 3, 2, 1});
     auto result = Sort::isort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 5);
     ASSERT(vec[0] == 1 && vec[1] == 2 && vec[2] == 3 && vec[3] == 4 && vec[4] == 5);
@@ -116,7 +116,7 @@ int main() {
   {
     auto input = vector_to_list({3, 1, 4, 1, 5, 9, 2, 6});
     auto result = Sort::isort(input);
-    auto sorted_list = result->_a0;
+    auto sorted_list = std::get<0>(result->v())._a0;
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 8);
     // Check sorted

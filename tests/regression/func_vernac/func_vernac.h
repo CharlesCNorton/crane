@@ -229,9 +229,10 @@ struct FuncVernac {
     }
   }
 
-  template <typename T1, MapsTo<T1, unsigned int, unsigned int, T1> F1,
-            MapsTo<T1, unsigned int> F2, MapsTo<T1, unsigned int> F3>
-  static T1 div2_rec(const unsigned int _x0, F1 &&_x1, F2 &&_x2, F3 &&_x3) {
+  template <typename T1, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, unsigned int> F1,
+            MapsTo<T1, unsigned int, unsigned int, T1> F2>
+  static T1 div2_rec(F0 &&_x0, F1 &&_x1, F2 &&_x2, const unsigned int _x3) {
     return div2_rect<T1>(_x0, _x1, _x2, _x3);
   }
 
@@ -383,13 +384,12 @@ struct FuncVernac {
         l->v());
   }
 
-  template <typename T1,
+  template <typename T1, MapsTo<T1, std::shared_ptr<List<unsigned int>>> F0,
             MapsTo<T1, std::shared_ptr<List<unsigned int>>, unsigned int,
                    std::shared_ptr<List<unsigned int>>, T1>
-                F1,
-            MapsTo<T1, std::shared_ptr<List<unsigned int>>> F2>
-  static T1 list_sum_rec(const std::shared_ptr<List<unsigned int>> &_x0,
-                         F1 &&_x1, F2 &&_x2) {
+                F1>
+  static T1 list_sum_rec(F0 &&_x0, F1 &&_x1,
+                         const std::shared_ptr<List<unsigned int>> &_x2) {
     return list_sum_rect<T1>(_x0, _x1, _x2);
   }
 

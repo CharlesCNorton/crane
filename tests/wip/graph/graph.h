@@ -97,12 +97,12 @@ struct Graph {
   }
 
   template <typename _tcI0, typename T1, typename T2>
-  static T1 add_node(const T2 _x0, const T1 _x1) {
+  static T1 add_node(const T1 _x0, const T2 _x1) {
     return _tcI0::add_node(_x0, _x1);
   }
 
   template <typename _tcI0, typename T1, typename T2>
-  static T1 add_edge(const edge<T1, T2> _x0, const T1 _x1) {
+  static T1 add_edge(const T1 _x0, const edge<T1, T2> _x1) {
     return _tcI0::add_edge(_x0, _x1);
   }
 
@@ -112,7 +112,7 @@ struct Graph {
   }
 
   template <typename _tcI0, typename T1, typename T2>
-  static std::shared_ptr<List<edge<T1, T2>>> edges(const T2 _x0, const T1 _x1) {
+  static std::shared_ptr<List<edge<T1, T2>>> edges(const T1 _x0, const T2 _x1) {
     return _tcI0::edges(_x0, _x1);
   }
 

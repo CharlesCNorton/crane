@@ -195,9 +195,9 @@ struct Equations {
   template <typename T1, typename T2, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, unsigned int> F1, typename F2, typename F3, typename F4>
   static T1 gcd_graph_mut(F0 &&f, F1 &&f0, F2 &&f1, F3 &&f2, F4 &&f3,
-                          std::shared_ptr<gcd_graph> _x0,
+                          const std::pair<unsigned int, unsigned int> _x0,
                           const unsigned int _x1,
-                          const std::pair<unsigned int, unsigned int> _x2) {
+                          std::shared_ptr<gcd_graph> _x2) {
     std::function<T1(std::pair<unsigned int, unsigned int>, unsigned int,
                      std::shared_ptr<gcd_graph>)>
         f5;
@@ -273,10 +273,10 @@ struct Equations {
   template <typename T1, typename T2, typename F0, typename F1, typename F2,
             typename F3, typename F4>
   static T2 gcd_clause_3_graph_mut(F0 &&f, F1 &&f0, F2 &&f1, F3 &&f2, F4 &&f3,
-                                   std::shared_ptr<gcd_clause_3_graph> _x0,
+                                   const unsigned int _x0,
                                    const unsigned int _x1, const bool _x2,
                                    const unsigned int _x3,
-                                   const unsigned int _x4) {
+                                   std::shared_ptr<gcd_clause_3_graph> _x4) {
     std::function<T1(std::pair<unsigned int, unsigned int>, unsigned int,
                      std::shared_ptr<gcd_graph>)>
         f5;
@@ -349,12 +349,12 @@ struct Equations {
     return f4(_x0, _x1, _x2, _x3, _x4);
   }
 
-  template <typename T1, typename T2, typename F3, typename F4, typename F5,
-            MapsTo<T1, unsigned int> F6, MapsTo<T1, unsigned int> F7>
-  static T1 gcd_graph_rect(const std::shared_ptr<gcd_graph> &_x0,
-                           const unsigned int _x1,
-                           const std::pair<unsigned int, unsigned int> _x2,
-                           F3 &&_x3, F4 &&_x4, F5 &&_x5, F6 &&_x6, F7 &&_x7) {
+  template <typename T1, typename T2, MapsTo<T1, unsigned int> F0,
+            MapsTo<T1, unsigned int> F1, typename F2, typename F3, typename F4>
+  static T1 gcd_graph_rect(F0 &&_x0, F1 &&_x1, F2 &&_x2, F3 &&_x3, F4 &&_x4,
+                           const std::pair<unsigned int, unsigned int> _x5,
+                           const unsigned int _x6,
+                           const std::shared_ptr<gcd_graph> &_x7) {
     return gcd_graph_mut<T1>(_x0, _x1, _x2, _x3, _x4, _x5, _x6, _x7);
   }
 
@@ -388,10 +388,10 @@ struct Equations {
         p, gcd(p), gcd_graph_correct(p));
   }
 
-  template <typename F1, typename F2, typename F3, typename F4>
+  template <typename F0, typename F1, typename F2, typename F3>
   static std::any
-  FunctionalElimination_gcd(const std::pair<unsigned int, unsigned int> _x0,
-                            F1 &&_x1, F2 &&_x2, F3 &&_x3, F4 &&_x4) {
+  FunctionalElimination_gcd(F0 &&_x0, F1 &&_x1, F2 &&_x2, F3 &&_x3,
+                            const std::pair<unsigned int, unsigned int> _x4) {
     return gcd_elim(_x0, _x1, _x2, _x3, _x4);
   }
 
@@ -562,10 +562,10 @@ struct Equations {
   };
 
   template <typename T1, typename T2, typename F2, typename F3, typename F4>
-  static T1
-  collatz_steps_graph_mut(const T1 f, const T1 f0, F2 &&f1, F3 &&f2, F4 &&f3,
-                          std::shared_ptr<collatz_steps_graph> _x0,
-                          const unsigned int _x1, const unsigned int _x2) {
+  static T1 collatz_steps_graph_mut(const T1 f, const T1 f0, F2 &&f1, F3 &&f2,
+                                    F4 &&f3, const unsigned int _x0,
+                                    const unsigned int _x1,
+                                    std::shared_ptr<collatz_steps_graph> _x2) {
     std::function<T1(unsigned int, unsigned int,
                      std::shared_ptr<collatz_steps_graph>)>
         f5;
@@ -629,8 +629,8 @@ struct Equations {
       MapsTo<T2, unsigned int, std::shared_ptr<collatz_steps_graph>, T1> F4>
   static T2 collatz_steps_clause_3_graph_mut(
       const T1 f, const T1 f0, F2 &&f1, F3 &&f2, F4 &&f3,
-      std::shared_ptr<collatz_steps_clause_3_graph> _x0, const unsigned int _x1,
-      const bool _x2, const unsigned int _x3) {
+      const unsigned int _x0, const bool _x1, const unsigned int _x2,
+      std::shared_ptr<collatz_steps_clause_3_graph> _x3) {
     std::function<T1(unsigned int, unsigned int,
                      std::shared_ptr<collatz_steps_graph>)>
         f5;
@@ -685,12 +685,12 @@ struct Equations {
     return f4(_x0, _x1, _x2, _x3);
   }
 
-  template <typename T1, typename T2, typename F3, typename F4, typename F5>
+  template <typename T1, typename T2, typename F2, typename F3, typename F4>
   static T1
-  collatz_steps_graph_rect(const std::shared_ptr<collatz_steps_graph> &_x0,
-                           const unsigned int _x1, const unsigned int _x2,
-                           F3 &&_x3, F4 &&_x4, F5 &&_x5, const T1 _x6,
-                           const T1 _x7) {
+  collatz_steps_graph_rect(const T1 _x0, const T1 _x1, F2 &&_x2, F3 &&_x3,
+                           F4 &&_x4, const unsigned int _x5,
+                           const unsigned int _x6,
+                           const std::shared_ptr<collatz_steps_graph> &_x7) {
     return collatz_steps_graph_mut<T1>(_x0, _x1, _x2, _x3, _x4, _x5, _x6, _x7);
   }
 
@@ -714,11 +714,11 @@ struct Equations {
         n, collatz_steps(n), collatz_steps_graph_correct(n));
   }
 
-  template <typename F1, typename F2>
-  static std::any FunctionalElimination_collatz_steps(const unsigned int _x0,
-                                                      F1 &&_x1, F2 &&_x2,
-                                                      const std::any _x3,
-                                                      const std::any _x4) {
+  template <typename F2, typename F3>
+  static std::any FunctionalElimination_collatz_steps(const std::any _x0,
+                                                      const std::any _x1,
+                                                      F2 &&_x2, F3 &&_x3,
+                                                      const unsigned int _x4) {
     return collatz_steps_elim(_x0, _x1, _x2, _x3, _x4);
   }
 

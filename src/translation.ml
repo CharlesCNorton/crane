@@ -510,6 +510,26 @@ let rec tvar_erase_type (ty : cpp_type) : cpp_type =
   | Tqualified (ty, id) -> Tqualified (tvar_erase_type ty, id)
   | _ -> ty  (* Tvoid, Tstring, Ttodo, Tunknown, Taxiom, Tany *)
 
+(* Check if a C++ type contains any unnamed Tvar (Tvar(_, None)).
+   Used to detect types that can't be fully resolved in monomorphized contexts
+   (tvars=[]), where nested Tvar(_, None) would print as invalid C++ like List<T1>. *)
+let rec has_unnamed_tvar (ty : cpp_type) : bool =
+  match ty with
+  | Tvar (_, None) -> true
+  | Tvar (_, Some _) -> false
+  | Tglob (_, tys, _) -> List.exists has_unnamed_tvar tys
+  | Tfun (tys, ty) -> List.exists has_unnamed_tvar tys || has_unnamed_tvar ty
+  | Tmod (_, ty) -> has_unnamed_tvar ty
+  | Tnamespace (_, ty) -> has_unnamed_tvar ty
+  | Tstruct (_, tys) -> List.exists has_unnamed_tvar tys
+  | Tref ty -> has_unnamed_tvar ty
+  | Tvariant tys -> List.exists has_unnamed_tvar tys
+  | Tshared_ptr ty -> has_unnamed_tvar ty
+  | Tunique_ptr ty -> has_unnamed_tvar ty
+  | Tid (_, tys) -> List.exists has_unnamed_tvar tys
+  | Tqualified (ty, _) -> has_unnamed_tvar ty
+  | _ -> false
+
 (* Check if a C++ type is Tany or contains an unnamed Tvar (which becomes Tany).
    This is used to identify methods that return std::any due to type erasure in indexed inductives. *)
 let rec type_is_erased (ty : cpp_type) : bool =
@@ -664,6 +684,14 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
        Wrap in an IIFE, delegating to gen_stmts which handles MLapp(MLfix ...). *)
     with_escape_analysis a (fun () ->
       CPPfun_call (CPPlambda([], None, gen_stmts env (fun x -> Sreturn x) a, false), []))
+  | MLapp (MLapp (MLglob _ as g, inner_args), outer_args) ->
+    (* Flatten nested MLapp when inner callee is a global reference.
+       This arises from Rocq partial applications like:
+         div_conq_split x f1 f2 l
+       which extracts as MLapp(MLapp(MLglob(dcs), [x,f1,f2]), [l]).
+       Flattening to MLapp(MLglob(dcs), [x,f1,f2,l]) lets eta_fun see
+       the complete argument list and generate a direct call. *)
+    eta_fun env g (inner_args @ outer_args)
   | MLapp (f, args) ->
     eta_fun env f args
   | MLlam _ as a ->
@@ -1203,6 +1231,10 @@ and eta_fun env f args =
       | _ -> assert false  (* Already filtered by is_typeclass_instance_arg *)
     in
     let typeclass_type_args = List.map ml_arg_to_template_type typeclass_ml_args in
+    (* Filter out MLdummy entries from regular args — these are erased proof
+       arguments that would generate CPPabort "unreachable" expressions and
+       inflate the argument count for eta expansion. *)
+    let regular_ml_args = List.filter (fun x -> match x with MLdummy _ -> false | _ -> true) regular_ml_args in
     (* Generate regular args as expressions *)
     let args = List.map (gen_expr env) regular_ml_args in
     let ty = find_type id in
@@ -1313,8 +1345,13 @@ and eta_fun env f args =
     else
     (match ty with
     | Tfun (dom, cod) ->
-      (* Filter domain to exclude type class types (they're now template params) *)
-      let dom = List.filter (fun t -> not (Table.is_typeclass_type_cpp t)) dom in
+      (* Filter domain to exclude type class types (they're now template params)
+         and erased types.  Use has_hkt_erasure for deep checking: proof params
+         like wf witnesses may extract as function types containing dummy_type
+         (e.g. Tfun([List<T1>], dummy_type)) rather than plain dummy_type.
+         These entries must be removed to match the ML arg list which already
+         filters out MLdummy entries. *)
+      let dom = List.filter (fun t -> not (Table.is_typeclass_type_cpp t) && not (is_erased_type t)) dom in
       let missing_args = get_eta_args dom args in
       if missing_args == [] then begin
         if id_is_typeclass_instance && args = [] then
@@ -1402,11 +1439,11 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
       let cpp_ty = if is_indexed_ind then tvar_erase_type cpp_ty else cpp_ty in
       (* Use 'auto' for unresolved type variables in non-template contexts.
          This handles cases where MLcase type annotations have Tvar/Tvar' that
-         can't be resolved (e.g., sig's type parameter in Function vernacular). *)
-      let cpp_ty = match cpp_ty with
-        | Minicpp.Tvar (_, None) when tvars = [] -> Minicpp.Ttodo
-        | _ -> cpp_ty
-      in
+         can't be resolved (e.g., sig's type parameter in Function vernacular).
+         Check for Tvar(_, None) at any depth: a top-level Tvar(_, None) becomes
+         auto directly; a nested one (e.g. Tshared_ptr(Tglob(list, [Tvar(1, None)])))
+         must also become auto since List<auto> is invalid C++. *)
+      let cpp_ty = if tvars = [] && has_unnamed_tvar cpp_ty then Minicpp.Ttodo else cpp_ty in
       Sasgn (fst x, Some cpp_ty, CPPget (CPPglob (GlobRef.VarRef sname, []), id))) (List.rev ids) in
   let asgns = List.filteri (fun i _ -> List.nth dummies i) asgns in
   (* Phase 2: Add pattern-bound variables as owned for move insertion.
@@ -2870,7 +2907,14 @@ let gen_dfun n b dom cod ty temps =
   let get_missing d a =
     let n_missing = max 0 (List.length d - List.length a) in
     List.firstn n_missing d in
-  let missing = List.rev (List.mapi (fun i t -> (Id (Id.of_string ("_x" ^ string_of_int i)), t)) (get_missing mldom ids)) in
+  let missing_types = get_missing mldom ids in
+  let n_miss = List.length missing_types in
+  (* Assign names so that _x0 gets the outermost missing type (closest to the
+     explicit lambdas) and _x(n-1) gets the innermost (= last source param).
+     get_missing returns types innermost-first from mldom, so index i maps to
+     name _x(n_miss - 1 - i).  The resulting list is already in de Bruijn order
+     (innermost first) because mapi iterates innermost-first. *)
+  let missing = List.mapi (fun i t -> (Id (Id.of_string ("_x" ^ string_of_int (n_miss - 1 - i))), t)) missing_types in
   (* Unify body lambda parameter types with the function signature types.
 
      When optimize_fix (mlutil.ml) promotes a polymorphic let-fix into a

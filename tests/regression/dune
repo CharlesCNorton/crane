@@ -1014,3 +1014,14 @@
   (alias runtest)
   (deps prime_collision.t.exe)
   (action (run ./prime_collision.t.exe))))
+
+(subdir isort
+ (rule
+  (targets isort.t.exe)
+  (deps Sort.vo isort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} isort.t.exe isort.cpp isort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps isort.t.exe)
+  (action (run ./isort.t.exe))))

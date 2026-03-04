@@ -24,7 +24,7 @@ Sort::sort_cons_prog(const unsigned int a,
           },
           [&](const typename List<unsigned int>::cons _args) -> auto {
             auto y = _args._a0;
-            std::shared_ptr<List<T1>> l = _args._a1;
+            auto l = _args._a1;
             std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>> s =
                 sort_cons_prog(std::move(a), l, l);
             return std::visit(
@@ -159,7 +159,8 @@ Sort::msort(const std::shared_ptr<List<unsigned int>> &_x0) {
                   x0->v());
             }},
             x->v());
-      })(_x0);
+      },
+      _x0);
 }
 
 std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
@@ -219,7 +220,8 @@ Sort::psort(const std::shared_ptr<List<unsigned int>> &_x0) {
                   x0->v());
             }},
             x->v());
-      })(_x0);
+      },
+      _x0);
 }
 
 std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
@@ -253,7 +255,8 @@ Sort::qsort(const std::shared_ptr<List<unsigned int>> &_x0) {
                   x0->v());
             }},
             x->v());
-      })(_x0);
+      },
+      _x0);
 }
 
 bool Compare_dec::le_lt_dec(const unsigned int n, const unsigned int m) {

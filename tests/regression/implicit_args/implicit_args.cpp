@@ -11,7 +11,7 @@
 #include <variant>
 
 unsigned int ImplicitArgs::add_one(const unsigned int _x0) {
-  return [](const unsigned int _x0) { return (1u + _x0); }(_x0);
+  return (1u + _x0);
 }
 
 unsigned int ImplicitArgs::double_nat(const unsigned int n) { return (n + n); }
@@ -37,11 +37,11 @@ unsigned int ImplicitArgs::with_base(const unsigned int _x0,
 }
 
 unsigned int ImplicitArgs::from_zero(const unsigned int _x0) {
-  return [](const unsigned int _x0) { return with_base(0u, _x0); }(_x0);
+  return with_base(0u, _x0);
 }
 
 unsigned int ImplicitArgs::from_ten(const unsigned int _x0) {
-  return [](const unsigned int _x0) { return with_base(10u, _x0); }(_x0);
+  return with_base(10u, _x0);
 }
 
 unsigned int ImplicitArgs::sum_with_init(

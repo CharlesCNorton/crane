@@ -19,11 +19,11 @@ unsigned int Sections::mul_n(const unsigned int _x0, const unsigned int _x1) {
 }
 
 unsigned int Sections::add_five(const unsigned int _x0) {
-  return [](const unsigned int _x0) { return add_n(5u, _x0); }(_x0);
+  return add_n(5u, _x0);
 }
 
 unsigned int Sections::mul_three(const unsigned int _x0) {
-  return [](const unsigned int _x0) { return mul_n(3u, _x0); }(_x0);
+  return mul_n(3u, _x0);
 }
 
 unsigned int Sections::sum_ab(const unsigned int _x0, const unsigned int _x1) {

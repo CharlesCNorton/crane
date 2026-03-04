@@ -440,10 +440,7 @@ comparison Pos::compare_cont(const comparison r,
 
 comparison Pos::compare(const std::shared_ptr<Positive> &_x0,
                         const std::shared_ptr<Positive> &_x1) {
-  return [](const std::shared_ptr<Positive> _x0,
-            const std::shared_ptr<Positive> _x1) {
-    return compare_cont(comparison::Eq, _x0, _x1);
-  }(_x0, _x1);
+  return compare_cont(comparison::Eq, _x0, _x1);
 }
 
 unsigned int Pos::to_nat(const std::shared_ptr<Positive> &x) {
