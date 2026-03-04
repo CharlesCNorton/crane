@@ -23,7 +23,7 @@ Sort::sort_cons_prog(const unsigned int a,
                     std::move(a), List<unsigned int>::ctor::nil_()));
           },
           [&](const typename List<unsigned int>::cons _args) -> auto {
-            T1 y = _args._a0;
+            auto y = _args._a0;
             std::shared_ptr<List<T1>> l = _args._a1;
             std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>> s =
                 sort_cons_prog(std::move(a), l, l);
@@ -129,7 +129,8 @@ Sort::merge_prog(const std::shared_ptr<List<unsigned int>> &_x,
 
 std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
 Sort::msort(const std::shared_ptr<List<unsigned int>> &_x0) {
-  return div_conq_split(
+  return div_conq_split<
+      unsigned int, std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>>(
       Sig<std::shared_ptr<List<unsigned int>>>::ctor::exist_(
           List<unsigned int>::ctor::nil_()),
       [](unsigned int a) {
@@ -172,7 +173,8 @@ Sort::pair_merge_prog(const unsigned int _x, const unsigned int _x0,
 
 std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
 Sort::psort(const std::shared_ptr<List<unsigned int>> &_x0) {
-  return div_conq_pair(
+  return div_conq_pair<
+      unsigned int, std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>>(
       Sig<std::shared_ptr<List<unsigned int>>>::ctor::exist_(
           List<unsigned int>::ctor::nil_()),
       [](unsigned int a) {
@@ -222,7 +224,8 @@ Sort::psort(const std::shared_ptr<List<unsigned int>> &_x0) {
 
 std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
 Sort::qsort(const std::shared_ptr<List<unsigned int>> &_x0) {
-  return div_conq_pivot(
+  return div_conq_pivot<
+      unsigned int, std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>>(
       Compare_dec::le_dec,
       Sig<std::shared_ptr<List<unsigned int>>>::ctor::exist_(
           List<unsigned int>::ctor::nil_()),

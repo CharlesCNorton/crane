@@ -239,16 +239,7 @@ struct Monadic {
           0, ((0 + 1) + 1));
 
   static inline const std::pair<unsigned int, unsigned int> test_state =
-      count_elements<unsigned int>(
-          List<unsigned int>::ctor::cons_(
-              (0 + 1), List<unsigned int>::ctor::cons_(
-                           ((0 + 1) + 1),
-                           List<unsigned int>::ctor::cons_(
-                               (((0 + 1) + 1) + 1),
-                               List<unsigned int>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List<unsigned int>::ctor::cons_(
-                                       (((((0 + 1) + 1) + 1) + 1) + 1),
-                                       List<unsigned int>::ctor::nil_()))))),
-          0);
+      ([&]() -> auto {
+        throw std::logic_error("untranslatable curried proof term");
+      })();
 };

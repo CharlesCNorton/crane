@@ -2062,7 +2062,6 @@ let pp_decl = function
           mt ()
     | Dterm (r, a, t) ->
         let (ds, env, tvars) = gen_decl_for_pp r a t in
-        (*let _ = print_endline (Pp.string_of_ppcmds (pp_type false [] t)) in*)
         begin match ds, tvars with
         | Some ds , [] -> pp_cpp_decl env ds
         | _ , _ -> mt ()

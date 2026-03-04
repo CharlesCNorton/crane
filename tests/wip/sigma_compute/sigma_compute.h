@@ -134,12 +134,12 @@ struct SigmaCompute {
   static inline const unsigned int test_positive_3 =
       get_positive((((0 + 1) + 1) + 1));
 
-  static inline const unsigned int test_double_pos =
-      std::visit(Overloaded{[](const typename Sig<T1>::exist _args) -> auto {
-                   T1 a = _args._a0;
-                   return a;
-                 }},
-                 double_positive((((0 + 1) + 1) + 1))->v());
+  static inline const unsigned int test_double_pos = std::visit(
+      Overloaded{[](const typename Sig<unsigned int>::exist _args) -> auto {
+        auto a = _args._a0;
+        return a;
+      }},
+      double_positive((((0 + 1) + 1) + 1))->v());
 
   static inline const std::shared_ptr<List<unsigned int>> test_positives =
       positives_up_to((((((0 + 1) + 1) + 1) + 1) + 1));

@@ -112,17 +112,12 @@ struct Sort {
                 div_conq<T1, T2>(splitF, x, x0, x1, splitF(ls).second));
     } else {
       return std::visit(
-          Overloaded{[&](const typename List<T1>::nil _args)
-                         -> std::function<T2(
-                             std::function<T2(std::shared_ptr<List<T1>>)>,
-                             dummy_prop)> { return x; },
-                     [&](const typename List<T1>::cons _args)
-                         -> std::function<T2(
-                             std::function<T2(std::shared_ptr<List<T1>>)>,
-                             dummy_prop)> {
-                       T1 a = _args._a0;
-                       return x0(a);
-                     }},
+          Overloaded{
+              [&](const typename List<T1>::nil _args) -> auto { return x; },
+              [&](const typename List<T1>::cons _args) -> auto {
+                T1 a = _args._a0;
+                return x0(a);
+              }},
           ls->v());
     }
   }
@@ -174,7 +169,7 @@ struct Sort {
                            F2 &&_x1, F3 &&_x2) {
     return [&](const std::function<dummy_type(std::shared_ptr<List<T1>>)> _x0,
                const std::shared_ptr<List<T1>> _x1) {
-      return div_conq(split<T1>, x, _x0, _x1);
+      return div_conq<T1, T2>(split<T1>, x, _x0, _x1);
     }(_x0, _x1, _x2);
   }
 
@@ -184,31 +179,21 @@ struct Sort {
                           const std::shared_ptr<List<T1>> &l) {
     return std::visit(
         Overloaded{
-            [&](const typename List<T1>::nil _args)
-                -> std::function<T2(
-                    std::function<T2(std::shared_ptr<List<T1>>)>)> {
-              return x;
-            },
-            [&](const typename List<T1>::cons _args)
-                -> std::function<T2(
-                    std::function<T2(std::shared_ptr<List<T1>>)>)> {
+            [&](const typename List<T1>::nil _args) -> auto { return x; },
+            [&](const typename List<T1>::cons _args) -> auto {
               T1 a = _args._a0;
               std::shared_ptr<List<T1>> l0 = _args._a1;
               return std::visit(
-                  Overloaded{
-                      [&](const typename List<T1>::nil _args)
-                          -> std::function<T2(
-                              std::function<T2(std::shared_ptr<List<T1>>)>)> {
-                        return x0(a);
-                      },
-                      [&](const typename List<T1>::cons _args)
-                          -> std::function<T2(
-                              std::function<T2(std::shared_ptr<List<T1>>)>)> {
-                        T1 a0 = _args._a0;
-                        std::shared_ptr<List<T1>> l1 = _args._a1;
-                        return x2(a, a0, l1, x1(a, a0),
-                                  div_conq_pair<T1, T2>(x, x0, x1, x2, l1));
-                      }},
+                  Overloaded{[&](const typename List<T1>::nil _args) -> auto {
+                               return x0(a);
+                             },
+                             [&](const typename List<T1>::cons _args) -> auto {
+                               T1 a0 = _args._a0;
+                               std::shared_ptr<List<T1>> l1 = _args._a1;
+                               return x2(
+                                   a, a0, l1, x1(a, a0),
+                                   div_conq_pair<T1, T2>(x, x0, x1, x2, l1));
+                             }},
                   std::move(l0)->v());
             }},
         l->v());
@@ -251,14 +236,8 @@ struct Sort {
                            const std::shared_ptr<List<T1>> &l) {
     return std::visit(
         Overloaded{
-            [&](const typename List<T1>::nil _args)
-                -> std::function<T2(
-                    std::function<T2(std::shared_ptr<List<T1>>)>)> {
-              return x;
-            },
-            [&](const typename List<T1>::cons _args)
-                -> std::function<T2(
-                    std::function<T2(std::shared_ptr<List<T1>>)>)> {
+            [&](const typename List<T1>::nil _args) -> auto { return x; },
+            [&](const typename List<T1>::cons _args) -> auto {
               T1 a = _args._a0;
               std::shared_ptr<List<T1>> l0 = _args._a1;
               return x0(

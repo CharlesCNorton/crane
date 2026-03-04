@@ -816,3 +816,14 @@
   (alias runtest)
   (deps functor_comp.t.exe)
   (action (run ./functor_comp.t.exe))))
+
+(subdir func_vernac
+ (rule
+  (targets func_vernac.t.exe)
+  (deps FuncVernac.vo func_vernac.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} func_vernac.t.exe func_vernac.cpp func_vernac.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps func_vernac.t.exe)
+  (action (run ./func_vernac.t.exe))))

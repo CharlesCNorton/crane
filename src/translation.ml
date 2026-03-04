@@ -37,6 +37,10 @@ type translation_ctx = {
   mutable current_type_vars : Id.t list;
   mutable current_param_types : (int * ml_type) list;
   mutable current_outer_function_name : string option;
+  (* C++ return type of the enclosing function, set by gen_dfun.
+     Used to recover erased template type args at call sites
+     where C++ can't deduce them from lambda arguments. *)
+  mutable current_cpp_return_type : cpp_type option;
   mutable env_types : (Id.t * ml_type) list;
   mutable pending_lifted_decls : cpp_decl list;
   mutable unique_bindings : int list;
@@ -50,6 +54,7 @@ let tctx = {
   current_type_vars = [];
   current_param_types = [];
   current_outer_function_name = None;
+  current_cpp_return_type = None;
   env_types = [];
   pending_lifted_decls = [];
   unique_bindings = [];
@@ -547,10 +552,16 @@ let rec collect_free_rels n_bound acc = function
 
 let rec convert_ml_type_to_cpp_type env (ns : Refset'.t) (tvars : Id.t list) (ml_t : ml_type) : cpp_type =
   match ml_t with
-  | Tarr (t1, t2) -> (* FIX *)
+  | Tarr (t1, t2) ->
         let t1c = convert_ml_type_to_cpp_type env ns tvars t1 in
         let t2c = convert_ml_type_to_cpp_type env ns tvars t2 in
-        if isTdummy t1 then t2c else
+        (* Skip erased params: isTdummy catches direct Tdummy, is_cpp_dummy_type
+           catches Tdummy wrapped in Tmeta (e.g., Tmeta{contents=Some(Tdummy Kprop)}
+           which converts to dummy_prop glob).  Do NOT use is_erased_type here as
+           it also catches Tany (std::any), which is a valid type for universally
+           quantified parameters — stripping it would incorrectly collapse
+           (A -> IO) into just IO. *)
+        if isTdummy t1 || is_cpp_dummy_type t1c then t2c else
         (match t2c with
         | Tfun (l, t) -> Tfun (t1c::l, t)
         | _ -> Tfun (t1c::[], t2c))
@@ -1118,6 +1129,46 @@ and eta_fun env f args =
   in
   match f with
   | MLglob (id , tys) ->
+    (* When the call has more args than the function's ML value-domain,
+       the excess args are curried applications to the result.  This is common
+       with Rocq's Function vernacular _correct proof terms, where the
+       extraction produces e.g.  div2_rect f f0 f1 n _res __
+       but div2_rect only has 4 value-domain params (f, f0, f1, n).
+       The trailing _res and __ are applied to the result via currying.
+
+       Split into:
+       - primary_args: first n_value_dom args (passed to the function)
+       - excess_args: remaining non-dummy args (curried onto the result)
+       Only activates when n_args > n_value_dom; otherwise unchanged. *)
+    let args, excess_args =
+      let is_value_arg = function MLdummy _ -> false | _ -> true in
+      let rec resolve_tmeta = function
+        | Miniml.Tmeta {contents = Some t} -> resolve_tmeta t
+        | t -> t
+      in
+      let rec collect_tarr_dom acc = function
+        | Miniml.Tarr (t1, t2) -> collect_tarr_dom (resolve_tmeta t1 :: acc) t2
+        | _ -> List.rev acc
+      in
+      try
+        let ml_ty = Table.find_type id in
+        let all_dom = collect_tarr_dom [] ml_ty in
+        (* Skip leading Tdummy Ktype positions — these correspond to type args
+           (tys), not value args. *)
+        let rec skip_type_params = function
+          | Miniml.Tdummy Miniml.Ktype :: rest -> skip_type_params rest
+          | dom -> dom
+        in
+        let n_value_dom = List.length (skip_type_params all_dom) in
+        let n_args = List.length args in
+        if n_args > n_value_dom then
+          let primary = List.filteri (fun i _ -> i < n_value_dom) args in
+          let excess = List.filteri (fun i _ -> i >= n_value_dom) args in
+          (List.filter is_value_arg primary, List.filter is_value_arg excess)
+        else
+          (args, [])
+      with Not_found -> (args, [])
+    in
     (* Partition args into type class instances and regular args *)
     let (typeclass_ml_args, regular_ml_args) =
       List.partition is_typeclass_instance_arg args in
@@ -1162,9 +1213,87 @@ and eta_fun env f args =
        If any regular type arg is Tany or a dummy type glob (from erased params),
        drop ALL regular type args via filter_erased_type_args and let the
        compiler deduce them.  See filter_erased_type_args for why we must drop
-       all args rather than just the erased ones. *)
+       all args rather than just the erased ones.
+
+       Exception: when the callee's return type depends on an erased type var,
+       C++ can't deduce it from lambda arguments (lambdas don't participate in
+       template argument deduction).  In that case, recover the concrete type
+       from the enclosing function's return type. *)
     let regular_type_args = List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys in
-    let all_type_args = typeclass_type_args @ filter_erased_type_args regular_type_args in
+    (* Recover erased type args that C++ cannot deduce.
+       Two cases:
+       (a) tys is non-empty but all entries were erased (Tdummy Ktype) →
+           filter_erased_type_args drops them all.
+       (b) tys is empty — the Rocq extraction didn't supply type args at the
+           call site, but the callee has Tdummy Ktype domain entries (erased
+           type params).
+
+       In both cases, if the callee's ML return type is a Tvar that refers to
+       one of those erased type params, and we know the concrete return type
+       from the enclosing function context (current_cpp_return_type), we can
+       supply it as an explicit C++ template arg.
+
+       This is needed because C++ cannot deduce template type params from
+       lambda arguments — lambdas don't participate in template argument
+       deduction. *)
+    let regular_type_args =
+      let filtered = filter_erased_type_args regular_type_args in
+      (* Check if the callee's return type is a Tvar pointing to an erased
+         (Tdummy Ktype) domain position, and if so, return the position index,
+         the concrete C++ type to use, and the full ML domain. *)
+      let try_recover_erased_return_type () =
+        let rec resolve_tmeta = function
+          | Miniml.Tmeta {contents = Some t} -> resolve_tmeta t
+          | t -> t
+        in
+        match tctx.current_cpp_return_type with
+        | None -> None
+        | Some ret_ty ->
+          match (try Some (Table.find_type id) with Not_found -> None) with
+          | None -> None
+          | Some ml_ty_orig ->
+            let ret = resolve_tmeta (ml_return_type ml_ty_orig) in
+            (match ret with
+            | Miniml.Tvar i | Miniml.Tvar' i ->
+              let rec collect_dom acc = function
+                | Miniml.Tarr (t1, t2) -> collect_dom (resolve_tmeta t1 :: acc) t2
+                | _ -> List.rev acc
+              in
+              let all_dom = collect_dom [] ml_ty_orig in
+              (* Tvar uses 1-based indexing (matching type_subst_list);
+                 convert to 0-based for list access. *)
+              let idx = i - 1 in
+              if idx >= 0 && idx < List.length all_dom then
+                (match List.nth all_dom idx with
+                | Miniml.Tdummy Miniml.Ktype -> Some (idx, ret_ty, all_dom)
+                | _ -> None)
+              else None
+            | _ -> None)
+      in
+      if filtered = [] && regular_type_args <> [] then begin
+        (* Case (a): tys was non-empty but all got filtered. *)
+        match try_recover_erased_return_type () with
+        | Some (idx, ret_ty, _) ->
+          (* Replace the erased position with the concrete return type,
+             then filter out any remaining erased entries. *)
+          List.mapi (fun j t -> if j = idx then ret_ty else t) regular_type_args
+          |> List.filter (fun t -> not (is_erased_type t))
+        | None -> filtered
+      end
+      else if tys = [] then begin
+        (* Case (b): tys is empty — synthesize type args from scratch.
+           Build one entry per Tdummy Ktype domain position. *)
+        match try_recover_erased_return_type () with
+        | Some (_idx, ret_ty, all_dom) ->
+          List.filter_map (function
+            | Miniml.Tdummy Miniml.Ktype -> Some ret_ty
+            | _ -> None
+          ) all_dom
+        | None -> filtered
+      end
+      else filtered
+    in
+    let all_type_args = typeclass_type_args @ regular_type_args in
     let cglob = CPPglob (id, all_type_args) in
     (* Check if this is a typeclass instance used as a type (for :: access).
        When all args are consumed (domain and args both empty after filtering),
@@ -1172,6 +1301,16 @@ and eta_fun env f args =
        generating numOption<numNat, unsigned int>() instead of
        numOption<numNat, unsigned int> for qualified access like ::to_nat. *)
     let id_is_typeclass_instance = ref_returns_typeclass id in
+    (* Curried excess args (see split above) indicate a call pattern like
+       div2_rect(f,f0,f1,n)(_res) from Rocq's Function vernacular _correct
+       proof terms.  The intermediate return type would need to be a
+       std::function, and the lambda arguments would need restructuring to
+       match — neither of which the current translation supports.  Since
+       these proof-certificate functions are never called at runtime,
+       generate an abort placeholder. *)
+    if excess_args <> [] then
+      CPPabort "untranslatable curried proof term"
+    else
     (match ty with
     | Tfun (dom, cod) ->
       (* Filter domain to exclude type class types (they're now template params) *)
@@ -1246,11 +1385,14 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
     | _ -> false
   in
   let ret = convert_ml_type_to_cpp_type env Refset'.empty tvars rty in
-  (* For pattern matching lambdas, if the return type would be an unnamed Tvar
-     (like T1, T2 which are not actual template parameters), use 'auto' instead.
-     C++ can deduce the return type from the return statements. *)
+  (* For pattern matching lambdas, use 'auto' when the return type can't be
+     expressed as a valid C++ type annotation:
+     - Unnamed Tvar (T1, T2 not in template params): unresolvable
+     - Tfun (std::function<...>): often contains dependent types like T1(...)
+       that cause parsing ambiguities in lambda trailing return types *)
   let ret = match ret with
     | Minicpp.Tvar (_, None) -> Minicpp.Ttodo  (* Ttodo prints as 'auto' *)
+    | Minicpp.Tfun _ -> Minicpp.Ttodo  (* C++ can deduce the return type *)
     | _ -> ret
   in
   let asgns =  List.mapi (fun i x ->
@@ -1258,6 +1400,13 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
       let cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty tvars (snd x) in
       (* Only erase Tvars in constructor field types for indexed inductives *)
       let cpp_ty = if is_indexed_ind then tvar_erase_type cpp_ty else cpp_ty in
+      (* Use 'auto' for unresolved type variables in non-template contexts.
+         This handles cases where MLcase type annotations have Tvar/Tvar' that
+         can't be resolved (e.g., sig's type parameter in Function vernacular). *)
+      let cpp_ty = match cpp_ty with
+        | Minicpp.Tvar (_, None) when tvars = [] -> Minicpp.Ttodo
+        | _ -> cpp_ty
+      in
       Sasgn (fst x, Some cpp_ty, CPPget (CPPglob (GlobRef.VarRef sname, []), id))) (List.rev ids) in
   let asgns = List.filteri (fun i _ -> List.nth dummies i) asgns in
   (* Phase 2: Add pattern-bound variables as owned for move insertion.
@@ -1284,19 +1433,35 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
         asgns @ body_stmts, false)
 
 and gen_cpp_case (typ : ml_type) t env pv =
-  (* When scrutinee is a parameter reference, use parameter's concrete type if available.
-     This handles monomorphic functions where MLcase has Tvar but parameter is concrete. *)
+  (* When the match type annotation has unresolved Tvars, try to resolve from context.
+     This handles monomorphic functions where MLcase has Tvar but the concrete type is known. *)
+  let resolve_tvar_type typ candidate =
+    match typ, candidate with
+    | Miniml.Tglob (r1, _, _), Miniml.Tglob (r2, _, _)
+      when Environ.QGlobRef.equal Environ.empty_env r1 r2
+        && has_tvar typ && not (has_tvar candidate) ->
+        candidate
+    | _ -> typ
+  in
   let typ = match t with
     | MLrel i | MLmagic (MLrel i) ->
+        (* Scrutinee is a parameter reference — use parameter's concrete type *)
         (match get_param_type_by_index i with
-         | Some (Miniml.Tglob (r2, _, _) as param_ty) ->
-             (match typ with
-              | Miniml.Tglob (r1, _, _)
-                when Environ.QGlobRef.equal Environ.empty_env r1 r2
-                  && has_tvar typ && not (has_tvar param_ty) ->
-                  param_ty
-              | _ -> typ)
+         | Some (Miniml.Tglob _ as param_ty) -> resolve_tvar_type typ param_ty
          | _ -> typ)
+    | MLapp (func_expr, _) | MLmagic (MLapp (func_expr, _)) ->
+        (* Scrutinee is a function call — use function's return type *)
+        let func_ref = match func_expr with
+          | MLglob (r, _) | MLmagic (MLglob (r, _)) -> Some r
+          | _ -> None
+        in
+        (match func_ref with
+         | Some r ->
+             (try
+               let ret_ty = ml_return_type (Table.find_type r) in
+               resolve_tvar_type typ ret_ty
+             with Not_found -> typ)
+         | None -> typ)
     | _ -> typ
   in
   (* Check if this is an enum inductive type *)
@@ -3013,6 +3178,10 @@ let gen_dfun n b dom cod ty temps =
     else acc
   ) Escape.IntSet.empty (List.mapi (fun i o -> (i, o)) owned_flags);
   tctx.move_dead_after <- Escape.IntSet.empty;
+  (* Expose the C++ return type to inner call sites so they can recover
+     erased template type args (see try_recover_erased_return_type). *)
+  let saved_return_type = tctx.current_cpp_return_type in
+  tctx.current_cpp_return_type <- Some cod;
   let inner =
     if missing == [] then
       let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap b) in
@@ -3047,6 +3216,7 @@ let gen_dfun n b dom cod ty temps =
       clear_current_type_vars ();
       clear_current_param_types ();
       Dfundef ([n, []], cod, ids, sigma_asserts @ b) in
+  tctx.current_cpp_return_type <- saved_return_type;
   tctx.current_outer_function_name <- saved_outer_name;
   (match temps with
     | [] -> inner, env
