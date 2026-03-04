@@ -1,0 +1,18 @@
+#include <algorithm>
+#include <any>
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <modpath_escape_collision.h>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <variant>
+
+unsigned int ModpathEscapeCollision::A::Token'::f(const unsigned int n){return std::move(n);}
+
+    unsigned int
+    ModpathEscapeCollision::B::Token_::g(const unsigned int n) {
+  return (std::move(n) + 1);
+}
