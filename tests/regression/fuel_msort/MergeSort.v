@@ -224,4 +224,4 @@ End MergeSort.
 
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "msort" MergeSort.
+Crane Extraction "fuel_msort" MergeSort.

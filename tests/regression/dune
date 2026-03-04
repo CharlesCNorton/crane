@@ -1236,3 +1236,14 @@
   (alias runtest)
   (deps qsort.t.exe)
   (action (run ./qsort.t.exe))))
+
+(subdir fuel_msort
+ (rule
+  (targets fuel_msort.t.exe)
+  (deps MergeSort.vo fuel_msort.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} fuel_msort.t.exe fuel_msort.cpp fuel_msort.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps fuel_msort.t.exe)
+  (action (run ./fuel_msort.t.exe))))
