@@ -182,28 +182,6 @@
   (deps prime_collision.t.exe)
   (action (run ./prime_collision.t.exe))))
 
-(subdir ctor_escape_collision
- (rule
-  (targets ctor_escape_collision.t.exe)
-  (deps CtorEscapeCollision.vo ctor_escape_collision.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ctor_escape_collision.t.exe ctor_escape_collision.cpp ctor_escape_collision.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ctor_escape_collision.t.exe)
-  (action (run ./ctor_escape_collision.t.exe))))
-
-(subdir modpath_escape_collision
- (rule
-  (targets modpath_escape_collision.t.exe)
-  (deps ModpathEscapeCollision.vo modpath_escape_collision.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} modpath_escape_collision.t.exe modpath_escape_collision.cpp modpath_escape_collision.t.cpp)))
- (rule
-  (alias runtest)
-  (deps modpath_escape_collision.t.exe)
-  (action (run ./modpath_escape_collision.t.exe))))
-
 (subdir shadow_qual_node
  (rule
   (targets shadow_qual_node.t.exe)
@@ -236,25 +214,3 @@
   (alias runtest)
   (deps prime_collision_value.t.exe)
   (action (run ./prime_collision_value.t.exe))))
-
-(subdir ctor_escape_prime
- (rule
-  (targets ctor_escape_prime.t.exe)
-  (deps CtorEscapePrime.vo ctor_escape_prime.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ctor_escape_prime.t.exe ctor_escape_prime.cpp ctor_escape_prime.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ctor_escape_prime.t.exe)
-  (action (run ./ctor_escape_prime.t.exe))))
-
-(subdir modpath_escape_value
- (rule
-  (targets modpath_escape_value.t.exe)
-  (deps ModpathEscapeValue.vo modpath_escape_value.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} modpath_escape_value.t.exe modpath_escape_value.cpp modpath_escape_value.t.cpp)))
- (rule
-  (alias runtest)
-  (deps modpath_escape_value.t.exe)
-  (action (run ./modpath_escape_value.t.exe))))

@@ -10,9 +10,8 @@
 #include <string>
 #include <variant>
 
-unsigned int PrimeCollision::foo'(const unsigned int n){return std::move(n);}
+unsigned int PrimeCollision::foo_(const unsigned int n) { return std::move(n); }
 
-    unsigned int
-    PrimeCollision::foo_(const unsigned int n) {
+unsigned int PrimeCollision::foo_(const unsigned int n) {
   return (std::move(n) + 1);
 }

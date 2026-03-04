@@ -8,15 +8,23 @@ Module CtorEscapeCollision.
 
 Inductive item : Type :=
 | D'
-| D_.
+| D_
+| D''
+| D__
+| D'_
+| D_'.
 
 Definition tag (x : item) : nat :=
   match x with
   | D' => 1
   | D_ => 2
+  | D'' => 3
+  | D__ => 4
+  | D'_ => 5
+  | D_' => 6
   end.
 
-Definition t : nat := tag D' + tag D_.
+Definition t : nat := tag D' + tag D_ + tag D'' + tag D__ + tag D'_ + tag D_'.
 
 End CtorEscapeCollision.
 

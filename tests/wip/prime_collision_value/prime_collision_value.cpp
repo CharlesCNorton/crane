@@ -10,9 +10,10 @@
 #include <string>
 #include <variant>
 
-unsigned int PrimeCollisionValue::value'(const unsigned int n){return std::move(n);}
+unsigned int PrimeCollisionValue::value_(const unsigned int n) {
+  return std::move(n);
+}
 
-    unsigned int
-    PrimeCollisionValue::value_(const unsigned int n) {
+unsigned int PrimeCollisionValue::value_(const unsigned int n) {
   return (std::move(n) + 1);
 }

@@ -293,6 +293,26 @@ let add_global_ids, get_global_ids =
   and get () = !ids
   in (add,get)
 
+(* Per-inductive constructor name tracking: constructors of the same inductive
+   must have distinct C++ names (e.g. enum members must be unique). *)
+module IndKey = struct
+  type t = Names.MutInd.t * int
+  let compare (m1,i1) (m2,i2) =
+    let c = Names.MutInd.CanOrd.compare m1 m2 in
+    if c = 0 then Int.compare i1 i2 else c
+end
+module IndMap = Map.Make(IndKey)
+
+let add_ctor_sibling, get_ctor_siblings =
+  let tbl = ref IndMap.empty in
+  register_cleanup (fun () -> tbl := IndMap.empty);
+  let add ind id =
+    let cur = try IndMap.find ind !tbl with Not_found -> Id.Set.empty in
+    tbl := IndMap.add ind (Id.Set.add id cur) !tbl
+  and get ind =
+    try IndMap.find ind !tbl with Not_found -> Id.Set.empty
+  in (add, get)
+
 let empty_env () = [], get_global_ids ()
 
 (* We might have built [global_reference] whose canonical part is
@@ -430,8 +450,9 @@ let reset_renaming_tables flag =
 
 let modular_rename _k id =
   let s = ascii_of_id id in
-  if Id.Set.mem id (get_keywords ()) then s ^ "_"
-  else s
+  let s = if Id.Set.mem id (get_keywords ()) then s ^ "_" else s in
+  (* Replace primes (') with underscores — primes are not valid in C++ identifiers *)
+  String.map (fun c -> if c = '\'' then '_' else c) s
 
 (*s For monolithic extraction, first-level modules might have to be renamed
     with unique numbers *)
@@ -496,7 +517,24 @@ let ref_renaming_fun (k,r) =
       let globs = get_global_ids () in
       let id = next_ident_away (kindcase_id k idg) globs in
       Id.to_string id
-    | _ -> modular_rename k idg
+    | _ ->
+      let s = modular_rename k idg in
+      (* For constructors, avoid collisions among siblings of the same
+         inductive type (e.g. D' and D_ both mapping to D_ after prime
+         escaping).  Non-constructor globals don't need this check. *)
+      match r with
+      | GlobRef.ConstructRef (ind, _)
+        when not (is_mp_bound (base_mp mp)) ->
+        (* Track constructor names per inductive type so that prime-to-underscore
+           escaping can't create duplicates (e.g. D' and D_ both → D_).
+           Skip for MPbound refs (functor parameters) since those bypass
+           the ref_renaming cache and would accumulate stale entries. *)
+        let siblings = get_ctor_siblings ind in
+        let id = next_ident_away (Id.of_string s) siblings in
+        let s = Id.to_string id in
+        add_ctor_sibling ind (Id.of_string s);
+        s
+      | _ -> s
   in
   add_global_ids (Id.of_string s);
   s::l

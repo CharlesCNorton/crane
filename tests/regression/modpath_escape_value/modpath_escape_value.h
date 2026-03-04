@@ -17,18 +17,18 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct ModpathEscapeCollision {
+struct ModpathEscapeValue {
   struct A {
-    struct Token' { static unsigned int f(const unsigned int n);
+    struct Value_ {
+      static unsigned int f(const unsigned int n);
+    };
   };
-};
 
-struct B {
-  struct Token_ {
-    static unsigned int g(const unsigned int n);
+  struct B {
+    struct Value_ {
+      static unsigned int g(const unsigned int n);
+    };
   };
-};
 
- static inline const unsigned int t = (A::Token'::f(0) + B::Token_::g(0));
- }
- ;
+  static inline const unsigned int t = (A::Value_::f(0) + B::Value_::g(0));
+};

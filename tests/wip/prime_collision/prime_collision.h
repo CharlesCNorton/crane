@@ -18,10 +18,9 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct PrimeCollision {
-  static unsigned int foo'(const unsigned int n);
+  static unsigned int foo_(const unsigned int n);
 
-      static unsigned int
-      foo_(const unsigned int n);
+  static unsigned int foo_(const unsigned int n);
 
- static inline const unsigned int t = (foo'(0) + foo_(0));
+  static inline const unsigned int t = (foo_(0) + foo_(0));
 };
