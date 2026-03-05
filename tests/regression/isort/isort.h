@@ -92,7 +92,7 @@ public:
 struct Compare_dec {
   static bool le_lt_dec(const unsigned int n, const unsigned int m);
 
-  static bool le_gt_dec(const unsigned int, const unsigned int);
+  static bool le_gt_dec(const unsigned int _x0, const unsigned int _x1);
 
   static bool le_dec(const unsigned int n, const unsigned int m);
 };

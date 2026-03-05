@@ -85,7 +85,7 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
-  std::shared_ptr<List<A>> app(const std::shared_ptr<List<A>> &m) const {
+  std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
     return std::visit(Overloaded{[&](const typename List<A>::nil _args)
                                      -> std::shared_ptr<List<A>> { return m; },
                                  [&](const typename List<A>::cons _args)
@@ -210,7 +210,8 @@ struct NestedTree {
   template <typename T1>
   static std::shared_ptr<List<std::shared_ptr<List<T1>>>>
   flatten_tree(const std::shared_ptr<tree<T1>> &t) {
-    return _flatten_tree_go(
+    return _flatten_tree_go<T1,
+                            std::shared_ptr<List<std::shared_ptr<List<T1>>>>>(
         [](T1 x) { return List<T1>::ctor::cons_(x, List<T1>::ctor::nil_()); },
         t);
   }

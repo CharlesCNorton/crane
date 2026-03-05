@@ -69,7 +69,7 @@ struct Nat {
                      }},
           this->v());
     }
-    std::shared_ptr<nat> add(const std::shared_ptr<nat> &n) const {
+    std::shared_ptr<nat> add(std::shared_ptr<nat> n) const {
       return std::visit(
           Overloaded{[&](const typename nat::O _args) -> std::shared_ptr<nat> {
                        return n;

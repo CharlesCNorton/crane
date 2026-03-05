@@ -40,7 +40,8 @@ Levenshtein::inserts_chain(const std::shared_ptr<String> &s1,
                            const std::shared_ptr<String> &s2) {
   return std::visit(
       Overloaded{[&](const typename String::EmptyString _args) -> auto {
-                   return _inserts_chain_F(s2);
+                   return _inserts_chain_F<std::shared_ptr<Levenshtein::chain>>(
+                       s2);
                  },
                  [&](const typename String::String0 _args) -> auto {
                    std::shared_ptr<Ascii> a = _args._a0;
@@ -359,7 +360,9 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String> &s,
                                                                   std::move(
                                                                       n3)),
                                                               std::move(r3_)),
-                                                      this->projT1());
+                                                      [](const auto &_x) {
+                                                        return _x->projT1();
+                                                      });
                                                 }},
                                             levenshtein_chain(xs, ys)->v());
                                       }},

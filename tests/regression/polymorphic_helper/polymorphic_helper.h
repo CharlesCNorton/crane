@@ -48,7 +48,7 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
-  std::shared_ptr<Nat> add(const std::shared_ptr<Nat> &m) const {
+  std::shared_ptr<Nat> add(std::shared_ptr<Nat> m) const {
     return std::visit(
         Overloaded{[&](const typename Nat::O _args) -> std::shared_ptr<Nat> {
                      return m;

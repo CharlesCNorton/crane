@@ -17,6 +17,59 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
+enum class bool0 { true0, false0 };
+
+struct Nat {
+public:
+  struct O {};
+  struct S {
+    std::shared_ptr<Nat> _a0;
+  };
+  using variant_t = std::variant<O, S>;
+
+private:
+  variant_t v_;
+  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : v_(std::move(_v)) {}
+
+public:
+  struct ctor {
+    ctor() = delete;
+    static std::shared_ptr<Nat> O_() {
+      return std::shared_ptr<Nat>(new Nat(O{}));
+    }
+    static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
+      return std::shared_ptr<Nat>(new Nat(S{a0}));
+    }
+    static std::unique_ptr<Nat> O_uptr() {
+      return std::unique_ptr<Nat>(new Nat(O{}));
+    }
+    static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
+      return std::unique_ptr<Nat>(new Nat(S{a0}));
+    }
+  };
+  const variant_t &v() const { return v_; }
+  variant_t &v_mut() { return v_; }
+  bool0 leb(const std::shared_ptr<Nat> &m) const {
+    return std::visit(
+        Overloaded{
+            [](const typename Nat::O _args) -> bool0 { return bool0::true0; },
+            [&](const typename Nat::S _args) -> bool0 {
+              std::shared_ptr<Nat> n_ = _args._a0;
+              return std::visit(
+                  Overloaded{[](const typename Nat::O _args) -> bool0 {
+                               return bool0::false0;
+                             },
+                             [&](const typename Nat::S _args) -> bool0 {
+                               std::shared_ptr<Nat> m_ = _args._a0;
+                               return std::move(n_)->leb(std::move(m_));
+                             }},
+                  m->v());
+            }},
+        this->v());
+  }
+};
+
 template <typename A, typename P> struct SigT {
 public:
   struct existT {
@@ -55,67 +108,6 @@ enum class sumbool { left, right };
 
 struct Bool {
   static sumbool bool_dec(const bool0 b1, const bool0 b2);
-};
-
-struct String {
-public:
-  struct EmptyString {};
-  struct String0 {
-    std::shared_ptr<Ascii> _a0;
-    std::shared_ptr<String> _a1;
-  };
-  using variant_t = std::variant<EmptyString, String0>;
-
-private:
-  variant_t v_;
-  explicit String(EmptyString _v) : v_(std::move(_v)) {}
-  explicit String(String0 _v) : v_(std::move(_v)) {}
-
-public:
-  struct ctor {
-    ctor() = delete;
-    static std::shared_ptr<String> EmptyString_() {
-      return std::shared_ptr<String>(new String(EmptyString{}));
-    }
-    static std::shared_ptr<String> String0_(const std::shared_ptr<Ascii> &a0,
-                                            const std::shared_ptr<String> &a1) {
-      return std::shared_ptr<String>(new String(String0{a0, a1}));
-    }
-    static std::unique_ptr<String> EmptyString_uptr() {
-      return std::unique_ptr<String>(new String(EmptyString{}));
-    }
-    static std::unique_ptr<String>
-    String0_uptr(const std::shared_ptr<Ascii> &a0,
-                 const std::shared_ptr<String> &a1) {
-      return std::unique_ptr<String>(new String(String0{a0, a1}));
-    }
-  };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
-  std::shared_ptr<String> append(const std::shared_ptr<String> &s2) const {
-    return std::visit(Overloaded{[&](const typename String::EmptyString _args)
-                                     -> std::shared_ptr<String> { return s2; },
-                                 [&](const typename String::String0 _args)
-                                     -> std::shared_ptr<String> {
-                                   std::shared_ptr<Ascii> c = _args._a0;
-                                   std::shared_ptr<String> s1_ = _args._a1;
-                                   return String::ctor::String0_(
-                                       std::move(c),
-                                       std::move(s1_)->append(s2));
-                                 }},
-                      this->v());
-  }
-  std::shared_ptr<Nat> length() const {
-    return std::visit(
-        Overloaded{
-            [](const typename String::EmptyString _args)
-                -> std::shared_ptr<Nat> { return Nat::ctor::O_(); },
-            [](const typename String::String0 _args) -> std::shared_ptr<Nat> {
-              std::shared_ptr<String> s_ = _args._a1;
-              return Nat::ctor::S_(std::move(s_)->length());
-            }},
-        this->v());
-  }
 };
 
 struct Ascii {
@@ -255,54 +247,62 @@ public:
   }
 };
 
-enum class bool0 { true0, false0 };
-
-struct Nat {
+struct String {
 public:
-  struct O {};
-  struct S {
-    std::shared_ptr<Nat> _a0;
+  struct EmptyString {};
+  struct String0 {
+    std::shared_ptr<Ascii> _a0;
+    std::shared_ptr<String> _a1;
   };
-  using variant_t = std::variant<O, S>;
+  using variant_t = std::variant<EmptyString, String0>;
 
 private:
   variant_t v_;
-  explicit Nat(O _v) : v_(std::move(_v)) {}
-  explicit Nat(S _v) : v_(std::move(_v)) {}
+  explicit String(EmptyString _v) : v_(std::move(_v)) {}
+  explicit String(String0 _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<Nat> O_() {
-      return std::shared_ptr<Nat>(new Nat(O{}));
+    static std::shared_ptr<String> EmptyString_() {
+      return std::shared_ptr<String>(new String(EmptyString{}));
     }
-    static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
-      return std::shared_ptr<Nat>(new Nat(S{a0}));
+    static std::shared_ptr<String> String0_(const std::shared_ptr<Ascii> &a0,
+                                            const std::shared_ptr<String> &a1) {
+      return std::shared_ptr<String>(new String(String0{a0, a1}));
     }
-    static std::unique_ptr<Nat> O_uptr() {
-      return std::unique_ptr<Nat>(new Nat(O{}));
+    static std::unique_ptr<String> EmptyString_uptr() {
+      return std::unique_ptr<String>(new String(EmptyString{}));
     }
-    static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
-      return std::unique_ptr<Nat>(new Nat(S{a0}));
+    static std::unique_ptr<String>
+    String0_uptr(const std::shared_ptr<Ascii> &a0,
+                 const std::shared_ptr<String> &a1) {
+      return std::unique_ptr<String>(new String(String0{a0, a1}));
     }
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
-  bool0 leb(const std::shared_ptr<Nat> &m) const {
+  std::shared_ptr<String> append(std::shared_ptr<String> s2) const {
+    return std::visit(Overloaded{[&](const typename String::EmptyString _args)
+                                     -> std::shared_ptr<String> { return s2; },
+                                 [&](const typename String::String0 _args)
+                                     -> std::shared_ptr<String> {
+                                   std::shared_ptr<Ascii> c = _args._a0;
+                                   std::shared_ptr<String> s1_ = _args._a1;
+                                   return String::ctor::String0_(
+                                       std::move(c),
+                                       std::move(s1_)->append(s2));
+                                 }},
+                      this->v());
+  }
+  std::shared_ptr<Nat> length() const {
     return std::visit(
         Overloaded{
-            [](const typename Nat::O _args) -> bool0 { return bool0::true0; },
-            [&](const typename Nat::S _args) -> bool0 {
-              std::shared_ptr<Nat> n_ = _args._a0;
-              return std::visit(
-                  Overloaded{[](const typename Nat::O _args) -> bool0 {
-                               return bool0::false0;
-                             },
-                             [&](const typename Nat::S _args) -> bool0 {
-                               std::shared_ptr<Nat> m_ = _args._a0;
-                               return std::move(n_)->leb(std::move(m_));
-                             }},
-                  m->v());
+            [](const typename String::EmptyString _args)
+                -> std::shared_ptr<Nat> { return Nat::ctor::O_(); },
+            [](const typename String::String0 _args) -> std::shared_ptr<Nat> {
+              std::shared_ptr<String> s_ = _args._a1;
+              return Nat::ctor::S_(std::move(s_)->length());
             }},
         this->v());
   }
@@ -689,8 +689,8 @@ struct Levenshtein {
   }
 
   static std::shared_ptr<SigT<std::shared_ptr<Nat>, std::shared_ptr<chain>>>
-  levenshtein_chain(const std::shared_ptr<String> &,
-                    const std::shared_ptr<String> &);
+  levenshtein_chain(const std::shared_ptr<String> &s,
+                    std::shared_ptr<String> _x0);
 
   static std::shared_ptr<Nat>
   levenshtein_computed(const std::shared_ptr<String> &s,

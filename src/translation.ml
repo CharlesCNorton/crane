@@ -1758,9 +1758,35 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     let fix_ids_for_env = Array.to_list (Array.map (fun (n, ty) -> (n, ty)) ids) in
     let _, env_with_fix = push_vars' fix_ids_for_env env in
     push_env_types fix_ids_for_env;
-    (* Generate b, then replace references to the fixpoint var with calls to the lifted function. *)
-    let outer_type_args = List.map (fun id -> Tvar (0, Some id)) outer_tvars in
-    let lifted_call = CPPglob (lifted_ref, outer_type_args) in
+    (* Generate b, then replace references to the fixpoint var with calls to the lifted function.
+       Build explicit type args: outer tvars stay as Tvar references, extra tvars
+       are resolved to concrete types from the enclosing function's return type. *)
+    let call_type_args =
+      let extra_tvar_names = List.filter (fun id ->
+        not (List.exists (Id.equal id) outer_tvars)) all_tvar_names in
+      if extra_tvar_names = [] then
+        List.map (fun id -> Tvar (0, Some id)) outer_tvars
+      else begin
+        let fix_ty = snd ids.(0) in
+        let tmpl_cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty all_tvar_names fix_ty in
+        let tmpl_cod = match tmpl_cpp_ty with
+          | Tfun (_, cod) -> cod | t -> t in
+        let outer_args = List.map (fun id -> Tvar (0, Some id)) outer_tvars in
+        let extra_args = List.map (fun tvar_name ->
+          match tmpl_cod with
+          | Tvar (_, Some id) when Id.equal id tvar_name ->
+            (match tctx.current_cpp_return_type with
+             | Some ret_ty -> ret_ty
+             | None -> Tvar (0, Some tvar_name))
+          | _ ->
+            (match tctx.current_cpp_return_type with
+             | Some ret_ty -> ret_ty
+             | None -> Tvar (0, Some tvar_name))
+        ) extra_tvar_names in
+        outer_args @ extra_args
+      end
+    in
+    let lifted_call = CPPglob (lifted_ref, call_type_args) in
     (* Phase 2: shift owned vars for fix bindings *)
     let n_fix_bindings_lifted = Array.length ids in
     let saved_owned_lifted = tctx.move_owned_vars in
@@ -2131,9 +2157,43 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
       add_lifted_decl lifted_decl
     ) funs_compiled;
     (* Generate args in outer scope and call the lifted function.
-       With template function parameters (F0 &&), C++ can deduce all type args. *)
+       Build explicit type args: outer tvars stay as Tvar references, extra tvars
+       are resolved to concrete types from the enclosing context.
+       Extra tvars that appear as the fixpoint's return type are resolved to the
+       enclosing function's C++ return type (current_cpp_return_type). *)
+    let call_type_args =
+      let extra_tvar_names = List.filter (fun id ->
+        not (List.exists (Id.equal id) outer_tvars)) all_tvar_names in
+      if extra_tvar_names = [] then
+        (* All tvars are outer — C++ can deduce them *)
+        []
+      else begin
+        (* Get the fixpoint's template return type to identify which extra tvar it uses *)
+        let fix_ty = snd ids.(x) in
+        let tmpl_cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty extended_tvar_names fix_ty in
+        let tmpl_cod = match tmpl_cpp_ty with
+          | Tfun (_, cod) -> cod | t -> t in
+        let outer_args = List.map (fun id -> Tvar (0, Some id)) outer_tvars in
+        let extra_args = List.map (fun tvar_name ->
+          (* If this extra tvar IS the template return type, use the enclosing
+             function's concrete return type as the instantiation. *)
+          match tmpl_cod with
+          | Tvar (_, Some id) when Id.equal id tvar_name ->
+            (match tctx.current_cpp_return_type with
+             | Some ret_ty -> ret_ty
+             | None -> Tvar (0, Some tvar_name))
+          | _ ->
+            (* For non-return-type extra tvars, keep as Tvar — C++ may deduce them
+               from arguments, or further analysis is needed. *)
+            (match tctx.current_cpp_return_type with
+             | Some ret_ty -> ret_ty  (* Best guess: use enclosing return type *)
+             | None -> Tvar (0, Some tvar_name))
+        ) extra_tvar_names in
+        outer_args @ extra_args
+      end
+    in
     let cpp_args = List.rev_map (gen_expr env) args in
-    [k (CPPfun_call (CPPglob (lifted_ref, []), cpp_args))]
+    [k (CPPfun_call (CPPglob (lifted_ref, call_type_args), cpp_args))]
   end else begin
     (* No extra Tvars - proceed with original local fixpoint approach *)
     let all_fix_ids_list = Array.to_list ids in
@@ -3596,19 +3656,6 @@ let gen_dfuns (ns,bs,tys) =
     [result]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
-let gen_dfuns_header (ns,bs,tys) =
-  List.concat_map (fun (i, name) ->
-    let (ds, env, tvars) = gen_decl_for_dfuns name bs.(i) tys.(i) in
-    let lifted = take_lifted_decls () in
-    let lifted_results = List.map (fun d -> (d, empty_env ())) lifted in
-    let main_result = match tvars with
-      | [] ->
-        let b = resolve_body_tvars bs.(i) tys.(i) in
-        gen_spec_for_sfuns name b tys.(i)
-      | _::_ -> ds, env in
-    lifted_results @ [main_result]
-  ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
-
 (* Convert a Dfundef (definition with body) to a Dfundecl (declaration without body).
    Recursively handles Dtemplate wrappers. Used to generate forward declarations
    that match the full definition's signature (including concept constraints). *)
@@ -3619,6 +3666,22 @@ let rec decl_to_spec (d : cpp_decl) : cpp_decl =
   | Dtemplate (temps, cstr, inner) ->
     Dtemplate (temps, cstr, decl_to_spec inner)
   | _ -> d  (* Already a declaration, return as-is *)
+
+let gen_dfuns_header (ns,bs,tys) =
+  List.concat_map (fun (i, name) ->
+    let (ds, env, tvars) = gen_decl_for_dfuns name bs.(i) tys.(i) in
+    let lifted = take_lifted_decls () in
+    let lifted_results = List.map (fun d -> (d, empty_env ())) lifted in
+    (* For non-template functions, derive the spec from the definition via
+       decl_to_spec to ensure parameter types (owned vs borrowed) match exactly
+       between the forward declaration and the out-of-line definition.
+       Previously used gen_spec_for_sfuns which ran independent escape analysis
+       and could produce different ownership decisions. *)
+    let main_result = match tvars with
+      | [] -> (decl_to_spec ds, env)
+      | _::_ -> ds, env in
+    lifted_results @ [main_result]
+  ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
 (* Generate forward declarations (specs) for a group of mutually recursive functions,
    using the SAME signature as the full definitions. This ensures the specs match
@@ -3662,10 +3725,12 @@ let gen_decl_for_pp_dual ~is_header n b ty =
     let def = if is_header then Some (ds, env) else None in
     (Some (decl_to_spec ds, env), def, tvars)
   | Some ds, [] ->
-    (* Non-template function: spec via gen_spec, def only in source mode *)
-    let (spec_ds, spec_env) = gen_spec n b ty in
+    (* Non-template function: spec via decl_to_spec to ensure parameter types
+       (owned vs borrowed) match exactly between declaration and definition.
+       Using gen_spec here would run independent escape analysis that may
+       produce different ownership decisions than gen_dfun used for the def. *)
     let def = if is_header then None else Some (ds, env) in
-    (Some (spec_ds, spec_env), def, tvars)
+    (Some (decl_to_spec ds, env), def, tvars)
   | None, _ ->
     (* Non-function type: no def needed *)
     let (spec_ds, spec_env) = gen_spec n b ty in
@@ -3838,11 +3903,15 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
   let template_params = extra_type_params @ fun_template_params in
 
   (* Build final params with proper wrapping.
-     Methods have const this, so for now all method shared_ptr params stay borrowed. *)
-  let params = List.map (fun (id, cpp_ty, i, _owned) ->
+     Use escape analysis to determine owned vs borrowed: owned params are passed by value
+     (for move semantics), borrowed params are passed by const ref.
+     This matches gen_dfun's logic to ensure forward declarations and definitions agree. *)
+  let params = List.map (fun (id, cpp_ty, i, owned) ->
     let wrapped = match cpp_ty with
       | Tfun _ -> Tref (Tref (Tvar (0, Some (Id.of_string ("F" ^ string_of_int i)))))
-      | Tshared_ptr _ | Tunique_ptr _ -> Tref (Tmod (TMconst, cpp_ty))
+      | Tshared_ptr _ | Tunique_ptr _ ->
+        if owned then cpp_ty  (* Pass by value for owned params *)
+        else Tref (Tmod (TMconst, cpp_ty))  (* Const ref for borrowed params *)
       | _ -> Tmod (TMconst, cpp_ty)
     in
     (id, wrapped)

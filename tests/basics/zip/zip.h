@@ -91,7 +91,7 @@ public:
             }},
         this->v());
   }
-  std::shared_ptr<List<A>> app(const std::shared_ptr<List<A>> &m) const {
+  std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
     return std::visit(Overloaded{[&](const typename List<A>::nil _args)
                                      -> std::shared_ptr<List<A>> { return m; },
                                  [&](const typename List<A>::cons _args)

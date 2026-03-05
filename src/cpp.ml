@@ -1199,11 +1199,39 @@ and pp_cpp_expr env args t =
     let custom = find_custom x in
     let cmds = parse_numbered_args "t" (fun i -> CCty_arg i) custom in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print x) ^ " := " ^ custom) env None None tys [] [] [] [] cmds
-  | CPPglob (x, _tys) when lookup_method_this_pos x <> None ->
+  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+    && (match is_registered_method x with
+        | Some (epon_ref, _) ->
+          (* Only use this-> for methods belonging to the current struct.
+             Check if the method's eponymous type name matches current_struct_name.
+             This prevents e.g. SigT::projT1 from being rendered as this->projT1()
+             when generating code inside a different struct like Levenshtein. *)
+          (match !current_struct_name with
+           | Some sn ->
+             let epon_name = Common.pp_global_name Type epon_ref in
+             let sn_str = Pp.string_of_ppcmds sn in
+             String.equal (String.capitalize_ascii epon_name) sn_str
+           | None -> true)
+        | None -> true) ->
     (* A bare reference to a method on the same struct (eta-reduced from \self. method self).
        Generate this->method() - a call to the method via this, not a function pointer. *)
     let method_name = Id.of_string (Common.pp_global_name Term x) in
     str "this->" ++ Id.print method_name ++ str "()"
+  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+    && (match is_registered_method x with
+        | Some (epon_ref, _) ->
+          (* Bare reference to a method on a DIFFERENT struct (used as a function value).
+             Since C++ non-static member functions can't be passed as function pointers,
+             wrap in a lambda that calls the method on its argument. *)
+          (match !current_struct_name with
+           | Some sn ->
+             let epon_name = Common.pp_global_name Type epon_ref in
+             let sn_str = Pp.string_of_ppcmds sn in
+             not (String.equal (String.capitalize_ascii epon_name) sn_str)
+           | None -> false)
+        | None -> false) ->
+    let method_name = Id.of_string (Common.pp_global_name Term x) in
+    str "[](const auto &_x) { return _x->" ++ Id.print method_name ++ str "(); }"
   | CPPglob (x, tys) ->
     (* Determine the base name for a global reference *)
     let base_name = match x with
@@ -3495,131 +3523,111 @@ let do_struct_with_decl_tracking ~is_header f s =
   (* Pre-compute wrapper names for all modules *)
   let wrapper_names_unsorted = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
   (* ============================================================================
-     TOPOLOGICAL SORT: Reorder wrapper modules by method-body dependencies
+     TOPOLOGICAL SORT: Reorder all module entries by cross-module dependencies
      ============================================================================
 
-     When a standalone Rocq function (e.g., ascii_dec) is turned into a C++ method
-     on an eponymous struct (e.g., Ascii), its body may reference types/functions
-     from other wrapper modules (e.g., Bool::bool_dec). Since the method is inlined
-     into the struct definition, the referenced wrapper module must be declared first.
+     Rocq functions turned into C++ methods are inlined into struct definitions.
+     Their bodies may reference types/functions from other modules (e.g., String's
+     length method calls Nat::ctor::O_()). Similarly, inductive field types may
+     reference types from other modules (e.g., String's constructor stores Ascii).
+     These references require the target structs to be declared before the source.
 
-     This dependency didn't exist at the Rocq type level — it only arises from the
-     eponymous type method pattern. The extraction framework outputs modules in
-     import order, which may not satisfy these method-body dependencies.
+     The extraction framework outputs modules in import order, which may not
+     satisfy these dependencies. We topologically sort ALL non-main module entries
+     (both wrapper and non-wrapper) so dependencies are emitted first.
 
-     We collect dependencies by scanning method candidate bodies for GlobRefs and
-     mapping them to wrapper module names, then topologically sort wrapper modules
-     so dependencies come first. Non-wrapper modules (the main module) stay at the end. *)
+     The main module (last entry) stays at the end since it's the user's code
+     and should be emitted after all imported dependencies. *)
   let wrapper_names =
-    (* Build a map from wrapper name to list of method candidate bodies *)
-    let wrapper_method_bodies : (string, Miniml.ml_ast list) Hashtbl.t = Hashtbl.create 16 in
-    List.iter (fun ((_mp, sel), wrapper_name) ->
-      match wrapper_name with
-      | Some name ->
-        let bodies = ref [] in
+    (* Build a mapping from ModPath to the module's sort key (index in the list).
+       Each module entry gets a unique integer ID for the topological sort.
+       The main module is excluded from sorting. *)
+    let n = List.length wrapper_names_unsorted in
+    let is_main_entry i = (i = n - 1) in
+    (* Map from ModPath to sort index, for resolving cross-module references *)
+    let mp_to_idx : (ModPath.t, int) Hashtbl.t = Hashtbl.create 16 in
+    List.iteri (fun i ((mp, _sel), _wn) ->
+      if not (is_main_entry i) then
+        Hashtbl.replace mp_to_idx mp i
+    ) wrapper_names_unsorted;
+    (* Build dependency graph: index -> set of prerequisite indices.
+       We scan ALL declarations in each module (inductives, terms, fixes)
+       for cross-module references. This captures:
+       - Type-level deps: inductive field types referencing types in other modules
+         (e.g., String's constructor has a field of type Ascii)
+       - Method-body deps: inlined methods referencing functions in other modules
+         (e.g., ascii_dec calling Bool::bool_dec)
+       - Constructor deps: pattern matching on types from other modules *)
+    let deps : (int, int list) Hashtbl.t = Hashtbl.create 16 in
+    List.iteri (fun i ((_mp, sel), _wn) ->
+      if is_main_entry i then ()
+      else begin
+        let dep_set : (int, unit) Hashtbl.t = Hashtbl.create 8 in
+        let add_dep r =
+          let rmp = modpath_of_r r in
+          (match Hashtbl.find_opt mp_to_idx rmp with
+           | Some j when j <> i -> Hashtbl.replace dep_set j ()
+           | _ -> ());
+          (* Also check if the reference is a registered method whose eponymous
+             type lives in another module *)
+          match is_registered_method r with
+          | Some (epon_ref, _pos) ->
+            let epon_mp = modpath_of_r epon_ref in
+            (match Hashtbl.find_opt mp_to_idx epon_mp with
+             | Some j when j <> i -> Hashtbl.replace dep_set j ()
+             | _ -> ())
+          | None -> ()
+        in
         List.iter (fun (_l, se) ->
           match se with
-          | SEdecl (Dterm (r, body, _ty)) ->
-            if is_registered_method r <> None then
-              bodies := body :: !bodies
-          | SEdecl (Dfix (rv, defs, _typs)) ->
-            Array.iteri (fun i r ->
-              if is_registered_method r <> None then
-                bodies := defs.(i) :: !bodies
-            ) rv
+          | SEdecl d -> Modutil.decl_iter_references add_dep add_dep add_dep d
           | _ -> ()
         ) sel;
-        if !bodies <> [] then
-          Hashtbl.replace wrapper_method_bodies name !bodies
-      | None -> ()
+        let dep_list = Hashtbl.fold (fun k () acc -> k :: acc) dep_set [] in
+        if dep_list <> [] then
+          Hashtbl.replace deps i dep_list
+      end
     ) wrapper_names_unsorted;
-    (* Build dependency graph: wrapper name -> set of wrapper names it depends on *)
-    let deps : (string, string list) Hashtbl.t = Hashtbl.create 16 in
-    Hashtbl.iter (fun name bodies ->
-      let dep_set : (string, unit) Hashtbl.t = Hashtbl.create 8 in
-      List.iter (fun body ->
-        Modutil.ast_iter_references
-          (fun r ->
-            let mp = modpath_of_r r in
-            (match Hashtbl.find_opt wrapper_module_table mp with
-            | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
-            | _ ->
-              (* Also check if the referenced function is a registered method
-                 on an inductive in another wrapper module *)
-              (match is_registered_method r with
-               | Some (epon_ref, _pos) ->
-                 let epon_mp = modpath_of_r epon_ref in
-                 (match Hashtbl.find_opt wrapper_module_table epon_mp with
-                  | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
-                  | _ -> ())
-               | None -> ())))
-          (fun r ->
-            let mp = modpath_of_r r in
-            match Hashtbl.find_opt wrapper_module_table mp with
-            | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
-            | _ -> ())
-          (fun _r -> ())  (* type refs don't create ordering deps *)
-          body
-      ) bodies;
-      let dep_list = Hashtbl.fold (fun k () acc -> k :: acc) dep_set [] in
-      if dep_list <> [] then
-        Hashtbl.replace deps name dep_list
-    ) wrapper_method_bodies;
-    (* Topological sort (Kahn's algorithm) *)
+    (* Topological sort (Kahn's algorithm) on module indices *)
     if Hashtbl.length deps = 0 then
       wrapper_names_unsorted
     else begin
-      (* Separate wrapper modules from non-wrapper (main) modules *)
-      let wrappers = List.filter (fun (_, wn) -> wn <> None) wrapper_names_unsorted in
-      let non_wrappers = List.filter (fun (_, wn) -> wn = None) wrapper_names_unsorted in
-      (* Build name -> entry map and compute in-degrees *)
-      let name_to_entry : (string, ((ModPath.t * (Label.t * Miniml.ml_structure_elem) list) * string option)) Hashtbl.t = Hashtbl.create 16 in
-      let all_wrapper_names = ref [] in
-      List.iter (fun (entry, wn) ->
-        match wn with
-        | Some name ->
-          Hashtbl.replace name_to_entry name (entry, wn);
-          all_wrapper_names := name :: !all_wrapper_names
-        | None -> ()
-      ) wrappers;
-      let all_names = List.rev !all_wrapper_names in
-      let in_degree : (string, int) Hashtbl.t = Hashtbl.create 16 in
-      List.iter (fun name -> Hashtbl.replace in_degree name 0) all_names;
-      (* deps maps dependent -> [prerequisites]. Each prerequisite that is a known
-         wrapper adds 1 to the dependent's in-degree (it must wait for the prerequisite). *)
-      Hashtbl.iter (fun name dep_list ->
+      let non_main_indices = List.init (n - 1) (fun i -> i) in
+      let in_degree : (int, int) Hashtbl.t = Hashtbl.create 16 in
+      List.iter (fun i -> Hashtbl.replace in_degree i 0) non_main_indices;
+      (* deps maps dependent -> [prerequisites]. Each prerequisite increments
+         the dependent's in-degree. *)
+      Hashtbl.iter (fun idx dep_list ->
         let count = List.length (List.filter (fun dep -> Hashtbl.mem in_degree dep) dep_list) in
         if count > 0 then
-          Hashtbl.replace in_degree name ((try Hashtbl.find in_degree name with Not_found -> 0) + count)
+          Hashtbl.replace in_degree idx ((try Hashtbl.find in_degree idx with Not_found -> 0) + count)
       ) deps;
-      (* Kahn's algorithm *)
       let queue = Queue.create () in
-      List.iter (fun name ->
-        if Hashtbl.find in_degree name = 0 then Queue.push name queue
-      ) all_names;
+      (* Seed with zero-in-degree nodes in original order for stability *)
+      List.iter (fun i ->
+        if Hashtbl.find in_degree i = 0 then Queue.push i queue
+      ) non_main_indices;
       let sorted = ref [] in
       while not (Queue.is_empty queue) do
-        let name = Queue.pop queue in
-        sorted := name :: !sorted;
-        (* Find nodes that depend on 'name' (name is in their dep list) *)
+        let idx = Queue.pop queue in
+        sorted := idx :: !sorted;
         Hashtbl.iter (fun dependent dep_list ->
-          if List.mem name dep_list then begin
+          if List.mem idx dep_list then begin
             let new_deg = Hashtbl.find in_degree dependent - 1 in
             Hashtbl.replace in_degree dependent new_deg;
             if new_deg = 0 then Queue.push dependent queue
           end
         ) deps
       done;
-      let sorted_names = List.rev !sorted in
-      if List.length sorted_names <> List.length all_names then
+      let sorted_indices = List.rev !sorted in
+      if List.length sorted_indices <> List.length non_main_indices then
         (* Cycle detected: fall back to original order *)
         wrapper_names_unsorted
       else
-        (* Rebuild wrapper_names in sorted order, then append non-wrappers *)
-        let sorted_wrappers = List.map (fun name ->
-          Hashtbl.find name_to_entry name
-        ) sorted_names in
-        sorted_wrappers @ non_wrappers
+        let arr = Array.of_list wrapper_names_unsorted in
+        let sorted_entries = List.map (fun i -> arr.(i)) sorted_indices in
+        (* Append the main module at the end *)
+        sorted_entries @ [arr.(n - 1)]
     end
   in
   (* ============================================================================

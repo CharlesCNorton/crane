@@ -105,7 +105,7 @@ struct List {
                      }},
           this->v());
     }
-    std::shared_ptr<list<A>> app(const std::shared_ptr<list<A>> &l2) const {
+    std::shared_ptr<list<A>> app(std::shared_ptr<list<A>> l2) const {
       return std::visit(
           Overloaded{[&](const typename list<A>::nil _args)
                          -> std::shared_ptr<list<A>> { return l2; },

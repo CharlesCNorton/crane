@@ -143,8 +143,7 @@ struct Stream {
               }},
           n->v());
     }
-    std::shared_ptr<stream<A>>
-    interleave(const std::shared_ptr<stream<A>> &sb) const {
+    std::shared_ptr<stream<A>> interleave(std::shared_ptr<stream<A>> sb) const {
       return stream<A>::ctor::lazy_([=](void) -> std::shared_ptr<stream<A>> {
         return std::visit(Overloaded{[&](const typename stream<A>::scons _args)
                                          -> std::shared_ptr<stream<A>> {

@@ -91,7 +91,7 @@ struct Nat {
                             }},
                         this->v());
         }
-        bsl::shared_ptr<nat> add(const bsl::shared_ptr<nat>& n) const
+        bsl::shared_ptr<nat> add(bsl::shared_ptr<nat> n) const
         {
             return bsl::visit(
                  bdlf::Overloaded{
