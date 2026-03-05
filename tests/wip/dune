@@ -81,17 +81,6 @@
   (deps monadic.t.exe)
   (action (run ./monadic.t.exe))))
 
-(subdir sigma_compute
- (rule
-  (targets sigma_compute.t.exe)
-  (deps SigmaCompute.vo sigma_compute.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} sigma_compute.t.exe sigma_compute.cpp sigma_compute.t.cpp)))
- (rule
-  (alias runtest)
-  (deps sigma_compute.t.exe)
-  (action (run ./sigma_compute.t.exe))))
-
 (subdir nested_record_update_qual
  (rule
   (targets nested_record_update_qual.t.exe)

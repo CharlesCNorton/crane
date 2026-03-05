@@ -113,7 +113,7 @@ public:
 };
 
 struct SigmaCompute {
-  static std::shared_ptr<SigT<unsigned int, dummy_prop>>
+  static std::shared_ptr<SigT<unsigned int, std::any>>
   nat_with_double(const unsigned int n);
 
   static std::shared_ptr<Sig<unsigned int>> positive_succ(const unsigned int n);

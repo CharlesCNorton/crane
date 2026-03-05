@@ -10,10 +10,9 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<SigT<unsigned int, dummy_prop>>
+std::shared_ptr<SigT<unsigned int, std::any>>
 SigmaCompute::nat_with_double(const unsigned int n) {
-  return SigT<unsigned int, dummy_prop>::ctor::existT_(
-      (n + n), ([&]() -> auto { throw std::logic_error("unreachable"); })());
+  return SigT<unsigned int, std::any>::ctor::existT_((n + n), std::any{});
 }
 
 std::shared_ptr<Sig<unsigned int>>
@@ -33,17 +32,19 @@ unsigned int SigmaCompute::get_positive(const unsigned int n) {
 std::shared_ptr<Sig<unsigned int>>
 SigmaCompute::double_positive(const unsigned int n) {
   std::shared_ptr<Sig<unsigned int>> p = positive_succ(n);
-  return Sig<unsigned int>::ctor::exist_(
-      (std::visit(Overloaded{[](const typename Sig<T1>::exist _args) -> auto {
-                    auto a = _args._a0;
-                    return a;
-                  }},
-                  p->v()) +
-       std::visit(Overloaded{[](const typename Sig<T1>::exist _args) -> auto {
-                    auto a = _args._a0;
-                    return a;
-                  }},
-                  p->v())));
+  return Sig<unsigned int>::ctor::exist_((
+      std::visit(
+          Overloaded{[](const typename Sig<unsigned int>::exist _args) -> auto {
+            auto a = _args._a0;
+            return a;
+          }},
+          p->v()) +
+      std::visit(
+          Overloaded{[](const typename Sig<unsigned int>::exist _args) -> auto {
+            auto a = _args._a0;
+            return a;
+          }},
+          p->v())));
 }
 
 unsigned int SigmaCompute::use_nat_double(const unsigned int n) {

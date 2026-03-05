@@ -999,8 +999,15 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
         let ctor_expr = CPPqualified (CPPglob (r, []), Id.of_string "ctor") in
         let factory_expr = CPPqualified (ctor_expr, factory_name) in
         CPPfun_call (factory_expr, args)) in
-      (* Note: CPPfun_call reverses args when printing, so we reverse here *)
-      gen_ctor_call (List.rev_map (gen_expr env) ts_updated)
+      (* Note: CPPfun_call reverses args when printing, so we reverse here.
+         For MLdummy constructor args (erased prop/type values), generate std::any{}
+         instead of the default CPPabort throw expression, since the corresponding
+         parameter type is std::any and throw has type void. *)
+      let gen_ctor_arg e = match e with
+        | MLdummy _ -> CPPraw "std::any{}"
+        | _ -> gen_expr env e
+      in
+      gen_ctor_call (List.rev_map gen_ctor_arg ts_updated)
     | _ ->
       (* Records - keep using make_shared pattern for now *)
       let nstempmod args = (match ty with
@@ -1482,10 +1489,24 @@ and gen_cpp_case (typ : ml_type) t env pv =
   in
   let typ = match t with
     | MLrel i | MLmagic (MLrel i) ->
-        (* Scrutinee is a parameter reference — use parameter's concrete type *)
-        (match get_param_type_by_index i with
-         | Some (Miniml.Tglob _ as param_ty) -> resolve_tvar_type typ param_ty
-         | _ -> typ)
+        (* Scrutinee is a variable reference — use its concrete type.
+           Try env_types first (correctly tracks let-bound variables with
+           shifted de Bruijn indices), then fall back to param_types.
+           Unwrap Tmeta wrappers since env_types may store types in Tmeta form. *)
+        let rec unwrap_tmeta = function
+          | Miniml.Tmeta { contents = Some t } -> unwrap_tmeta t
+          | t -> t
+        in
+        let env_ty_opt = try
+          let env_ty = unwrap_tmeta (get_env_type i) in
+          (match env_ty with Miniml.Tglob _ -> Some env_ty | _ -> None)
+        with _ -> None in
+        (match env_ty_opt with
+         | Some let_ty -> resolve_tvar_type typ let_ty
+         | None ->
+             (match get_param_type_by_index i with
+              | Some (Miniml.Tglob _ as param_ty) -> resolve_tvar_type typ param_ty
+              | _ -> typ))
     | MLapp (func_expr, _) | MLmagic (MLapp (func_expr, _)) ->
         (* Scrutinee is a function call — use function's return type *)
         let func_ref = match func_expr with

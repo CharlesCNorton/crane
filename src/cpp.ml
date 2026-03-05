@@ -1072,6 +1072,15 @@ let rec pp_cpp_type par vl t =
              struct_name ++ str "::" ++ Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">"
          | _ -> Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">")
     | Tglob (r, tys, args) ->
+        (* Erased type/prop/implicit markers (from Tdummy in the ML AST) should
+           never reach the C++ output.  When they do survive — e.g. as a template
+           argument of SigT<nat, dummy_prop> — render them as std::any. *)
+        (match r with
+        | GlobRef.VarRef id
+          when (let name = Id.to_string id in
+                name = "dummy_type" || name = "dummy_prop" || name = "dummy_implicit") ->
+            str "std::any"
+        | _ ->
         (match find_custom_opt r with
         | Some s when to_inline r ->
             let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
@@ -1084,12 +1093,13 @@ let rec pp_cpp_type par vl t =
             (* Non-custom cases *)
             let type_name = pp_inductive_type_name r in
             let name_str = Pp.string_of_ppcmds type_name in
-            match tys with
+            (match tys with
             | [] ->
                 typename_prefix_for name_str ++ struct_qualifier_for r name_str ++ type_name
             | l ->
                 typename_prefix_for name_str ++ struct_qualifier_for r name_str ++
-                type_name ++ str "<" ++ pp_list (pp_rec false) l ++ str ">")
+                type_name ++ str "<" ++ pp_list (pp_rec false) l ++ str ">")))
+
     | Tfun (d,c) -> std_angle "function" (pp_rec false c ++ pp_par true (pp_list (pp_rec false) d))
     | Tstruct (id, args) ->
       let id_str = Pp.string_of_ppcmds (pp_global Type id) in
