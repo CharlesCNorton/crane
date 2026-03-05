@@ -52,6 +52,17 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
+  template <typename T1, MapsTo<T1, T1, A> F0>
+  T1 fold_left(F0 &&f, const T1 a0) const {
+    return std::visit(
+        Overloaded{[&](const typename List<A>::nil _args) -> T1 { return a0; },
+                   [&](const typename List<A>::cons _args) -> T1 {
+                     A b = _args._a0;
+                     std::shared_ptr<List<A>> l0 = _args._a1;
+                     return std::move(l0)->template fold_left<T1>(f, f(a0, b));
+                   }},
+        this->v());
+  }
   template <typename T1, MapsTo<T1, A> F0>
   std::shared_ptr<List<T1>> map(F0 &&f) const {
     return std::visit(
@@ -66,17 +77,6 @@ public:
               return List<T1>::ctor::cons_(f(a),
                                            std::move(l0)->template map<T1>(f));
             }},
-        this->v());
-  }
-  template <typename T1, MapsTo<T1, T1, A> F0>
-  T1 fold_left(F0 &&f, const T1 a0) const {
-    return std::visit(
-        Overloaded{[&](const typename List<A>::nil _args) -> T1 { return a0; },
-                   [&](const typename List<A>::cons _args) -> T1 {
-                     A b = _args._a0;
-                     std::shared_ptr<List<A>> l0 = _args._a1;
-                     return std::move(l0)->template fold_left<T1>(f, f(a0, b));
-                   }},
         this->v());
   }
 };

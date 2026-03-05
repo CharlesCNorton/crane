@@ -72,24 +72,6 @@ struct List {
     };
     const variant_t& v() const { return v_; }
     variant_t&       v_mut() { return v_; }
-    template <typename T1, MapsTo<T1, A> F0>
-    bsl::shared_ptr<List<T1> > map(F0&& f) const
-    {
-        return bsl::visit(
-                 bdlf::Overloaded{[](const typename List<A>::nil _args)
-                                      -> bsl::shared_ptr<List<T1> > {
-                                      return List<T1>::ctor::nil_();
-                                  },
-                                  [&](const typename List<A>::cons _args)
-                                      -> bsl::shared_ptr<List<T1> > {
-                                      A                         a  = _args._a0;
-                                      bsl::shared_ptr<List<A> > l0 = _args._a1;
-                                      return List<T1>::ctor::cons_(
-                                          f(a),
-                                          bsl::move(l0)->template map<T1>(f));
-                                  }},
-                 this->v());
-    }
     template <typename T1>
     bsl::shared_ptr<List<T1> > concat() const
     {
@@ -199,6 +181,24 @@ struct List {
                          l_->v());
                  }},
              this->v());
+    }
+    template <typename T1, MapsTo<T1, A> F0>
+    bsl::shared_ptr<List<T1> > map(F0&& f) const
+    {
+        return bsl::visit(
+                 bdlf::Overloaded{[](const typename List<A>::nil _args)
+                                      -> bsl::shared_ptr<List<T1> > {
+                                      return List<T1>::ctor::nil_();
+                                  },
+                                  [&](const typename List<A>::cons _args)
+                                      -> bsl::shared_ptr<List<T1> > {
+                                      A                         a  = _args._a0;
+                                      bsl::shared_ptr<List<A> > l0 = _args._a1;
+                                      return List<T1>::ctor::cons_(
+                                          f(a),
+                                          bsl::move(l0)->template map<T1>(f));
+                                  }},
+                 this->v());
     }
     unsigned int length() const
     {

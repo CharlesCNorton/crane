@@ -20,24 +20,24 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct DeepMatch {
   template <typename A, typename B> struct pair {
   public:
-    struct Pair {
+    struct Pair0 {
       A _a0;
       B _a1;
     };
-    using variant_t = std::variant<Pair>;
+    using variant_t = std::variant<Pair0>;
 
   private:
     variant_t v_;
-    explicit pair(Pair _v) : v_(std::move(_v)) {}
+    explicit pair(Pair0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<pair<A, B>> Pair_(A a0, B a1) {
-        return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair{a0, a1}));
+      static std::shared_ptr<pair<A, B>> Pair0_(A a0, B a1) {
+        return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
-      static std::unique_ptr<pair<A, B>> Pair_uptr(A a0, B a1) {
-        return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair{a0, a1}));
+      static std::unique_ptr<pair<A, B>> Pair0_uptr(A a0, B a1) {
+        return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -47,7 +47,7 @@ struct DeepMatch {
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
   static T3 pair_rect(F0 &&f, const std::shared_ptr<pair<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[&](const typename pair<T1, T2>::Pair _args) -> T3 {
+        Overloaded{[&](const typename pair<T1, T2>::Pair0 _args) -> T3 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           return f(a, b);
@@ -58,7 +58,7 @@ struct DeepMatch {
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
   static T3 pair_rec(F0 &&f, const std::shared_ptr<pair<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[&](const typename pair<T1, T2>::Pair _args) -> T3 {
+        Overloaded{[&](const typename pair<T1, T2>::Pair0 _args) -> T3 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           return f(a, b);
@@ -145,7 +145,7 @@ struct DeepMatch {
 
   static inline const unsigned int test_pair_list = match_pair_list(
       list<std::shared_ptr<pair<unsigned int, unsigned int>>>::ctor::cons_(
-          pair<unsigned int, unsigned int>::ctor::Pair_(5u, 3u),
+          pair<unsigned int, unsigned int>::ctor::Pair0_(5u, 3u),
           list<std::shared_ptr<pair<unsigned int, unsigned int>>>::ctor::
               nil_()));
 
@@ -170,6 +170,6 @@ struct DeepMatch {
   static inline const unsigned int test_wildcard = deep_wildcard(
       pair<std::shared_ptr<pair<unsigned int, unsigned int>>,
            std::shared_ptr<pair<unsigned int, unsigned int>>>::ctor::
-          Pair_(pair<unsigned int, unsigned int>::ctor::Pair_(1u, 2u),
-                pair<unsigned int, unsigned int>::ctor::Pair_(3u, 4u)));
+          Pair0_(pair<unsigned int, unsigned int>::ctor::Pair0_(1u, 2u),
+                 pair<unsigned int, unsigned int>::ctor::Pair0_(3u, 4u)));
 };

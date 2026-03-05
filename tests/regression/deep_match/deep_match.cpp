@@ -24,13 +24,12 @@ unsigned int DeepMatch::match_pair_list(
             std::shared_ptr<DeepMatch::pair<unsigned int, unsigned int>> p =
                 _args._a0;
             return std::visit(
-                Overloaded{
-                    [](const typename DeepMatch::pair<unsigned int,
-                                                      unsigned int>::Pair _args)
-                        -> unsigned int {
-                      unsigned int x = _args._a0;
-                      return std::move(x);
-                    }},
+                Overloaded{[](const typename DeepMatch::pair<
+                               unsigned int, unsigned int>::Pair0 _args)
+                               -> unsigned int {
+                  unsigned int x = _args._a0;
+                  return std::move(x);
+                }},
                 std::move(p)->v());
           }},
       l->v());
@@ -108,19 +107,19 @@ unsigned int DeepMatch::deep_wildcard(
           [](const typename DeepMatch::pair<
               std::shared_ptr<DeepMatch::pair<unsigned int, unsigned int>>,
               std::shared_ptr<DeepMatch::pair<unsigned int, unsigned int>>>::
-                 Pair _args) -> unsigned int {
+                 Pair0 _args) -> unsigned int {
             std::shared_ptr<DeepMatch::pair<unsigned int, unsigned int>> p0 =
                 _args._a0;
             std::shared_ptr<DeepMatch::pair<unsigned int, unsigned int>> p1 =
                 _args._a1;
             return std::visit(
                 Overloaded{[&](const typename DeepMatch::pair<
-                               unsigned int, unsigned int>::Pair _args)
+                               unsigned int, unsigned int>::Pair0 _args)
                                -> unsigned int {
                   unsigned int a = _args._a0;
                   return std::visit(
                       Overloaded{[&](const typename DeepMatch::pair<
-                                     unsigned int, unsigned int>::Pair _args)
+                                     unsigned int, unsigned int>::Pair0 _args)
                                      -> unsigned int { return std::move(a); }},
                       std::move(p1)->v());
                 }},

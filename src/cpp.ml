@@ -1839,9 +1839,12 @@ function
       (* MERGE template: template<typename A> struct List { ... } *)
       let struct_name = str struct_name_str in
       let old_context = !in_struct_context in
+      let old_template = !in_template_struct in
       in_struct_context := true;
+      in_template_struct := true;
       let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
       in_struct_context := old_context;
+      in_template_struct := old_template;
       let args = pp_list pp_template_param temps in
       h (str "template <" ++ args ++ str ">")
       ++ (match cstr with
@@ -3490,7 +3493,135 @@ let do_struct_with_decl_tracking ~is_header f s =
     end else
       None in
   (* Pre-compute wrapper names for all modules *)
-  let wrapper_names = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
+  let wrapper_names_unsorted = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
+  (* ============================================================================
+     TOPOLOGICAL SORT: Reorder wrapper modules by method-body dependencies
+     ============================================================================
+
+     When a standalone Rocq function (e.g., ascii_dec) is turned into a C++ method
+     on an eponymous struct (e.g., Ascii), its body may reference types/functions
+     from other wrapper modules (e.g., Bool::bool_dec). Since the method is inlined
+     into the struct definition, the referenced wrapper module must be declared first.
+
+     This dependency didn't exist at the Rocq type level — it only arises from the
+     eponymous type method pattern. The extraction framework outputs modules in
+     import order, which may not satisfy these method-body dependencies.
+
+     We collect dependencies by scanning method candidate bodies for GlobRefs and
+     mapping them to wrapper module names, then topologically sort wrapper modules
+     so dependencies come first. Non-wrapper modules (the main module) stay at the end. *)
+  let wrapper_names =
+    (* Build a map from wrapper name to list of method candidate bodies *)
+    let wrapper_method_bodies : (string, Miniml.ml_ast list) Hashtbl.t = Hashtbl.create 16 in
+    List.iter (fun ((_mp, sel), wrapper_name) ->
+      match wrapper_name with
+      | Some name ->
+        let bodies = ref [] in
+        List.iter (fun (_l, se) ->
+          match se with
+          | SEdecl (Dterm (r, body, _ty)) ->
+            if is_registered_method r <> None then
+              bodies := body :: !bodies
+          | SEdecl (Dfix (rv, defs, _typs)) ->
+            Array.iteri (fun i r ->
+              if is_registered_method r <> None then
+                bodies := defs.(i) :: !bodies
+            ) rv
+          | _ -> ()
+        ) sel;
+        if !bodies <> [] then
+          Hashtbl.replace wrapper_method_bodies name !bodies
+      | None -> ()
+    ) wrapper_names_unsorted;
+    (* Build dependency graph: wrapper name -> set of wrapper names it depends on *)
+    let deps : (string, string list) Hashtbl.t = Hashtbl.create 16 in
+    Hashtbl.iter (fun name bodies ->
+      let dep_set : (string, unit) Hashtbl.t = Hashtbl.create 8 in
+      List.iter (fun body ->
+        Modutil.ast_iter_references
+          (fun r ->
+            let mp = modpath_of_r r in
+            (match Hashtbl.find_opt wrapper_module_table mp with
+            | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
+            | _ ->
+              (* Also check if the referenced function is a registered method
+                 on an inductive in another wrapper module *)
+              (match is_registered_method r with
+               | Some (epon_ref, _pos) ->
+                 let epon_mp = modpath_of_r epon_ref in
+                 (match Hashtbl.find_opt wrapper_module_table epon_mp with
+                  | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
+                  | _ -> ())
+               | None -> ())))
+          (fun r ->
+            let mp = modpath_of_r r in
+            match Hashtbl.find_opt wrapper_module_table mp with
+            | Some dep_name when dep_name <> name -> Hashtbl.replace dep_set dep_name ()
+            | _ -> ())
+          (fun _r -> ())  (* type refs don't create ordering deps *)
+          body
+      ) bodies;
+      let dep_list = Hashtbl.fold (fun k () acc -> k :: acc) dep_set [] in
+      if dep_list <> [] then
+        Hashtbl.replace deps name dep_list
+    ) wrapper_method_bodies;
+    (* Topological sort (Kahn's algorithm) *)
+    if Hashtbl.length deps = 0 then
+      wrapper_names_unsorted
+    else begin
+      (* Separate wrapper modules from non-wrapper (main) modules *)
+      let wrappers = List.filter (fun (_, wn) -> wn <> None) wrapper_names_unsorted in
+      let non_wrappers = List.filter (fun (_, wn) -> wn = None) wrapper_names_unsorted in
+      (* Build name -> entry map and compute in-degrees *)
+      let name_to_entry : (string, ((ModPath.t * (Label.t * Miniml.ml_structure_elem) list) * string option)) Hashtbl.t = Hashtbl.create 16 in
+      let all_wrapper_names = ref [] in
+      List.iter (fun (entry, wn) ->
+        match wn with
+        | Some name ->
+          Hashtbl.replace name_to_entry name (entry, wn);
+          all_wrapper_names := name :: !all_wrapper_names
+        | None -> ()
+      ) wrappers;
+      let all_names = List.rev !all_wrapper_names in
+      let in_degree : (string, int) Hashtbl.t = Hashtbl.create 16 in
+      List.iter (fun name -> Hashtbl.replace in_degree name 0) all_names;
+      (* deps maps dependent -> [prerequisites]. Each prerequisite that is a known
+         wrapper adds 1 to the dependent's in-degree (it must wait for the prerequisite). *)
+      Hashtbl.iter (fun name dep_list ->
+        let count = List.length (List.filter (fun dep -> Hashtbl.mem in_degree dep) dep_list) in
+        if count > 0 then
+          Hashtbl.replace in_degree name ((try Hashtbl.find in_degree name with Not_found -> 0) + count)
+      ) deps;
+      (* Kahn's algorithm *)
+      let queue = Queue.create () in
+      List.iter (fun name ->
+        if Hashtbl.find in_degree name = 0 then Queue.push name queue
+      ) all_names;
+      let sorted = ref [] in
+      while not (Queue.is_empty queue) do
+        let name = Queue.pop queue in
+        sorted := name :: !sorted;
+        (* Find nodes that depend on 'name' (name is in their dep list) *)
+        Hashtbl.iter (fun dependent dep_list ->
+          if List.mem name dep_list then begin
+            let new_deg = Hashtbl.find in_degree dependent - 1 in
+            Hashtbl.replace in_degree dependent new_deg;
+            if new_deg = 0 then Queue.push dependent queue
+          end
+        ) deps
+      done;
+      let sorted_names = List.rev !sorted in
+      if List.length sorted_names <> List.length all_names then
+        (* Cycle detected: fall back to original order *)
+        wrapper_names_unsorted
+      else
+        (* Rebuild wrapper_names in sorted order, then append non-wrappers *)
+        let sorted_wrappers = List.map (fun name ->
+          Hashtbl.find name_to_entry name
+        ) sorted_names in
+        sorted_wrappers @ non_wrappers
+    end
+  in
   (* ============================================================================
      COMBINED PASS: PERFORMANCE OPTIMIZATION TO ELIMINATE DUPLICATE CODE GENERATION
      ============================================================================
@@ -3586,11 +3717,24 @@ let do_struct_with_decl_tracking ~is_header f s =
     current_structure_decls := sel;
     push_visible mp [];
     let p = match wrapper_name with
-      | Some _name ->
+      | Some name ->
         (* Only render non-function declarations. Functions were pre-rendered
            and stored in pending_wrapper_decls for Dnspace injection. *)
         let type_sels = List.filter (fun x -> not (is_func_decl x)) sel in
-        prlist_sep_nonempty cut2 f type_sels
+        let type_pp = prlist_sep_nonempty cut2 f type_sels in
+        (* If this wrapper module produced no type output (no Dnspace consumed
+           its pending declarations), emit a standalone wrapper struct here.
+           This preserves the topological sort order: standalone wrappers like
+           Bool are emitted before types like Ascii that depend on them via
+           inlined method bodies. *)
+        if Pp.ismt type_pp && is_header then
+          match Hashtbl.find_opt pending_wrapper_decls name with
+          | Some specs ->
+            Hashtbl.remove pending_wrapper_decls name;
+            str "struct " ++ str name ++ str " {" ++ fnl () ++ specs ++ fnl () ++ str "};"
+          | None -> mt ()
+        else
+          type_pp
       | None ->
         prlist_sep_nonempty cut2 f sel
     in
@@ -3598,11 +3742,13 @@ let do_struct_with_decl_tracking ~is_header f s =
     (if modular () then pop_visible ());
     p
   in
-  (* Render all modules in original order *)
+  (* Render all modules in topologically-sorted order.
+     Standalone wrapper structs (not consumed by any Dnspace) are emitted inline
+     by ppl above, preserving the dependency order from the topological sort. *)
   let rendered = List.map (fun wn -> (wn, ppl wn)) wrapper_names in
-  (* Find the last non-wrapper entry (main module) and insert remaining_wrappers before it.
-     Remaining wrapper structs are standalone wrappers not consumed by any Dnspace struct.
-     They must be emitted after all imported types are defined but before the main module. *)
+  (* Emit any remaining standalone wrapper structs that were not emitted inline.
+     This handles wrappers whose pending declarations were consumed by a Dnspace
+     struct during type rendering but still have unconsumed entries. *)
   let remaining_wrappers =
     if is_header then
       Hashtbl.fold (fun name specs acc ->

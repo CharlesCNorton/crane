@@ -534,6 +534,20 @@ let ref_renaming_fun (k,r) =
     match l with
     | [""] -> (* this happens only at toplevel of the monolithic case *)
       let globs = get_global_ids () in
+      (* For constructors, also reserve the parent inductive type's name
+         (and its capitalized form) so that eponymous constructors like
+         Ascii.Ascii get renamed to avoid C++ struct name conflicts. *)
+      let globs = match r with
+        | GlobRef.ConstructRef (ind, _) ->
+          let parent_idg = safe_basename_of_global (GlobRef.IndRef ind) in
+          let parent_s = ascii_of_id parent_idg in
+          let globs = Id.Set.add (Id.of_string parent_s) globs in
+          let parent_cap = String.capitalize_ascii parent_s in
+          if parent_cap <> parent_s
+          then Id.Set.add (Id.of_string parent_cap) globs
+          else globs
+        | _ -> globs
+      in
       let id = next_ident_away (kindcase_id k idg) globs in
       Id.to_string id
     | _ ->
@@ -549,6 +563,19 @@ let ref_renaming_fun (k,r) =
       match r with
       | GlobRef.ConstructRef (ind, _) when not is_bound ->
         let siblings = get_ctor_siblings ind in
+        (* In C++, a nested struct cannot share its name with the enclosing
+           struct.  Reserve the parent inductive type's C++ name so that any
+           constructor with the same name is automatically renamed.
+           We reserve both the raw name and the capitalized form, because
+           an eponymous Dnspace merge may capitalize the enclosing struct
+           name (e.g. module Ascii + type ascii -> struct Ascii). *)
+        let parent_idg = safe_basename_of_global (GlobRef.IndRef ind) in
+        let (parent_s, _) = modular_rename_ex k parent_idg in
+        let siblings = Id.Set.add (Id.of_string parent_s) siblings in
+        let parent_cap = String.capitalize_ascii parent_s in
+        let siblings = if parent_cap <> parent_s
+                       then Id.Set.add (Id.of_string parent_cap) siblings
+                       else siblings in
         let id = next_ident_away (Id.of_string s) siblings in
         let s = Id.to_string id in
         add_ctor_sibling ind (Id.of_string s);

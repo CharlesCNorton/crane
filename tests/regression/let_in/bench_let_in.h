@@ -20,24 +20,24 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct BenchLetIn {
   template <typename A, typename B> struct pair {
   public:
-    struct Pair {
+    struct Pair0 {
       A _a0;
       B _a1;
     };
-    using variant_t = std::variant<Pair>;
+    using variant_t = std::variant<Pair0>;
 
   private:
     variant_t v_;
-    explicit pair(Pair _v) : v_(std::move(_v)) {}
+    explicit pair(Pair0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<pair<A, B>> Pair_(A a0, B a1) {
-        return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair{a0, a1}));
+      static std::shared_ptr<pair<A, B>> Pair0_(A a0, B a1) {
+        return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
-      static std::unique_ptr<pair<A, B>> Pair_uptr(A a0, B a1) {
-        return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair{a0, a1}));
+      static std::unique_ptr<pair<A, B>> Pair0_uptr(A a0, B a1) {
+        return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -47,7 +47,7 @@ struct BenchLetIn {
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
   static T3 pair_rect(F0 &&f, const std::shared_ptr<pair<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[&](const typename pair<T1, T2>::Pair _args) -> T3 {
+        Overloaded{[&](const typename pair<T1, T2>::Pair0 _args) -> T3 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           return f(a, b);
@@ -58,7 +58,7 @@ struct BenchLetIn {
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1, T2> F0>
   static T3 pair_rec(F0 &&f, const std::shared_ptr<pair<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[&](const typename pair<T1, T2>::Pair _args) -> T3 {
+        Overloaded{[&](const typename pair<T1, T2>::Pair0 _args) -> T3 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           return f(a, b);
@@ -77,27 +77,27 @@ struct BenchLetIn {
 
   template <typename A, typename B, typename C> struct triple {
   public:
-    struct Triple {
+    struct Triple0 {
       A _a0;
       B _a1;
       C _a2;
     };
-    using variant_t = std::variant<Triple>;
+    using variant_t = std::variant<Triple0>;
 
   private:
     variant_t v_;
-    explicit triple(Triple _v) : v_(std::move(_v)) {}
+    explicit triple(Triple0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
-      static std::shared_ptr<triple<A, B, C>> Triple_(A a0, B a1, C a2) {
+      static std::shared_ptr<triple<A, B, C>> Triple0_(A a0, B a1, C a2) {
         return std::shared_ptr<triple<A, B, C>>(
-            new triple<A, B, C>(Triple{a0, a1, a2}));
+            new triple<A, B, C>(Triple0{a0, a1, a2}));
       }
-      static std::unique_ptr<triple<A, B, C>> Triple_uptr(A a0, B a1, C a2) {
+      static std::unique_ptr<triple<A, B, C>> Triple0_uptr(A a0, B a1, C a2) {
         return std::unique_ptr<triple<A, B, C>>(
-            new triple<A, B, C>(Triple{a0, a1, a2}));
+            new triple<A, B, C>(Triple0{a0, a1, a2}));
       }
     };
     const variant_t &v() const { return v_; }
@@ -108,7 +108,7 @@ struct BenchLetIn {
             MapsTo<T4, T1, T2, T3> F0>
   static T4 triple_rect(F0 &&f, const std::shared_ptr<triple<T1, T2, T3>> &t) {
     return std::visit(
-        Overloaded{[&](const typename triple<T1, T2, T3>::Triple _args) -> T4 {
+        Overloaded{[&](const typename triple<T1, T2, T3>::Triple0 _args) -> T4 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           T3 c = _args._a2;
@@ -121,7 +121,7 @@ struct BenchLetIn {
             MapsTo<T4, T1, T2, T3> F0>
   static T4 triple_rec(F0 &&f, const std::shared_ptr<triple<T1, T2, T3>> &t) {
     return std::visit(
-        Overloaded{[&](const typename triple<T1, T2, T3>::Triple _args) -> T4 {
+        Overloaded{[&](const typename triple<T1, T2, T3>::Triple0 _args) -> T4 {
           T1 a = _args._a0;
           T2 b = _args._a1;
           T3 c = _args._a2;
