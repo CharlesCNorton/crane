@@ -4,16 +4,13 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <option_tuple_wrapper.h>
 #include <optional>
+#include <shadow_qual_node.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-Node::shadow OptionTupleWrapper::pick(const bool b) {
-  if (b) {
-    return Node::shadow::TagA;
-  } else {
-    return Node::shadow::TagB;
-  }
+ShadowQualNode::Node::shadow
+ShadowQualNode::id(const ShadowQualNode::Node::shadow x) {
+  return x;
 }

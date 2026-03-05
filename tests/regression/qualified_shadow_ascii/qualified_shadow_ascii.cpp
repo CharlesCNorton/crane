@@ -5,9 +5,12 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <shadow_qual_node.h>
+#include <qualified_shadow_ascii.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-Node::shadow ShadowQualNode::id(const Node::shadow x) { return x; }
+QualifiedShadowAscii::Shadow::shadow
+QualifiedShadowAscii::id_shadow(const QualifiedShadowAscii::Shadow::shadow x) {
+  return x;
+}

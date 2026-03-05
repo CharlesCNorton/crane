@@ -10,7 +10,7 @@
 #include <string>
 #include <variant>
 
-Node::shadow MatchForwardOrder::pick(const bool b) {
+MatchForwardOrder::Node::shadow MatchForwardOrder::pick(const bool b) {
   if (b) {
     return Node::shadow::TagA;
   } else {

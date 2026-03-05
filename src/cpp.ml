@@ -1060,9 +1060,17 @@ let rec pp_cpp_type par vl t =
     | Tvar (_, Some id) -> Id.print id
     (* NEW: Tid for local type references (e.g., nested structs inside modules).
        These don't need GlobRef qualification, just simple Id references.
-       Can be parameterized like generic types: Leaf<int> *)
-    | Tid (id, []) -> Id.print id
-    | Tid (id, args) -> Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">"
+       Can be parameterized like generic types: Leaf<int>
+       When generating out-of-struct definitions, prepend struct name. *)
+    | Tid (id, []) ->
+        (match !current_struct_name with
+         | Some struct_name when not !in_struct_context -> struct_name ++ str "::" ++ Id.print id
+         | _ -> Id.print id)
+    | Tid (id, args) ->
+        (match !current_struct_name with
+         | Some struct_name when not !in_struct_context ->
+             struct_name ++ str "::" ++ Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">"
+         | _ -> Id.print id ++ str "<" ++ pp_list (pp_rec false) args ++ str ">")
     | Tglob (r, tys, args) ->
         (match find_custom_opt r with
         | Some s when to_inline r ->
@@ -1114,8 +1122,23 @@ let rec pp_cpp_type par vl t =
                 Use pp_global_name to get just the base name, not the qualified path. *)
              str (String.capitalize_ascii (Common.pp_global_name Type r')) ++ templates
            else if is_enum_inductive r' then
-             (* Enum inductives have no wrapper struct - just the enum name. *)
-             str type_name_str ++ templates
+             (* Enum inductives have no wrapper struct - just the enum name.
+                When generating out-of-struct definitions, prepend struct name if the enum
+                belongs to the current struct (even if type_name_str is already qualified like Node::shadow). *)
+             let qualifier =
+               match !current_struct_name with
+               | Some struct_name when not !in_struct_context ->
+                   let full_path = Pp.string_of_ppcmds (GlobRef.print r') in
+                   let struct_name_str = Pp.string_of_ppcmds struct_name in
+                   let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
+                   (* Check if the enum belongs to the current struct by checking if the full path contains the struct name *)
+                   if Common.contains_substring full_path struct_name_dotted then
+                     struct_name ++ str "::"
+                   else
+                     mt ()
+               | _ -> mt ()
+             in
+             qualifier ++ str type_name_str ++ templates
            else if is_qualified_name type_name_str then
              (* Already qualified (e.g., C::t from module parameter): add typename if in template *)
              typename_prefix_for type_name_str ++ str type_name_str ++ templates

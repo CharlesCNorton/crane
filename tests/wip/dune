@@ -103,39 +103,6 @@
   (deps sigma_compute.t.exe)
   (action (run ./sigma_compute.t.exe))))
 
-(subdir qualified_shadow_ascii
- (rule
-  (targets qualified_shadow_ascii.t.exe)
-  (deps QualifiedShadowAscii.vo qualified_shadow_ascii.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} qualified_shadow_ascii.t.exe qualified_shadow_ascii.cpp qualified_shadow_ascii.t.cpp)))
- (rule
-  (alias runtest)
-  (deps qualified_shadow_ascii.t.exe)
-  (action (run ./qualified_shadow_ascii.t.exe))))
-
-(subdir shadow_qual_node
- (rule
-  (targets shadow_qual_node.t.exe)
-  (deps ShadowQualNode.vo shadow_qual_node.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} shadow_qual_node.t.exe shadow_qual_node.cpp shadow_qual_node.t.cpp)))
- (rule
-  (alias runtest)
-  (deps shadow_qual_node.t.exe)
-  (action (run ./shadow_qual_node.t.exe))))
-
-(subdir option_tuple_wrapper
- (rule
-  (targets option_tuple_wrapper.t.exe)
-  (deps OptionTupleWrapper.vo option_tuple_wrapper.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} option_tuple_wrapper.t.exe option_tuple_wrapper.cpp option_tuple_wrapper.t.cpp)))
- (rule
-  (alias runtest)
-  (deps option_tuple_wrapper.t.exe)
-  (action (run ./option_tuple_wrapper.t.exe))))
-
 (subdir nested_record_update_qual
  (rule
   (targets nested_record_update_qual.t.exe)
@@ -146,14 +113,3 @@
   (alias runtest)
   (deps nested_record_update_qual.t.exe)
   (action (run ./nested_record_update_qual.t.exe))))
-
-(subdir match_forward_order
- (rule
-  (targets match_forward_order.t.exe)
-  (deps MatchForwardOrder.vo match_forward_order.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} match_forward_order.t.exe match_forward_order.cpp match_forward_order.t.cpp)))
- (rule
-  (alias runtest)
-  (deps match_forward_order.t.exe)
-  (action (run ./match_forward_order.t.exe))))

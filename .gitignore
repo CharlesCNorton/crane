@@ -54,6 +54,7 @@ infer-out
 /tests/*/*/benchmark
 /tests/*/*/corpus
 /tests/*/*/*.dSYM
+/tests/*/*/test
 CLAUDE.md
 /docs
 /logs
