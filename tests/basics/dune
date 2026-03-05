@@ -287,3 +287,14 @@
   (alias runtest)
   (deps prim_float.t.exe)
   (action (run ./prim_float.t.exe))))
+
+(subdir levenshtein
+ (rule
+  (targets levenshtein.t.exe)
+  (deps Levenshtein.vo levenshtein.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} levenshtein.t.exe levenshtein.cpp levenshtein.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps levenshtein.t.exe)
+  (action (run ./levenshtein.t.exe))))
