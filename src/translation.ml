@@ -2464,10 +2464,13 @@ let gen_typeclass_cpp name fields ind =
   let method_reqs = List.filter_map (fun pair -> gen_method_req 0 pair) method_list in
   (* Collect all unique parameter types for the requires clause *)
   let all_params_flat = List.concat_map fst method_reqs in
-  (* Deduplicate parameters by keeping first occurrence of each type+name combination *)
+  (* Deduplicate parameters by name only — when an associated type is erased to
+     std::any the (type, name) pair changes but the name stays the same, so
+     deduplicating by name keeps the first occurrence and avoids duplicate
+     parameter names in the requires clause. *)
   let seen = ref [] in
-  let dedup_params = List.filter (fun (ty, id) ->
-    let key = (ty, Id.to_string id) in
+  let dedup_params = List.filter (fun (_ty, id) ->
+    let key = Id.to_string id in
     if List.mem key !seen then false
     else (seen := key :: !seen; true)
   ) all_params_flat in

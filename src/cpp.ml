@@ -87,6 +87,9 @@ let sig_preamble _ comment used_modules usf =
 
 (* Context tracking for code generation *)
 let in_struct_context = ref false
+(* Track whether type class concepts have been hoisted for the current module.
+   When true, TypeClass inductives in the body are skipped (already emitted). *)
+let concepts_hoisted = ref false
 (* Track when we're in a non-local context (static inline variable initialization).
    Lambdas in non-local contexts cannot have capture-default [&]. *)
 let in_nonlocal_context = ref false
@@ -252,6 +255,7 @@ let current_structure_decls : (Label.t * Miniml.ml_structure_elem) list ref = re
    extractions in the same process (e.g., during 'dune build'). *)
 let reset_cpp_state () =
   in_struct_context := false;
+  concepts_hoisted := false;
   in_nonlocal_context := false;
   current_struct_name := None;
   in_template_struct := false;
@@ -2153,8 +2157,8 @@ let pp_cpp_ind_header kn ind =
   match ind.ind_kind with
   | TypeClass fields ->
       (* Type classes become C++ concepts *)
-      (* Skip if inside struct context - concepts are hoisted to namespace scope *)
-      if !in_struct_context then mt ()
+      (* Skip if concepts have been hoisted or we're inside a struct *)
+      if !in_struct_context || !concepts_hoisted then mt ()
       else pp_cpp_decl (empty_env ()) (gen_typeclass_cpp names.(0) fields ind.ind_packets.(0))
   | Record fields ->
       (* Check if this is an eponymous record being merged into module struct *)
@@ -3051,6 +3055,42 @@ let rec pp_structure_elem ~is_header f = function
                 1. Collect all type class inductives from the module
                 2. Generate their concepts at the current scope (before the struct)
                 3. Skip them when generating the struct body *)
+             (* DESIGN: Concept-module name collision detection.
+                Check if any type class concept inside this module has the same name
+                as the module struct. When this happens, concepts are still hoisted
+                (they must be at namespace/global scope), but the module body is emitted
+                without a struct wrapper to avoid a name collision between the hoisted
+                concept and the struct. *)
+             let concept_simple_name_of ind_ref =
+               let sn = Common.pp_global_name Type ind_ref in
+               match String.rindex_opt sn ':' with
+               | Some idx when idx > 0 && idx < String.length sn - 1
+                             && sn.[idx-1] = ':' ->
+                   String.sub sn (idx + 1) (String.length sn - idx - 1)
+               | _ -> sn
+             in
+             let module_name_str_raw = Common.pp_module mp in
+             let has_concept_collision = List.exists (fun (_l, se) ->
+               match se with
+               | SEdecl (Dind (kn, ind)) ->
+                   List.exists (fun i ->
+                     match ind.ind_kind with
+                     | TypeClass _ ->
+                         let ind_ref = GlobRef.IndRef (kn, i) in
+                         String.equal (concept_simple_name_of ind_ref) module_name_str_raw
+                     | _ -> false
+                   ) (List.init (Array.length ind.ind_packets) Fun.id)
+               | _ -> false
+             ) sel in
+
+             (* DESIGN: Type class concept hoisting
+                Type classes inside modules must be hoisted to namespace scope because C++ concepts
+                can only be declared at namespace or global scope, not inside structs.
+
+                Before generating the module struct:
+                1. Collect all type class inductives from the module
+                2. Generate their concepts at the current scope (before the struct)
+                3. Skip them when generating the struct body *)
              let typeclass_concepts = if is_header then
                List.concat_map (fun (_l, se) ->
                  match se with
@@ -3090,18 +3130,24 @@ let rec pp_structure_elem ~is_header f = function
              let modtypes_pp = prlist_with_sep fnl (fun x -> x) modtype_concepts in
              let modtypes_pp = if modtype_concepts = [] then mt () else modtypes_pp ++ fnl () ++ fnl () in
 
-             (* Only set struct context for header; implementation needs out-of-struct definitions *)
-             if is_header then
+             (* When there's a concept collision, don't set struct context or
+                struct name — the module body is emitted without a wrapper. *)
+             let old_concepts_hoisted = !concepts_hoisted in
+             if is_header && not has_concept_collision then
                in_struct_context := true
-             else
+             else if not is_header && not has_concept_collision then
                (* Track struct name for qualification - combine with parent for nested modules *)
                current_struct_name := (match old_struct_name with
                  | Some parent -> Some (parent ++ str "::" ++ name)
                  | None -> Some name);
+             (* Mark concepts as hoisted so TypeClass items in the body are skipped *)
+             if is_header && typeclass_concepts <> [] then
+               concepts_hoisted := true;
              let body = pp_module_expr ~is_header f [] m.ml_mod_expr in
              (* Save method_candidates before restoring old state - need them for generating record methods *)
              let this_method_candidates = !method_candidates in
              in_struct_context := old_context;
+             concepts_hoisted := old_concepts_hoisted;
              current_struct_name := old_struct_name;
              eponymous_type_ref := old_eponymous;
              eponymous_record := old_eponymous_record;  (* Restore PARENT's value *)
@@ -3149,25 +3195,34 @@ let rec pp_structure_elem ~is_header f = function
                      (template_str, fields_pp, methods_pp)
                  | None -> (mt (), mt (), mt ())
                in
-               let struct_def = template_decl ++
-                 str "struct " ++ name ++ str " {" ++ fnl () ++
+               if has_concept_collision then
+                 (* Concept collision: the hoisted concept takes the module name,
+                    so emit module body without a struct wrapper. *)
+                 typeclasses_pp ++ modtypes_pp ++
                  record_fields_pp ++
                  record_methods_pp ++
-                 body ++
-                 str "};" in
-               (* For modules with type annotations, add static_assert *)
-               let rec get_concept_name = function
-                 | MTident kn -> Some (pp_modname kn)
-                 | MTwith(mt, _) -> get_concept_name mt  (* Extract base from 'with' clauses *)
-                 | MTfunsig (_, mt, mt') -> get_concept_name mt'  (* Extract return type from functor sig *)
-                 | MTsig _ -> None  (* Anonymous signature, no concept *)
-               in
-               let static_assert = match get_concept_name m.ml_mod_type with
-               | Some concept_name ->
-                   fnl () ++ str "static_assert(" ++ concept_name ++ str "<" ++ name ++ str ">);"
-               | None -> mt ()
-               in
-               typeclasses_pp ++ modtypes_pp ++ struct_def ++ static_assert
+                 body
+               else begin
+                 let struct_def = template_decl ++
+                   str "struct " ++ name ++ str " {" ++ fnl () ++
+                   record_fields_pp ++
+                   record_methods_pp ++
+                   body ++
+                   str "};" in
+                 (* For modules with type annotations, add static_assert *)
+                 let rec get_concept_name = function
+                   | MTident kn -> Some (pp_modname kn)
+                   | MTwith(mt, _) -> get_concept_name mt  (* Extract base from 'with' clauses *)
+                   | MTfunsig (_, mt, mt') -> get_concept_name mt'  (* Extract return type from functor sig *)
+                   | MTsig _ -> None  (* Anonymous signature, no concept *)
+                 in
+                 let static_assert = match get_concept_name m.ml_mod_type with
+                 | Some concept_name ->
+                     fnl () ++ str "static_assert(" ++ concept_name ++ str "<" ++ name ++ str ">);"
+                 | None -> mt ()
+                 in
+                 typeclasses_pp ++ modtypes_pp ++ struct_def ++ static_assert
+               end
              else
                (* Implementation: just the member definitions (body is already processed) *)
                body

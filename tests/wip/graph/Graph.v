@@ -95,6 +95,18 @@ Instance UndirectedGraph {A : Type} `{Eq A} : Graph Undirected A :=
   ; edges g n := filter (undirected_originates n) (undirected_edges g)
   }.
 
+Fixpoint nat_eqb (n m : nat) : bool :=
+  match n, m with
+  | O, O => true
+  | S n', S m' => nat_eqb n' m'
+  | _, _ => false
+  end.
+
+Instance NatEq : Eq nat := { eqb := nat_eqb }.
+
+Definition test_eq {A : Type} `{Eq A} (x y : A) : bool := eqb x y.
+Definition test_int_eq : bool := test_eq 5 5.
+
 End Graph.
 
 Crane Extraction "graph" Graph.

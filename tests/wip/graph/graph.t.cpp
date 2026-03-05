@@ -38,10 +38,14 @@ int main() {
   ASSERT(test_int_eq == true);
 
   // Test that test_eq works with explicit type class instance
-  bool result = test_eq<IntEq, int>(5, 5);
+  auto five_a = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
+  auto five_b = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
+  auto six = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))));
+
+  bool result = test_eq<NatEq, std::shared_ptr<Nat>>(five_a, five_b);
   ASSERT(result == true);
 
-  bool result2 = test_eq<IntEq, int>(5, 6);
+  bool result2 = test_eq<NatEq, std::shared_ptr<Nat>>(five_a, six);
   ASSERT(result2 == false);
 
   std::cout << "All graph tests passed!" << std::endl;
