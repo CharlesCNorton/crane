@@ -1472,10 +1472,8 @@ and pp_cpp_expr env args t =
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
       let struct_name = match id with
-        | GlobRef.IndRef _ when is_record_inductive id ->
-            pp_global Type id
-        | GlobRef.IndRef _ ->
-            pp_global Type id
+        | GlobRef.IndRef _ when is_eponymous_record_global id ->
+            str (String.capitalize_ascii (Common.pp_global_name Type id))
         | _ -> pp_global Type id
       in
       struct_name ++  templates ++ str "::make(" ++ es_s ++ str ")"
@@ -1486,10 +1484,8 @@ and pp_cpp_expr env args t =
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
       let struct_name = match id with
-        | GlobRef.IndRef _ when is_record_inductive id ->
-            pp_global Type id
-        | GlobRef.IndRef _ ->
-            pp_global Type id
+        | GlobRef.IndRef _ when is_eponymous_record_global id ->
+            str (String.capitalize_ascii (Common.pp_global_name Type id))
         | _ -> pp_global Type id
       in
       struct_name ++ templates ++ str "{" ++ es_s ++ str "}"

@@ -80,14 +80,3 @@
   (alias runtest)
   (deps monadic.t.exe)
   (action (run ./monadic.t.exe))))
-
-(subdir nested_record_update_qual
- (rule
-  (targets nested_record_update_qual.t.exe)
-  (deps NestedRecordUpdateQual.vo nested_record_update_qual.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} nested_record_update_qual.t.exe nested_record_update_qual.cpp nested_record_update_qual.t.cpp)))
- (rule
-  (alias runtest)
-  (deps nested_record_update_qual.t.exe)
-  (action (run ./nested_record_update_qual.t.exe))))
