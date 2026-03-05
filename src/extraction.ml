@@ -649,39 +649,40 @@ and extract_really_ind env kn mib =
                    function/Prod type. This distinguishes:
                    - Associated types like `edge : Type` (promote these)
                    - Function fields like `fun_ind_prf : forall x, some_type x` (don't promote)
-                   We check the type WITHOUT deep reduction to catch direct Sorts. *)
+                   Only promote fields whose type is DIRECTLY a Sort, without reduction. *)
                 match Constr.kind prod_ty with
                 | Sort s ->
                     (* Field type is directly a Sort — this is an associated type.
                        Only promote if it's Type/Set, not Prop. *)
                     not (Sorts.is_prop s)
-                | Prod _ ->
-                    (* Field is a function/forall — not an associated type, even
-                       if its codomain is Type. Don't promote. *)
-                    false
                 | _ ->
-                    (* Field type is some other term. Check if it reduces to Sort. *)
-                    let prod_ty_whnf = Reduction.whd_all epar prod_ty in
-                    match Constr.kind prod_ty_whnf with
-                    | Sort s when not (Sorts.is_prop s) ->
-                        (* Reduces to Type/Set but isn't a Prod — likely a type
-                           synonym or definition. Only promote if it's a simple
-                           reference, not a complex term. *)
-                        (match Constr.kind prod_ty with
-                         | Const _ | Rel _ | Var _ -> true
-                         | _ -> false)
-                    | _ -> false
+                    (* Field type is not directly a Sort (could be Prod, App, Const, etc).
+                       Don't promote these to avoid promoting proof fields or complex types. *)
+                    false
               else false
           | _ -> false
         in
-        (* Only promote Sort fields if there are other non-Tdummy fields that can
-           reference them. A type class/record with ONLY Tdummy fields (all erased)
-           is likely a proof-related abstraction, not a dependent record.
-           Example: Magma has carrier:Type (Tdummy Ktype) + op:carrier→carrier (non-Tdummy) → promote
-           Example: FunctionalInduction has only fun_ind_prf:Type (Tdummy Ktype) → don't promote *)
-        let non_dummy_field_count = List.length (List.filter (fun t ->
-          not (isTdummy (expand env t))) typ) in
-        let should_promote = non_dummy_field_count > 0 in
+        (* Only promote Sort fields if there are non-Tdummy fields that are actual
+           methods/functions (Prod/App), not just simple type references (Rel).
+           This distinguishes:
+           - Magma: carrier:Type + op:carrier→carrier (op is Prod) → PROMOTE
+           - Graph: edge:Type + methods (Prod/App) → PROMOTE
+           - FunctionalInduction: fun_ind_prf_ty:Type + fun_ind_prf:ty (fun_ind_prf is Rel) → DON'T PROMOTE
+
+           A field with Rocq type Rel is just a variable reference, not a method that uses the type. *)
+        let has_method_field = List.exists Fun.id (List.mapi (fun idx t ->
+          if isTdummy (expand env t) then false
+          else
+            let prod_idx = nfields - 1 - idx in
+            if prod_idx >= 0 && prod_idx < List.length orig_prods then
+              let prod_decl = List.nth orig_prods prod_idx in
+              let prod_ty = Context.Rel.Declaration.get_type prod_decl in
+              match Constr.kind prod_ty with
+              | Prod _ | App _ -> true  (* Function or application - a real method *)
+              | _ -> false               (* Rel, Const, etc. - not a method *)
+            else false
+        ) typ) in
+        let should_promote = has_method_field in
         if lang () == Cpp &&
            should_promote &&
            List.exists Fun.id (List.mapi (fun idx t -> is_assoc_type_field idx t) typ)
