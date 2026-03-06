@@ -45,8 +45,8 @@ ExecuteTccWfEdge0105::decode_list(
             unsigned int b1 = _args._a0;
             std::shared_ptr<List<unsigned int>> l = _args._a1;
             return [&](void) {
-              if (std::move(l).use_count() == 1 &&
-                  std::move(l)->v().index() == 0) {
+              if (((std::move(l).use_count() == 1) &&
+                   (std::move(l)->v().index() == 0))) {
                 auto &_rf = std::get<0>(std::move(l)->v_mut());
                 return std::move(l);
               } else {

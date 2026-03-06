@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int DecodeJmsWfBehavior0060::acc(
-    const std::shared_ptr<DecodeJmsWfBehavior0060::state> &s) {
-  return s->acc;
-}
-
-bool DecodeJmsWfBehavior0060::carry(
-    const std::shared_ptr<DecodeJmsWfBehavior0060::state> &s) {
-  return s->carry;
-}
-
-bool DecodeJmsWfBehavior0060::test_pin(
-    const std::shared_ptr<DecodeJmsWfBehavior0060::state> &s) {
-  return s->test_pin;
-}
-
 bool DecodeJmsWfBehavior0060::jcn_condition(
     const std::shared_ptr<DecodeJmsWfBehavior0060::state> &s,
     const unsigned int cond) {

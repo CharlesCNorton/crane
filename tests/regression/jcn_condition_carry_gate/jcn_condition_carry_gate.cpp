@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int JcnConditionCarryGate::acc(
-    const std::shared_ptr<JcnConditionCarryGate::state> &s) {
-  return s->acc;
-}
-
-bool JcnConditionCarryGate::carry(
-    const std::shared_ptr<JcnConditionCarryGate::state> &s) {
-  return s->carry;
-}
-
-bool JcnConditionCarryGate::test_pin(
-    const std::shared_ptr<JcnConditionCarryGate::state> &s) {
-  return s->test_pin;
-}
-
 bool JcnConditionCarryGate::jcn_condition(
     const std::shared_ptr<JcnConditionCarryGate::state> &s,
     const unsigned int cond) {

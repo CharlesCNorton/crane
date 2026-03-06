@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int
-CyclesJmsConstant::acc(const std::shared_ptr<CyclesJmsConstant::state> &s) {
-  return s->acc;
-}
-
 unsigned int CyclesJmsConstant::cycles(
     const std::shared_ptr<CyclesJmsConstant::state> &_x,
     const std::shared_ptr<CyclesJmsConstant::instruction> &i) {

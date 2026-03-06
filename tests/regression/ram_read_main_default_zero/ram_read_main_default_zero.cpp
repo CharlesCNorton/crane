@@ -10,65 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamReadMainDefaultZero::reg_main(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> RamReadMainDefaultZero::reg_status(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainDefaultZero::ram_reg>>>
-RamReadMainDefaultZero::chip_regs(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int RamReadMainDefaultZero::chip_port(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainDefaultZero::ram_chip>>>
-RamReadMainDefaultZero::bank_chips(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-unsigned int RamReadMainDefaultZero::sel_chip(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_sel> &r) {
-  return r->sel_chip;
-}
-
-unsigned int RamReadMainDefaultZero::sel_reg(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_sel> &r) {
-  return r->sel_reg;
-}
-
-unsigned int RamReadMainDefaultZero::sel_char(
-    const std::shared_ptr<RamReadMainDefaultZero::ram_sel> &r) {
-  return r->sel_char;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainDefaultZero::ram_bank>>>
-RamReadMainDefaultZero::ram_sys(
-    const std::shared_ptr<RamReadMainDefaultZero::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int RamReadMainDefaultZero::cur_bank(
-    const std::shared_ptr<RamReadMainDefaultZero::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<RamReadMainDefaultZero::ram_sel>
-RamReadMainDefaultZero::sel_ram(
-    const std::shared_ptr<RamReadMainDefaultZero::state> &s) {
-  return s->sel_ram;
-}
-
 std::shared_ptr<RamReadMainDefaultZero::ram_bank>
 RamReadMainDefaultZero::get_bank(
     const std::shared_ptr<RamReadMainDefaultZero::state> &s,

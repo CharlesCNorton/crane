@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int InstructionSequenceExec::pc_(
-    const std::shared_ptr<InstructionSequenceExec::state> &s) {
-  return s->pc_;
-}
-
-unsigned int InstructionSequenceExec::acc_(
-    const std::shared_ptr<InstructionSequenceExec::state> &s) {
-  return s->acc_;
-}
-
 std::shared_ptr<InstructionSequenceExec::state>
 InstructionSequenceExec::execute(
     std::shared_ptr<InstructionSequenceExec::state> s,

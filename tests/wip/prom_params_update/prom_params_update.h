@@ -63,20 +63,6 @@ struct PromParamsUpdate {
     bool prom_enable;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> set_prom_params(std::shared_ptr<state> s,
                                                 const unsigned int addr,
                                                 const unsigned int data,

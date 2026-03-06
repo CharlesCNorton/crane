@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> DecodeInstrWfJunJmsBehavior0052::rom(
-    const std::shared_ptr<DecodeInstrWfJunJmsBehavior0052::state> &s) {
-  return s->rom;
-}
-
 unsigned int DecodeInstrWfJunJmsBehavior0052::fetch_byte(
     const std::shared_ptr<DecodeInstrWfJunJmsBehavior0052::state> &s,
     const unsigned int addr) {

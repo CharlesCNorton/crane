@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RegisterPairEvenRounding::regs_(
-    const std::shared_ptr<RegisterPairEvenRounding::state> &s) {
-  return s->regs_;
-}
-
 unsigned int RegisterPairEvenRounding::get_reg(
     const std::shared_ptr<RegisterPairEvenRounding::state> &s,
     const unsigned int r) {

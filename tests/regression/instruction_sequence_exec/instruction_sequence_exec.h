@@ -59,10 +59,6 @@ struct InstructionSequenceExec {
     unsigned int acc_;
   };
 
-  static unsigned int pc_(const std::shared_ptr<state> &s);
-
-  static unsigned int acc_(const std::shared_ptr<state> &s);
-
   struct instruction {
   public:
     struct NOP_ {};

@@ -10,64 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> PageBaseBehavior0014::reg_main(
-    const std::shared_ptr<PageBaseBehavior0014::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> PageBaseBehavior0014::reg_status(
-    const std::shared_ptr<PageBaseBehavior0014::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<PageBaseBehavior0014::ram_reg>>>
-PageBaseBehavior0014::chip_regs(
-    const std::shared_ptr<PageBaseBehavior0014::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int PageBaseBehavior0014::chip_port(
-    const std::shared_ptr<PageBaseBehavior0014::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<PageBaseBehavior0014::ram_chip>>>
-PageBaseBehavior0014::bank_chips(
-    const std::shared_ptr<PageBaseBehavior0014::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-unsigned int PageBaseBehavior0014::sel_chip(
-    const std::shared_ptr<PageBaseBehavior0014::ram_sel> &r) {
-  return r->sel_chip;
-}
-
-unsigned int PageBaseBehavior0014::sel_reg(
-    const std::shared_ptr<PageBaseBehavior0014::ram_sel> &r) {
-  return r->sel_reg;
-}
-
-unsigned int PageBaseBehavior0014::sel_char(
-    const std::shared_ptr<PageBaseBehavior0014::ram_sel> &r) {
-  return r->sel_char;
-}
-
-std::shared_ptr<List<std::shared_ptr<PageBaseBehavior0014::ram_bank>>>
-PageBaseBehavior0014::ram_sys(
-    const std::shared_ptr<PageBaseBehavior0014::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int PageBaseBehavior0014::cur_bank(
-    const std::shared_ptr<PageBaseBehavior0014::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<PageBaseBehavior0014::ram_sel> PageBaseBehavior0014::sel_ram(
-    const std::shared_ptr<PageBaseBehavior0014::state> &s) {
-  return s->sel_ram;
-}
-
 std::shared_ptr<PageBaseBehavior0014::ram_bank> PageBaseBehavior0014::get_bank(
     const std::shared_ptr<PageBaseBehavior0014::state> &s,
     const unsigned int b) {

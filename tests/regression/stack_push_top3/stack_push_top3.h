@@ -68,9 +68,6 @@ struct StackPushTop3 {
     std::shared_ptr<List<unsigned int>> stack;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> push_stack(const std::shared_ptr<state> &s,
                                            const unsigned int addr);
 

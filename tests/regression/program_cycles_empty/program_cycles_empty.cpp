@@ -11,11 +11,6 @@
 #include <variant>
 
 unsigned int
-ProgramCyclesEmpty::acc(const std::shared_ptr<ProgramCyclesEmpty::state> &s) {
-  return s->acc;
-}
-
-unsigned int
 ProgramCyclesEmpty::cycles(const std::shared_ptr<ProgramCyclesEmpty::state> &_x,
                            const ProgramCyclesEmpty::instruction _x0) {
   return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);

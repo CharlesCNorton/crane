@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-IszCycleBranch::regs(const std::shared_ptr<IszCycleBranch::state> &s) {
-  return s->regs;
-}
-
 unsigned int
 IszCycleBranch::get_reg(const std::shared_ptr<IszCycleBranch::state> &s,
                         const unsigned int r) {

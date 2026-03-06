@@ -70,12 +70,6 @@ struct InstructionCycleSum {
     bool test_;
   };
 
-  static unsigned int acc_(const std::shared_ptr<state> &s);
-
-  static bool carry_(const std::shared_ptr<state> &s);
-
-  static bool test_(const std::shared_ptr<state> &s);
-
   struct instruction {
   public:
     struct NOP_ {};

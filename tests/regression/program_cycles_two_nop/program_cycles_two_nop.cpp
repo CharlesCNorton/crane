@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int
-ProgramCyclesTwoNop::acc(const std::shared_ptr<ProgramCyclesTwoNop::state> &s) {
-  return s->acc;
-}
-
 unsigned int ProgramCyclesTwoNop::cycles(
     const std::shared_ptr<ProgramCyclesTwoNop::state> &_x,
     const ProgramCyclesTwoNop::instruction _x0) {

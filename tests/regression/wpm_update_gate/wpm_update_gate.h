@@ -117,15 +117,6 @@ struct WpmUpdateGate {
     bool prom_enable;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> execute_wpm(std::shared_ptr<state> s);
 
   static inline const unsigned int t = [](void) {

@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int FetchByteBehavior0010::acc(
-    const std::shared_ptr<FetchByteBehavior0010::state> &s) {
-  return s->acc;
-}
-
 unsigned int FetchByteBehavior0010::cycles(
     const std::shared_ptr<FetchByteBehavior0010::state> &_x,
     const FetchByteBehavior0010::instruction _x0) {

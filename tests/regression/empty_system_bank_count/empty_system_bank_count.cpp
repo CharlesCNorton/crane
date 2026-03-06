@@ -9,30 +9,3 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-std::shared_ptr<List<unsigned int>> EmptySystemBankCount::reg_main(
-    const std::shared_ptr<EmptySystemBankCount::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> EmptySystemBankCount::reg_status(
-    const std::shared_ptr<EmptySystemBankCount::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<EmptySystemBankCount::ram_reg>>>
-EmptySystemBankCount::chip_regs(
-    const std::shared_ptr<EmptySystemBankCount::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int EmptySystemBankCount::chip_port(
-    const std::shared_ptr<EmptySystemBankCount::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<EmptySystemBankCount::ram_chip>>>
-EmptySystemBankCount::bank_chips(
-    const std::shared_ptr<EmptySystemBankCount::ram_bank> &r) {
-  return r->bank_chips;
-}

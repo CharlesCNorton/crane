@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> ExecuteNopPreservesWfBehavior0088::rom(
-    const std::shared_ptr<ExecuteNopPreservesWfBehavior0088::state> &s) {
-  return s->rom;
-}
-
 unsigned int ExecuteNopPreservesWfBehavior0088::fetch_byte(
     const std::shared_ptr<ExecuteNopPreservesWfBehavior0088::state> &s,
     const unsigned int addr) {

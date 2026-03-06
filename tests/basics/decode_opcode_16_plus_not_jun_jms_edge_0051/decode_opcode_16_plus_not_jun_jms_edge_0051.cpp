@@ -16,6 +16,6 @@ DecodeOpcode16PlusNotJunJmsEdge0051::bump(
   return [&](void) {
     unsigned int n = x->Shadow::value;
     return std::make_shared<DecodeOpcode16PlusNotJunJmsEdge0051::Shadow>(
-        Shadow::shadow{(n + 1)});
+        Shadow{(n + 1)});
   }();
 }

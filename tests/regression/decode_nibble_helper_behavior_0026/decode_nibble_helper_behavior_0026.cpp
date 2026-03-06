@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int DecodeNibbleHelperBehavior0026::acc(
-    const std::shared_ptr<DecodeNibbleHelperBehavior0026::state> &s) {
-  return s->acc;
-}
-
-bool DecodeNibbleHelperBehavior0026::carry(
-    const std::shared_ptr<DecodeNibbleHelperBehavior0026::state> &s) {
-  return s->carry;
-}
-
-bool DecodeNibbleHelperBehavior0026::test_pin(
-    const std::shared_ptr<DecodeNibbleHelperBehavior0026::state> &s) {
-  return s->test_pin;
-}
-
 bool DecodeNibbleHelperBehavior0026::jcn_condition(
     const std::shared_ptr<DecodeNibbleHelperBehavior0026::state> &s,
     const unsigned int cond) {

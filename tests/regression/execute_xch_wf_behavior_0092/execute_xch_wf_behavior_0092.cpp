@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> ExecuteXchWfBehavior0092::regs(
-    const std::shared_ptr<ExecuteXchWfBehavior0092::state> &s) {
-  return s->regs;
-}
-
 unsigned int ExecuteXchWfBehavior0092::get_reg(
     const std::shared_ptr<ExecuteXchWfBehavior0092::state> &s,
     const unsigned int r) {

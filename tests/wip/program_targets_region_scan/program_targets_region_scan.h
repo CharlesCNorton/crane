@@ -149,10 +149,6 @@ struct ProgramTargetsRegionScan {
     unsigned int code_size;
   };
 
-  static unsigned int base_addr(const std::shared_ptr<layout> &l);
-
-  static unsigned int code_size(const std::shared_ptr<layout> &l);
-
   static std::optional<unsigned int>
   jump_target(const std::shared_ptr<instruction> &i);
 

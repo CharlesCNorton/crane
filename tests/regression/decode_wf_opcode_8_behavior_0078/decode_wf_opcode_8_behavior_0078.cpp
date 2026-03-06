@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int DecodeWfOpcode8Behavior0078::acc(
-    const std::shared_ptr<DecodeWfOpcode8Behavior0078::state> &s) {
-  return s->acc;
-}
-
 unsigned int DecodeWfOpcode8Behavior0078::cycles(
     const std::shared_ptr<DecodeWfOpcode8Behavior0078::state> &_x,
     const DecodeWfOpcode8Behavior0078::instruction _x0) {

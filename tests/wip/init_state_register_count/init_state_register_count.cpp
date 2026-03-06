@@ -9,13 +9,3 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-std::shared_ptr<List<unsigned int>> InitStateRegisterCount::regs(
-    const std::shared_ptr<InitStateRegisterCount::state> &s) {
-  return s->regs;
-}
-
-std::shared_ptr<List<unsigned int>> InitStateRegisterCount::rom(
-    const std::shared_ptr<InitStateRegisterCount::state> &s) {
-  return s->rom;
-}

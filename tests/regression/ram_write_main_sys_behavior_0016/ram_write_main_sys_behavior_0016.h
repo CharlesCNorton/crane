@@ -80,9 +80,6 @@ struct RamWriteMainSysBehavior0016 {
     std::shared_ptr<List<unsigned int>> rom;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
   static unsigned int fetch_byte(const std::shared_ptr<state> &s,
                                  const unsigned int addr);
 

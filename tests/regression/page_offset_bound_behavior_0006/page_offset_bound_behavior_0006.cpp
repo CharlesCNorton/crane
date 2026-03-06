@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int PageOffsetBoundBehavior0006::acc(
-    const std::shared_ptr<PageOffsetBoundBehavior0006::state> &s) {
-  return s->acc;
-}
-
 unsigned int PageOffsetBoundBehavior0006::cycles(
     const std::shared_ptr<PageOffsetBoundBehavior0006::state> &_x,
     const PageOffsetBoundBehavior0006::instruction _x0) {

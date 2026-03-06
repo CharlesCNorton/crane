@@ -11,16 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-StackPopOptionPair::stack(const std::shared_ptr<StackPopOptionPair::state> &s) {
-  return s->stack;
-}
-
-unsigned int
-StackPopOptionPair::acc(const std::shared_ptr<StackPopOptionPair::state> &s) {
-  return s->acc;
-}
-
 std::pair<std::optional<unsigned int>,
           std::shared_ptr<StackPopOptionPair::state>>
 StackPopOptionPair::pop_stack(std::shared_ptr<StackPopOptionPair::state> s) {

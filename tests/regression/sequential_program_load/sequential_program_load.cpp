@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SequentialProgramLoad::rom_(
-    const std::shared_ptr<SequentialProgramLoad::state> &s) {
-  return s->rom_;
-}
-
-unsigned int SequentialProgramLoad::ptr_(
-    const std::shared_ptr<SequentialProgramLoad::state> &s) {
-  return s->ptr_;
-}
-
 std::shared_ptr<SequentialProgramLoad::state> SequentialProgramLoad::write_byte(
     std::shared_ptr<SequentialProgramLoad::state> s, const unsigned int b) {
   return std::make_shared<SequentialProgramLoad::state>(state{

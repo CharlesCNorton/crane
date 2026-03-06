@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int
-JcnConstantsEval::acc(const std::shared_ptr<JcnConstantsEval::state> &s) {
-  return s->acc;
-}
-
-bool JcnConstantsEval::carry(
-    const std::shared_ptr<JcnConstantsEval::state> &s) {
-  return s->carry;
-}
-
-bool JcnConstantsEval::test_pin(
-    const std::shared_ptr<JcnConstantsEval::state> &s) {
-  return s->test_pin;
-}
-
 bool JcnConstantsEval::jcn_condition(
     const std::shared_ptr<JcnConstantsEval::state> &s,
     const unsigned int cond) {

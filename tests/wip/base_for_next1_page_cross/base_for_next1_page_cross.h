@@ -32,8 +32,6 @@ struct BaseForNext1PageCross {
     unsigned int pc;
   };
 
-  static unsigned int pc(const std::shared_ptr<state> &s);
-
   static unsigned int addr12_of_nat(const unsigned int n);
 
   static unsigned int pc_inc1(const std::shared_ptr<state> &s);

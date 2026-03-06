@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> DecodeJinWfBehavior0058::regs(
-    const std::shared_ptr<DecodeJinWfBehavior0058::state> &s) {
-  return s->regs;
-}
-
 unsigned int DecodeJinWfBehavior0058::get_reg(
     const std::shared_ptr<DecodeJinWfBehavior0058::state> &s,
     const unsigned int r) {

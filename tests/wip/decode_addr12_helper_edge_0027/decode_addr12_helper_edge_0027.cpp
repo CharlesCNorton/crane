@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int DecodeAddr12HelperEdge0027::base_addr(
-    const std::shared_ptr<DecodeAddr12HelperEdge0027::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int DecodeAddr12HelperEdge0027::code_size(
-    const std::shared_ptr<DecodeAddr12HelperEdge0027::layout> &l) {
-  return l->code_size;
-}
-
 std::optional<unsigned int> DecodeAddr12HelperEdge0027::jump_target(
     const std::shared_ptr<DecodeAddr12HelperEdge0027::instruction> &i) {
   return std::visit(

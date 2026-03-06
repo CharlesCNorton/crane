@@ -15,7 +15,6 @@ DecodeWfOpcode13Edge0083::bump(
     const std::shared_ptr<DecodeWfOpcode13Edge0083::Shadow> &x) {
   return [&](void) {
     unsigned int n = x->Shadow::value;
-    return std::make_shared<DecodeWfOpcode13Edge0083::Shadow>(
-        Shadow::shadow{(n + 1)});
+    return std::make_shared<DecodeWfOpcode13Edge0083::Shadow>(Shadow{(n + 1)});
   }();
 }

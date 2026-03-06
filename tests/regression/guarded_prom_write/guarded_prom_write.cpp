@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-GuardedPromWrite::rom_(const std::shared_ptr<GuardedPromWrite::state> &s) {
-  return s->rom_;
-}
-
-unsigned int GuardedPromWrite::prom_addr_(
-    const std::shared_ptr<GuardedPromWrite::state> &s) {
-  return s->prom_addr_;
-}
-
-unsigned int GuardedPromWrite::prom_data_(
-    const std::shared_ptr<GuardedPromWrite::state> &s) {
-  return s->prom_data_;
-}
-
-bool GuardedPromWrite::prom_enable_(
-    const std::shared_ptr<GuardedPromWrite::state> &s) {
-  return s->prom_enable_;
-}
-
 std::shared_ptr<GuardedPromWrite::state>
 GuardedPromWrite::execute_wpm(std::shared_ptr<GuardedPromWrite::state> s) {
   if (s->prom_enable_) {

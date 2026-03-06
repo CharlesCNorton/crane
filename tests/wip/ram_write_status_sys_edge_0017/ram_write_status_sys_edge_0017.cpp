@@ -11,35 +11,15 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamWriteStatusSysEdge0017::rom(
-    const std::shared_ptr<RamWriteStatusSysEdge0017::state> &s) {
-  return s->rom;
-}
-
-unsigned int RamWriteStatusSysEdge0017::prom_addr(
-    const std::shared_ptr<RamWriteStatusSysEdge0017::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int RamWriteStatusSysEdge0017::prom_data(
-    const std::shared_ptr<RamWriteStatusSysEdge0017::state> &s) {
-  return s->prom_data;
-}
-
-bool RamWriteStatusSysEdge0017::prom_enable(
-    const std::shared_ptr<RamWriteStatusSysEdge0017::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<List<unsigned int>>
 RamWriteStatusSysEdge0017::update_nth(const unsigned int n,
                                       const unsigned int x,
                                       std::shared_ptr<List<unsigned int>> l) {
   if (n <= 0) {
     return [&](void) {
-      if (l.use_count() == 1 && l->v().index() == 1) {
+      if (((l.use_count() == 1) && (l->v().index() == 1))) {
         auto &_rf = std::get<1>(l->v_mut());
-        dummy_type _x = std::move(_rf._a0);
+        std::any _x = std::move(_rf._a0);
         _rf._a0 = x;
         _rf._a1 = xs;
         return l;
@@ -61,7 +41,7 @@ RamWriteStatusSysEdge0017::update_nth(const unsigned int n,
   } else {
     unsigned int n_ = n - 1;
     return [&](void) {
-      if (l.use_count() == 1 && l->v().index() == 1) {
+      if (((l.use_count() == 1) && (l->v().index() == 1))) {
         auto &_rf = std::get<1>(l->v_mut());
         unsigned int y = std::move(_rf._a0);
         std::shared_ptr<List<unsigned int>> ys = std::move(_rf._a1);

@@ -11,44 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamStatusWriteChain::reg_status(
-    const std::shared_ptr<RamStatusWriteChain::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamStatusWriteChain::ram_reg>>>
-RamStatusWriteChain::chip_regs(
-    const std::shared_ptr<RamStatusWriteChain::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamStatusWriteChain::ram_chip>>>
-RamStatusWriteChain::bank_chips(
-    const std::shared_ptr<RamStatusWriteChain::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamStatusWriteChain::ram_bank>>>
-RamStatusWriteChain::ram_sys(
-    const std::shared_ptr<RamStatusWriteChain::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int RamStatusWriteChain::cur_bank(
-    const std::shared_ptr<RamStatusWriteChain::state> &s) {
-  return s->cur_bank;
-}
-
-unsigned int RamStatusWriteChain::sel_chip(
-    const std::shared_ptr<RamStatusWriteChain::state> &s) {
-  return s->sel_chip;
-}
-
-unsigned int RamStatusWriteChain::sel_reg(
-    const std::shared_ptr<RamStatusWriteChain::state> &s) {
-  return s->sel_reg;
-}
-
 std::shared_ptr<RamStatusWriteChain::ram_bank> RamStatusWriteChain::get_bank(
     const std::shared_ptr<RamStatusWriteChain::state> &s,
     const unsigned int b) {

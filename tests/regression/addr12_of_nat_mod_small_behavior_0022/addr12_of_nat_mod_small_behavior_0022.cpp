@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> Addr12OfNatModSmallBehavior0022::regs(
-    const std::shared_ptr<Addr12OfNatModSmallBehavior0022::state> &s) {
-  return s->regs;
-}
-
 unsigned int Addr12OfNatModSmallBehavior0022::get_reg(
     const std::shared_ptr<Addr12OfNatModSmallBehavior0022::state> &s,
     const unsigned int r) {

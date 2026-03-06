@@ -83,9 +83,6 @@ struct IszLoopFlags {
     std::shared_ptr<List<unsigned int>> regs;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 

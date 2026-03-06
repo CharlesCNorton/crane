@@ -102,10 +102,6 @@ struct JumpTargetRegionCheck {
     unsigned int code_;
   };
 
-  static unsigned int base_(const std::shared_ptr<layout> &l);
-
-  static unsigned int code_(const std::shared_ptr<layout> &l);
-
   static bool addr_in_region(const unsigned int addr,
                              const std::shared_ptr<layout> &l);
 

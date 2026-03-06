@@ -82,41 +82,6 @@ struct PromParamsLargeState {
     bool prom_enable;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static unsigned int pc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_ram(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom_ports(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_rom(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> set_prom_params(std::shared_ptr<state> s,
                                                 const unsigned int addr,
                                                 const unsigned int data,

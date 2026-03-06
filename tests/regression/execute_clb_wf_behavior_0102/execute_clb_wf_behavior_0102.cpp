@@ -10,31 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> ExecuteClbWfBehavior0102::regs(
-    const std::shared_ptr<ExecuteClbWfBehavior0102::state> &s) {
-  return s->regs;
-}
-
-bool ExecuteClbWfBehavior0102::carry(
-    const std::shared_ptr<ExecuteClbWfBehavior0102::state> &s) {
-  return s->carry;
-}
-
-unsigned int ExecuteClbWfBehavior0102::pc(
-    const std::shared_ptr<ExecuteClbWfBehavior0102::state> &s) {
-  return s->pc;
-}
-
-std::shared_ptr<List<unsigned int>> ExecuteClbWfBehavior0102::ram_sys(
-    const std::shared_ptr<ExecuteClbWfBehavior0102::state> &s) {
-  return s->ram_sys;
-}
-
-std::shared_ptr<List<unsigned int>> ExecuteClbWfBehavior0102::rom(
-    const std::shared_ptr<ExecuteClbWfBehavior0102::state> &s) {
-  return s->rom;
-}
-
 std::shared_ptr<ExecuteClbWfBehavior0102::state>
 ExecuteClbWfBehavior0102::reset_state(
     std::shared_ptr<ExecuteClbWfBehavior0102::state> s) {

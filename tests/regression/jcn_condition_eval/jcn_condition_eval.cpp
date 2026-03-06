@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int
-JcnConditionEval::acc(const std::shared_ptr<JcnConditionEval::state> &s) {
-  return s->acc;
-}
-
-bool JcnConditionEval::carry(
-    const std::shared_ptr<JcnConditionEval::state> &s) {
-  return s->carry;
-}
-
-bool JcnConditionEval::test_pin(
-    const std::shared_ptr<JcnConditionEval::state> &s) {
-  return s->test_pin;
-}
-
 bool JcnConditionEval::jcn_condition(
     const std::shared_ptr<JcnConditionEval::state> &s,
     const unsigned int cond) {

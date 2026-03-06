@@ -10,64 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> PcInc2Behavior0012::reg_main(
-    const std::shared_ptr<PcInc2Behavior0012::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> PcInc2Behavior0012::reg_status(
-    const std::shared_ptr<PcInc2Behavior0012::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<PcInc2Behavior0012::ram_reg>>>
-PcInc2Behavior0012::chip_regs(
-    const std::shared_ptr<PcInc2Behavior0012::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int PcInc2Behavior0012::chip_port(
-    const std::shared_ptr<PcInc2Behavior0012::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<PcInc2Behavior0012::ram_chip>>>
-PcInc2Behavior0012::bank_chips(
-    const std::shared_ptr<PcInc2Behavior0012::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-unsigned int PcInc2Behavior0012::sel_chip(
-    const std::shared_ptr<PcInc2Behavior0012::ram_sel> &r) {
-  return r->sel_chip;
-}
-
-unsigned int PcInc2Behavior0012::sel_reg(
-    const std::shared_ptr<PcInc2Behavior0012::ram_sel> &r) {
-  return r->sel_reg;
-}
-
-unsigned int PcInc2Behavior0012::sel_char(
-    const std::shared_ptr<PcInc2Behavior0012::ram_sel> &r) {
-  return r->sel_char;
-}
-
-std::shared_ptr<List<std::shared_ptr<PcInc2Behavior0012::ram_bank>>>
-PcInc2Behavior0012::ram_sys(
-    const std::shared_ptr<PcInc2Behavior0012::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int PcInc2Behavior0012::cur_bank(
-    const std::shared_ptr<PcInc2Behavior0012::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<PcInc2Behavior0012::ram_sel> PcInc2Behavior0012::sel_ram(
-    const std::shared_ptr<PcInc2Behavior0012::state> &s) {
-  return s->sel_ram;
-}
-
 std::shared_ptr<PcInc2Behavior0012::ram_bank> PcInc2Behavior0012::get_bank(
     const std::shared_ptr<PcInc2Behavior0012::state> &s, const unsigned int b) {
   return s->ram_sys->nth(b, empty_bank);

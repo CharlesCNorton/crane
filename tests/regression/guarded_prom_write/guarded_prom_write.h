@@ -83,15 +83,6 @@ struct GuardedPromWrite {
     bool prom_enable_;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  rom_(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr_(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data_(const std::shared_ptr<state> &s);
-
-  static bool prom_enable_(const std::shared_ptr<state> &s);
-
   template <typename T1>
   static std::shared_ptr<List<T1>>
   update_nth(const unsigned int n, const T1 x,

@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-LoopBodyIteration::regs_(const std::shared_ptr<LoopBodyIteration::state> &s) {
-  return s->regs_;
-}
-
 unsigned int LoopBodyIteration::get_reg0(
     const std::shared_ptr<LoopBodyIteration::state> &s) {
   return s->regs_->nth(0, 0);

@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int ProgramCyclesSingleton::acc(
-    const std::shared_ptr<ProgramCyclesSingleton::state> &s) {
-  return s->acc;
-}
-
 unsigned int ProgramCyclesSingleton::cycles(
     const std::shared_ptr<ProgramCyclesSingleton::state> &_x,
     const ProgramCyclesSingleton::instruction _x0) {

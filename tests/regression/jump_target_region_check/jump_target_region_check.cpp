@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int JumpTargetRegionCheck::base_(
-    const std::shared_ptr<JumpTargetRegionCheck::layout> &l) {
-  return l->base_;
-}
-
-unsigned int JumpTargetRegionCheck::code_(
-    const std::shared_ptr<JumpTargetRegionCheck::layout> &l) {
-  return l->code_;
-}
-
 bool JumpTargetRegionCheck::addr_in_region(
     const unsigned int addr,
     const std::shared_ptr<JumpTargetRegionCheck::layout> &l) {

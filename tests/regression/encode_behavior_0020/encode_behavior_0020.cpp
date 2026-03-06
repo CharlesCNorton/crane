@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-EncodeBehavior0020::regs(const std::shared_ptr<EncodeBehavior0020::state> &s) {
-  return s->regs;
-}
-
 unsigned int
 EncodeBehavior0020::get_reg(const std::shared_ptr<EncodeBehavior0020::state> &s,
                             const unsigned int r) {

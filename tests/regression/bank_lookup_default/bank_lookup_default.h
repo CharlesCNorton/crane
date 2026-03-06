@@ -90,21 +90,13 @@ struct BankLookupDefault {
     unsigned int chip_port;
   };
 
-  static unsigned int chip_port(const std::shared_ptr<ram_chip> &r);
-
   struct ram_bank {
     std::shared_ptr<List<std::shared_ptr<ram_chip>>> bank_chips;
   };
 
-  static std::shared_ptr<List<std::shared_ptr<ram_chip>>>
-  bank_chips(const std::shared_ptr<ram_bank> &r);
-
   struct state {
     std::shared_ptr<List<std::shared_ptr<ram_bank>>> ram_sys;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
-  ram_sys(const std::shared_ptr<state> &s);
 
   static inline const std::shared_ptr<ram_chip> empty_chip =
       std::make_shared<ram_chip>(ram_chip{0});

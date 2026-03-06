@@ -10,11 +10,6 @@
 #include <update_nth_behavior_0008.h>
 #include <variant>
 
-unsigned int UpdateNthBehavior0008::acc(
-    const std::shared_ptr<UpdateNthBehavior0008::state> &s) {
-  return s->acc;
-}
-
 unsigned int UpdateNthBehavior0008::cycles(
     const std::shared_ptr<UpdateNthBehavior0008::state> &_x,
     const UpdateNthBehavior0008::instruction _x0) {

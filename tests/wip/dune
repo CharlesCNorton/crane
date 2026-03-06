@@ -70,28 +70,6 @@
   (deps monadic.t.exe)
   (action (run ./monadic.t.exe))))
 
-(subdir sigma_compute
- (rule
-  (targets sigma_compute.t.exe)
-  (deps SigmaCompute.vo sigma_compute.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} sigma_compute.t.exe sigma_compute.cpp sigma_compute.t.cpp)))
- (rule
-  (alias runtest)
-  (deps sigma_compute.t.exe)
-  (action (run ./sigma_compute.t.exe))))
-
-(subdir nested_record_update_qual
- (rule
-  (targets nested_record_update_qual.t.exe)
-  (deps NestedRecordUpdateQual.vo nested_record_update_qual.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} nested_record_update_qual.t.exe nested_record_update_qual.cpp nested_record_update_qual.t.cpp)))
- (rule
-  (alias runtest)
-  (deps nested_record_update_qual.t.exe)
-  (action (run ./nested_record_update_qual.t.exe))))
-
 (subdir disassemble_drop_window
  (rule
   (targets disassemble_drop_window.t.exe)
@@ -443,17 +421,6 @@
   (deps decode_bbl_wf_edge_0067.t.exe)
   (action (run ./decode_bbl_wf_edge_0067.t.exe))))
 
-(subdir decode_edge_0019
- (rule
-  (targets decode_edge_0019.t.exe)
-  (deps DecodeEdge0019.vo decode_edge_0019.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_edge_0019.t.exe decode_edge_0019.cpp decode_edge_0019.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_edge_0019.t.exe)
-  (action (run ./decode_edge_0019.t.exe))))
-
 (subdir decode_fim_wf_edge_0055
  (rule
   (targets decode_fim_wf_edge_0055.t.exe)
@@ -542,17 +509,6 @@
   (deps decode_opcode_0_wf_edge_0043.t.exe)
   (action (run ./decode_opcode_0_wf_edge_0043.t.exe))))
 
-(subdir decode_opcode_16_plus_not_jun_jms_edge_0051
- (rule
-  (targets decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe)
-  (deps DecodeOpcode16PlusNotJunJmsEdge0051.vo decode_opcode_16_plus_not_jun_jms_edge_0051.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe decode_opcode_16_plus_not_jun_jms_edge_0051.cpp decode_opcode_16_plus_not_jun_jms_edge_0051.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe)
-  (action (run ./decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe))))
-
 (subdir decode_opcode_2_wf_edge_0045
  (rule
   (targets decode_opcode_2_wf_edge_0045.t.exe)
@@ -618,17 +574,6 @@
   (alias runtest)
   (deps decode_wf_opcode_11_edge_0081.t.exe)
   (action (run ./decode_wf_opcode_11_edge_0081.t.exe))))
-
-(subdir decode_wf_opcode_13_edge_0083
- (rule
-  (targets decode_wf_opcode_13_edge_0083.t.exe)
-  (deps DecodeWfOpcode13Edge0083.vo decode_wf_opcode_13_edge_0083.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_13_edge_0083.t.exe decode_wf_opcode_13_edge_0083.cpp decode_wf_opcode_13_edge_0083.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_13_edge_0083.t.exe)
-  (action (run ./decode_wf_opcode_13_edge_0083.t.exe))))
 
 (subdir decode_wf_opcode_15_edge_0085
  (rule

@@ -85,15 +85,6 @@ struct DecodeOpcode6To13WfEdge0049 {
   };
 
   static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
   update_nth(const unsigned int n, const unsigned int x,
              std::shared_ptr<List<unsigned int>> l);
 

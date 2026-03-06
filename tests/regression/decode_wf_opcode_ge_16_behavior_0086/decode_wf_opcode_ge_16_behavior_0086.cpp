@@ -10,65 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> DecodeWfOpcodeGe16Behavior0086::reg_main(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> DecodeWfOpcodeGe16Behavior0086::reg_status(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_reg>>>
-DecodeWfOpcodeGe16Behavior0086::chip_regs(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int DecodeWfOpcodeGe16Behavior0086::chip_port(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_chip>>>
-DecodeWfOpcodeGe16Behavior0086::bank_chips(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-unsigned int DecodeWfOpcodeGe16Behavior0086::sel_chip(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_sel> &r) {
-  return r->sel_chip;
-}
-
-unsigned int DecodeWfOpcodeGe16Behavior0086::sel_reg(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_sel> &r) {
-  return r->sel_reg;
-}
-
-unsigned int DecodeWfOpcodeGe16Behavior0086::sel_char(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_sel> &r) {
-  return r->sel_char;
-}
-
-std::shared_ptr<List<std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_bank>>>
-DecodeWfOpcodeGe16Behavior0086::ram_sys(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int DecodeWfOpcodeGe16Behavior0086::cur_bank(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_sel>
-DecodeWfOpcodeGe16Behavior0086::sel_ram(
-    const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::state> &s) {
-  return s->sel_ram;
-}
-
 std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::ram_bank>
 DecodeWfOpcodeGe16Behavior0086::get_bank(
     const std::shared_ptr<DecodeWfOpcodeGe16Behavior0086::state> &s,

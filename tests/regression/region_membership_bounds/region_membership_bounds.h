@@ -23,10 +23,6 @@ struct RegionMembershipBounds {
     unsigned int code_size;
   };
 
-  static unsigned int base_addr(const std::shared_ptr<layout> &l);
-
-  static unsigned int code_size(const std::shared_ptr<layout> &l);
-
   static bool addr_in_regionb(const unsigned int addr,
                               const std::shared_ptr<layout> &l);
 

@@ -74,28 +74,14 @@ struct EmptyBankChipCount {
     std::shared_ptr<List<unsigned int>> reg_status;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  reg_main(const std::shared_ptr<ram_reg> &r);
-
-  static std::shared_ptr<List<unsigned int>>
-  reg_status(const std::shared_ptr<ram_reg> &r);
-
   struct ram_chip {
     std::shared_ptr<List<std::shared_ptr<ram_reg>>> chip_regs;
     unsigned int chip_port;
   };
 
-  static std::shared_ptr<List<std::shared_ptr<ram_reg>>>
-  chip_regs(const std::shared_ptr<ram_chip> &r);
-
-  static unsigned int chip_port(const std::shared_ptr<ram_chip> &r);
-
   struct ram_bank {
     std::shared_ptr<List<std::shared_ptr<ram_chip>>> bank_chips;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_chip>>>
-  bank_chips(const std::shared_ptr<ram_bank> &r);
 
   static inline const unsigned int NREGS = ((((0 + 1) + 1) + 1) + 1);
 

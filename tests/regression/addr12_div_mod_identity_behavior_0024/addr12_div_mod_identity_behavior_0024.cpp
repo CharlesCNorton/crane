@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int Addr12DivModIdentityBehavior0024::acc(
-    const std::shared_ptr<Addr12DivModIdentityBehavior0024::state> &s) {
-  return s->acc;
-}
-
-bool Addr12DivModIdentityBehavior0024::carry(
-    const std::shared_ptr<Addr12DivModIdentityBehavior0024::state> &s) {
-  return s->carry;
-}
-
-bool Addr12DivModIdentityBehavior0024::test_pin(
-    const std::shared_ptr<Addr12DivModIdentityBehavior0024::state> &s) {
-  return s->test_pin;
-}
-
 bool Addr12DivModIdentityBehavior0024::jcn_condition(
     const std::shared_ptr<Addr12DivModIdentityBehavior0024::state> &s,
     const unsigned int cond) {

@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int ExecuteLdWfEdge0091::base_addr(
-    const std::shared_ptr<ExecuteLdWfEdge0091::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int ExecuteLdWfEdge0091::code_size(
-    const std::shared_ptr<ExecuteLdWfEdge0091::layout> &l) {
-  return l->code_size;
-}
-
 std::optional<unsigned int> ExecuteLdWfEdge0091::jump_target(
     const std::shared_ptr<ExecuteLdWfEdge0091::instruction> &i) {
   return std::visit(

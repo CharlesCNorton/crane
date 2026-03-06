@@ -9,8 +9,3 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-std::shared_ptr<List<unsigned int>>
-InitStateRomLength::rom(const std::shared_ptr<InitStateRomLength::state> &s) {
-  return s->rom;
-}

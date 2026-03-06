@@ -34,12 +34,6 @@ struct CyclesJcnNotTaken {
     bool test_pin;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
   struct instruction {
   public:
     struct JCN {

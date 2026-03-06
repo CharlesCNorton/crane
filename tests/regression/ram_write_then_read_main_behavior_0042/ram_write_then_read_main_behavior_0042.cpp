@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int RamWriteThenReadMainBehavior0042::acc(
-    const std::shared_ptr<RamWriteThenReadMainBehavior0042::state> &s) {
-  return s->acc;
-}
-
 unsigned int RamWriteThenReadMainBehavior0042::cycles(
     const std::shared_ptr<RamWriteThenReadMainBehavior0042::state> &_x,
     const RamWriteThenReadMainBehavior0042::instruction _x0) {

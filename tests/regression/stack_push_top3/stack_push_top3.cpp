@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-StackPushTop3::stack(const std::shared_ptr<StackPushTop3::state> &s) {
-  return s->stack;
-}
-
 std::shared_ptr<StackPushTop3::state>
 StackPushTop3::push_stack(const std::shared_ptr<StackPushTop3::state> &s,
                           const unsigned int addr) {
@@ -43,8 +38,8 @@ StackPushTop3::push_stack(const std::shared_ptr<StackPushTop3::state> &s,
                       unsigned int b = _args._a0;
                       std::shared_ptr<List<unsigned int>> l0 = _args._a1;
                       return [&](void) {
-                        if (std::move(l0).use_count() == 1 &&
-                            std::move(l0)->v().index() == 1) {
+                        if (((std::move(l0).use_count() == 1) &&
+                             (std::move(l0)->v().index() == 1))) {
                           auto &_rf = std::get<1>(std::move(l0)->v_mut());
                           _rf._a0 = addr;
                           _rf._a1 = List<unsigned int>::ctor::cons_(

@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int
-StepFetchDecodeExec::acc(const std::shared_ptr<StepFetchDecodeExec::state> &s) {
-  return s->acc;
-}
-
-unsigned int
-StepFetchDecodeExec::pc(const std::shared_ptr<StepFetchDecodeExec::state> &s) {
-  return s->pc;
-}
-
-std::shared_ptr<List<unsigned int>>
-StepFetchDecodeExec::rom(const std::shared_ptr<StepFetchDecodeExec::state> &s) {
-  return s->rom;
-}
-
 unsigned int StepFetchDecodeExec::fetch_byte(
     const std::shared_ptr<StepFetchDecodeExec::state> &s,
     const unsigned int addr) {

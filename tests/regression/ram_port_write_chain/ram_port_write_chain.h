@@ -81,27 +81,15 @@ struct RamPortWriteChain {
     unsigned int chip_port;
   };
 
-  static unsigned int chip_port(const std::shared_ptr<chip> &c);
-
   struct bank {
     std::shared_ptr<List<std::shared_ptr<chip>>> bank_chips;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<chip>>>
-  bank_chips(const std::shared_ptr<bank> &b);
 
   struct state {
     std::shared_ptr<List<std::shared_ptr<bank>>> ram_sys;
     unsigned int cur_bank;
     unsigned int sel_chip;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<bank>>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_chip(const std::shared_ptr<state> &s);
 
   template <typename T1>
   static std::shared_ptr<List<T1>>

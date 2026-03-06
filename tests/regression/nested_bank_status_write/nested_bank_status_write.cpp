@@ -10,29 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> NestedBankStatusWrite::status_(
-    const std::shared_ptr<NestedBankStatusWrite::reg> &r) {
-  return r->status_;
-}
-
-std::shared_ptr<List<std::shared_ptr<NestedBankStatusWrite::reg>>>
-NestedBankStatusWrite::regs_(
-    const std::shared_ptr<NestedBankStatusWrite::chip> &c) {
-  return c->regs_;
-}
-
-std::shared_ptr<List<std::shared_ptr<NestedBankStatusWrite::chip>>>
-NestedBankStatusWrite::chips_(
-    const std::shared_ptr<NestedBankStatusWrite::bank> &b) {
-  return b->chips_;
-}
-
-std::shared_ptr<List<std::shared_ptr<NestedBankStatusWrite::bank>>>
-NestedBankStatusWrite::banks_(
-    const std::shared_ptr<NestedBankStatusWrite::state> &s) {
-  return s->banks_;
-}
-
 std::shared_ptr<NestedBankStatusWrite::bank> NestedBankStatusWrite::get_bank0(
     const std::shared_ptr<NestedBankStatusWrite::state> &s) {
   return s->banks_->nth(

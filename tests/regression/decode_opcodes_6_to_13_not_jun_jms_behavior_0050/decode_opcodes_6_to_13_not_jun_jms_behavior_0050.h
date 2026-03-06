@@ -81,28 +81,14 @@ struct DecodeOpcodes6To13NotJunJmsBehavior0050 {
     std::shared_ptr<List<unsigned int>> reg_status;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  reg_main(const std::shared_ptr<ram_reg> &r);
-
-  static std::shared_ptr<List<unsigned int>>
-  reg_status(const std::shared_ptr<ram_reg> &r);
-
   struct ram_chip {
     std::shared_ptr<List<std::shared_ptr<ram_reg>>> chip_regs;
     unsigned int chip_port;
   };
 
-  static std::shared_ptr<List<std::shared_ptr<ram_reg>>>
-  chip_regs(const std::shared_ptr<ram_chip> &r);
-
-  static unsigned int chip_port(const std::shared_ptr<ram_chip> &r);
-
   struct ram_bank {
     std::shared_ptr<List<std::shared_ptr<ram_chip>>> bank_chips;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_chip>>>
-  bank_chips(const std::shared_ptr<ram_bank> &r);
 
   struct ram_sel {
     unsigned int sel_chip;
@@ -110,24 +96,11 @@ struct DecodeOpcodes6To13NotJunJmsBehavior0050 {
     unsigned int sel_char;
   };
 
-  static unsigned int sel_chip(const std::shared_ptr<ram_sel> &r);
-
-  static unsigned int sel_reg(const std::shared_ptr<ram_sel> &r);
-
-  static unsigned int sel_char(const std::shared_ptr<ram_sel> &r);
-
   struct state {
     std::shared_ptr<List<std::shared_ptr<ram_bank>>> ram_sys;
     unsigned int cur_bank;
     std::shared_ptr<ram_sel> sel_ram;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<ram_sel> sel_ram(const std::shared_ptr<state> &s);
 
   static inline const std::shared_ptr<ram_reg> empty_reg =
       std::make_shared<ram_reg>(ram_reg{List<unsigned int>::ctor::nil_(),

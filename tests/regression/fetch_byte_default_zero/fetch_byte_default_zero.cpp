@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> FetchByteDefaultZero::rom(
-    const std::shared_ptr<FetchByteDefaultZero::state> &s) {
-  return s->rom;
-}
-
 unsigned int FetchByteDefaultZero::fetch_byte(
     const std::shared_ptr<FetchByteDefaultZero::state> &s,
     const unsigned int addr) {

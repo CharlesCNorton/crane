@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int RegionMembershipBounds::base_addr(
-    const std::shared_ptr<RegionMembershipBounds::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int RegionMembershipBounds::code_size(
-    const std::shared_ptr<RegionMembershipBounds::layout> &l) {
-  return l->code_size;
-}
-
 bool RegionMembershipBounds::addr_in_regionb(
     const unsigned int addr,
     const std::shared_ptr<RegionMembershipBounds::layout> &l) {

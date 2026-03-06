@@ -11,32 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int RamPortWriteChain::chip_port(
-    const std::shared_ptr<RamPortWriteChain::chip> &c) {
-  return c->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamPortWriteChain::chip>>>
-RamPortWriteChain::bank_chips(
-    const std::shared_ptr<RamPortWriteChain::bank> &b) {
-  return b->bank_chips;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamPortWriteChain::bank>>>
-RamPortWriteChain::ram_sys(const std::shared_ptr<RamPortWriteChain::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int RamPortWriteChain::cur_bank(
-    const std::shared_ptr<RamPortWriteChain::state> &s) {
-  return s->cur_bank;
-}
-
-unsigned int RamPortWriteChain::sel_chip(
-    const std::shared_ptr<RamPortWriteChain::state> &s) {
-  return s->sel_chip;
-}
-
 std::shared_ptr<RamPortWriteChain::bank>
 RamPortWriteChain::get_bank(const std::shared_ptr<RamPortWriteChain::state> &s,
                             const unsigned int b) {

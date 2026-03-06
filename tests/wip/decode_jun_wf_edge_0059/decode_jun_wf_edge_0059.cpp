@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int DecodeJunWfEdge0059::base_addr(
-    const std::shared_ptr<DecodeJunWfEdge0059::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int DecodeJunWfEdge0059::code_size(
-    const std::shared_ptr<DecodeJunWfEdge0059::layout> &l) {
-  return l->code_size;
-}
-
 std::optional<unsigned int> DecodeJunWfEdge0059::jump_target(
     const std::shared_ptr<DecodeJunWfEdge0059::instruction> &i) {
   return std::visit(

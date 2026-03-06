@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-IszTerminatesAtMax::regs(const std::shared_ptr<IszTerminatesAtMax::state> &s) {
-  return s->regs;
-}
-
 unsigned int
 IszTerminatesAtMax::get_reg(const std::shared_ptr<IszTerminatesAtMax::state> &s,
                             const unsigned int r) {

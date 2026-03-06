@@ -23,10 +23,6 @@ struct SetTestPinUpdate {
     bool test_pin;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> set_test_pin(std::shared_ptr<state> s,
                                              const bool v);
 

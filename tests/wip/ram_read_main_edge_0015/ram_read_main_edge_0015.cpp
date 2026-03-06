@@ -9,8 +9,3 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-std::shared_ptr<List<unsigned int>>
-RamReadMainEdge0015::rom(const std::shared_ptr<RamReadMainEdge0015::state> &s) {
-  return s->rom;
-}

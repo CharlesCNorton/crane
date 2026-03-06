@@ -62,19 +62,6 @@ struct ExecuteClbWfBehavior0102 {
     std::shared_ptr<List<unsigned int>> rom;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static unsigned int pc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> reset_state(std::shared_ptr<state> s);
 
   static inline const bool t =

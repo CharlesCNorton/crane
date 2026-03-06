@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int DecodeIszWfBehavior0062::acc(
-    const std::shared_ptr<DecodeIszWfBehavior0062::state> &s) {
-  return s->acc;
-}
-
-bool DecodeIszWfBehavior0062::carry(
-    const std::shared_ptr<DecodeIszWfBehavior0062::state> &s) {
-  return s->carry;
-}
-
-bool DecodeIszWfBehavior0062::test_pin(
-    const std::shared_ptr<DecodeIszWfBehavior0062::state> &s) {
-  return s->test_pin;
-}
-
 bool DecodeIszWfBehavior0062::jcn_condition(
     const std::shared_ptr<DecodeIszWfBehavior0062::state> &s,
     const unsigned int cond) {

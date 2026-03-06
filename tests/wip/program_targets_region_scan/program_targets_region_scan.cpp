@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int ProgramTargetsRegionScan::base_addr(
-    const std::shared_ptr<ProgramTargetsRegionScan::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int ProgramTargetsRegionScan::code_size(
-    const std::shared_ptr<ProgramTargetsRegionScan::layout> &l) {
-  return l->code_size;
-}
-
 std::optional<unsigned int> ProgramTargetsRegionScan::jump_target(
     const std::shared_ptr<ProgramTargetsRegionScan::instruction> &i) {
   return std::visit(

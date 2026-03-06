@@ -81,8 +81,6 @@ struct CyclesJmsConstant {
     unsigned int acc;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
   static unsigned int cycles(const std::shared_ptr<state> &_x,
                              const std::shared_ptr<instruction> &i);
 

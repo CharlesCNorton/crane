@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int PortWriteNibbleMask::chip_port(
-    const std::shared_ptr<PortWriteNibbleMask::ram_chip> &r) {
-  return r->chip_port;
-}
-
 unsigned int PortWriteNibbleMask::nibble_of_nat(const unsigned int n) {
   return (
       n %

@@ -17,7 +17,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct DecodeOpcode16PlusNotJunJmsEdge0051 {
+struct DecodeWfOpcode13Edge0083 {
   struct Shadow {
     unsigned int value;
   };
@@ -25,5 +25,5 @@ struct DecodeOpcode16PlusNotJunJmsEdge0051 {
   static std::shared_ptr<Shadow> bump(const std::shared_ptr<Shadow> &x);
 
   static inline const std::shared_ptr<Shadow> t =
-      bump(std::make_shared<Shadow>(Shadow::shadow{(0 + 1)}));
+      bump(std::make_shared<Shadow>(Shadow{(0 + 1)}));
 };

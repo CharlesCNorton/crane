@@ -12,19 +12,6 @@
 #include <variant>
 
 unsigned int
-CyclesJcnTaken::acc(const std::shared_ptr<CyclesJcnTaken::state> &s) {
-  return s->acc;
-}
-
-bool CyclesJcnTaken::carry(const std::shared_ptr<CyclesJcnTaken::state> &s) {
-  return s->carry;
-}
-
-bool CyclesJcnTaken::test_pin(const std::shared_ptr<CyclesJcnTaken::state> &s) {
-  return s->test_pin;
-}
-
-unsigned int
 CyclesJcnTaken::cycles(const std::shared_ptr<CyclesJcnTaken::state> &s,
                        const std::shared_ptr<CyclesJcnTaken::instruction> &i) {
   return std::visit(

@@ -320,3 +320,36 @@
   (alias runtest)
   (deps graph.t.exe)
   (action (run ./graph.t.exe))))
+
+(subdir decode_edge_0019
+ (rule
+  (targets decode_edge_0019.t.exe)
+  (deps DecodeEdge0019.vo decode_edge_0019.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_edge_0019.t.exe decode_edge_0019.cpp decode_edge_0019.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_edge_0019.t.exe)
+  (action (run ./decode_edge_0019.t.exe))))
+
+(subdir decode_opcode_16_plus_not_jun_jms_edge_0051
+ (rule
+  (targets decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe)
+  (deps DecodeOpcode16PlusNotJunJmsEdge0051.vo decode_opcode_16_plus_not_jun_jms_edge_0051.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe decode_opcode_16_plus_not_jun_jms_edge_0051.cpp decode_opcode_16_plus_not_jun_jms_edge_0051.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe)
+  (action (run ./decode_opcode_16_plus_not_jun_jms_edge_0051.t.exe))))
+
+(subdir decode_wf_opcode_13_edge_0083
+ (rule
+  (targets decode_wf_opcode_13_edge_0083.t.exe)
+  (deps DecodeWfOpcode13Edge0083.vo decode_wf_opcode_13_edge_0083.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_13_edge_0083.t.exe decode_wf_opcode_13_edge_0083.cpp decode_wf_opcode_13_edge_0083.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_wf_opcode_13_edge_0083.t.exe)
+  (action (run ./decode_wf_opcode_13_edge_0083.t.exe))))

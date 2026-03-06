@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> ExecuteAddWfBehavior0094::regs(
-    const std::shared_ptr<ExecuteAddWfBehavior0094::state> &s) {
-  return s->regs;
-}
-
 unsigned int ExecuteAddWfBehavior0094::get_reg(
     const std::shared_ptr<ExecuteAddWfBehavior0094::state> &s,
     const unsigned int r) {

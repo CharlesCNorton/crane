@@ -80,29 +80,17 @@ struct NestedBankStatusWrite {
     std::shared_ptr<List<unsigned int>> status_;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  status_(const std::shared_ptr<reg> &r);
-
   struct chip {
     std::shared_ptr<List<std::shared_ptr<reg>>> regs_;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<reg>>>
-  regs_(const std::shared_ptr<chip> &c);
 
   struct bank {
     std::shared_ptr<List<std::shared_ptr<chip>>> chips_;
   };
 
-  static std::shared_ptr<List<std::shared_ptr<chip>>>
-  chips_(const std::shared_ptr<bank> &b);
-
   struct state {
     std::shared_ptr<List<std::shared_ptr<bank>>> banks_;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<bank>>>
-  banks_(const std::shared_ptr<state> &s);
 
   template <typename T1>
   static std::shared_ptr<List<T1>>

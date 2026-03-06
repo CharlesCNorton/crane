@@ -10,64 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamReadMainSelector::reg_main(
-    const std::shared_ptr<RamReadMainSelector::ram_reg> &r) {
-  return r->reg_main;
-}
-
-std::shared_ptr<List<unsigned int>> RamReadMainSelector::reg_status(
-    const std::shared_ptr<RamReadMainSelector::ram_reg> &r) {
-  return r->reg_status;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainSelector::ram_reg>>>
-RamReadMainSelector::chip_regs(
-    const std::shared_ptr<RamReadMainSelector::ram_chip> &r) {
-  return r->chip_regs;
-}
-
-unsigned int RamReadMainSelector::chip_port(
-    const std::shared_ptr<RamReadMainSelector::ram_chip> &r) {
-  return r->chip_port;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainSelector::ram_chip>>>
-RamReadMainSelector::bank_chips(
-    const std::shared_ptr<RamReadMainSelector::ram_bank> &r) {
-  return r->bank_chips;
-}
-
-unsigned int RamReadMainSelector::sel_chip(
-    const std::shared_ptr<RamReadMainSelector::ram_sel> &r) {
-  return r->sel_chip;
-}
-
-unsigned int RamReadMainSelector::sel_reg(
-    const std::shared_ptr<RamReadMainSelector::ram_sel> &r) {
-  return r->sel_reg;
-}
-
-unsigned int RamReadMainSelector::sel_char(
-    const std::shared_ptr<RamReadMainSelector::ram_sel> &r) {
-  return r->sel_char;
-}
-
-std::shared_ptr<List<std::shared_ptr<RamReadMainSelector::ram_bank>>>
-RamReadMainSelector::ram_sys(
-    const std::shared_ptr<RamReadMainSelector::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int RamReadMainSelector::cur_bank(
-    const std::shared_ptr<RamReadMainSelector::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<RamReadMainSelector::ram_sel> RamReadMainSelector::sel_ram(
-    const std::shared_ptr<RamReadMainSelector::state> &s) {
-  return s->sel_ram;
-}
-
 std::shared_ptr<RamReadMainSelector::ram_bank> RamReadMainSelector::get_bank(
     const std::shared_ptr<RamReadMainSelector::state> &s,
     const unsigned int b) {

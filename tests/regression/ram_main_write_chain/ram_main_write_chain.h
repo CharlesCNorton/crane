@@ -81,22 +81,13 @@ struct RamMainWriteChain {
     std::shared_ptr<List<unsigned int>> reg_main;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  reg_main(const std::shared_ptr<ram_reg> &r);
-
   struct ram_chip {
     std::shared_ptr<List<std::shared_ptr<ram_reg>>> chip_regs;
   };
 
-  static std::shared_ptr<List<std::shared_ptr<ram_reg>>>
-  chip_regs(const std::shared_ptr<ram_chip> &r);
-
   struct ram_bank {
     std::shared_ptr<List<std::shared_ptr<ram_chip>>> bank_chips;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_chip>>>
-  bank_chips(const std::shared_ptr<ram_bank> &r);
 
   struct state {
     std::shared_ptr<List<std::shared_ptr<ram_bank>>> ram_sys;
@@ -105,17 +96,6 @@ struct RamMainWriteChain {
     unsigned int sel_reg;
     unsigned int sel_char;
   };
-
-  static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_chip(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_reg(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_char(const std::shared_ptr<state> &s);
 
   template <typename T1>
   static std::shared_ptr<List<T1>>

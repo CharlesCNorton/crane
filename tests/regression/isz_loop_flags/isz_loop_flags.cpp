@@ -22,11 +22,6 @@ unsigned int IszLoopFlags::nibble_of_nat(const unsigned int n) {
        1));
 }
 
-std::shared_ptr<List<unsigned int>>
-IszLoopFlags::regs(const std::shared_ptr<IszLoopFlags::state> &s) {
-  return s->regs;
-}
-
 unsigned int
 IszLoopFlags::get_reg(const std::shared_ptr<IszLoopFlags::state> &s,
                       const unsigned int r) {

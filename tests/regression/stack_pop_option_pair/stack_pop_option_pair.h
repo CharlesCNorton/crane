@@ -70,11 +70,6 @@ struct StackPopOptionPair {
     unsigned int acc;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
   static std::pair<std::optional<unsigned int>, std::shared_ptr<state>>
   pop_stack(std::shared_ptr<state> s);
 

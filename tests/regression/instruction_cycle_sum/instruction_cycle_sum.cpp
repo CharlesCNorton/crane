@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int InstructionCycleSum::acc_(
-    const std::shared_ptr<InstructionCycleSum::state> &s) {
-  return s->acc_;
-}
-
-bool InstructionCycleSum::carry_(
-    const std::shared_ptr<InstructionCycleSum::state> &s) {
-  return s->carry_;
-}
-
-bool InstructionCycleSum::test_(
-    const std::shared_ptr<InstructionCycleSum::state> &s) {
-  return s->test_;
-}
-
 unsigned int InstructionCycleSum::cycles(
     const std::shared_ptr<InstructionCycleSum::state> &s,
     const std::shared_ptr<InstructionCycleSum::instruction> &i) {

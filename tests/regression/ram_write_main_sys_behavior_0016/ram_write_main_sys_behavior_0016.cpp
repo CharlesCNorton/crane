@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamWriteMainSysBehavior0016::rom(
-    const std::shared_ptr<RamWriteMainSysBehavior0016::state> &s) {
-  return s->rom;
-}
-
 unsigned int RamWriteMainSysBehavior0016::fetch_byte(
     const std::shared_ptr<RamWriteMainSysBehavior0016::state> &s,
     const unsigned int addr) {

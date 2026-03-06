@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int
-SetTestPinUpdate::acc(const std::shared_ptr<SetTestPinUpdate::state> &s) {
-  return s->acc;
-}
-
-bool SetTestPinUpdate::test_pin(
-    const std::shared_ptr<SetTestPinUpdate::state> &s) {
-  return s->test_pin;
-}
-
 std::shared_ptr<SetTestPinUpdate::state>
 SetTestPinUpdate::set_test_pin(std::shared_ptr<SetTestPinUpdate::state> s,
                                const bool v) {

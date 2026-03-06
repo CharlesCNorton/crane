@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-IszLoopsBeforeWrap::regs(const std::shared_ptr<IszLoopsBeforeWrap::state> &s) {
-  return s->regs;
-}
-
 unsigned int
 IszLoopsBeforeWrap::get_reg(const std::shared_ptr<IszLoopsBeforeWrap::state> &s,
                             const unsigned int r) {

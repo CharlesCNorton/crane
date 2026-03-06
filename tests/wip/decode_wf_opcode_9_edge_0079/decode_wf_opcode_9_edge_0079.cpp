@@ -9,8 +9,3 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-std::shared_ptr<List<unsigned int>> DecodeWfOpcode9Edge0079::rom(
-    const std::shared_ptr<DecodeWfOpcode9Edge0079::state> &s) {
-  return s->rom;
-}

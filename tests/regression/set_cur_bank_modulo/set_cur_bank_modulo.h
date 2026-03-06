@@ -26,10 +26,6 @@ struct SetCurBankModulo {
     unsigned int acc;
   };
 
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> set_cur_bank(std::shared_ptr<state> s,
                                              const unsigned int b);
 

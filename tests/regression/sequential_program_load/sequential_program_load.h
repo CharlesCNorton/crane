@@ -81,11 +81,6 @@ struct SequentialProgramLoad {
     unsigned int ptr_;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  rom_(const std::shared_ptr<state> &s);
-
-  static unsigned int ptr_(const std::shared_ptr<state> &s);
-
   template <typename T1>
   static std::shared_ptr<List<T1>>
   update_nth(const unsigned int n, const T1 x,

@@ -35,14 +35,6 @@ struct JcnBranchTargetChoice {
     unsigned int pc;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
-  static unsigned int pc(const std::shared_ptr<state> &s);
-
   static unsigned int addr12_of_nat(const unsigned int n);
 
   static unsigned int pc_inc2(const std::shared_ptr<state> &s);

@@ -11,21 +11,6 @@
 #include <utility>
 #include <variant>
 
-unsigned int ExecuteIacWfBehavior0096::acc(
-    const std::shared_ptr<ExecuteIacWfBehavior0096::state> &s) {
-  return s->acc;
-}
-
-bool ExecuteIacWfBehavior0096::carry(
-    const std::shared_ptr<ExecuteIacWfBehavior0096::state> &s) {
-  return s->carry;
-}
-
-bool ExecuteIacWfBehavior0096::test_pin(
-    const std::shared_ptr<ExecuteIacWfBehavior0096::state> &s) {
-  return s->test_pin;
-}
-
 bool ExecuteIacWfBehavior0096::jcn_condition(
     const std::shared_ptr<ExecuteIacWfBehavior0096::state> &s,
     const unsigned int cond) {
