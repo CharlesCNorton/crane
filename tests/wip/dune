@@ -190,3 +190,168 @@
   (alias runtest)
   (deps prom_flagged_sum.t.exe)
   (action (run ./prom_flagged_sum.t.exe))))
+
+(subdir update_nth_length_preserve
+ (rule
+  (targets update_nth_length_preserve.t.exe)
+  (deps UpdateNthLengthPreserve.vo update_nth_length_preserve.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_length_preserve.t.exe update_nth_length_preserve.cpp update_nth_length_preserve.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps update_nth_length_preserve.t.exe)
+  (action (run ./update_nth_length_preserve.t.exe))))
+
+(subdir decode_list_odd_tail
+ (rule
+  (targets decode_list_odd_tail.t.exe)
+  (deps DecodeListOddTail.vo decode_list_odd_tail.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_odd_tail.t.exe decode_list_odd_tail.cpp decode_list_odd_tail.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_list_odd_tail.t.exe)
+  (action (run ./decode_list_odd_tail.t.exe))))
+
+(subdir page_offset_recompose
+ (rule
+  (targets page_offset_recompose.t.exe)
+  (deps PageOffsetRecompose.vo page_offset_recompose.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} page_offset_recompose.t.exe page_offset_recompose.cpp page_offset_recompose.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps page_offset_recompose.t.exe)
+  (action (run ./page_offset_recompose.t.exe))))
+
+(subdir prom_params_large_state
+ (rule
+  (targets prom_params_large_state.t.exe)
+  (deps PromParamsLargeState.vo prom_params_large_state.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_large_state.t.exe prom_params_large_state.cpp prom_params_large_state.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prom_params_large_state.t.exe)
+  (action (run ./prom_params_large_state.t.exe))))
+
+(subdir program_wf_targets_prop
+ (rule
+  (targets program_wf_targets_prop.t.exe)
+  (deps ProgramWfTargetsProp.vo program_wf_targets_prop.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} program_wf_targets_prop.t.exe program_wf_targets_prop.cpp program_wf_targets_prop.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps program_wf_targets_prop.t.exe)
+  (action (run ./program_wf_targets_prop.t.exe))))
+
+(subdir init_state_rom_length
+ (rule
+  (targets init_state_rom_length.t.exe)
+  (deps InitStateRomLength.vo init_state_rom_length.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_rom_length.t.exe init_state_rom_length.cpp init_state_rom_length.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps init_state_rom_length.t.exe)
+  (action (run ./init_state_rom_length.t.exe))))
+
+(subdir disassemble_next_address
+ (rule
+  (targets disassemble_next_address.t.exe)
+  (deps DisassembleNextAddress.vo disassemble_next_address.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} disassemble_next_address.t.exe disassemble_next_address.cpp disassemble_next_address.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps disassemble_next_address.t.exe)
+  (action (run ./disassemble_next_address.t.exe))))
+
+(subdir init_state_register_count
+ (rule
+  (targets init_state_register_count.t.exe)
+  (deps InitStateRegisterCount.vo init_state_register_count.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_register_count.t.exe init_state_register_count.cpp init_state_register_count.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps init_state_register_count.t.exe)
+  (action (run ./init_state_register_count.t.exe))))
+
+(subdir pc_inc1_wrap_modulo
+ (rule
+  (targets pc_inc1_wrap_modulo.t.exe)
+  (deps PcInc1WrapModulo.vo pc_inc1_wrap_modulo.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc1_wrap_modulo.t.exe pc_inc1_wrap_modulo.cpp pc_inc1_wrap_modulo.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pc_inc1_wrap_modulo.t.exe)
+  (action (run ./pc_inc1_wrap_modulo.t.exe))))
+
+(subdir load_program_head_write
+ (rule
+  (targets load_program_head_write.t.exe)
+  (deps LoadProgramHeadWrite.vo load_program_head_write.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} load_program_head_write.t.exe load_program_head_write.cpp load_program_head_write.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps load_program_head_write.t.exe)
+  (action (run ./load_program_head_write.t.exe))))
+
+(subdir addr12_wrap_window
+ (rule
+  (targets addr12_wrap_window.t.exe)
+  (deps Addr12WrapWindow.vo addr12_wrap_window.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_wrap_window.t.exe addr12_wrap_window.cpp addr12_wrap_window.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps addr12_wrap_window.t.exe)
+  (action (run ./addr12_wrap_window.t.exe))))
+
+(subdir pc_inc2_wrap_modulo
+ (rule
+  (targets pc_inc2_wrap_modulo.t.exe)
+  (deps PcInc2WrapModulo.vo pc_inc2_wrap_modulo.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc2_wrap_modulo.t.exe pc_inc2_wrap_modulo.cpp pc_inc2_wrap_modulo.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pc_inc2_wrap_modulo.t.exe)
+  (action (run ./pc_inc2_wrap_modulo.t.exe))))
+
+(subdir base_for_next1_page_cross
+ (rule
+  (targets base_for_next1_page_cross.t.exe)
+  (deps BaseForNext1PageCross.vo base_for_next1_page_cross.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} base_for_next1_page_cross.t.exe base_for_next1_page_cross.cpp base_for_next1_page_cross.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps base_for_next1_page_cross.t.exe)
+  (action (run ./base_for_next1_page_cross.t.exe))))
+
+(subdir decode_list_empty
+ (rule
+  (targets decode_list_empty.t.exe)
+  (deps DecodeListEmpty.vo decode_list_empty.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_empty.t.exe decode_list_empty.cpp decode_list_empty.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_list_empty.t.exe)
+  (action (run ./decode_list_empty.t.exe))))
+
+(subdir decode_list_pair_count
+ (rule
+  (targets decode_list_pair_count.t.exe)
+  (deps DecodeListPairCount.vo decode_list_pair_count.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_pair_count.t.exe decode_list_pair_count.cpp decode_list_pair_count.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps decode_list_pair_count.t.exe)
+  (action (run ./decode_list_pair_count.t.exe))))
