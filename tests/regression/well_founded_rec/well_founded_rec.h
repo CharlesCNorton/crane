@@ -54,7 +54,7 @@ public:
   variant_t &v_mut() { return v_; }
 };
 
-struct Nat {
+struct PeanoNat {
   static unsigned int sub(const unsigned int n, const unsigned int m);
 
   static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,

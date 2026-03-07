@@ -18,7 +18,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Nat {
+struct PeanoNat {
   static bool leb(const unsigned int n, const unsigned int m);
 
   static bool ltb(const unsigned int n, const unsigned int m);
@@ -68,7 +68,7 @@ struct Equations {
         return (n1 + 1);
       } else {
         unsigned int n2 = n0 - 1;
-        return gcd_clause_3(n1, n2, Nat::ltb((n1 + 1), (n2 + 1)), gcd0);
+        return gcd_clause_3(n1, n2, PeanoNat::ltb((n1 + 1), (n2 + 1)), gcd0);
       }
     }
   }
@@ -225,11 +225,11 @@ struct Equations {
                 unsigned int n = _args._a0;
                 unsigned int n0 = _args._a1;
                 std::shared_ptr<gcd_clause_3_graph> hind = _args._a2;
-                return f1(
-                    n, n0, hind,
-                    f5(n, n0, Nat::ltb((n + 1), (n0 + 1)),
-                       gcd_unfold_clause_3(n, n0, Nat::ltb((n + 1), (n0 + 1))),
-                       hind));
+                return f1(n, n0, hind,
+                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)),
+                             gcd_unfold_clause_3(
+                                 n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
+                             hind));
               }},
           g->v());
     };
@@ -304,11 +304,11 @@ struct Equations {
                 unsigned int n = _args._a0;
                 unsigned int n0 = _args._a1;
                 std::shared_ptr<gcd_clause_3_graph> hind = _args._a2;
-                return f1(
-                    n, n0, hind,
-                    f5(n, n0, Nat::ltb((n + 1), (n0 + 1)),
-                       gcd_unfold_clause_3(n, n0, Nat::ltb((n + 1), (n0 + 1))),
-                       hind));
+                return f1(n, n0, hind,
+                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)),
+                             gcd_unfold_clause_3(
+                                 n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
+                             hind));
               }},
           g->v());
     };
@@ -417,7 +417,7 @@ struct Equations {
                                              const bool refine,
                                              F2 &&collatz_steps0) {
     if (refine) {
-      return (collatz_steps0(Nat::div2(std::move(n))) + 1);
+      return (collatz_steps0(PeanoNat::div2(std::move(n))) + 1);
     } else {
       return (collatz_steps0((((((0 + 1) + 1) + 1) * std::move(n)) + (0 + 1))) +
               1);
@@ -435,7 +435,7 @@ struct Equations {
         return 0;
       } else {
         unsigned int n1 = n0 - 1;
-        return collatz_steps_clause_3(n1, Nat::even(((n1 + 1) + 1)),
+        return collatz_steps_clause_3(n1, PeanoNat::even(((n1 + 1) + 1)),
                                       collatz_steps0);
       }
     }
@@ -596,9 +596,9 @@ struct Equations {
                 unsigned int n = _args._a0;
                 std::shared_ptr<collatz_steps_clause_3_graph> hind = _args._a1;
                 return f1(n, hind,
-                          f5(n, Nat::even(((n + 1) + 1)),
+                          f5(n, PeanoNat::even(((n + 1) + 1)),
                              collatz_steps_unfold_clause_3(
-                                 n, Nat::even(((n + 1) + 1))),
+                                 n, PeanoNat::even(((n + 1) + 1))),
                              hind));
               }},
           c->v());
@@ -612,7 +612,8 @@ struct Equations {
                 unsigned int n = _args._a0;
                 std::shared_ptr<collatz_steps_graph> hind = _args._a1;
                 return f2(n, hind,
-                          f4(Nat::div2(n), collatz_steps(Nat::div2(n)), hind));
+                          f4(PeanoNat::div2(n),
+                             collatz_steps(PeanoNat::div2(n)), hind));
               },
               [&](const typename collatz_steps_clause_3_graph::
                       collatz_steps_clause_3_graph_equation_2 _args) -> T2 {
@@ -661,9 +662,9 @@ struct Equations {
                 unsigned int n = _args._a0;
                 std::shared_ptr<collatz_steps_clause_3_graph> hind = _args._a1;
                 return f1(n, hind,
-                          f5(n, Nat::even(((n + 1) + 1)),
+                          f5(n, PeanoNat::even(((n + 1) + 1)),
                              collatz_steps_unfold_clause_3(
-                                 n, Nat::even(((n + 1) + 1))),
+                                 n, PeanoNat::even(((n + 1) + 1))),
                              hind));
               }},
           c->v());
@@ -677,7 +678,8 @@ struct Equations {
                 unsigned int n = _args._a0;
                 std::shared_ptr<collatz_steps_graph> hind = _args._a1;
                 return f2(n, hind,
-                          f4(Nat::div2(n), collatz_steps(Nat::div2(n)), hind));
+                          f4(PeanoNat::div2(n),
+                             collatz_steps(PeanoNat::div2(n)), hind));
               },
               [&](const typename collatz_steps_clause_3_graph::
                       collatz_steps_clause_3_graph_equation_2 _args) -> T2 {

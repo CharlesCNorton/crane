@@ -263,7 +263,7 @@ struct Coq_Pos {
   static unsigned int to_nat(const std::shared_ptr<Positive> &x);
 };
 
-struct N {
+struct BinNat {
   static std::shared_ptr<N> sub(std::shared_ptr<N> n,
                                 const std::shared_ptr<N> &m);
 
@@ -280,7 +280,7 @@ struct N {
   static unsigned int to_nat(const std::shared_ptr<N> &a);
 };
 
-struct Z {
+struct BinInt {
   static std::shared_ptr<Z> double_(const std::shared_ptr<Z> &x);
 
   static std::shared_ptr<Z> succ_double(const std::shared_ptr<Z> &x);
@@ -308,6 +308,10 @@ struct Z {
   static std::shared_ptr<Z> abs(const std::shared_ptr<Z> &z);
 };
 
+struct Datatypes {
+  static comparison CompOpp(const comparison r);
+};
+
 struct BinaryNums {
   static inline const std::shared_ptr<Positive> pos_one = Positive::ctor::xH_();
 
@@ -331,30 +335,31 @@ struct BinaryNums {
   static inline const std::shared_ptr<N> n_five = N::ctor::Npos_(
       Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_())));
 
-  static inline const std::shared_ptr<N> n_add_result = N::add(
+  static inline const std::shared_ptr<N> n_add_result = BinNat::add(
       N::ctor::Npos_(Positive::ctor::xO_(
           Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_())))),
       N::ctor::Npos_(Positive::ctor::xO_(Positive::ctor::xO_(
           Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))))));
 
-  static inline const std::shared_ptr<N> n_mul_result = N::mul(
+  static inline const std::shared_ptr<N> n_mul_result = BinNat::mul(
       N::ctor::Npos_(
           Positive::ctor::xO_(Positive::ctor::xI_(Positive::ctor::xH_()))),
       N::ctor::Npos_(
           Positive::ctor::xI_(Positive::ctor::xI_(Positive::ctor::xH_()))));
 
   static inline const std::shared_ptr<N> n_sub_result =
-      N::sub(N::ctor::Npos_(Positive::ctor::xO_(Positive::ctor::xI_(
-                 Positive::ctor::xO_(Positive::ctor::xH_())))),
-             N::ctor::Npos_(Positive::ctor::xI_(Positive::ctor::xH_())));
+      BinNat::sub(N::ctor::Npos_(Positive::ctor::xO_(Positive::ctor::xI_(
+                      Positive::ctor::xO_(Positive::ctor::xH_())))),
+                  N::ctor::Npos_(Positive::ctor::xI_(Positive::ctor::xH_())));
 
-  static inline const std::shared_ptr<N> n_pred_result = N::pred(N::ctor::Npos_(
-      Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))));
+  static inline const std::shared_ptr<N> n_pred_result =
+      BinNat::pred(N::ctor::Npos_(
+          Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))));
 
-  static inline const comparison n_compare_result =
-      N::compare(N::ctor::Npos_(Positive::ctor::xI_(Positive::ctor::xH_())),
-                 N::ctor::Npos_(Positive::ctor::xI_(
-                     Positive::ctor::xO_(Positive::ctor::xH_()))));
+  static inline const comparison n_compare_result = BinNat::compare(
+      N::ctor::Npos_(Positive::ctor::xI_(Positive::ctor::xH_())),
+      N::ctor::Npos_(
+          Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))));
 
   static inline const std::shared_ptr<Z> z_zero = Z::ctor::Z0_();
 
@@ -366,39 +371,40 @@ struct BinaryNums {
       Positive::ctor::xI_(Positive::ctor::xI_(Positive::ctor::xH_())));
 
   static inline const std::shared_ptr<Z> z_add_result =
-      Z::add(Z::ctor::Zpos_(Positive::ctor::xO_(Positive::ctor::xI_(
-                 Positive::ctor::xO_(Positive::ctor::xH_())))),
-             Z::ctor::Zneg_(Positive::ctor::xI_(Positive::ctor::xH_())));
+      BinInt::add(Z::ctor::Zpos_(Positive::ctor::xO_(Positive::ctor::xI_(
+                      Positive::ctor::xO_(Positive::ctor::xH_())))),
+                  Z::ctor::Zneg_(Positive::ctor::xI_(Positive::ctor::xH_())));
 
-  static inline const std::shared_ptr<Z> z_mul_result = Z::mul(
+  static inline const std::shared_ptr<Z> z_mul_result = BinInt::mul(
       Z::ctor::Zneg_(
           Positive::ctor::xO_(Positive::ctor::xO_(Positive::ctor::xH_()))),
       Z::ctor::Zpos_(
           Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))));
 
   static inline const std::shared_ptr<Z> z_sub_result =
-      Z::sub(Z::ctor::Zpos_(Positive::ctor::xI_(Positive::ctor::xH_())),
-             Z::ctor::Zpos_(Positive::ctor::xO_(Positive::ctor::xI_(
-                 Positive::ctor::xO_(Positive::ctor::xH_())))));
+      BinInt::sub(Z::ctor::Zpos_(Positive::ctor::xI_(Positive::ctor::xH_())),
+                  Z::ctor::Zpos_(Positive::ctor::xO_(Positive::ctor::xI_(
+                      Positive::ctor::xO_(Positive::ctor::xH_())))));
 
-  static inline const std::shared_ptr<Z> z_abs_result = Z::abs(Z::ctor::Zneg_(
-      Positive::ctor::xO_(Positive::ctor::xI_(Positive::ctor::xO_(
-          Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_())))))));
+  static inline const std::shared_ptr<Z> z_abs_result =
+      BinInt::abs(Z::ctor::Zneg_(Positive::ctor::xO_(
+          Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xI_(
+              Positive::ctor::xO_(Positive::ctor::xH_())))))));
 
-  static inline const comparison z_compare_result =
-      Z::compare(Z::ctor::Zneg_(Positive::ctor::xI_(Positive::ctor::xH_())),
-                 Z::ctor::Zpos_(Positive::ctor::xI_(
-                     Positive::ctor::xO_(Positive::ctor::xH_()))));
+  static inline const comparison z_compare_result = BinInt::compare(
+      Z::ctor::Zneg_(Positive::ctor::xI_(Positive::ctor::xH_())),
+      Z::ctor::Zpos_(
+          Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_()))));
 
   static inline const unsigned int pos_to_nat = Coq_Pos::to_nat(
       Positive::ctor::xI_(Positive::ctor::xI_(Positive::ctor::xH_())));
 
   static inline const unsigned int n_to_nat =
-      N::to_nat(N::ctor::Npos_(Positive::ctor::xI_(
+      BinNat::to_nat(N::ctor::Npos_(Positive::ctor::xI_(
           Positive::ctor::xI_(Positive::ctor::xI_(Positive::ctor::xH_())))));
 
   static inline const unsigned int z_to_nat =
-      Z::to_nat(Z::ctor::Zpos_(Positive::ctor::xO_(
+      BinInt::to_nat(Z::ctor::Zpos_(Positive::ctor::xO_(
           Positive::ctor::xI_(Positive::ctor::xO_(Positive::ctor::xH_())))));
 
   static std::shared_ptr<N> n_max(std::shared_ptr<N> a, std::shared_ptr<N> b);

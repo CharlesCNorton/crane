@@ -20,7 +20,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Nat {
+struct PeanoNat {
   static bool eqb(const unsigned int n, const unsigned int m);
 
   static bool leb(const unsigned int n, const unsigned int m);
@@ -82,7 +82,7 @@ template <typename K, typename V> struct SkipList {
         SkipList<int, int>::template linkNode<K, V>(
             path, this->SkipList::slHead, newN);
         [&](void) {
-          if (Nat::ltb(curLvl, newLevel)) {
+          if (PeanoNat::ltb(curLvl, newLevel)) {
             return this->SkipList::slLevel->write(newLevel);
           } else {
             return;
@@ -97,7 +97,7 @@ template <typename K, typename V> struct SkipList {
       SkipList<int, int>::template linkNode<K, V>(path, this->SkipList::slHead,
                                                   newN);
       [&](void) {
-        if (Nat::ltb(curLvl, newLevel)) {
+        if (PeanoNat::ltb(curLvl, newLevel)) {
           return this->SkipList::slLevel->write(newLevel);
         } else {
           return;
@@ -156,7 +156,7 @@ template <typename K, typename V> struct SkipList {
   }
   bool isEmpty() const {
     unsigned int len = this->SkipList::slLength->read();
-    return Nat::eqb(len, 0);
+    return PeanoNat::eqb(len, 0);
   }
   unsigned int length() const { return this->SkipList::slLength->read(); }
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
@@ -226,7 +226,7 @@ template <typename K, typename V> struct SkipList {
         SkipList<int, int>::template linkNode<K, V>(
             path, this->SkipList::slHead, newN);
         [&](void) {
-          if (Nat::ltb(curLvl, newLevel)) {
+          if (PeanoNat::ltb(curLvl, newLevel)) {
             return this->SkipList::slLevel->write(newLevel);
           } else {
             return;
@@ -241,7 +241,7 @@ template <typename K, typename V> struct SkipList {
       SkipList<int, int>::template linkNode<K, V>(path, this->SkipList::slHead,
                                                   newN);
       [&](void) {
-        if (Nat::ltb(curLvl, newLevel)) {
+        if (PeanoNat::ltb(curLvl, newLevel)) {
           return this->SkipList::slLevel->write(newLevel);
         } else {
           return;
@@ -271,7 +271,7 @@ template <typename K, typename V> struct SkipList {
         SkipList<int, int>::template linkNode<K, V>(
             path, this->SkipList::slHead, newN);
         [&](void) {
-          if (Nat::ltb(curLvl, newLevel)) {
+          if (PeanoNat::ltb(curLvl, newLevel)) {
             return this->SkipList::slLevel->write(newLevel);
           } else {
             return;
@@ -287,7 +287,7 @@ template <typename K, typename V> struct SkipList {
       SkipList<int, int>::template linkNode<K, V>(path, this->SkipList::slHead,
                                                   newN);
       [&](void) {
-        if (Nat::ltb(curLvl, newLevel)) {
+        if (PeanoNat::ltb(curLvl, newLevel)) {
           return this->SkipList::slLevel->write(newLevel);
         } else {
           return;
@@ -425,7 +425,7 @@ template <typename K, typename V> struct SkipList {
         SkipList<int, int>::template linkNode<K, V>(
             path, this->SkipList::slHead, newN);
         [&](void) {
-          if (Nat::ltb(curLvl, level)) {
+          if (PeanoNat::ltb(curLvl, level)) {
             return this->SkipList::slLevel->write(level);
           } else {
             return;
@@ -441,7 +441,7 @@ template <typename K, typename V> struct SkipList {
       SkipList<int, int>::template linkNode<K, V>(path, this->SkipList::slHead,
                                                   newN);
       [&](void) {
-        if (Nat::ltb(curLvl, level)) {
+        if (PeanoNat::ltb(curLvl, level)) {
           return this->SkipList::slLevel->write(level);
         } else {
           return;
@@ -487,7 +487,7 @@ template <typename K, typename V> struct SkipList {
         SkipList<int, int>::template linkNode<K, V>(
             path, this->SkipList::slHead, newN);
         [&](void) {
-          if (Nat::ltb(curLvl, level)) {
+          if (PeanoNat::ltb(curLvl, level)) {
             return this->SkipList::slLevel->write(level);
           } else {
             return;
@@ -507,7 +507,7 @@ template <typename K, typename V> struct SkipList {
       SkipList<int, int>::template linkNode<K, V>(path, this->SkipList::slHead,
                                                   newN);
       [&](void) {
-        if (Nat::ltb(curLvl, level)) {
+        if (PeanoNat::ltb(curLvl, level)) {
           return this->SkipList::slLevel->write(level);
         } else {
           return;
@@ -740,7 +740,7 @@ template <typename K, typename V> struct SkipList {
     } else {
       unsigned int level_ = level - 1;
       path.set(level, head);
-      if (Nat::leb(maxLevel, level_)) {
+      if (PeanoNat::leb(maxLevel, level_)) {
         return SkipList<int, int>::template extendPath_aux<T1, T2>(
             path, head, level_, maxLevel);
       } else {
@@ -754,7 +754,7 @@ template <typename K, typename V> struct SkipList {
                          const std::shared_ptr<SkipNode<T1, T2>> head,
                          const unsigned int needed,
                          const unsigned int currentMax) {
-    if (Nat::leb(needed, (currentMax + 1))) {
+    if (PeanoNat::leb(needed, (currentMax + 1))) {
       return;
     } else {
       return SkipList<int, int>::template extendPath_aux<T1, T2>(
@@ -865,7 +865,7 @@ template <typename K, typename V> struct SkipList {
       [&](void) {
         if (headNext.has_value()) {
           std::shared_ptr<SkipNode<T1, T2>> _x = *headNext;
-          if (Nat::leb(lvl, nodeLevel)) {
+          if (PeanoNat::leb(lvl, nodeLevel)) {
             std::optional<std::shared_ptr<SkipNode<T1, T2>>> nodeNext =
                 ptr_to_opt(stm::readTVar<std::shared_ptr<SkipNode<T1, T2>>>(
                     node->forward[lvl]));

@@ -26,7 +26,7 @@ concept MapsTo = requires(F& f, Args&... a) {
     } -> convertible_to<R>;
 };
 
-struct Nat {
+struct PeanoNat {
     static bool eqb(const unsigned int n, const unsigned int m);
 
     static bool leb(const unsigned int n, const unsigned int m);
@@ -112,7 +112,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
                 [&](void) {
-                    if (Nat::ltb(curLvl, newLevel)) {
+                    if (PeanoNat::ltb(curLvl, newLevel)) {
                         return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -134,7 +134,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
             [&](void) {
-                if (Nat::ltb(curLvl, newLevel)) {
+                if (PeanoNat::ltb(curLvl, newLevel)) {
                     return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -225,7 +225,7 @@ struct SkipList {
     {
         unsigned int len =
                          stm::readTVar<unsigned int>(this->SkipList::slLength);
-        return Nat::eqb(len, 0);
+        return PeanoNat::eqb(len, 0);
     }
     unsigned int length() const
     {
@@ -329,7 +329,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
                 [&](void) {
-                    if (Nat::ltb(curLvl, newLevel)) {
+                    if (PeanoNat::ltb(curLvl, newLevel)) {
                         return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -351,7 +351,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
             [&](void) {
-                if (Nat::ltb(curLvl, newLevel)) {
+                if (PeanoNat::ltb(curLvl, newLevel)) {
                     return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -397,7 +397,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
                 [&](void) {
-                    if (Nat::ltb(curLvl, newLevel)) {
+                    if (PeanoNat::ltb(curLvl, newLevel)) {
                         return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -420,7 +420,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
             [&](void) {
-                if (Nat::ltb(curLvl, newLevel)) {
+                if (PeanoNat::ltb(curLvl, newLevel)) {
                     return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        newLevel);
@@ -611,7 +611,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
                 [&](void) {
-                    if (Nat::ltb(curLvl, level)) {
+                    if (PeanoNat::ltb(curLvl, level)) {
                         return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        level);
@@ -634,7 +634,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
             [&](void) {
-                if (Nat::ltb(curLvl, level)) {
+                if (PeanoNat::ltb(curLvl, level)) {
                     return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        level);
@@ -697,7 +697,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
                 [&](void) {
-                    if (Nat::ltb(curLvl, level)) {
+                    if (PeanoNat::ltb(curLvl, level)) {
                         return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        level);
@@ -725,7 +725,7 @@ struct SkipList {
                                                         this->SkipList::slHead,
                                                         newN);
             [&](void) {
-                if (Nat::ltb(curLvl, level)) {
+                if (PeanoNat::ltb(curLvl, level)) {
                     return stm::writeTVar<unsigned int>(
                                                        this->SkipList::slLevel,
                                                        level);
@@ -1039,7 +1039,7 @@ struct SkipList {
         else {
             unsigned int level_ = level - 1;
             path.set(level, head);
-            if (Nat::leb(maxLevel, level_)) {
+            if (PeanoNat::leb(maxLevel, level_)) {
                 return SkipList<int, int>::template extendPath_aux<T1, T2>(
                                                                      path,
                                                                      head,
@@ -1058,7 +1058,7 @@ struct SkipList {
                            const unsigned int                       needed,
                            const unsigned int                       currentMax)
     {
-        if (Nat::leb(needed, (currentMax + 1))) {
+        if (PeanoNat::leb(needed, (currentMax + 1))) {
             return;
         }
         else {
@@ -1216,7 +1216,7 @@ struct SkipList {
             [&](void) {
                 if (headNext.has_value()) {
                     bsl::shared_ptr<SkipNode<T1, T2> > _x = *headNext;
-                    if (Nat::leb(lvl, nodeLevel)) {
+                    if (PeanoNat::leb(lvl, nodeLevel)) {
                         bsl::optional<bsl::shared_ptr<SkipNode<T1, T2> > >
                             nodeNext = ptr_to_opt(
                                       stm::readTVar<

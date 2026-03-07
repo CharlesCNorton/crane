@@ -50,13 +50,15 @@ struct Option {
     }
   }
 
-  static inline const unsigned int test_some = get_or_default(some_val, 0u);
+  static inline const unsigned int test_some =
+      Option::get_or_default(Option::some_val, 0u);
 
-  static inline const unsigned int test_none = get_or_default(none_val, 0u);
+  static inline const unsigned int test_none =
+      Option::get_or_default(Option::none_val, 0u);
 
   static inline const std::optional<unsigned int> test_pred_zero =
-      safe_pred(0u);
+      Option::safe_pred(0u);
 
   static inline const std::optional<unsigned int> test_pred_five =
-      safe_pred(5u);
+      Option::safe_pred(5u);
 };

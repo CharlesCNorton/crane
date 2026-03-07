@@ -17,7 +17,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-struct Nat {
+struct PeanoNat {
   static unsigned int pred(const unsigned int n);
 
   static unsigned int div2(const unsigned int n);

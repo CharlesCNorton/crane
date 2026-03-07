@@ -95,6 +95,9 @@ let concepts_hoisted = ref false
 let in_nonlocal_context = ref false
 (* Track current struct name for qualifying out-of-struct definitions *)
 let current_struct_name : Pp.t option ref = ref None
+(* Track current struct's ModPath for ModPath-based qualification checks.
+   Needed when the C++ struct name differs from the Rocq module path (e.g., Coq_Pos vs BinPos.Pos). *)
+let current_struct_mp : ModPath.t option ref = ref None
 (* Track whether we're inside a template struct (functor) *)
 let in_template_struct = ref false
 (* Track definitions rendered as function accessors (Meyers singletons)
@@ -132,6 +135,15 @@ let global_method_registry : (GlobRef.t, GlobRef.t * int * int list) Hashtbl.t =
    references to functions in that module get properly qualified. *)
 let wrapper_module_table : (ModPath.t, string) Hashtbl.t = Hashtbl.create 16
 
+(* Collision wrapper table: tracks modpaths that were registered as collision-wrapped
+   (i.e., a child module whose name collides with a global inductive, wrapped into
+   a parent struct). For these, wrapper_qualify_name strips the child qualifier. *)
+let collision_wrapper_table : (ModPath.t, unit) Hashtbl.t = Hashtbl.create 16
+
+(* Global-scope enum table: tracks enum inductives that were rendered at global scope
+   (not inside any struct). Used to avoid incorrect struct qualification in .cpp files. *)
+let global_scope_enum_table : (GlobRef.t, unit) Hashtbl.t = Hashtbl.create 16
+
 (* Pending wrapper declarations: maps a Dnspace struct name (e.g., "Nat") to
    pre-rendered forward declarations (specs) that should be injected into that struct.
    Full definitions are rendered separately in PASS 3 after all types are defined.
@@ -144,6 +156,12 @@ let pending_wrapper_decls : (string, Pp.t) Hashtbl.t = Hashtbl.create 16
    Used during type/expression rendering to decide between merged (List<A>)
    and unmerged (List::list<A>) name formats. Not consumed during rendering. *)
 let unmerged_wrappers : (string, unit) Hashtbl.t = Hashtbl.create 16
+
+(* Maps capitalized inductive names to their ModPaths across all modules.
+   Pre-populated in do_struct_with_decl_tracking before code generation.
+   Used to detect module-inductive name collisions (e.g., N/Z appearing
+   as both an inductive from BinNums and a module from BinNat). *)
+let global_inductive_names : (string, ModPath.t) Hashtbl.t = Hashtbl.create 16
 
 (* Pending method candidates from dependency modules.
    Maps an inductive type's GlobRef to a list of (func_ref, body, type, this_position).
@@ -169,6 +187,19 @@ let wrapper_qualify_name (r : GlobRef.t) (name : string) : string =
     match Hashtbl.find_opt wrapper_module_table mp with
     | Some struct_name when not (String.contains name ':') ->
       struct_name ^ "::" ^ name
+    | Some struct_name when String.contains name ':' ->
+      (* Name is already qualified (e.g., "N::add" from visibility stack).
+         Only strip the child qualifier for collision-wrapped entries
+         (e.g., BinNat wrapping N). For normal wrappers (e.g., List wrapping list),
+         keep the full qualification. *)
+      if Hashtbl.mem collision_wrapper_table mp then
+        (match String.index_opt name ':' with
+         | Some colon_pos when colon_pos > 0 && colon_pos + 1 < String.length name && name.[colon_pos + 1] = ':' ->
+           let func_part = String.sub name (colon_pos + 2) (String.length name - colon_pos - 2) in
+           struct_name ^ "::" ^ func_part
+         | _ -> name)
+      else
+        name
     | _ -> name
 
 let register_method (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) ?(ind_tvar_positions : int list = []) () =
@@ -258,6 +289,7 @@ let reset_cpp_state () =
   concepts_hoisted := false;
   in_nonlocal_context := false;
   current_struct_name := None;
+  current_struct_mp := None;
   in_template_struct := false;
   eponymous_type_ref := None;
   eponymous_record := None;
@@ -266,8 +298,11 @@ let reset_cpp_state () =
   Hashtbl.clear global_method_registry;
   Hashtbl.clear global_eponymous_record_registry;
   Hashtbl.clear wrapper_module_table;
+  Hashtbl.clear collision_wrapper_table;
+  Hashtbl.clear global_scope_enum_table;
   Hashtbl.clear pending_wrapper_decls;
   Hashtbl.clear unmerged_wrappers;
+  Hashtbl.clear global_inductive_names;
   Hashtbl.clear pending_method_candidates;
   template_static_accessors := [];
   Hashtbl.clear functor_app_sources
@@ -402,7 +437,7 @@ let rec pre_register_methods_from_structure ~at_top_level (parent_decls : (Label
     (* Don't register methods for custom types (e.g., nat mapped to unsigned int).
        Method calls use -> which doesn't work on primitive types.
        Also skip enum-only inductives which don't have shared_ptr semantics. *)
-    if is_custom epon_ref then ()
+    if is_custom epon_ref || Table.is_enum_inductive epon_ref then ()
     else
     let epon_modpath = modpath_of_r epon_ref in
     let from_wrapper_module r =
@@ -457,8 +492,19 @@ let rec pre_register_methods_from_structure ~at_top_level (parent_decls : (Label
     List.iter (fun (_l, se) ->
       match se with
       | SEdecl (Dind (kn, ind)) ->
-        Array.iteri (fun i _p ->
+        let is_mutual = Array.length ind.ind_packets > 1 in
+        Array.iteri (fun i p ->
           let ind_ref = GlobRef.IndRef (kn, i) in
+          (* Early enum detection: identify enum inductives before method registration
+             so that register_methods_for_epon can skip them (method calls use ->
+             which doesn't work on enum types). *)
+          if not (is_custom ind_ref) && not is_mutual then begin
+            let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p.ip_types in
+            let param_sign = List.firstn ind.ind_nparams p.ip_sign in
+            let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
+            if all_nullary && num_param_vars = 0 && Array.length p.ip_types > 0 then
+              Table.add_enum_inductive ind_ref
+          end;
           (* Skip type classes - they become concepts, not eponymous types *)
           (match ind.ind_kind with
            | TypeClass _ -> ()
@@ -482,6 +528,23 @@ let rec pre_register_methods_from_structure ~at_top_level (parent_decls : (Label
     | SEmodule m ->
       (match m.ml_mod_expr with
        | MEstruct (_mp, inner_sel) ->
+         (* Early enum detection for inductives inside this module *)
+         List.iter (fun (_l', se') ->
+           match se' with
+           | SEdecl (Dind (kn', ind')) ->
+             let is_mutual' = Array.length ind'.ind_packets > 1 in
+             Array.iteri (fun i' p' ->
+               let ind_ref' = GlobRef.IndRef (kn', i') in
+               if not (is_custom ind_ref') && not is_mutual' then begin
+                 let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p'.ip_types in
+                 let param_sign = List.firstn ind'.ind_nparams p'.ip_sign in
+                 let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
+                 if all_nullary && num_param_vars = 0 && Array.length p'.ip_types > 0 then
+                   Table.add_enum_inductive ind_ref'
+               end
+             ) ind'.ind_packets
+           | _ -> ()
+         ) inner_sel;
          (* Get module name from the label *)
          let module_name_str = Label.to_string l in
          (* Find eponymous type in this module *)
@@ -715,15 +778,30 @@ let typename_prefix_for name_str =
 let struct_qualifier_for r name_str =
   match !current_struct_name with
   | Some struct_name when not (is_qualified_name name_str) ->
-      let full_path = Pp.string_of_ppcmds (GlobRef.print r) in
-      let struct_name_str = Pp.string_of_ppcmds struct_name in
-      (* Normalize C++ :: separators to dots for comparison with Rocq paths *)
-      let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
-      (* Only qualify if the type belongs to the current struct *)
-      if Common.contains_substring full_path struct_name_dotted then
-        struct_name ++ str "::"
-      else
-        mt ()
+      (* Enum types at global scope need no struct qualification.
+         Enums inside structs need it. *)
+      if Table.is_enum_inductive r then
+        (if Hashtbl.mem global_scope_enum_table r then
+           mt ()
+         else
+           let full_path = Pp.string_of_ppcmds (GlobRef.print r) in
+           let struct_name_str = Pp.string_of_ppcmds struct_name in
+           let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
+           if Common.contains_substring full_path struct_name_dotted then
+             struct_name ++ str "::"
+           else
+             mt ())
+      else begin
+        let full_path = Pp.string_of_ppcmds (GlobRef.print r) in
+        let struct_name_str = Pp.string_of_ppcmds struct_name in
+        (* Normalize C++ :: separators to dots for comparison with Rocq paths *)
+        let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
+        (* Only qualify if the type belongs to the current struct *)
+        if Common.contains_substring full_path struct_name_dotted then
+          struct_name ++ str "::"
+        else
+          mt ()
+      end
   | _ -> mt ()
 
 (* Check if a global function needs :: prefix to avoid name collision.
@@ -739,8 +817,14 @@ let needs_global_qualifier x =
         let struct_name_str = Pp.string_of_ppcmds struct_name in
         (* Normalize C++ :: separators to dots for comparison with Rocq paths *)
         let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
-        (* Function is external if its path doesn't contain struct name *)
-        not (Common.contains_substring full_path struct_name_dotted)
+        if Common.contains_substring full_path struct_name_dotted then false
+        else
+          (* Fallback: check ModPath equality for renamed modules (e.g., Coq_Pos).
+             When a module is renamed (modfstlev_rename), the C++ struct name differs
+             from the Rocq path, so string comparison fails. Use ModPath comparison instead. *)
+          (match !current_struct_mp with
+          | Some struct_mp -> not (ModPath.equal (modpath_of_r x) struct_mp)
+          | None -> true)
   | None -> false
 
 (* Look up method info for a function reference.
@@ -1139,20 +1223,21 @@ let rec pp_cpp_type par vl t =
                 Use pp_global_name to get just the base name, not the qualified path. *)
              str (String.capitalize_ascii (Common.pp_global_name Type r')) ++ templates
            else if is_enum_inductive r' then
-             (* Enum inductives have no wrapper struct - just the enum name.
-                When generating out-of-struct definitions, prepend struct name if the enum
-                belongs to the current struct (even if type_name_str is already qualified like Node::shadow). *)
+             (* Enum types at global scope need no struct qualification.
+                Enums inside structs (e.g., Comparison::cmp) need it. *)
              let qualifier =
                match !current_struct_name with
                | Some struct_name when not !in_struct_context ->
-                   let full_path = Pp.string_of_ppcmds (GlobRef.print r') in
-                   let struct_name_str = Pp.string_of_ppcmds struct_name in
-                   let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
-                   (* Check if the enum belongs to the current struct by checking if the full path contains the struct name *)
-                   if Common.contains_substring full_path struct_name_dotted then
-                     struct_name ++ str "::"
-                   else
+                   if Hashtbl.mem global_scope_enum_table r' then
                      mt ()
+                   else
+                     let full_path = Pp.string_of_ppcmds (GlobRef.print r') in
+                     let struct_name_str = Pp.string_of_ppcmds struct_name in
+                     let struct_name_dotted = Str.global_replace (Str.regexp_string "::") "." struct_name_str in
+                     if Common.contains_substring full_path struct_name_dotted then
+                       struct_name ++ str "::"
+                     else
+                       mt ()
                | _ -> mt ()
              in
              qualifier ++ str type_name_str ++ templates
@@ -2940,10 +3025,11 @@ let rec pp_structure_elem ~is_header f = function
              | None -> mt ()
              in
              using_decl ++ static_assert
-         | MEstruct (_, sel) ->
+         | MEstruct (_mp, sel) ->
              (* Regular module: generate struct in header, member definitions in implementation *)
              let old_context = !in_struct_context in
              let old_struct_name = !current_struct_name in
+             let old_struct_mp = !current_struct_mp in
              let old_eponymous = !eponymous_type_ref in
              let old_methods = !method_candidates in
              (* Save parent's eponymous_record BEFORE detecting for this module *)
@@ -3146,20 +3232,24 @@ let rec pp_structure_elem ~is_header f = function
              let old_concepts_hoisted = !concepts_hoisted in
              if is_header && not has_concept_collision then
                in_struct_context := true
-             else if not is_header && not has_concept_collision then
+             else if not is_header && not has_concept_collision then begin
                (* Track struct name for qualification - combine with parent for nested modules *)
                current_struct_name := (match old_struct_name with
                  | Some parent -> Some (parent ++ str "::" ++ name)
                  | None -> Some name);
+               current_struct_mp := Some mp
+             end;
              (* Mark concepts as hoisted so TypeClass items in the body are skipped *)
              if is_header && typeclass_concepts <> [] then
                concepts_hoisted := true;
+             begin
              let body = pp_module_expr ~is_header f [] m.ml_mod_expr in
              (* Save method_candidates before restoring old state - need them for generating record methods *)
              let this_method_candidates = !method_candidates in
              in_struct_context := old_context;
              concepts_hoisted := old_concepts_hoisted;
              current_struct_name := old_struct_name;
+             current_struct_mp := old_struct_mp;
              eponymous_type_ref := old_eponymous;
              eponymous_record := old_eponymous_record;  (* Restore PARENT's value *)
              method_candidates := old_methods;
@@ -3237,20 +3327,25 @@ let rec pp_structure_elem ~is_header f = function
              else
                (* Implementation: just the member definitions (body is already processed) *)
                body
+             end (* has_sibling_inductive_collision else branch *)
          | MEident _ ->
              (* Module alias: generate as is *)
              let old_context = !in_struct_context in
              let old_struct_name = !current_struct_name in
+             let old_struct_mp = !current_struct_mp in
              if is_header then
                in_struct_context := true
-             else
+             else begin
                (* Track struct name for qualification - combine with parent for nested modules *)
                current_struct_name := (match old_struct_name with
                  | Some parent -> Some (parent ++ str "::" ++ name)
                  | None -> Some name);
+               current_struct_mp := Some mp
+             end;
              let body = pp_module_expr ~is_header f [] m.ml_mod_expr in
              in_struct_context := old_context;
              current_struct_name := old_struct_name;
+             current_struct_mp := old_struct_mp;
              if is_header then
                str "struct " ++ name ++ str " {" ++ fnl () ++ body ++ str "};"
              else
@@ -3383,7 +3478,7 @@ let rec pre_register_enum_inductives (sel : (Label.t * Miniml.ml_structure_elem)
    - Non-template functions: forward declaration in .h, full definition in .cpp (normal C++ separation)
 
    The is_header parameter controls which definitions are generated via gen_dfuns_dual/gen_decl_for_pp_dual. *)
-let pp_wrapper_module_dual ~is_header wrapper_name func_sels =
+let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
   let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
   let is_global_method x = is_registered_method x <> None in
 
@@ -3537,9 +3632,12 @@ let pp_wrapper_module_dual ~is_header wrapper_name func_sels =
      The Dfundef case in pp_cpp_decl checks current_struct_name and adds the
      "WrapperName::" prefix to the function name. *)
   let old_struct_name = !current_struct_name in
+  let old_struct_mp = !current_struct_mp in
   current_struct_name := Some (str wrapper_name);
+  current_struct_mp := Some wrapper_mp;
   let defs_pp = prlist_sep_nonempty cut2 render_sel_defs all_results in
   current_struct_name := old_struct_name;
+  current_struct_mp := old_struct_mp;
 
   (* Render lifted decls (template helpers like _foo_aux)
      These are template functions extracted from local fixpoints during gen_dfun.
@@ -3566,6 +3664,46 @@ let do_struct_with_decl_tracking ~is_header f s =
   List.iter (fun (_mp, sel) -> pre_register_methods_from_structure ~at_top_level:true all_top_level_decls sel) s;
   (* Pre-register enum inductives so type conversion and code gen see them *)
   List.iter (fun (_mp, sel) -> pre_register_enum_inductives sel) s;
+  (* Pre-populate global_inductive_names with all inductive type names across all modules.
+     This is used to detect module-inductive name collisions (e.g., N/Z). *)
+  Hashtbl.clear global_inductive_names;
+  let rec collect_inductive_names sel =
+    List.iter (fun (_l, se) ->
+      match se with
+      | SEdecl (Dind (kn, ind)) ->
+        let ind_mp = Names.MutInd.modpath kn in
+        Array.iteri (fun i _p ->
+          let ind_ref = GlobRef.IndRef (kn, i) in
+          let ind_name = Common.pp_global_name Type ind_ref in
+          let ind_name_cap = String.capitalize_ascii ind_name in
+          Hashtbl.replace global_inductive_names ind_name_cap ind_mp
+        ) ind.ind_packets
+      | SEmodule m ->
+        (match m.ml_mod_expr with
+         | MEstruct (_mp, inner_sel) -> collect_inductive_names inner_sel
+         | _ -> ())
+      | _ -> ()
+    ) sel
+  in
+  List.iter (fun (_mp, sel) -> collect_inductive_names sel) s;
+  (* Pre-populate global_scope_enum_table with enum inductives that will be
+     rendered at global scope (not inside any struct). Top-level SEdecl entries
+     are rendered at global scope. This must be done before both .h and .cpp
+     rendering since the .cpp is rendered first and needs this information
+     for type qualification. *)
+  Hashtbl.clear global_scope_enum_table;
+  List.iter (fun (_mp, sel) ->
+    List.iter (fun (_l, se) ->
+      match se with
+      | SEdecl (Dind (kn, ind)) ->
+        Array.iteri (fun i _p ->
+          let ind_ref = GlobRef.IndRef (kn, i) in
+          if Table.is_enum_inductive ind_ref then
+            Hashtbl.replace global_scope_enum_table ind_ref ()
+        ) ind.ind_packets
+      | _ -> ()
+    ) sel
+  ) s;
   (* The main module is the last entry in the structure list.
      Only imported dependency modules should get wrapper structs. *)
   let main_mp = match List.rev s with
@@ -3737,6 +3875,8 @@ let do_struct_with_decl_tracking ~is_header f s =
 
   let deferred_defs_acc = ref (mt ()) in
   let deferred_lifted_acc = ref (mt ()) in
+
+  (* PASS 1: Process wrapper modules and generate code ONCE per function *)
   List.iter (fun ((mp, sel), wrapper_name) ->
     match wrapper_name with
     | Some name ->
@@ -3750,7 +3890,7 @@ let do_struct_with_decl_tracking ~is_header f s =
          - p_specs: forward declarations to inject into Dnspace struct
          - p_defs: full out-of-line definitions with WrapperName:: prefix
          - p_lifted: template helper functions (e.g., _foo_aux from local fixpoints) *)
-      let (p_specs, p_defs, p_lifted) = pp_wrapper_module_dual ~is_header name func_sels in
+      let (p_specs, p_defs, p_lifted) = pp_wrapper_module_dual ~is_header ~wrapper_mp:mp name func_sels in
 
       current_structure_decls := old_decls;
 
@@ -3818,7 +3958,176 @@ let do_struct_with_decl_tracking ~is_header f s =
         else
           type_pp
       | None ->
-        prlist_sep_nonempty cut2 f sel
+        (* Check if this module has SEmodule children whose names collide with
+           global inductives from other modules (e.g., BinNat has module N which
+           collides with inductive N from BinNums). If so, wrap this module's
+           output in a parent struct to disambiguate. *)
+        (* Check if child module contains an eponymous inductive *)
+        let child_has_eponymous_ind child_name se =
+          match se with
+          | SEmodule m ->
+            (match m.ml_mod_expr with
+             | MEstruct (_inner_mp, inner_sel) ->
+               List.exists (fun (_l', se') ->
+                 match se' with
+                 | SEdecl (Dind (kn, ind)) ->
+                   let found = ref false in
+                   Array.iteri (fun i _p ->
+                     let ind_ref = GlobRef.IndRef (kn, i) in
+                     let ind_name = Common.pp_global_name Type ind_ref in
+                     let ind_name_cap = String.capitalize_ascii ind_name in
+                     if String.equal ind_name_cap child_name then found := true
+                   ) ind.ind_packets;
+                   !found
+                 | _ -> false
+               ) inner_sel
+             | _ -> false)
+          | _ -> false
+        in
+        (* Check if there's a sibling inductive in this module matching the given name *)
+        let has_sibling_inductive child_name =
+          List.exists (fun (_l', se') ->
+            match se' with
+            | SEdecl (Dind (kn, ind)) ->
+              let found = ref false in
+              Array.iteri (fun i _p ->
+                let ind_ref = GlobRef.IndRef (kn, i) in
+                let ind_name = Common.pp_global_name Type ind_ref in
+                let ind_name_cap = String.capitalize_ascii ind_name in
+                if String.equal ind_name_cap child_name then found := true
+              ) ind.ind_packets;
+              !found
+            | _ -> false
+          ) sel
+        in
+        let has_child_collision = is_modfile mp && List.exists (fun (l, se) ->
+          match se with
+          | SEmodule _ ->
+            let child_name = String.capitalize_ascii (Label.to_string l) in
+            (match Hashtbl.find_opt global_inductive_names child_name with
+             | Some ind_mp ->
+               let is_collision =
+                 not (ModPath.equal ind_mp mp)
+                 && not (child_has_eponymous_ind child_name se)
+                 && not (has_sibling_inductive child_name)
+               in
+               is_collision
+             | None -> false)
+          | _ -> false
+        ) sel in
+        if has_child_collision then begin
+          let parent_name = String.capitalize_ascii (string_of_modfile mp) in
+          (* Identify which child modules collide with global inductives *)
+          let is_colliding_child l se =
+            let child_name = String.capitalize_ascii (Label.to_string l) in
+            match Hashtbl.find_opt global_inductive_names child_name with
+            | Some ind_mp ->
+              not (ModPath.equal ind_mp mp)
+              && not (child_has_eponymous_ind child_name se)
+              && not (has_sibling_inductive child_name)
+            | None -> false
+          in
+          (* Register colliding child module paths so references get parent qualification *)
+          let register_decl_modpaths qualified inner_sel =
+            List.iter (fun (_l', se') ->
+              match se' with
+              | SEdecl (Dterm (r, _, _)) ->
+                let rmp = modpath_of_r r in
+                Hashtbl.replace wrapper_module_table rmp qualified;
+                Hashtbl.replace collision_wrapper_table rmp ()
+              | SEdecl (Dfix (rn, _, _)) ->
+                Array.iter (fun r ->
+                  let rmp = modpath_of_r r in
+                  Hashtbl.replace wrapper_module_table rmp qualified;
+                  Hashtbl.replace collision_wrapper_table rmp ()
+                ) rn
+              | _ -> ()
+            ) inner_sel
+          in
+          List.iter (fun (l, se) ->
+            match se with
+            | SEmodule m when is_colliding_child l se ->
+              let vis_mp = MPdot (mp, l) in
+              Hashtbl.replace wrapper_module_table vis_mp parent_name;
+              Hashtbl.replace collision_wrapper_table vis_mp ();
+              (match m.ml_mod_expr with
+               | MEstruct (inner_mp, inner_sel) ->
+                 Hashtbl.replace wrapper_module_table inner_mp parent_name;
+                 Hashtbl.replace collision_wrapper_table inner_mp ();
+                 register_decl_modpaths parent_name inner_sel
+               | MEident alias_mp ->
+                 Hashtbl.replace wrapper_module_table alias_mp parent_name;
+                 Hashtbl.replace collision_wrapper_table alias_mp ()
+               | _ -> ())
+            | _ -> ()
+          ) sel;
+          (* Render: colliding child modules have their body rendered directly
+             (functions as flat forward declarations), non-colliding entries render normally *)
+          if is_header then begin
+            let old_context = !in_struct_context in
+            in_struct_context := true;
+            (* Render non-colliding entries normally *)
+            let non_colliding = List.filter (fun (l, se) ->
+              match se with
+              | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
+              | _ -> true
+            ) sel in
+            let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
+            (* Render colliding child modules: extract their inner body directly,
+               pushing/popping visibility for proper name resolution *)
+            let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
+              match se with
+              | SEmodule m ->
+                (match m.ml_mod_expr with
+                 | MEstruct (inner_mp, inner_sel) ->
+                   push_visible inner_mp [];
+                   let inner_func_sels = List.filter is_func_decl inner_sel in
+                   let body = prlist_sep_nonempty cut2 f inner_func_sels in
+                   pop_visible ();
+                   body
+                 | _ -> mt ())
+              | _ -> mt ()
+            ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
+            in_struct_context := old_context;
+            let body = if Pp.ismt non_colliding_pp then colliding_pp
+              else if Pp.ismt colliding_pp then non_colliding_pp
+              else non_colliding_pp ++ cut2 () ++ colliding_pp in
+            str "struct " ++ str parent_name ++ str " {" ++ fnl () ++ body ++ fnl () ++ str "};"
+          end else begin
+            let old_struct_name = !current_struct_name in
+            let old_struct_mp = !current_struct_mp in
+            current_struct_name := Some (str parent_name);
+            current_struct_mp := Some mp;
+            (* Render non-colliding entries normally *)
+            let non_colliding = List.filter (fun (l, se) ->
+              match se with
+              | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
+              | _ -> true
+            ) sel in
+            let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
+            (* Render colliding child modules: extract their inner body directly,
+               keeping current_struct_name as the parent name *)
+            let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
+              match se with
+              | SEmodule m ->
+                (match m.ml_mod_expr with
+                 | MEstruct (inner_mp, inner_sel) ->
+                   push_visible inner_mp [];
+                   let body = prlist_sep_nonempty cut2 f inner_sel in
+                   pop_visible ();
+                   body
+                 | _ -> mt ())
+              | _ -> mt ()
+            ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
+            current_struct_name := old_struct_name;
+            current_struct_mp := old_struct_mp;
+            let body = if Pp.ismt non_colliding_pp then colliding_pp
+              else if Pp.ismt colliding_pp then non_colliding_pp
+              else non_colliding_pp ++ cut2 () ++ colliding_pp in
+            body
+          end
+        end else
+          prlist_sep_nonempty cut2 f sel
     in
     current_structure_decls := old_decls;
     (if modular () then pop_visible ());

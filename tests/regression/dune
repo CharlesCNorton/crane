@@ -1399,3 +1399,14 @@
   (deps qualified_record_shadow.t.exe)
   (action (run ./qualified_record_shadow.t.exe))))
 
+
+(subdir binary_nums
+ (rule
+  (targets binary_nums.t.exe)
+  (deps BinaryNums.vo binary_nums.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} binary_nums.t.exe binary_nums.cpp binary_nums.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps binary_nums.t.exe)
+  (action (run ./binary_nums.t.exe))))

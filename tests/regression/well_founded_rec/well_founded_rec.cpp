@@ -11,7 +11,7 @@
 #include <variant>
 #include <well_founded_rec.h>
 
-unsigned int Nat::sub(const unsigned int n, const unsigned int m) {
+unsigned int PeanoNat::sub(const unsigned int n, const unsigned int m) {
   if (n <= 0) {
     return std::move(n);
   } else {
@@ -20,34 +20,34 @@ unsigned int Nat::sub(const unsigned int n, const unsigned int m) {
       return n;
     } else {
       unsigned int l = m - 1;
-      return sub(std::move(k), l);
+      return PeanoNat::sub(std::move(k), l);
     }
   }
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
+                                                       const unsigned int y,
+                                                       const unsigned int q,
+                                                       const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
     unsigned int x_ = x - 1;
     if (u <= 0) {
-      return divmod(std::move(x_), y, (q + 1), y);
+      return PeanoNat::divmod(std::move(x_), y, (q + 1), y);
     } else {
       unsigned int u_ = u - 1;
-      return divmod(std::move(x_), y, q, std::move(u_));
+      return PeanoNat::divmod(std::move(x_), y, q, std::move(u_));
     }
   }
 }
 
-unsigned int Nat::modulo(const unsigned int x, const unsigned int y) {
+unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
   if (y <= 0) {
     return std::move(x);
   } else {
     unsigned int y_ = y - 1;
-    return sub(y_, divmod(x, y_, 0, y_).second);
+    return PeanoNat::sub(y_, PeanoNat::divmod(x, y_, 0, y_).second);
   }
 }
 
@@ -86,7 +86,7 @@ unsigned int WellFoundedRec::gcd_wf(const unsigned int x,
     return std::move(b);
   } else {
     unsigned int a_ = x - 1;
-    unsigned int y = Nat::modulo(b, (std::move(a_) + 1));
+    unsigned int y = PeanoNat::modulo(b, (std::move(a_) + 1));
     return gcd_wf(std::move(y), (std::move(a_) + 1));
   }
 }

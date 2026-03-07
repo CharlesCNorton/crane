@@ -11,7 +11,7 @@
 #include <utility>
 #include <variant>
 
-bool Nat::leb(const unsigned int n, const unsigned int m) {
+bool PeanoNat::leb(const unsigned int n, const unsigned int m) {
   if (n <= 0) {
     return true;
   } else {
@@ -20,16 +20,16 @@ bool Nat::leb(const unsigned int n, const unsigned int m) {
       return false;
     } else {
       unsigned int m_ = m - 1;
-      return leb(n_, m_);
+      return PeanoNat::leb(n_, m_);
     }
   }
 }
 
-bool Nat::ltb(const unsigned int n, const unsigned int m) {
-  return leb((std::move(n) + 1), m);
+bool PeanoNat::ltb(const unsigned int n, const unsigned int m) {
+  return PeanoNat::leb((std::move(n) + 1), m);
 }
 
-bool Nat::even(const unsigned int n) {
+bool PeanoNat::even(const unsigned int n) {
   if (n <= 0) {
     return true;
   } else {
@@ -38,12 +38,12 @@ bool Nat::even(const unsigned int n) {
       return false;
     } else {
       unsigned int n_ = n0 - 1;
-      return even(n_);
+      return PeanoNat::even(n_);
     }
   }
 }
 
-unsigned int Nat::div2(const unsigned int n) {
+unsigned int PeanoNat::div2(const unsigned int n) {
   if (n <= 0) {
     return 0;
   } else {
@@ -52,7 +52,7 @@ unsigned int Nat::div2(const unsigned int n) {
       return 0;
     } else {
       unsigned int n_ = n0 - 1;
-      return (div2(n_) + 1);
+      return (PeanoNat::div2(n_) + 1);
     }
   }
 }
@@ -91,7 +91,7 @@ Equations::gcd_unfold(const std::pair<unsigned int, unsigned int> p) {
       return (n1 + 1);
     } else {
       unsigned int n2 = n0 - 1;
-      return gcd_unfold_clause_3(n1, n2, Nat::ltb((n1 + 1), (n2 + 1)));
+      return gcd_unfold_clause_3(n1, n2, PeanoNat::ltb((n1 + 1), (n2 + 1)));
     }
   }
 }
@@ -109,7 +109,7 @@ Equations::gcd_graph_correct(const std::pair<unsigned int, unsigned int> x) {
     } else {
       unsigned int n2 = n0 - 1;
       return gcd_graph::ctor::gcd_graph_refinement_3_(n1, n2, [&](void) {
-        bool refine = Nat::ltb((n1 + 1), (n2 + 1));
+        bool refine = PeanoNat::ltb((n1 + 1), (n2 + 1));
         if (refine) {
           return gcd_clause_3_graph::ctor::gcd_clause_3_graph_equation_1_(
               n1, n2, [&](void) {
@@ -143,7 +143,7 @@ unsigned int Equations::collatz_steps(const unsigned int x) {
 unsigned int Equations::collatz_steps_unfold_clause_3(const unsigned int n,
                                                       const bool refine) {
   if (refine) {
-    return (collatz_steps(Nat::div2(std::move(n))) + 1);
+    return (collatz_steps(PeanoNat::div2(std::move(n))) + 1);
   } else {
     return (collatz_steps((((((0 + 1) + 1) + 1) * std::move(n)) + (0 + 1))) +
             1);
@@ -159,7 +159,7 @@ unsigned int Equations::collatz_steps_unfold(const unsigned int n) {
       return 0;
     } else {
       unsigned int n1 = n0 - 1;
-      return collatz_steps_unfold_clause_3(n1, Nat::even(((n1 + 1) + 1)));
+      return collatz_steps_unfold_clause_3(n1, PeanoNat::even(((n1 + 1) + 1)));
     }
   }
 }
@@ -176,11 +176,11 @@ Equations::collatz_steps_graph_correct(const unsigned int x) {
       unsigned int n0 = n - 1;
       return collatz_steps_graph::ctor::collatz_steps_graph_refinement_3_(
           n0, [&](void) {
-            bool refine = Nat::even(((n0 + 1) + 1));
+            bool refine = PeanoNat::even(((n0 + 1) + 1));
             if (refine) {
               return collatz_steps_clause_3_graph::ctor::
                   collatz_steps_clause_3_graph_equation_1_(n0, [&](void) {
-                    unsigned int y = Nat::div2(n0);
+                    unsigned int y = PeanoNat::div2(n0);
                     return collatz_steps_graph_correct(std::move(y));
                   }());
             } else {

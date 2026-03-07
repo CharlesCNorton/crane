@@ -16,7 +16,7 @@
 namespace BloombergLP {
 
 }
-bool Nat::eqb(const unsigned int n, const unsigned int m)
+bool PeanoNat::eqb(const unsigned int n, const unsigned int m)
 {
     if (n <= 0) {
         if (m <= 0) {
@@ -34,12 +34,12 @@ bool Nat::eqb(const unsigned int n, const unsigned int m)
         }
         else {
             unsigned int m_ = m - 1;
-            return eqb(n_, m_);
+            return PeanoNat::eqb(n_, m_);
         }
     }
 }
 
-bool Nat::leb(const unsigned int n, const unsigned int m)
+bool PeanoNat::leb(const unsigned int n, const unsigned int m)
 {
     if (n <= 0) {
         return true;
@@ -51,12 +51,12 @@ bool Nat::leb(const unsigned int n, const unsigned int m)
         }
         else {
             unsigned int m_ = m - 1;
-            return leb(n_, m_);
+            return PeanoNat::leb(n_, m_);
         }
     }
 }
 
-bool Nat::ltb(const unsigned int n, const unsigned int m)
+bool PeanoNat::ltb(const unsigned int n, const unsigned int m)
 {
-    return leb((bsl::move(n) + 1), m);
+    return PeanoNat::leb((bsl::move(n) + 1), m);
 }
