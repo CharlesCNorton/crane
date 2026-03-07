@@ -11,7 +11,6 @@
    Crane)
  (flags (:standard -output-directory ../../tests/wip)))
 
-
 (subdir cotree
  (rule
   (targets cotree.t.exe)
@@ -44,9 +43,6 @@
   (alias runtest)
   (deps mutual_coind.t.exe)
   (action (run ./mutual_coind.t.exe))))
-
-
-
 
 (subdir coind_guard
  (rule
@@ -333,6 +329,7 @@
   (alias runtest)
   (deps decode_list_pair_count.t.exe)
   (action (run ./decode_list_pair_count.t.exe))))
+
 (subdir addr_page_decomp_edge_0007
  (rule
   (targets addr_page_decomp_edge_0007.t.exe)
@@ -1014,3 +1011,212 @@
   (alias runtest)
   (deps encode_jun_bytes_in_range.t.exe)
   (action (run ./encode_jun_bytes_in_range.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_regs_forall
+ (rule
+  (targets set_prom_then_wpm_preserves_regs_forall.t.exe)
+  (deps SetPromThenWpmPreservesRegsForall.vo set_prom_then_wpm_preserves_regs_forall.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_regs_forall.t.exe set_prom_then_wpm_preserves_regs_forall.cpp set_prom_then_wpm_preserves_regs_forall.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_regs_forall.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_regs_forall.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_sel_wf
+ (rule
+  (targets set_prom_then_wpm_preserves_sel_wf.t.exe)
+  (deps SetPromThenWpmPreservesSelWf.vo set_prom_then_wpm_preserves_sel_wf.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_sel_wf.t.exe set_prom_then_wpm_preserves_sel_wf.cpp set_prom_then_wpm_preserves_sel_wf.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_sel_wf.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_sel_wf.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_ram_forall
+ (rule
+  (targets set_prom_then_wpm_preserves_ram_forall.t.exe)
+  (deps SetPromThenWpmPreservesRamForall.vo set_prom_then_wpm_preserves_ram_forall.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_ram_forall.t.exe set_prom_then_wpm_preserves_ram_forall.cpp set_prom_then_wpm_preserves_ram_forall.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_ram_forall.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_ram_forall.t.exe))))
+
+(subdir set_prom_then_wpm_rom_forall
+ (rule
+  (targets set_prom_then_wpm_rom_forall.t.exe)
+  (deps SetPromThenWpmRomForall.vo set_prom_then_wpm_rom_forall.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_rom_forall.t.exe set_prom_then_wpm_rom_forall.cpp set_prom_then_wpm_rom_forall.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_rom_forall.t.exe)
+  (action (run ./set_prom_then_wpm_rom_forall.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_regs_length
+ (rule
+  (targets set_prom_then_wpm_preserves_regs_length.t.exe)
+  (deps SetPromThenWpmPreservesRegsLength.vo set_prom_then_wpm_preserves_regs_length.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_regs_length.t.exe set_prom_then_wpm_preserves_regs_length.cpp set_prom_then_wpm_preserves_regs_length.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_regs_length.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_regs_length.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_acc_bound
+ (rule
+  (targets set_prom_then_wpm_preserves_acc_bound.t.exe)
+  (deps SetPromThenWpmPreservesAccBound.vo set_prom_then_wpm_preserves_acc_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_acc_bound.t.exe set_prom_then_wpm_preserves_acc_bound.cpp set_prom_then_wpm_preserves_acc_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_acc_bound.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_acc_bound.t.exe))))
+
+(subdir set_prom_then_wpm_pc_bound
+ (rule
+  (targets set_prom_then_wpm_pc_bound.t.exe)
+  (deps SetPromThenWpmPcBound.vo set_prom_then_wpm_pc_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_pc_bound.t.exe set_prom_then_wpm_pc_bound.cpp set_prom_then_wpm_pc_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_pc_bound.t.exe)
+  (action (run ./set_prom_then_wpm_pc_bound.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_stack_length
+ (rule
+  (targets set_prom_then_wpm_preserves_stack_length.t.exe)
+  (deps SetPromThenWpmPreservesStackLength.vo set_prom_then_wpm_preserves_stack_length.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_stack_length.t.exe set_prom_then_wpm_preserves_stack_length.cpp set_prom_then_wpm_preserves_stack_length.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_stack_length.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_stack_length.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_stack_forall
+ (rule
+  (targets set_prom_then_wpm_preserves_stack_forall.t.exe)
+  (deps SetPromThenWpmPreservesStackForall.vo set_prom_then_wpm_preserves_stack_forall.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_stack_forall.t.exe set_prom_then_wpm_preserves_stack_forall.cpp set_prom_then_wpm_preserves_stack_forall.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_stack_forall.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_stack_forall.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_bank_bound
+ (rule
+  (targets set_prom_then_wpm_preserves_bank_bound.t.exe)
+  (deps SetPromThenWpmPreservesBankBound.vo set_prom_then_wpm_preserves_bank_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_bank_bound.t.exe set_prom_then_wpm_preserves_bank_bound.cpp set_prom_then_wpm_preserves_bank_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_bank_bound.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_bank_bound.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_rom_ports_length
+ (rule
+  (targets set_prom_then_wpm_preserves_rom_ports_length.t.exe)
+  (deps SetPromThenWpmPreservesRomPortsLength.vo set_prom_then_wpm_preserves_rom_ports_length.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_rom_ports_length.t.exe set_prom_then_wpm_preserves_rom_ports_length.cpp set_prom_then_wpm_preserves_rom_ports_length.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_rom_ports_length.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_rom_ports_length.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_rom_ports_forall
+ (rule
+  (targets set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
+  (deps SetPromThenWpmPreservesRomPortsForall.vo set_prom_then_wpm_preserves_rom_ports_forall.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_rom_ports_forall.t.exe set_prom_then_wpm_preserves_rom_ports_forall.cpp set_prom_then_wpm_preserves_rom_ports_forall.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_rom_ports_forall.t.exe))))
+
+(subdir set_prom_then_wpm_preserves_sel_rom_bound
+ (rule
+  (targets set_prom_then_wpm_preserves_sel_rom_bound.t.exe)
+  (deps SetPromThenWpmPreservesSelRomBound.vo set_prom_then_wpm_preserves_sel_rom_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_sel_rom_bound.t.exe set_prom_then_wpm_preserves_sel_rom_bound.cpp set_prom_then_wpm_preserves_sel_rom_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_preserves_sel_rom_bound.t.exe)
+  (action (run ./set_prom_then_wpm_preserves_sel_rom_bound.t.exe))))
+
+(subdir set_prom_then_wpm_rom_length
+ (rule
+  (targets set_prom_then_wpm_rom_length.t.exe)
+  (deps SetPromThenWpmRomLength.vo set_prom_then_wpm_rom_length.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_rom_length.t.exe set_prom_then_wpm_rom_length.cpp set_prom_then_wpm_rom_length.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_rom_length.t.exe)
+  (action (run ./set_prom_then_wpm_rom_length.t.exe))))
+
+(subdir set_prom_then_wpm_prom_addr_bound
+ (rule
+  (targets set_prom_then_wpm_prom_addr_bound.t.exe)
+  (deps SetPromThenWpmPromAddrBound.vo set_prom_then_wpm_prom_addr_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_prom_addr_bound.t.exe set_prom_then_wpm_prom_addr_bound.cpp set_prom_then_wpm_prom_addr_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_prom_addr_bound.t.exe)
+  (action (run ./set_prom_then_wpm_prom_addr_bound.t.exe))))
+
+(subdir set_prom_then_wpm_prom_data_bound
+ (rule
+  (targets set_prom_then_wpm_prom_data_bound.t.exe)
+  (deps SetPromThenWpmPromDataBound.vo set_prom_then_wpm_prom_data_bound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_prom_data_bound.t.exe set_prom_then_wpm_prom_data_bound.cpp set_prom_then_wpm_prom_data_bound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps set_prom_then_wpm_prom_data_bound.t.exe)
+  (action (run ./set_prom_then_wpm_prom_data_bound.t.exe))))
+
+(subdir jms_bbl_roundtrip
+ (rule
+  (targets jms_bbl_roundtrip.t.exe)
+  (deps JmsBblRoundtrip.vo jms_bbl_roundtrip.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} jms_bbl_roundtrip.t.exe jms_bbl_roundtrip.cpp jms_bbl_roundtrip.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps jms_bbl_roundtrip.t.exe)
+  (action (run ./jms_bbl_roundtrip.t.exe))))
+
+(subdir load_program_step_preserves_wf_simple
+ (rule
+  (targets load_program_step_preserves_wf_simple.t.exe)
+  (deps LoadProgramStepPreservesWfSimple.vo load_program_step_preserves_wf_simple.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} load_program_step_preserves_wf_simple.t.exe load_program_step_preserves_wf_simple.cpp load_program_step_preserves_wf_simple.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps load_program_step_preserves_wf_simple.t.exe)
+  (action (run ./load_program_step_preserves_wf_simple.t.exe))))
+
+(subdir timing_preserves_wf_simple
+ (rule
+  (targets timing_preserves_wf_simple.t.exe)
+  (deps TimingPreservesWfSimple.vo timing_preserves_wf_simple.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} timing_preserves_wf_simple.t.exe timing_preserves_wf_simple.cpp timing_preserves_wf_simple.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps timing_preserves_wf_simple.t.exe)
+  (action (run ./timing_preserves_wf_simple.t.exe))))
