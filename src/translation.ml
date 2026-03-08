@@ -27,6 +27,18 @@ let clear_local_inductives () =
 let get_local_inductives () =
   !local_inductives
 
+(* Helper to create CPPglob with pre-computed custom_info *)
+let mk_cppglob (r : GlobRef.t) (tys : cpp_type list) : cpp_expr =
+  let ci = {
+    ci_inline = (if Table.to_inline r then Table.find_custom_opt r else None);
+    ci_is_custom = Table.is_custom r;
+  } in
+  CPPglob (r, tys, Some ci)
+
+(* Helper for local variables (VarRef) - no custom extraction applies *)
+let mk_cppglob_local (r : GlobRef.t) (tys : cpp_type list) : cpp_expr =
+  CPPglob (r, tys, None)
+
 (* ========================================================================== *)
 (*  Translation context — consolidated mutable state for expression compilation.
     All fields except local_inductives (which has a different lifecycle and is
@@ -683,8 +695,8 @@ and gen_expr_custom_cons env (ty : ml_type) r ts =
       | _ -> tys
     in
     let temps = List.map (convert_ml_type_to_cpp_type env Refset'.empty []) tys in
-    app (CPPglob (r, temps))
-  | _ -> app (CPPglob (r, [])))
+    app (mk_cppglob r temps)
+  | _ -> app (mk_cppglob r []))
 
 (* Try to fold a Peano numeral chain (nested constructors) into an integer *)
 and try_fold_numeral info expr =
@@ -914,7 +926,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
       let ty = convert_ml_type_to_cpp_type env Refset'.empty tvars ty in
       (match ty with
       | Tfun (dom, cod) -> eta_fun env (MLglob (x, tys)) [] (* TODO: could be only if contains '%' *)
-      | _ -> CPPglob (x, List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys))
+      | _ -> mk_cppglob x (List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys))
   | MLglob (x, tys) ->
       let tvars = get_current_type_vars () in
       let tys_cpp = List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys in
@@ -922,7 +934,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
          drop ALL explicit type args via filter_erased_type_args and let the
          compiler deduce everything.  See filter_erased_type_args for why we
          must drop all args rather than just the erased ones. *)
-      CPPglob (x, filter_erased_type_args tys_cpp)
+      mk_cppglob x (filter_erased_type_args tys_cpp)
   | MLcons (_ty, r, _ts) when (match r with
       | GlobRef.ConstructRef ((kn, i), _) -> Table.is_numeral_inductive (GlobRef.IndRef (kn, i))
       | _ -> false) ->
@@ -1030,7 +1042,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
         let ctor_name = Common.pp_global_name Type r in
         let factory_name = Id.of_string (ctor_name ^ "_") in
         (* Build: Type<temps>::ctor::Factory_(args) *)
-        let type_expr = CPPglob (n, temps) in
+        let type_expr = mk_cppglob n temps in
         let ctor_expr = CPPqualified (type_expr, Id.of_string "ctor") in
         let factory_expr = CPPqualified (ctor_expr, factory_name) in
         CPPfun_call (factory_expr, args)
@@ -1038,7 +1050,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
         (* Fallback for non-Tglob types - shouldn't happen in practice *)
         let ctor_name = Common.pp_global_name Type r in
         let factory_name = Id.of_string (ctor_name ^ "_") in
-        let ctor_expr = CPPqualified (CPPglob (r, []), Id.of_string "ctor") in
+        let ctor_expr = CPPqualified (mk_cppglob r [], Id.of_string "ctor") in
         let factory_expr = CPPqualified (ctor_expr, factory_name) in
         CPPfun_call (factory_expr, args)) in
       (* Note: CPPfun_call reverses args when printing, so we reverse here.
@@ -1375,7 +1387,7 @@ and eta_fun env f args =
       else filtered
     in
     let all_type_args = typeclass_type_args @ regular_type_args in
-    let cglob = CPPglob (id, all_type_args) in
+    let cglob = mk_cppglob id all_type_args in
     (* Check if this is a typeclass instance used as a type (for :: access).
        When all args are consumed (domain and args both empty after filtering),
        return just the type reference, not a function call. This avoids
@@ -1493,7 +1505,7 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
          auto directly; a nested one (e.g. Tshared_ptr(Tglob(list, [Tvar(1, None)])))
          must also become auto since List<auto> is invalid C++. *)
       let cpp_ty = if tvars = [] && has_unnamed_tvar cpp_ty then Minicpp.Ttodo else cpp_ty in
-      Sasgn (fst x, Some cpp_ty, CPPget (CPPglob (GlobRef.VarRef sname, []), id))) (List.rev ids) in
+      Sasgn (fst x, Some cpp_ty, CPPget (mk_cppglob_local (GlobRef.VarRef sname) [], id))) (List.rev ids) in
   let asgns = List.filteri (fun i _ -> List.nth dummies i) asgns in
   (* Phase 2: Add pattern-bound variables as owned for move insertion.
      Pattern variables are extracted from the scrutinee into local variables,
@@ -1809,7 +1821,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
       let (cpp_params, all_temps_with_funs) =
         build_lifted_cpp_params (convert_ml_type_to_cpp_type env Refset'.empty all_tvar_names) all_temps params in
       (* Replace recursive self-references (CPPvar renamed_n) with calls to the lifted function *)
-      let rec_call = CPPglob (lifted_ref, List.map (fun id -> Tvar (0, Some id)) all_tvar_names) in
+      let rec_call = mk_cppglob lifted_ref (List.map (fun id -> Tvar (0, Some id)) all_tvar_names) in
       let body = List.map (local_var_subst_stmt renamed_id rec_call) body in
       let inner = Dfundef ([lifted_ref, []], cod, cpp_params, body) in
       let lifted_decl = Dtemplate (all_temps_with_funs, None, inner) in
@@ -1849,7 +1861,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
         outer_args @ extra_args
       end
     in
-    let lifted_call = CPPglob (lifted_ref, call_type_args) in
+    let lifted_call = mk_cppglob lifted_ref call_type_args in
     (* Phase 2: shift owned vars for fix bindings *)
     let n_fix_bindings_lifted = Array.length ids in
     let saved_owned_lifted = tctx.move_owned_vars in
@@ -1989,14 +2001,14 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
       let sub = subst_lifted_call_expr target lifted free_args in
       match e with
       | CPPfun_call (CPPvar id, args) when Id.equal id target ->
-          CPPfun_call (CPPglob (lifted, []), free_args @ List.map sub args)
+          CPPfun_call (mk_cppglob lifted [], free_args @ List.map sub args)
       | CPPvar id when Id.equal id target ->
           (* Bare reference to lifted function: if there are free args, wrap in a lambda *)
           if free_args = [] then
-            CPPglob (lifted, [])
+            mk_cppglob lifted []
           else
             (* Generate a lambda that captures and forwards: [&]() { return lifted(free_args...); } *)
-            CPPlambda ([], None, [Sreturn (Some (CPPfun_call (CPPglob (lifted, []), free_args)))], false)
+            CPPlambda ([], None, [Sreturn (Some (CPPfun_call (mk_cppglob lifted [], free_args)))], false)
       | CPPfun_call (f, args) -> CPPfun_call (sub f, List.map sub args)
       | CPPderef e' -> CPPderef (sub e')
       | CPPmove e' -> CPPmove (sub e')
@@ -2214,7 +2226,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
         | _ -> ([], cpp_ty) in
       let (cpp_params, all_temps_with_funs) =
         build_lifted_cpp_params (convert_ml_type_to_cpp_type env Refset'.empty extended_tvar_names) all_temps params in
-      let rec_call = CPPglob (lifted_ref, List.map (fun id -> Tvar (0, Some id)) all_tvar_names) in
+      let rec_call = mk_cppglob lifted_ref (List.map (fun id -> Tvar (0, Some id)) all_tvar_names) in
       let body = List.map (local_var_subst_stmt renamed_id rec_call) body in
       let inner = Dfundef ([lifted_ref, []], cod, cpp_params, body) in
       let lifted_decl = Dtemplate (all_temps_with_funs, None, inner) in
@@ -2257,7 +2269,7 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
       end
     in
     let cpp_args = List.rev_map (gen_expr env) args in
-    [k (CPPfun_call (CPPglob (lifted_ref, call_type_args), cpp_args))]
+    [k (CPPfun_call (mk_cppglob lifted_ref call_type_args, cpp_args))]
   end else begin
     (* No extra Tvars - proceed with original local fixpoint approach *)
     let all_fix_ids_list = Array.to_list ids in
@@ -2431,7 +2443,7 @@ let gen_ind_cpp vars name cnames tys =
       let c = cnames.(i) in
       (* eventually incorporate given names when they exist *)
       let constr = List.mapi (fun i x -> (Id.of_string ("_a" ^ string_of_int i) , convert_ml_type_to_cpp_type (empty_env ()) (Refset'.add name Refset'.empty) vars x)) tys in
-      let make_args = List.map(fun (x,_) -> CPPglob (GlobRef.VarRef x, [])) constr in
+      let make_args = List.map(fun (x,_) -> mk_cppglob_local (GlobRef.VarRef x) []) constr in
       let ty_vars = List.mapi (fun i x -> Tvar (i, Some x)) vars in
       let make = Dfundef ([c, []; GlobRef.VarRef (Id.of_string "make"), []], Tshared_ptr (Tglob (name, ty_vars, [])), List.rev constr,
         [Sreturn (Some (CPPfun_call (CPPmk_shared (Tglob (name, ty_vars, [])), [CPPstruct (c, ty_vars, make_args)])))]) in
@@ -2903,7 +2915,7 @@ let primary_tvar_indices dom cod =
 
 let rec glob_subst_expr (id : GlobRef.t) (e1 : cpp_expr) (e2 : cpp_expr) =
 match e2 with
-  | CPPglob (id', _) ->
+  | CPPglob (id', _, _) ->
     if Environ.QGlobRef.equal Environ.empty_env id id' then e1 else e2
   | CPPnamespace (id', e') -> CPPnamespace (id', glob_subst_expr id e1 e')
   | CPPfun_call (f, args) -> CPPfun_call (glob_subst_expr id e1 f, List.map (glob_subst_expr id e1) args)
@@ -2999,7 +3011,7 @@ let rec tvar_subst_expr (tvars : Id.t list) (e : cpp_expr) : cpp_expr =
   let subst_ty = tvar_subst_type tvars in
   let subst_e = tvar_subst_expr tvars in
   match e with
-  | CPPglob (r, tys) -> CPPglob (r, List.map subst_ty tys)
+  | CPPglob (r, tys, ci) -> CPPglob (r, List.map subst_ty tys, ci)
   | CPPnamespace (r, e') -> CPPnamespace (r, subst_e e')
   | CPPfun_call (f, args) -> CPPfun_call (subst_e f, List.map subst_e args)
   | CPPderef e' -> CPPderef (subst_e e')
@@ -3380,7 +3392,7 @@ let gen_dfun n b dom cod ty temps =
      Function type params (from fun_tys) are excluded because they should be
      deduced from arguments, not explicitly specified in recursive calls. *)
   let rec_call_temps = typeclass_temps_basic @ temps in
-  let rec_call = CPPglob (n, List.map (fun (_, id) -> Tvar (0, Some id)) rec_call_temps) in
+  let rec_call = mk_cppglob n (List.map (fun (_, id) -> Tvar (0, Some id)) rec_call_temps) in
   (* Combine all template params for function signature.
      Save the non-typeclass type params for Tvar index resolution below. *)
   let regular_temps = temps @ (List.map (fun (_,t,n) -> (t,n)) fun_tys) in
@@ -3418,7 +3430,7 @@ let gen_dfun n b dom cod ty temps =
           List.map (fun t -> convert_ml_type_to_cpp_type env Refset'.empty type_var_ids t) args
         | _ -> [] in
       let lazy_factory = CPPqualified (
-        CPPqualified (CPPglob (coind_ref, type_args), Id.of_string "ctor"),
+        CPPqualified (mk_cppglob coind_ref type_args, Id.of_string "ctor"),
         Id.of_string "lazy_") in
       let thunk = CPPlambda ([], Some ret_cpp,
         [Sreturn (Some x)], true) in
@@ -3951,7 +3963,7 @@ let gen_ind_header vars name cnames tys =
           | _ -> ty
         in
         (x, wrapped)) constr in
-      let make_args = List.map(fun (x,_) -> CPPglob (GlobRef.VarRef x, [])) constr in
+      let make_args = List.map(fun (x,_) -> mk_cppglob_local (GlobRef.VarRef x) []) constr in
       let ty_vars = List.mapi (fun i x -> Tvar (i, Some x)) vars in
       let make_decl = Ffundecl (Id.of_string "make", Tmod (TMstatic, (ind_ty_ptr name ty_vars)), List.rev constr_params) in
       let make_def = Ffundef (Id.of_string "make", Tmod (TMstatic, Tshared_ptr (Tglob (name, ty_vars, []))), constr_params,
@@ -4126,7 +4138,7 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
         | Miniml.Tglob (r, _, _) -> r
         | _ -> assert false in
       let lazy_factory = CPPqualified (
-        CPPqualified (CPPglob (coind_ref, type_args), Id.of_string "ctor"),
+        CPPqualified (mk_cppglob coind_ref type_args, Id.of_string "ctor"),
         Id.of_string "lazy_") in
       let thunk = CPPlambda ([], Some ret_cpp,
         [Sreturn (Some x)], true) in
@@ -4173,7 +4185,7 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
     ) all_tvars
   in
   let stmts = if all_method_type_args <> [] then
-    let self_call_with_tys = CPPglob (func_ref, all_method_type_args) in
+    let self_call_with_tys = mk_cppglob func_ref all_method_type_args in
     List.map (glob_subst_stmt func_ref self_call_with_tys) stmts
   else stmts in
   let stmts = match this_arg_id with

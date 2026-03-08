@@ -115,7 +115,7 @@ and cpp_stmt =
 (* add something for (mutual) fixpoints? *)
 and cpp_expr =
   | CPPvar of Id.t
-  | CPPglob of GlobRef.t * cpp_type list
+  | CPPglob of GlobRef.t * cpp_type list * custom_info option
   | CPPnamespace of GlobRef.t * cpp_expr
   | CPPfun_call of cpp_expr * cpp_expr list
   | CPPderef of cpp_expr

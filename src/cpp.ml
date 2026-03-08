@@ -1189,11 +1189,11 @@ and pp_cpp_expr env args t =
   match t with
   (* CPPvar' removed — all vars now use CPPvar *)
   | CPPvar id -> Id.print id
-  | CPPglob (x, tys) when is_inline_custom x ->
-    let custom = find_custom x in
+  | CPPglob (x, tys, Some ci) when ci.ci_inline <> None ->
+    let custom = Option.get ci.ci_inline in
     let cmds = parse_numbered_args "t" (fun i -> CCty_arg i) custom in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print x) ^ " := " ^ custom) env None None tys [] [] [] [] cmds
-  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+  | CPPglob (x, _tys, _) when lookup_method_this_pos x <> None
     && (match is_registered_method x with
         | Some (epon_ref, _) ->
           (* Only use this-> for methods belonging to the current struct.
@@ -1211,7 +1211,7 @@ and pp_cpp_expr env args t =
        Generate this->method() - a call to the method via this, not a function pointer. *)
     let method_name = Id.of_string (Common.pp_global_name Term x) in
     str "this->" ++ Id.print method_name ++ str "()"
-  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+  | CPPglob (x, _tys, _) when lookup_method_this_pos x <> None
     && (match is_registered_method x with
         | Some (epon_ref, _) ->
           (* Bare reference to a method on a DIFFERENT struct (used as a function value).
@@ -1226,7 +1226,7 @@ and pp_cpp_expr env args t =
         | None -> false) ->
     let method_name = Id.of_string (Common.pp_global_name Term x) in
     str "[](const auto &_x) { return _x->" ++ Id.print method_name ++ str "(); }"
-  | CPPglob (x, tys) ->
+  | CPPglob (x, tys, _) ->
     (* Determine the base name for a global reference *)
     let base_name = match x with
       | GlobRef.IndRef _ ->
@@ -1335,8 +1335,8 @@ and pp_cpp_expr env args t =
       (* Use inductive_name_info to get proper namespace name *)
       let (name, _) = inductive_name_info_cached r in
       h (name ++ str "::" ++ pp_cpp_expr env args t)
-  | CPPfun_call (CPPglob (n,tys), ts) when is_inline_custom n ->
-    let s = find_custom n in
+  | CPPfun_call (CPPglob (n,tys, Some ci), ts) when ci.ci_inline <> None ->
+    let s = Option.get ci.ci_inline in
     let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
     let cmds = List.fold_left
     (fun prev curr -> match curr with
@@ -1360,7 +1360,7 @@ and pp_cpp_expr env args t =
       with _ -> []
     in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print n) ^ " := " ^ s) env None None tys [] (List.rev ts) arg_types [] cmds
-  | CPPfun_call (CPPglob (n, tys), ts) when lookup_method_this_pos n <> None ->
+  | CPPfun_call (CPPglob (n, tys, _), ts) when lookup_method_this_pos n <> None ->
     (* Transform function call to method call: f(a0, a1, ...) -> a[this_pos]->f(other_args)
        Handles both local method_candidates and cross-module registered methods.
        For methods with non-deducible template params (e.g., map's output element type),
@@ -1396,7 +1396,7 @@ and pp_cpp_expr env args t =
        obj_s ++ str "->" ++ template_kw ++ Id.print method_name ++ ty_args_s ++ str "(" ++ args_s ++ str ")"
      | None ->
        (* Fallback - shouldn't happen for registered methods *)
-       pp_cpp_expr env args (CPPglob (n, tys)) ++ str "()")
+       pp_cpp_expr env args (CPPglob (n, tys, None)) ++ str "()")
   | CPPfun_call (f, ts) ->
     let args_s = pp_list (pp_cpp_expr env args) (List.rev ts) in
     pp_cpp_expr env args f ++ str "(" ++ args_s ++ str ")"
@@ -1619,8 +1619,8 @@ and is_concrete_cpp_type = function
    These are methods of indexed inductives (GADTs). Regular polymorphic methods
    (like fst) have type variables that become template parameters, not std::any. *)
 and expr_is_any_returning_method = function
-  | CPPmethod_call (CPPglob (n, _), _, _) -> method_returns_any n
-  | CPPfun_call (CPPglob (n, _), _) when lookup_method_this_pos n <> None -> method_returns_any n
+  | CPPmethod_call (CPPglob (n, _, _), _, _) -> method_returns_any n
+  | CPPfun_call (CPPglob (n, _, _), _) when lookup_method_this_pos n <> None -> method_returns_any n
   | _ -> false
 
 (* Wrap an expression with any_cast if needed.
