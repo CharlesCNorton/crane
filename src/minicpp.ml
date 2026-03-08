@@ -21,7 +21,6 @@ type cpp_type =
   | Tmod of cpp_tymod * cpp_type
   | Tnamespace of GlobRef.t * cpp_type
   | Tqualified of cpp_type * Id.t  (* typename Base<T>::nested - for nested struct access *)
-  | Tstruct of GlobRef.t * cpp_type list   (* This overlaps with Tglob..... *)
   | Tref of cpp_type
   | Tvariant of cpp_type list
   | Tshared_ptr of cpp_type
@@ -35,8 +34,7 @@ type cpp_type =
 and cpp_meta = { id : int; mutable contents : cpp_type option }
 
 and cpp_stmt =
-  | SreturnVoid (* TODO: better this or option below? or just check when pretty printing? *)
-  | Sreturn of cpp_expr
+  | Sreturn of cpp_expr option
   | Sdecl of Id.t * cpp_type
   | Sasgn of Id.t * cpp_type option * cpp_expr
   | Sexpr of cpp_expr
@@ -57,7 +55,6 @@ and cpp_stmt =
 (* add something for (mutual) fixpoints? *)
 and cpp_expr =
   | CPPvar of Id.t
-  | CPPvar' of int (* remove eventually!!! *)
   | CPPglob of GlobRef.t * cpp_type list
   | CPPnamespace of GlobRef.t * cpp_expr
   | CPPfun_call of cpp_expr * cpp_expr list
