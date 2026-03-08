@@ -960,17 +960,6 @@
   (deps guarded_prom_write.t.exe)
   (action (run ./guarded_prom_write.t.exe))))
 
-(subdir stack_push_top3
- (rule
-  (targets stack_push_top3.t.exe)
-  (deps StackPushTop3.vo stack_push_top3.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} stack_push_top3.t.exe stack_push_top3.cpp stack_push_top3.t.cpp)))
- (rule
-  (alias runtest)
-  (deps stack_push_top3.t.exe)
-  (action (run ./stack_push_top3.t.exe))))
-
 (subdir stack_pop_option_pair
  (rule
   (targets stack_pop_option_pair.t.exe)
@@ -1389,28 +1378,6 @@
   (deps cycles_jcn_not_taken.t.exe)
   (action (run ./cycles_jcn_not_taken.t.exe))))
 
-(subdir pc_inc2_behavior_0012
- (rule
-  (targets pc_inc2_behavior_0012.t.exe)
-  (deps PcInc2Behavior0012.vo pc_inc2_behavior_0012.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc2_behavior_0012.t.exe pc_inc2_behavior_0012.cpp pc_inc2_behavior_0012.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc2_behavior_0012.t.exe)
-  (action (run ./pc_inc2_behavior_0012.t.exe))))
-
-(subdir update_nth_behavior_0008
- (rule
-  (targets update_nth_behavior_0008.t.exe)
-  (deps UpdateNthBehavior0008.vo update_nth_behavior_0008.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_behavior_0008.t.exe update_nth_behavior_0008.cpp update_nth_behavior_0008.t.cpp)))
- (rule
-  (alias runtest)
-  (deps update_nth_behavior_0008.t.exe)
-  (action (run ./update_nth_behavior_0008.t.exe))))
-
 (subdir qualified_record_shadow
  (rule
   (targets qualified_record_shadow.t.exe)
@@ -1433,16 +1400,6 @@
   (alias runtest)
   (deps binary_nums.t.exe)
   (action (run ./binary_nums.t.exe))))
-(subdir byte_wrap_plus_263
- (rule
-  (targets byte_wrap_plus_263.t.exe)
-  (deps ByteWrapPlus263.vo byte_wrap_plus_263.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} byte_wrap_plus_263.t.exe byte_wrap_plus_263.cpp byte_wrap_plus_263.t.cpp)))
- (rule
-  (alias runtest)
-  (deps byte_wrap_plus_263.t.exe)
-  (action (run ./byte_wrap_plus_263.t.exe))))
 
 (subdir fetch_byte_in_range
  (rule
@@ -1488,28 +1445,6 @@
   (deps jump_target_some_jms.t.exe)
   (action (run ./jump_target_some_jms.t.exe))))
 
-(subdir nibble_wrap_plus_19
- (rule
-  (targets nibble_wrap_plus_19.t.exe)
-  (deps NibbleWrapPlus19.vo nibble_wrap_plus_19.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} nibble_wrap_plus_19.t.exe nibble_wrap_plus_19.cpp nibble_wrap_plus_19.t.cpp)))
- (rule
-  (alias runtest)
-  (deps nibble_wrap_plus_19.t.exe)
-  (action (run ./nibble_wrap_plus_19.t.exe))))
-
-(subdir valid_program_byte_256_reject
- (rule
-  (targets valid_program_byte_256_reject.t.exe)
-  (deps ValidProgramByte256Reject.vo valid_program_byte_256_reject.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} valid_program_byte_256_reject.t.exe valid_program_byte_256_reject.cpp valid_program_byte_256_reject.t.cpp)))
- (rule
-  (alias runtest)
-  (deps valid_program_byte_256_reject.t.exe)
-  (action (run ./valid_program_byte_256_reject.t.exe))))
-
 (subdir encode_bytes_in_range
  (rule
   (targets encode_bytes_in_range.t.exe)
@@ -1542,17 +1477,6 @@
   (alias runtest)
   (deps wrr_preserves_other_ports.t.exe)
   (action (run ./wrr_preserves_other_ports.t.exe))))
-
-(subdir kbp_multi_bit_returns_15
- (rule
-  (targets kbp_multi_bit_returns_15.t.exe)
-  (deps KbpMultiBitReturns15.vo kbp_multi_bit_returns_15.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} kbp_multi_bit_returns_15.t.exe kbp_multi_bit_returns_15.cpp kbp_multi_bit_returns_15.t.cpp)))
- (rule
-  (alias runtest)
-  (deps kbp_multi_bit_returns_15.t.exe)
-  (action (run ./kbp_multi_bit_returns_15.t.exe))))
 
 (subdir set_prom_preserves_regs
  (rule
@@ -1906,28 +1830,6 @@
   (deps ram_write_frame_different_chip.t.exe)
   (action (run ./ram_write_frame_different_chip.t.exe))))
 
-(subdir addr_page_decomp_1027
- (rule
-  (targets addr_page_decomp_1027.t.exe)
-  (deps AddrPageDecomp1027.vo addr_page_decomp_1027.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr_page_decomp_1027.t.exe addr_page_decomp_1027.cpp addr_page_decomp_1027.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr_page_decomp_1027.t.exe)
-  (action (run ./addr_page_decomp_1027.t.exe))))
-
-(subdir addr12_of_nat_add_edge_0025
- (rule
-  (targets addr12_of_nat_add_edge_0025.t.exe)
-  (deps Addr12OfNatAddEdge0025.vo addr12_of_nat_add_edge_0025.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_of_nat_add_edge_0025.t.exe addr12_of_nat_add_edge_0025.cpp addr12_of_nat_add_edge_0025.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_of_nat_add_edge_0025.t.exe)
-  (action (run ./addr12_of_nat_add_edge_0025.t.exe))))
-
 (subdir addr12_wrap_window
  (rule
   (targets addr12_wrap_window.t.exe)
@@ -1938,50 +1840,6 @@
   (alias runtest)
   (deps addr12_wrap_window.t.exe)
   (action (run ./addr12_wrap_window.t.exe))))
-
-(subdir decode_2_concrete_even_edge_0021
- (rule
-  (targets decode_2_concrete_even_edge_0021.t.exe)
-  (deps Decode2ConcreteEvenEdge0021.vo decode_2_concrete_even_edge_0021.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_2_concrete_even_edge_0021.t.exe decode_2_concrete_even_edge_0021.cpp decode_2_concrete_even_edge_0021.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_2_concrete_even_edge_0021.t.exe)
-  (action (run ./decode_2_concrete_even_edge_0021.t.exe))))
-
-(subdir decode_bbl_wf_edge_0067
- (rule
-  (targets decode_bbl_wf_edge_0067.t.exe)
-  (deps DecodeBblWfEdge0067.vo decode_bbl_wf_edge_0067.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_bbl_wf_edge_0067.t.exe decode_bbl_wf_edge_0067.cpp decode_bbl_wf_edge_0067.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_bbl_wf_edge_0067.t.exe)
-  (action (run ./decode_bbl_wf_edge_0067.t.exe))))
-
-(subdir decode_nop_wf_edge_0053
- (rule
-  (targets decode_nop_wf_edge_0053.t.exe)
-  (deps DecodeNopWfEdge0053.vo decode_nop_wf_edge_0053.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_nop_wf_edge_0053.t.exe decode_nop_wf_edge_0053.cpp decode_nop_wf_edge_0053.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_nop_wf_edge_0053.t.exe)
-  (action (run ./decode_nop_wf_edge_0053.t.exe))))
-
-(subdir decode_wf_opcode_15_edge_0085
- (rule
-  (targets decode_wf_opcode_15_edge_0085.t.exe)
-  (deps DecodeWfOpcode15Edge0085.vo decode_wf_opcode_15_edge_0085.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_15_edge_0085.t.exe decode_wf_opcode_15_edge_0085.cpp decode_wf_opcode_15_edge_0085.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_15_edge_0085.t.exe)
-  (action (run ./decode_wf_opcode_15_edge_0085.t.exe))))
 
 (subdir disassemble_drop_window
  (rule
@@ -2005,72 +1863,6 @@
   (deps disassemble_next_address.t.exe)
   (action (run ./disassemble_next_address.t.exe))))
 
-(subdir encode_decode_canonical_edge_0029
- (rule
-  (targets encode_decode_canonical_edge_0029.t.exe)
-  (deps EncodeDecodeCanonicalEdge0029.vo encode_decode_canonical_edge_0029.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} encode_decode_canonical_edge_0029.t.exe encode_decode_canonical_edge_0029.cpp encode_decode_canonical_edge_0029.t.cpp)))
- (rule
-  (alias runtest)
-  (deps encode_decode_canonical_edge_0029.t.exe)
-  (action (run ./encode_decode_canonical_edge_0029.t.exe))))
-
-(subdir execute_dac_wf_edge_0097
- (rule
-  (targets execute_dac_wf_edge_0097.t.exe)
-  (deps ExecuteDacWfEdge0097.vo execute_dac_wf_edge_0097.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_dac_wf_edge_0097.t.exe execute_dac_wf_edge_0097.cpp execute_dac_wf_edge_0097.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_dac_wf_edge_0097.t.exe)
-  (action (run ./execute_dac_wf_edge_0097.t.exe))))
-
-(subdir execute_inc_wf_edge_0093
- (rule
-  (targets execute_inc_wf_edge_0093.t.exe)
-  (deps ExecuteIncWfEdge0093.vo execute_inc_wf_edge_0093.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_inc_wf_edge_0093.t.exe execute_inc_wf_edge_0093.cpp execute_inc_wf_edge_0093.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_inc_wf_edge_0093.t.exe)
-  (action (run ./execute_inc_wf_edge_0093.t.exe))))
-
-(subdir execute_jun_wf_edge_0109
- (rule
-  (targets execute_jun_wf_edge_0109.t.exe)
-  (deps ExecuteJunWfEdge0109.vo execute_jun_wf_edge_0109.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_jun_wf_edge_0109.t.exe execute_jun_wf_edge_0109.cpp execute_jun_wf_edge_0109.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_jun_wf_edge_0109.t.exe)
-  (action (run ./execute_jun_wf_edge_0109.t.exe))))
-
-(subdir execute_nop_wf_edge_0089
- (rule
-  (targets execute_nop_wf_edge_0089.t.exe)
-  (deps ExecuteNopWfEdge0089.vo execute_nop_wf_edge_0089.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_nop_wf_edge_0089.t.exe execute_nop_wf_edge_0089.cpp execute_nop_wf_edge_0089.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_nop_wf_edge_0089.t.exe)
-  (action (run ./execute_nop_wf_edge_0089.t.exe))))
-
-(subdir execute_stc_wf_edge_0099
- (rule
-  (targets execute_stc_wf_edge_0099.t.exe)
-  (deps ExecuteStcWfEdge0099.vo execute_stc_wf_edge_0099.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_stc_wf_edge_0099.t.exe execute_stc_wf_edge_0099.cpp execute_stc_wf_edge_0099.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_stc_wf_edge_0099.t.exe)
-  (action (run ./execute_stc_wf_edge_0099.t.exe))))
-
 (subdir fetch_window_next_ptr
  (rule
   (targets fetch_window_next_ptr.t.exe)
@@ -2081,17 +1873,6 @@
   (alias runtest)
   (deps fetch_window_next_ptr.t.exe)
   (action (run ./fetch_window_next_ptr.t.exe))))
-
-(subdir init_state_edge_0033
- (rule
-  (targets init_state_edge_0033.t.exe)
-  (deps InitStateEdge0033.vo init_state_edge_0033.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_edge_0033.t.exe init_state_edge_0033.cpp init_state_edge_0033.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_edge_0033.t.exe)
-  (action (run ./init_state_edge_0033.t.exe))))
 
 (subdir init_state_register_count
  (rule
@@ -2114,17 +1895,6 @@
   (alias runtest)
   (deps init_state_rom_length.t.exe)
   (action (run ./init_state_rom_length.t.exe))))
-
-(subdir init_state_wf_edge_0035
- (rule
-  (targets init_state_wf_edge_0035.t.exe)
-  (deps InitStateWfEdge0035.vo init_state_wf_edge_0035.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_wf_edge_0035.t.exe init_state_wf_edge_0035.cpp init_state_wf_edge_0035.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_wf_edge_0035.t.exe)
-  (action (run ./init_state_wf_edge_0035.t.exe))))
 
 (subdir jcn_branch_target_choice
  (rule
@@ -2170,17 +1940,6 @@
   (deps page_base_next_pc.t.exe)
   (action (run ./page_base_next_pc.t.exe))))
 
-(subdir page_of_edge_0013
- (rule
-  (targets page_of_edge_0013.t.exe)
-  (deps PageOfEdge0013.vo page_of_edge_0013.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_of_edge_0013.t.exe page_of_edge_0013.cpp page_of_edge_0013.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_of_edge_0013.t.exe)
-  (action (run ./page_of_edge_0013.t.exe))))
-
 (subdir page_offset_recompose
  (rule
   (targets page_offset_recompose.t.exe)
@@ -2224,28 +1983,6 @@
   (alias runtest)
   (deps prom_params_update.t.exe)
   (action (run ./prom_params_update.t.exe))))
-
-(subdir ram_read_main_edge_0015
- (rule
-  (targets ram_read_main_edge_0015.t.exe)
-  (deps RamReadMainEdge0015.vo ram_read_main_edge_0015.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_read_main_edge_0015.t.exe ram_read_main_edge_0015.cpp ram_read_main_edge_0015.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_read_main_edge_0015.t.exe)
-  (action (run ./ram_read_main_edge_0015.t.exe))))
-
-(subdir reg_index_bound_edge_0003
- (rule
-  (targets reg_index_bound_edge_0003.t.exe)
-  (deps RegIndexBoundEdge0003.vo reg_index_bound_edge_0003.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} reg_index_bound_edge_0003.t.exe reg_index_bound_edge_0003.cpp reg_index_bound_edge_0003.t.cpp)))
- (rule
-  (alias runtest)
-  (deps reg_index_bound_edge_0003.t.exe)
-  (action (run ./reg_index_bound_edge_0003.t.exe))))
 
 (subdir set_prom_then_wpm
  (rule
@@ -2356,3 +2093,157 @@
   (alias runtest)
   (deps register_pair.t.exe)
   (action (run ./register_pair.t.exe))))
+
+(subdir byte_wrap
+ (rule
+  (targets byte_wrap.t.exe)
+  (deps ByteWrap.vo byte_wrap.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} byte_wrap.t.exe byte_wrap.cpp byte_wrap.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps byte_wrap.t.exe)
+  (action (run ./byte_wrap.t.exe))))
+
+(subdir init_state_regs
+ (rule
+  (targets init_state_regs.t.exe)
+  (deps InitStateRegs.vo init_state_regs.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_regs.t.exe init_state_regs.cpp init_state_regs.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps init_state_regs.t.exe)
+  (action (run ./init_state_regs.t.exe))))
+
+(subdir init_state_rom
+ (rule
+  (targets init_state_rom.t.exe)
+  (deps InitStateRom.vo init_state_rom.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_rom.t.exe init_state_rom.cpp init_state_rom.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps init_state_rom.t.exe)
+  (action (run ./init_state_rom.t.exe))))
+
+(subdir kbp_multibit_default
+ (rule
+  (targets kbp_multibit_default.t.exe)
+  (deps KbpMultibitDefault.vo kbp_multibit_default.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} kbp_multibit_default.t.exe kbp_multibit_default.cpp kbp_multibit_default.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps kbp_multibit_default.t.exe)
+  (action (run ./kbp_multibit_default.t.exe))))
+
+(subdir nibble_wrap
+ (rule
+  (targets nibble_wrap.t.exe)
+  (deps NibbleWrap.vo nibble_wrap.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} nibble_wrap.t.exe nibble_wrap.cpp nibble_wrap.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps nibble_wrap.t.exe)
+  (action (run ./nibble_wrap.t.exe))))
+
+(subdir page_boundary_cross
+ (rule
+  (targets page_boundary_cross.t.exe)
+  (deps PageBoundaryCross.vo page_boundary_cross.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} page_boundary_cross.t.exe page_boundary_cross.cpp page_boundary_cross.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps page_boundary_cross.t.exe)
+  (action (run ./page_boundary_cross.t.exe))))
+
+(subdir page_decomp_roundtrip
+ (rule
+  (targets page_decomp_roundtrip.t.exe)
+  (deps PageDecompRoundtrip.vo page_decomp_roundtrip.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} page_decomp_roundtrip.t.exe page_decomp_roundtrip.cpp page_decomp_roundtrip.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps page_decomp_roundtrip.t.exe)
+  (action (run ./page_decomp_roundtrip.t.exe))))
+
+(subdir page_recompose
+ (rule
+  (targets page_recompose.t.exe)
+  (deps PageRecompose.vo page_recompose.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} page_recompose.t.exe page_recompose.cpp page_recompose.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps page_recompose.t.exe)
+  (action (run ./page_recompose.t.exe))))
+
+(subdir pc_inc2_wraparound
+ (rule
+  (targets pc_inc2_wraparound.t.exe)
+  (deps PcInc2Wraparound.vo pc_inc2_wraparound.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc2_wraparound.t.exe pc_inc2_wraparound.cpp pc_inc2_wraparound.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pc_inc2_wraparound.t.exe)
+  (action (run ./pc_inc2_wraparound.t.exe))))
+
+(subdir program_cycles_single
+ (rule
+  (targets program_cycles_single.t.exe)
+  (deps ProgramCyclesSingle.vo program_cycles_single.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} program_cycles_single.t.exe program_cycles_single.cpp program_cycles_single.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps program_cycles_single.t.exe)
+  (action (run ./program_cycles_single.t.exe))))
+
+(subdir prom_params_set
+ (rule
+  (targets prom_params_set.t.exe)
+  (deps PromParamsSet.vo prom_params_set.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_set.t.exe prom_params_set.cpp prom_params_set.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps prom_params_set.t.exe)
+  (action (run ./prom_params_set.t.exe))))
+
+(subdir ram_read_nested
+ (rule
+  (targets ram_read_nested.t.exe)
+  (deps RamReadNested.vo ram_read_nested.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_read_nested.t.exe ram_read_nested.cpp ram_read_nested.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps ram_read_nested.t.exe)
+  (action (run ./ram_read_nested.t.exe))))
+
+(subdir stack_push_cap
+ (rule
+  (targets stack_push_cap.t.exe)
+  (deps StackPushCap.vo stack_push_cap.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} stack_push_cap.t.exe stack_push_cap.cpp stack_push_cap.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps stack_push_cap.t.exe)
+  (action (run ./stack_push_cap.t.exe))))
+
+(subdir valid_program_byte_reject
+ (rule
+  (targets valid_program_byte_reject.t.exe)
+  (deps ValidProgramByteReject.vo valid_program_byte_reject.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} valid_program_byte_reject.t.exe valid_program_byte_reject.cpp valid_program_byte_reject.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps valid_program_byte_reject.t.exe)
+  (action (run ./valid_program_byte_reject.t.exe))))
