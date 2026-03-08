@@ -111,12 +111,13 @@ public:
   }
   unsigned int length() const {
     return std::visit(
-        Overloaded{
-            [](const typename List<A>::nil _args) -> unsigned int { return 0; },
-            [](const typename List<A>::cons _args) -> unsigned int {
-              std::shared_ptr<List<A>> l_ = _args._a1;
-              return (std::move(l_)->length() + 1);
-            }},
+        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+                     return 0u;
+                   },
+                   [](const typename List<A>::cons _args) -> unsigned int {
+                     std::shared_ptr<List<A>> l_ = _args._a1;
+                     return (std::move(l_)->length() + 1);
+                   }},
         this->v());
   }
   std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
@@ -147,9 +148,6 @@ struct SetRegPairHighNibble {
     std::shared_ptr<List<unsigned int>> regs;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -161,5 +159,14 @@ struct SetRegPairHighNibble {
                                              const unsigned int r,
                                              const unsigned int v);
 
- static inline const unsigned int t = get_reg(set_reg_pair(std::make_shared<state>(state{List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::nil_()))))}), ((0 + 1) + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)), ((0 + 1) + 1));
+  static inline const unsigned int t = get_reg(
+      set_reg_pair(
+          std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+              0u,
+              List<unsigned int>::ctor::cons_(
+                  0u, List<unsigned int>::ctor::cons_(
+                          0u, List<unsigned int>::ctor::cons_(
+                                  0u, List<unsigned int>::ctor::nil_()))))}),
+          2u, 171u),
+      2u);
 };

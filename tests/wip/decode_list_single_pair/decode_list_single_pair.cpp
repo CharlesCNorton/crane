@@ -13,18 +13,10 @@
 
 std::shared_ptr<DecodeListSinglePair::instruction>
 DecodeListSinglePair::decode(const unsigned int b1, const unsigned int b2) {
-  if ((b1 == 0)) {
+  if ((b1 == 0u)) {
     return instruction::ctor::NOP_();
   } else {
-    return instruction::ctor::LDM_(
-        (std::move(b2) %
-         ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1)));
+    return instruction::ctor::LDM_((std::move(b2) % 16u));
   }
 }
 
@@ -45,8 +37,8 @@ DecodeListSinglePair::decode_list(
             unsigned int b1 = _args._a0;
             std::shared_ptr<List<unsigned int>> l = _args._a1;
             return [&](void) {
-              if (std::move(l).use_count() == 1 &&
-                  std::move(l)->v().index() == 0) {
+              if (((std::move(l).use_count() == 1) &&
+                   (std::move(l)->v().index() == 0))) {
                 auto &_rf = std::get<0>(std::move(l)->v_mut());
                 return std::move(l);
               } else {

@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetPromPreservesRomLength::rom(
-    const std::shared_ptr<SetPromPreservesRomLength::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromPreservesRomLength::prom_addr(
-    const std::shared_ptr<SetPromPreservesRomLength::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromPreservesRomLength::prom_data(
-    const std::shared_ptr<SetPromPreservesRomLength::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromPreservesRomLength::prom_enable(
-    const std::shared_ptr<SetPromPreservesRomLength::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromPreservesRomLength::state>
 SetPromPreservesRomLength::set_prom_params(
     std::shared_ptr<SetPromPreservesRomLength::state> s,

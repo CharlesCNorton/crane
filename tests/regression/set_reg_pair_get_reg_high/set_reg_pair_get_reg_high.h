@@ -124,9 +124,6 @@ struct SetRegPairGetRegHigh {
     std::shared_ptr<List<unsigned int>> regs;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -139,15 +136,17 @@ struct SetRegPairGetRegHigh {
 
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
-          0,
+          0u,
           List<unsigned int>::ctor::cons_(
-              0,
+              0u,
               List<unsigned int>::ctor::cons_(
-                  0,
+                  0u,
                   List<unsigned int>::ctor::cons_(
-                      0, List<unsigned int>::ctor::cons_(
-                             0, List<unsigned int>::ctor::cons_(
-                                    0, List<unsigned int>::ctor::nil_()))))))});
+                      0u,
+                      List<unsigned int>::ctor::cons_(
+                          0u, List<unsigned int>::ctor::cons_(
+                                  0u, List<unsigned int>::ctor::nil_()))))))});
 
- static inline const bool t = (get_reg(set_reg_pair(sample, ((0 + 1) + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)), ((0 + 1) + 1)) == ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool t =
+      (get_reg(set_reg_pair(sample, 2u, 171u), 2u) == 10u);
 };

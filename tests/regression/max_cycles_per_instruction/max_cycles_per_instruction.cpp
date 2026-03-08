@@ -15,68 +15,31 @@ MaxCyclesPerInstruction::cycles(const MaxCyclesPerInstruction::instr i) {
   return [&](void) {
     switch (i) {
     case instr::NOP: {
-      return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+      return 8u;
     }
     case instr::ADD: {
-      return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+      return 8u;
     }
     case instr::WRM: {
-      return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+      return 8u;
     }
     case instr::FIM: {
-      return (
-          (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1);
+      return 16u;
     }
     case instr::JMS: {
-      return ((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1);
+      return 24u;
     }
     case instr::JCNTaken: {
-      return (
-          (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1);
+      return 16u;
     }
     case instr::JCNNotTaken: {
-      return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+      return 8u;
     }
     case instr::ISZTaken: {
-      return (
-          (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1);
+      return 16u;
     }
     case instr::ISZZero: {
-      return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+      return 8u;
     }
     }
   }();

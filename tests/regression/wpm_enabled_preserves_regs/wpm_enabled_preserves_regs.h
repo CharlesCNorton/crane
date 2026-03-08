@@ -99,22 +99,19 @@ struct WpmEnabledPreservesRegs {
     bool prom_enable;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> execute_wpm(std::shared_ptr<state> s);
 
- static inline const std::shared_ptr<state> sample = std::make_shared<state>(state{List<unsigned int>::ctor::cons_((0 + 1), List<unsigned int>::ctor::cons_(((0 + 1) + 1), List<unsigned int>::ctor::cons_((((0 + 1) + 1) + 1), List<unsigned int>::ctor::nil_()))), List<unsigned int>::ctor::cons_(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_(((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::nil_()))), (0 + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), true});
+  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
+      state{List<unsigned int>::ctor::cons_(
+                1u, List<unsigned int>::ctor::cons_(
+                        2u, List<unsigned int>::ctor::cons_(
+                                3u, List<unsigned int>::ctor::nil_()))),
+            List<unsigned int>::ctor::cons_(
+                10u, List<unsigned int>::ctor::cons_(
+                         11u, List<unsigned int>::ctor::cons_(
+                                  12u, List<unsigned int>::ctor::nil_()))),
+            1u, 99u, true});
 
- static inline const bool t =
-     nat_list_eqb(execute_wpm(sample)->regs, sample->regs);
+  static inline const bool t =
+      nat_list_eqb(execute_wpm(sample)->regs, sample->regs);
 };

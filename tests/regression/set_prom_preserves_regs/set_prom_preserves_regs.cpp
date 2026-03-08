@@ -45,31 +45,6 @@ bool SetPromPreservesRegs::nat_list_eqb(
       xs->v());
 }
 
-std::shared_ptr<List<unsigned int>> SetPromPreservesRegs::regs(
-    const std::shared_ptr<SetPromPreservesRegs::state> &s) {
-  return s->regs;
-}
-
-std::shared_ptr<List<unsigned int>> SetPromPreservesRegs::ram_sys(
-    const std::shared_ptr<SetPromPreservesRegs::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int SetPromPreservesRegs::prom_addr(
-    const std::shared_ptr<SetPromPreservesRegs::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromPreservesRegs::prom_data(
-    const std::shared_ptr<SetPromPreservesRegs::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromPreservesRegs::prom_enable(
-    const std::shared_ptr<SetPromPreservesRegs::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromPreservesRegs::state>
 SetPromPreservesRegs::set_prom_params(
     std::shared_ptr<SetPromPreservesRegs::state> s, const unsigned int addr,

@@ -90,11 +90,8 @@ struct ForallRepeatProp {
 
   static inline const std::shared_ptr<List<unsigned int>> sample =
       List<unsigned int>::ctor::cons_(
-          (0 + 1),
-          List<unsigned int>::ctor::cons_(
-              ((0 + 1) + 1),
-              List<unsigned int>::ctor::cons_(
-                  (((0 + 1) + 1) + 1), List<unsigned int>::ctor::cons_(
-                                           ((((0 + 1) + 1) + 1) + 1),
-                                           List<unsigned int>::ctor::nil_()))));
+          1u, List<unsigned int>::ctor::cons_(
+                  2u, List<unsigned int>::ctor::cons_(
+                          3u, List<unsigned int>::ctor::cons_(
+                                  4u, List<unsigned int>::ctor::nil_()))));
 };

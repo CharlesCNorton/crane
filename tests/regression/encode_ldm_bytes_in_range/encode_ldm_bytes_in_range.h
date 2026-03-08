@@ -69,10 +69,6 @@ struct EncodeLdmBytesInRange {
 
   static bool pair_in_range(const std::pair<unsigned int, unsigned int> p);
 
-  static inline const bool t = pair_in_range(encode(instruction::ctor::LDM_(
-      (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-          1) +
-         1) +
-        1) +
-       1))));
+  static inline const bool t =
+      pair_in_range(encode(instruction::ctor::LDM_(15u)));
 };

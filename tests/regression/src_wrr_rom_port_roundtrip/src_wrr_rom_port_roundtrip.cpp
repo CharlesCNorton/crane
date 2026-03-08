@@ -11,62 +11,25 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SrcWrrRomPortRoundtrip::regs(
-    const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s) {
-  return s->regs;
-}
-
-unsigned int SrcWrrRomPortRoundtrip::acc(
-    const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s) {
-  return s->acc;
-}
-
-std::shared_ptr<List<unsigned int>> SrcWrrRomPortRoundtrip::rom_ports(
-    const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s) {
-  return s->rom_ports;
-}
-
-unsigned int SrcWrrRomPortRoundtrip::sel_rom(
-    const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s) {
-  return s->sel_rom;
-}
-
 unsigned int SrcWrrRomPortRoundtrip::get_reg(
     const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s,
     const unsigned int r) {
-  return s->regs->nth(r, 0);
+  return s->regs->nth(r, 0u);
 }
 
 unsigned int SrcWrrRomPortRoundtrip::get_reg_pair(
     const std::shared_ptr<SrcWrrRomPortRoundtrip::state> &s,
     const unsigned int r) {
-  unsigned int base =
-      (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
-  return ((get_reg(s, base) *
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)) +
-          get_reg(s, (base + (0 + 1))));
+  unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
+  return ((get_reg(s, base) * 16u) + get_reg(s, (base + 1u)));
 }
 
 std::shared_ptr<SrcWrrRomPortRoundtrip::state>
 SrcWrrRomPortRoundtrip::execute_src(
     std::shared_ptr<SrcWrrRomPortRoundtrip::state> s, const unsigned int r) {
-  return std::make_shared<SrcWrrRomPortRoundtrip::state>(state{
-      s->regs, s->acc, s->rom_ports,
-      Nat::div(
-          get_reg_pair(s, std::move(r)),
-          ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1))});
+  return std::make_shared<SrcWrrRomPortRoundtrip::state>(
+      state{s->regs, s->acc, s->rom_ports,
+            Nat::div(get_reg_pair(s, std::move(r)), 16u)});
 }
 
 std::shared_ptr<SrcWrrRomPortRoundtrip::state>
@@ -99,6 +62,6 @@ unsigned int Nat::div(const unsigned int x, const unsigned int y) {
     return std::move(y);
   } else {
     unsigned int y_ = y - 1;
-    return Nat::divmod(x, y_, 0, y_).first;
+    return Nat::divmod(x, y_, 0u, y_).first;
   }
 }

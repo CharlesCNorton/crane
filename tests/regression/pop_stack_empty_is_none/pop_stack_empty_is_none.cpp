@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> PopStackEmptyIsNone::stack(
-    const std::shared_ptr<PopStackEmptyIsNone::state> &s) {
-  return s->stack;
-}
-
 std::pair<std::optional<unsigned int>,
           std::shared_ptr<PopStackEmptyIsNone::state>>
 PopStackEmptyIsNone::pop_stack(std::shared_ptr<PopStackEmptyIsNone::state> s) {

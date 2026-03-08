@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> RamWriteMainPreservesOtherBank::ram_sys(
-    const std::shared_ptr<RamWriteMainPreservesOtherBank::state> &s) {
-  return s->ram_sys;
-}
-
-unsigned int RamWriteMainPreservesOtherBank::cur_bank(
-    const std::shared_ptr<RamWriteMainPreservesOtherBank::state> &s) {
-  return s->cur_bank;
-}
-
 std::shared_ptr<List<unsigned int>>
 RamWriteMainPreservesOtherBank::ram_write_main_sys(
     const std::shared_ptr<RamWriteMainPreservesOtherBank::state> &s,

@@ -12,5 +12,5 @@
 #include <variant>
 
 unsigned int RegPairEvenProjection::pair_base(const unsigned int r) {
-  return (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
+  return (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
 }

@@ -34,17 +34,9 @@ struct JcnConditionNonzeroGate {
     bool test_pin;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
   static bool jcn_condition(const std::shared_ptr<state> &s,
                             const unsigned int cond);
 
-  static inline const bool t = jcn_condition(
-      std::make_shared<state>(state{(((0 + 1) + 1) + 1), false, true}),
-      ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-       1));
+  static inline const bool t =
+      jcn_condition(std::make_shared<state>(state{3u, false, true}), 12u);
 };

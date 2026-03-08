@@ -82,11 +82,6 @@ struct LdPreservesAllPairs {
     unsigned int acc;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -96,25 +91,21 @@ struct LdPreservesAllPairs {
   static std::shared_ptr<state> execute_ld(std::shared_ptr<state> s,
                                            const unsigned int r);
 
-  static inline const std::shared_ptr<state> sample = std::make_shared<
-      state>(state{
-      List<unsigned int>::ctor::cons_(
-          ((0 + 1) + 1),
-          List<unsigned int>::ctor::cons_(
-              (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-              List<unsigned int>::ctor::cons_(
-                  ((((0 + 1) + 1) + 1) + 1),
-                  List<unsigned int>::ctor::cons_(
-                      (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                      List<unsigned int>::ctor::cons_(
-                          ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                          List<unsigned int>::ctor::cons_(
-                              (0 + 1), List<unsigned int>::ctor::nil_())))))),
-      (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-        1) +
-       1)});
+  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
+      state{List<unsigned int>::ctor::cons_(
+                2u,
+                List<unsigned int>::ctor::cons_(
+                    9u,
+                    List<unsigned int>::ctor::cons_(
+                        4u,
+                        List<unsigned int>::ctor::cons_(
+                            7u,
+                            List<unsigned int>::ctor::cons_(
+                                8u,
+                                List<unsigned int>::ctor::cons_(
+                                    1u, List<unsigned int>::ctor::nil_())))))),
+            13u});
 
   static inline const bool t =
-      (get_reg_pair(execute_ld(sample, ((((0 + 1) + 1) + 1) + 1)),
-                    ((0 + 1) + 1)) == get_reg_pair(sample, ((0 + 1) + 1)));
+      (get_reg_pair(execute_ld(sample, 4u), 2u) == get_reg_pair(sample, 2u));
 };

@@ -45,31 +45,6 @@ bool WpmEnabledPreservesRam::nat_list_eqb(
       xs->v());
 }
 
-std::shared_ptr<List<unsigned int>> WpmEnabledPreservesRam::ram_sys(
-    const std::shared_ptr<WpmEnabledPreservesRam::state> &s) {
-  return s->ram_sys;
-}
-
-std::shared_ptr<List<unsigned int>> WpmEnabledPreservesRam::rom(
-    const std::shared_ptr<WpmEnabledPreservesRam::state> &s) {
-  return s->rom;
-}
-
-unsigned int WpmEnabledPreservesRam::prom_addr(
-    const std::shared_ptr<WpmEnabledPreservesRam::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int WpmEnabledPreservesRam::prom_data(
-    const std::shared_ptr<WpmEnabledPreservesRam::state> &s) {
-  return s->prom_data;
-}
-
-bool WpmEnabledPreservesRam::prom_enable(
-    const std::shared_ptr<WpmEnabledPreservesRam::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<WpmEnabledPreservesRam::state>
 WpmEnabledPreservesRam::execute_wpm(
     std::shared_ptr<WpmEnabledPreservesRam::state> s) {

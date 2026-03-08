@@ -11,7 +11,7 @@
 #include <utility>
 #include <variant>
 
-bool Nat::eqb(const unsigned int n, const unsigned int m) {
+bool PeanoNat::eqb(const unsigned int n, const unsigned int m) {
   if (n <= 0) {
     if (m <= 0) {
       return true;
@@ -25,12 +25,12 @@ bool Nat::eqb(const unsigned int n, const unsigned int m) {
       return false;
     } else {
       unsigned int m_ = m - 1;
-      return eqb(n_, m_);
+      return PeanoNat::eqb(n_, m_);
     }
   }
 }
 
-bool Nat::leb(const unsigned int n, const unsigned int m) {
+bool PeanoNat::leb(const unsigned int n, const unsigned int m) {
   if (n <= 0) {
     return true;
   } else {
@@ -39,50 +39,49 @@ bool Nat::leb(const unsigned int n, const unsigned int m) {
       return false;
     } else {
       unsigned int m_ = m - 1;
-      return leb(n_, m_);
+      return PeanoNat::leb(n_, m_);
     }
   }
 }
 
-bool Nat::ltb(const unsigned int n, const unsigned int m) {
-  return leb((std::move(n) + 1), m);
+bool PeanoNat::ltb(const unsigned int n, const unsigned int m) {
+  return PeanoNat::leb((std::move(n) + 1), m);
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
+                                                       const unsigned int y,
+                                                       const unsigned int q,
+                                                       const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
     unsigned int x_ = x - 1;
     if (u <= 0) {
-      return divmod(std::move(x_), y, (q + 1), y);
+      return PeanoNat::divmod(std::move(x_), y, (q + 1), y);
     } else {
       unsigned int u_ = u - 1;
-      return divmod(std::move(x_), y, q, std::move(u_));
+      return PeanoNat::divmod(std::move(x_), y, q, std::move(u_));
     }
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+unsigned int PeanoNat::div(const unsigned int x, const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {
     unsigned int y_ = y - 1;
-    return divmod(x, y_, 0, y_).first;
+    return PeanoNat::divmod(x, y_, 0u, y_).first;
   }
 }
 
 unsigned int RegisterPairArchitecture::pair_index(const unsigned int r) {
-  return Nat::div(r, ((0 + 1) + 1));
+  return PeanoNat::div(r, 2u);
 }
 
 bool RegisterPairArchitecture::pair_property(const unsigned int r) {
   unsigned int p = pair_index(r);
-  return (Nat::ltb(p, ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)) &&
-          (Nat::eqb(r, (((0 + 1) + 1) * p)) ||
-           Nat::eqb(r, ((((0 + 1) + 1) * p) + (0 + 1)))));
+  return (PeanoNat::ltb(p, 8u) &&
+          (PeanoNat::eqb(r, (2u * p)) || PeanoNat::eqb(r, ((2u * p) + 1u))));
 }
 
 std::shared_ptr<List<unsigned int>> ListDef::seq(const unsigned int start,

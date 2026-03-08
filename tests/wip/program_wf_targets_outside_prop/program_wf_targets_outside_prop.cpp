@@ -10,16 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int ProgramWfTargetsOutsideProp::base_addr(
-    const std::shared_ptr<ProgramWfTargetsOutsideProp::layout> &l) {
-  return l->base_addr;
-}
-
-unsigned int ProgramWfTargetsOutsideProp::code_size(
-    const std::shared_ptr<ProgramWfTargetsOutsideProp::layout> &l) {
-  return l->code_size;
-}
-
 std::optional<unsigned int> ProgramWfTargetsOutsideProp::jump_target(
     const std::shared_ptr<ProgramWfTargetsOutsideProp::instruction> &i) {
   return std::visit(

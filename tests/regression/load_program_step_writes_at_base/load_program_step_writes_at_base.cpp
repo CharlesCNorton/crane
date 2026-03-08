@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> LoadProgramStepWritesAtBase::rom(
-    const std::shared_ptr<LoadProgramStepWritesAtBase::state> &s) {
-  return s->rom;
-}
-
-unsigned int LoadProgramStepWritesAtBase::prom_addr(
-    const std::shared_ptr<LoadProgramStepWritesAtBase::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int LoadProgramStepWritesAtBase::prom_data(
-    const std::shared_ptr<LoadProgramStepWritesAtBase::state> &s) {
-  return s->prom_data;
-}
-
-bool LoadProgramStepWritesAtBase::prom_enable(
-    const std::shared_ptr<LoadProgramStepWritesAtBase::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<LoadProgramStepWritesAtBase::state>
 LoadProgramStepWritesAtBase::set_prom_params(
     std::shared_ptr<LoadProgramStepWritesAtBase::state> s,

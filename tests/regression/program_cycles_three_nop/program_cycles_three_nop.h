@@ -82,8 +82,6 @@ struct ProgramCyclesThreeNop {
     unsigned int acc;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
   static unsigned int cycles(const std::shared_ptr<state> &_x,
                              const instruction _x0);
 
@@ -92,7 +90,7 @@ struct ProgramCyclesThreeNop {
                  const std::shared_ptr<List<instruction>> &prog);
 
   static inline const unsigned int t = program_cycles(
-      std::make_shared<state>(state{0}),
+      std::make_shared<state>(state{0u}),
       List<instruction>::ctor::cons_(
           instruction::NOP,
           List<instruction>::ctor::cons_(

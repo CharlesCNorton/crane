@@ -59,9 +59,6 @@ struct PopStackEmptyIsNone {
     std::shared_ptr<List<unsigned int>> stack;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
   static std::pair<std::optional<unsigned int>, std::shared_ptr<state>>
   pop_stack(std::shared_ptr<state> s);
 

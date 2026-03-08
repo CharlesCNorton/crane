@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-SetPromEnableTrue::rom(const std::shared_ptr<SetPromEnableTrue::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromEnableTrue::prom_addr(
-    const std::shared_ptr<SetPromEnableTrue::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromEnableTrue::prom_data(
-    const std::shared_ptr<SetPromEnableTrue::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromEnableTrue::prom_enable(
-    const std::shared_ptr<SetPromEnableTrue::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromEnableTrue::state>
 SetPromEnableTrue::set_prom_params(std::shared_ptr<SetPromEnableTrue::state> s,
                                    const unsigned int addr,

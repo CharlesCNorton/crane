@@ -21,7 +21,5 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct RegPairOddProjection {
   static unsigned int pair_base(const unsigned int r);
 
-  static inline const bool t =
-      (pair_base((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1)) ==
-       ((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool t = (pair_base(7u) == 6u);
 };

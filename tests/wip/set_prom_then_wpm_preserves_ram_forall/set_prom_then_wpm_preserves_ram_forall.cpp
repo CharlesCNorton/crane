@@ -10,31 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetPromThenWpmPreservesRamForall::ram_sys(
-    const std::shared_ptr<SetPromThenWpmPreservesRamForall::state> &s) {
-  return s->ram_sys;
-}
-
-std::shared_ptr<List<unsigned int>> SetPromThenWpmPreservesRamForall::rom(
-    const std::shared_ptr<SetPromThenWpmPreservesRamForall::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromThenWpmPreservesRamForall::prom_addr(
-    const std::shared_ptr<SetPromThenWpmPreservesRamForall::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromThenWpmPreservesRamForall::prom_data(
-    const std::shared_ptr<SetPromThenWpmPreservesRamForall::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromThenWpmPreservesRamForall::prom_enable(
-    const std::shared_ptr<SetPromThenWpmPreservesRamForall::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromThenWpmPreservesRamForall::state>
 SetPromThenWpmPreservesRamForall::set_prom_params(
     std::shared_ptr<SetPromThenWpmPreservesRamForall::state> s,

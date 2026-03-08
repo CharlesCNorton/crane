@@ -10,26 +10,6 @@
 #include <variant>
 #include <wpm_updates_rom_at_addr.h>
 
-std::shared_ptr<List<unsigned int>>
-WpmUpdatesRomAtAddr::rom(const std::shared_ptr<WpmUpdatesRomAtAddr::state> &s) {
-  return s->rom;
-}
-
-unsigned int WpmUpdatesRomAtAddr::prom_addr(
-    const std::shared_ptr<WpmUpdatesRomAtAddr::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int WpmUpdatesRomAtAddr::prom_data(
-    const std::shared_ptr<WpmUpdatesRomAtAddr::state> &s) {
-  return s->prom_data;
-}
-
-bool WpmUpdatesRomAtAddr::prom_enable(
-    const std::shared_ptr<WpmUpdatesRomAtAddr::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<WpmUpdatesRomAtAddr::state> WpmUpdatesRomAtAddr::execute_wpm(
     std::shared_ptr<WpmUpdatesRomAtAddr::state> s) {
   std::shared_ptr<List<unsigned int>> new_rom;

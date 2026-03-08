@@ -10,47 +10,6 @@
 #include <string>
 #include <variant>
 
-unsigned int SetPromThenWpmPreservesSelWf::sel_bank(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::sel> &s) {
-  return s->sel_bank;
-}
-
-unsigned int SetPromThenWpmPreservesSelWf::sel_chip(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::sel> &s) {
-  return s->sel_chip;
-}
-
-unsigned int SetPromThenWpmPreservesSelWf::sel_reg(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::sel> &s) {
-  return s->sel_reg;
-}
-
-std::shared_ptr<SetPromThenWpmPreservesSelWf::sel>
-SetPromThenWpmPreservesSelWf::sel_ram(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::state> &s) {
-  return s->sel_ram;
-}
-
-std::shared_ptr<List<unsigned int>> SetPromThenWpmPreservesSelWf::rom(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromThenWpmPreservesSelWf::prom_addr(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromThenWpmPreservesSelWf::prom_data(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromThenWpmPreservesSelWf::prom_enable(
-    const std::shared_ptr<SetPromThenWpmPreservesSelWf::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromThenWpmPreservesSelWf::state>
 SetPromThenWpmPreservesSelWf::set_prom_params(
     std::shared_ptr<SetPromThenWpmPreservesSelWf::state> s,

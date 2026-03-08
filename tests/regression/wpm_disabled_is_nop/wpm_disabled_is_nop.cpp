@@ -10,26 +10,6 @@
 #include <variant>
 #include <wpm_disabled_is_nop.h>
 
-std::shared_ptr<List<unsigned int>>
-WpmDisabledIsNop::rom(const std::shared_ptr<WpmDisabledIsNop::state> &s) {
-  return s->rom;
-}
-
-unsigned int
-WpmDisabledIsNop::prom_addr(const std::shared_ptr<WpmDisabledIsNop::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int
-WpmDisabledIsNop::prom_data(const std::shared_ptr<WpmDisabledIsNop::state> &s) {
-  return s->prom_data;
-}
-
-bool WpmDisabledIsNop::prom_enable(
-    const std::shared_ptr<WpmDisabledIsNop::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<WpmDisabledIsNop::state>
 WpmDisabledIsNop::execute_wpm(std::shared_ptr<WpmDisabledIsNop::state> s) {
   std::shared_ptr<List<unsigned int>> new_rom;

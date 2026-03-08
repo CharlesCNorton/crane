@@ -11,31 +11,14 @@
 #include <variant>
 #include <xch_preserves_pair_partner_odd.h>
 
-std::shared_ptr<List<unsigned int>> XchPreservesPairPartnerOdd::regs(
-    const std::shared_ptr<XchPreservesPairPartnerOdd::state> &s) {
-  return s->regs;
-}
-
-unsigned int XchPreservesPairPartnerOdd::acc(
-    const std::shared_ptr<XchPreservesPairPartnerOdd::state> &s) {
-  return s->acc;
-}
-
 unsigned int XchPreservesPairPartnerOdd::get_reg(
     const std::shared_ptr<XchPreservesPairPartnerOdd::state> &s,
     const unsigned int r) {
-  return s->regs->nth(r, 0);
+  return s->regs->nth(r, 0u);
 }
 
 unsigned int XchPreservesPairPartnerOdd::nibble_of_nat(const unsigned int n) {
-  return (
-      n %
-      ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
+  return (n % 16u);
 }
 
 std::shared_ptr<XchPreservesPairPartnerOdd::state>

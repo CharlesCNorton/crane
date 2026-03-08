@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> LoadProgramStepRomLengthWeak::rom(
-    const std::shared_ptr<LoadProgramStepRomLengthWeak::state> &s) {
-  return s->rom;
-}
-
-unsigned int LoadProgramStepRomLengthWeak::prom_addr(
-    const std::shared_ptr<LoadProgramStepRomLengthWeak::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int LoadProgramStepRomLengthWeak::prom_data(
-    const std::shared_ptr<LoadProgramStepRomLengthWeak::state> &s) {
-  return s->prom_data;
-}
-
-bool LoadProgramStepRomLengthWeak::prom_enable(
-    const std::shared_ptr<LoadProgramStepRomLengthWeak::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<LoadProgramStepRomLengthWeak::state>
 LoadProgramStepRomLengthWeak::set_prom_params(
     std::shared_ptr<LoadProgramStepRomLengthWeak::state> s,

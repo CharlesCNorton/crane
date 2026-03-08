@@ -59,9 +59,6 @@ struct PopStackSomeAddr {
     std::shared_ptr<List<unsigned int>> stack;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
   static std::pair<std::optional<unsigned int>, std::shared_ptr<state>>
   pop_stack(std::shared_ptr<state> s);
 
@@ -69,9 +66,7 @@ struct PopStackSomeAddr {
 
   static inline const unsigned int t = option_or_zero(
       pop_stack(std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
-                    (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                    List<unsigned int>::ctor::cons_(
-                        ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                        List<unsigned int>::ctor::nil_()))}))
+                    9u, List<unsigned int>::ctor::cons_(
+                            8u, List<unsigned int>::ctor::nil_()))}))
           .first);
 };

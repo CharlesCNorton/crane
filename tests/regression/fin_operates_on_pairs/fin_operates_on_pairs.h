@@ -125,12 +125,6 @@ struct FinOperatesOnPairs {
     std::shared_ptr<List<unsigned int>> rom;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -147,7 +141,27 @@ struct FinOperatesOnPairs {
   static std::shared_ptr<state> execute_fin(const std::shared_ptr<state> &s,
                                             const unsigned int r);
 
- static inline const std::shared_ptr<state> sample = std::make_shared<state>(state{List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(((0 + 1) + 1), List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::cons_(0, List<unsigned int>::ctor::nil_())))))), List<unsigned int>::ctor::cons_((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_(((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::nil_()))))});
+  static inline const std::shared_ptr<state> sample =
+      std::make_shared<state>(state{
+          List<unsigned int>::ctor::cons_(
+              0u,
+              List<unsigned int>::ctor::cons_(
+                  2u,
+                  List<unsigned int>::ctor::cons_(
+                      0u,
+                      List<unsigned int>::ctor::cons_(
+                          0u,
+                          List<unsigned int>::ctor::cons_(
+                              0u, List<unsigned int>::ctor::cons_(
+                                      0u,
+                                      List<unsigned int>::ctor::nil_())))))),
+          List<unsigned int>::ctor::cons_(
+              33u,
+              List<unsigned int>::ctor::cons_(
+                  44u, List<unsigned int>::ctor::cons_(
+                           55u, List<unsigned int>::ctor::cons_(
+                                    66u, List<unsigned int>::ctor::nil_()))))});
 
- static inline const bool t = (get_reg_pair(execute_fin(sample, ((0 + 1) + 1)), ((0 + 1) + 1)) == (((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool t =
+      (get_reg_pair(execute_fin(sample, 2u), 2u) == 55u);
 };

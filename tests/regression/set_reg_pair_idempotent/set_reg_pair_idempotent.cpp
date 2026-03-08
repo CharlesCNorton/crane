@@ -11,74 +11,36 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetRegPairIdempotent::regs(
-    const std::shared_ptr<SetRegPairIdempotent::state> &s) {
-  return s->regs;
-}
-
 unsigned int SetRegPairIdempotent::get_reg(
     const std::shared_ptr<SetRegPairIdempotent::state> &s,
     const unsigned int r) {
-  return s->regs->nth(r, 0);
+  return s->regs->nth(r, 0u);
 }
 
 std::shared_ptr<SetRegPairIdempotent::state>
 SetRegPairIdempotent::set_reg(std::shared_ptr<SetRegPairIdempotent::state> s,
                               const unsigned int r, const unsigned int v) {
   return std::make_shared<SetRegPairIdempotent::state>(
-      state{update_nth<unsigned int>(
-          std::move(r),
-          (std::move(v) %
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)),
-          std::move(s)->regs)});
+      state{update_nth<unsigned int>(std::move(r), (std::move(v) % 16u),
+                                     std::move(s)->regs)});
 }
 
 unsigned int SetRegPairIdempotent::get_reg_pair(
     const std::shared_ptr<SetRegPairIdempotent::state> &s,
     const unsigned int r) {
-  unsigned int base =
-      (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
-  return ((get_reg(s, base) *
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)) +
-          get_reg(s, (base + (0 + 1))));
+  unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
+  return ((get_reg(s, base) * 16u) + get_reg(s, (base + 1u)));
 }
 
 std::shared_ptr<SetRegPairIdempotent::state> SetRegPairIdempotent::set_reg_pair(
     const std::shared_ptr<SetRegPairIdempotent::state> &s, const unsigned int r,
     const unsigned int v) {
-  unsigned int base =
-      (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
-  unsigned int hi = Nat::div(
-      v,
-      ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
-  unsigned int lo =
-      (v % ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1));
+  unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
+  unsigned int hi = Nat::div(v, 16u);
+  unsigned int lo = (v % 16u);
   std::shared_ptr<SetRegPairIdempotent::state> s1 =
       set_reg(s, std::move(base), std::move(hi));
-  return set_reg(std::move(s1), (std::move(base) + (0 + 1)), std::move(lo));
+  return set_reg(std::move(s1), (std::move(base) + 1u), std::move(lo));
 }
 
 std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
@@ -103,6 +65,6 @@ unsigned int Nat::div(const unsigned int x, const unsigned int y) {
     return std::move(y);
   } else {
     unsigned int y_ = y - 1;
-    return Nat::divmod(x, y_, 0, y_).first;
+    return Nat::divmod(x, y_, 0u, y_).first;
   }
 }

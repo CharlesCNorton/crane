@@ -10,63 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetPromThenWpmPreservesRomPortsForall::regs(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->regs;
-}
-
-std::shared_ptr<List<unsigned int>> SetPromThenWpmPreservesRomPortsForall::rom(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::acc(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->acc;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::pc(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->pc;
-}
-
-std::shared_ptr<List<unsigned int>>
-SetPromThenWpmPreservesRomPortsForall::stack(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->stack;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::cur_bank(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->cur_bank;
-}
-
-std::shared_ptr<List<unsigned int>>
-SetPromThenWpmPreservesRomPortsForall::rom_ports(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->rom_ports;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::sel_rom(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->sel_rom;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::prom_addr(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromThenWpmPreservesRomPortsForall::prom_data(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromThenWpmPreservesRomPortsForall::prom_enable(
-    const std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state>
 SetPromThenWpmPreservesRomPortsForall::set_prom_params(
     std::shared_ptr<SetPromThenWpmPreservesRomPortsForall::state> s,

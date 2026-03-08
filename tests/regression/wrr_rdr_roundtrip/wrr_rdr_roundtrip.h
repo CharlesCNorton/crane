@@ -116,35 +116,19 @@ struct WrrRdrRoundtrip {
     unsigned int sel_rom;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom_ports(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_rom(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> execute_wrr(std::shared_ptr<state> s);
 
   static std::shared_ptr<state> execute_rdr(std::shared_ptr<state> s);
 
-  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
-      state{(((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1),
-            List<unsigned int>::ctor::cons_(
-                (0 + 1), List<unsigned int>::ctor::cons_(
-                             ((0 + 1) + 1),
-                             List<unsigned int>::ctor::cons_(
-                                 (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                                 List<unsigned int>::ctor::cons_(
-                                     ((((0 + 1) + 1) + 1) + 1),
-                                     List<unsigned int>::ctor::nil_())))),
-            ((0 + 1) + 1)});
+  static inline const std::shared_ptr<state> sample =
+      std::make_shared<state>(state{
+          13u,
+          List<unsigned int>::ctor::cons_(
+              1u, List<unsigned int>::ctor::cons_(
+                      2u, List<unsigned int>::ctor::cons_(
+                              7u, List<unsigned int>::ctor::cons_(
+                                      4u, List<unsigned int>::ctor::nil_())))),
+          2u});
 
-  static inline const bool t =
-      (execute_rdr(execute_wrr(sample))->acc ==
-       (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-         1) +
-        1));
+  static inline const bool t = (execute_rdr(execute_wrr(sample))->acc == 13u);
 };

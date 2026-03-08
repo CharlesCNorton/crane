@@ -34,15 +34,9 @@ struct JcnConditionTestLow {
     bool test_pin;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static bool carry(const std::shared_ptr<state> &s);
-
-  static bool test_pin(const std::shared_ptr<state> &s);
-
   static bool jcn_condition(const std::shared_ptr<state> &s,
                             const unsigned int cond);
 
-  static inline const bool t = jcn_condition(
-      std::make_shared<state>(state{(0 + 1), false, false}), (0 + 1));
+  static inline const bool t =
+      jcn_condition(std::make_shared<state>(state{1u, false, false}), 1u);
 };

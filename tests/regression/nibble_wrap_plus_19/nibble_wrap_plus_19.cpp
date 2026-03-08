@@ -12,12 +12,5 @@
 #include <variant>
 
 unsigned int NibbleWrapPlus19::nibble_of_nat(const unsigned int n) {
-  return (
-      n %
-      ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
+  return (n % 16u);
 }

@@ -94,17 +94,6 @@ struct SrcUsesPairValue {
     unsigned int sel_char;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_rom(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_chip(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_reg(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_char(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -114,32 +103,25 @@ struct SrcUsesPairValue {
   static std::shared_ptr<state> execute_src(std::shared_ptr<state> s,
                                             const unsigned int r);
 
-  static inline const std::shared_ptr<state> sample =
-      std::make_shared<state>(state{
-          List<unsigned int>::ctor::cons_(
-              0,
-              List<unsigned int>::ctor::cons_(
-                  0,
-                  List<unsigned int>::ctor::cons_(
-                      (0 + 1),
-                      List<unsigned int>::ctor::cons_(
-                          (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                             1) +
-                            1) +
-                           1),
-                          List<unsigned int>::ctor::cons_(
-                              0, List<unsigned int>::ctor::cons_(
-                                     0, List<unsigned int>::ctor::nil_())))))),
-          0, 0, 0, 0});
+  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
+      state{List<unsigned int>::ctor::cons_(
+                0u,
+                List<unsigned int>::ctor::cons_(
+                    0u,
+                    List<unsigned int>::ctor::cons_(
+                        1u,
+                        List<unsigned int>::ctor::cons_(
+                            11u,
+                            List<unsigned int>::ctor::cons_(
+                                0u,
+                                List<unsigned int>::ctor::cons_(
+                                    0u, List<unsigned int>::ctor::nil_())))))),
+            0u, 0u, 0u, 0u});
 
-  static inline const std::shared_ptr<state> after =
-      execute_src(sample, (((0 + 1) + 1) + 1));
+  static inline const std::shared_ptr<state> after = execute_src(sample, 3u);
 
   static inline const bool t =
-      ((after->sel_rom == (0 + 1)) &&
-       ((after->sel_chip == 0) &&
-        ((after->sel_reg == (0 + 1)) &&
-         (after->sel_char ==
-          (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1)))));
+      ((after->sel_rom == 1u) &&
+       ((after->sel_chip == 0u) &&
+        ((after->sel_reg == 1u) && (after->sel_char == 11u))));
 };

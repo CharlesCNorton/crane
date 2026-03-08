@@ -117,31 +117,21 @@ struct WpmDisabledIsNop {
     bool prom_enable;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  rom(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> execute_wpm(std::shared_ptr<state> s);
 
- static inline const std::shared_ptr<state> sample = std::make_shared<state>(state{List<unsigned int>::ctor::cons_(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_(((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::cons_((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), List<unsigned int>::ctor::nil_())))), ((0 + 1) + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), false});
+  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
+      state{List<unsigned int>::ctor::cons_(
+                10u,
+                List<unsigned int>::ctor::cons_(
+                    11u, List<unsigned int>::ctor::cons_(
+                             12u, List<unsigned int>::ctor::cons_(
+                                      13u, List<unsigned int>::ctor::nil_())))),
+            2u, 99u, false});
 
- static inline const std::shared_ptr<state> after = execute_wpm(sample);
+  static inline const std::shared_ptr<state> after = execute_wpm(sample);
 
- static inline const bool t =
-     ((after->rom->nth(0, 0) ==
-       ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)) &&
-      ((after->rom->nth((0 + 1), 0) ==
-        (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)) &&
-       ((after->rom->nth(((0 + 1) + 1), 0) ==
-         ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-          1)) &&
-        (after->rom->nth((((0 + 1) + 1) + 1), 0) ==
-         (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1)))));
+  static inline const bool t = ((after->rom->nth(0u, 0u) == 10u) &&
+                                ((after->rom->nth(1u, 0u) == 11u) &&
+                                 ((after->rom->nth(2u, 0u) == 12u) &&
+                                  (after->rom->nth(3u, 0u) == 13u))));
 };

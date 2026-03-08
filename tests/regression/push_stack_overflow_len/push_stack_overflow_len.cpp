@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> PushStackOverflowLen::stack(
-    const std::shared_ptr<PushStackOverflowLen::state> &s) {
-  return s->stack;
-}
-
 std::shared_ptr<PushStackOverflowLen::state> PushStackOverflowLen::push_stack(
     const std::shared_ptr<PushStackOverflowLen::state> &s,
     const unsigned int addr) {

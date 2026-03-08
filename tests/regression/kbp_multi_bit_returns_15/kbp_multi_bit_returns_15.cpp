@@ -10,91 +10,46 @@
 #include <string>
 #include <variant>
 
-unsigned int KbpMultiBitReturns15::acc(
-    const std::shared_ptr<KbpMultiBitReturns15::state> &s) {
-  return s->acc;
-}
-
 std::shared_ptr<KbpMultiBitReturns15::state> KbpMultiBitReturns15::execute_kbp(
     const std::shared_ptr<KbpMultiBitReturns15::state> &s) {
   unsigned int result;
   if (s->acc <= 0) {
-    result = 0;
+    result = 0u;
   } else {
     unsigned int n = s->acc - 1;
     if (n <= 0) {
-      result = (0 + 1);
+      result = 1u;
     } else {
       unsigned int n0 = n - 1;
       if (n0 <= 0) {
-        result = ((0 + 1) + 1);
+        result = 2u;
       } else {
         unsigned int n1 = n0 - 1;
         if (n1 <= 0) {
-          result =
-              (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1);
+          result = 15u;
         } else {
           unsigned int n2 = n1 - 1;
           if (n2 <= 0) {
-            result = (((0 + 1) + 1) + 1);
+            result = 3u;
           } else {
             unsigned int n3 = n2 - 1;
             if (n3 <= 0) {
-              result =
-                  (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1);
+              result = 15u;
             } else {
               unsigned int n4 = n3 - 1;
               if (n4 <= 0) {
-                result =
-                    (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1);
+                result = 15u;
               } else {
                 unsigned int n5 = n4 - 1;
                 if (n5 <= 0) {
-                  result =
-                      (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1);
+                  result = 15u;
                 } else {
                   unsigned int n6 = n5 - 1;
                   if (n6 <= 0) {
-                    result = ((((0 + 1) + 1) + 1) + 1);
+                    result = 4u;
                   } else {
                     unsigned int _x = n6 - 1;
-                    result =
-                        (((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1);
+                    result = 15u;
                   }
                 }
               }

@@ -131,81 +131,54 @@ struct RamWriteFrameDifferentChip {
 
   static inline const bank sample_bank = List<
       std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>>::ctor::
-      cons_(
-          List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
-              List<unsigned int>::ctor::cons_(
-                  (0 + 1),
-                  List<unsigned int>::ctor::cons_(
-                      ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
-                                         (((0 + 1) + 1) + 1),
-                                         List<unsigned int>::ctor::nil_()))),
-              List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
-                  List<unsigned int>::ctor::cons_(
-                      ((((0 + 1) + 1) + 1) + 1),
-                      List<unsigned int>::ctor::cons_(
-                          (((((0 + 1) + 1) + 1) + 1) + 1),
-                          List<unsigned int>::ctor::cons_(
-                              ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                              List<unsigned int>::ctor::nil_()))),
-                  List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())),
-          List<std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>>::
-              ctor::cons_(
-                  List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
-                      List<unsigned int>::ctor::cons_(
-                          (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                          List<unsigned int>::ctor::cons_(
-                              ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                              List<unsigned int>::ctor::cons_(
-                                  (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                     1) +
-                                    1) +
-                                   1),
-                                  List<unsigned int>::ctor::nil_()))),
-                      List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
-                          List<unsigned int>::ctor::cons_(
-                              ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                                 1) +
-                                1) +
-                               1),
-                              List<unsigned int>::ctor::cons_(
-                                  (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1),
-                                  List<unsigned int>::ctor::cons_(
-                                      ((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
-                                             1) +
-                                            1) +
-                                           1) +
-                                          1) +
-                                         1) +
-                                        1) +
-                                       1),
-                                      List<unsigned int>::ctor::nil_()))),
-                          List<std::shared_ptr<List<unsigned int>>>::ctor::
-                              nil_())),
-                  List<std::shared_ptr<List<
-                      std::shared_ptr<List<unsigned int>>>>>::ctor::nil_()));
+      cons_(List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
+                List<unsigned int>::ctor::cons_(
+                    1u, List<unsigned int>::ctor::cons_(
+                            2u, List<unsigned int>::ctor::cons_(
+                                    3u, List<unsigned int>::ctor::nil_()))),
+                List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
+                    List<unsigned int>::ctor::cons_(
+                        4u, List<unsigned int>::ctor::cons_(
+                                5u, List<unsigned int>::ctor::cons_(
+                                        6u, List<unsigned int>::ctor::nil_()))),
+                    List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())),
+            List<std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>>::
+                ctor::cons_(
+                    List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
+                        List<unsigned int>::ctor::cons_(
+                            7u,
+                            List<unsigned int>::ctor::cons_(
+                                8u, List<unsigned int>::ctor::cons_(
+                                        9u, List<unsigned int>::ctor::nil_()))),
+                        List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
+                            List<unsigned int>::ctor::cons_(
+                                10u,
+                                List<unsigned int>::ctor::cons_(
+                                    11u,
+                                    List<unsigned int>::ctor::cons_(
+                                        12u,
+                                        List<unsigned int>::ctor::nil_()))),
+                            List<std::shared_ptr<List<unsigned int>>>::ctor::
+                                nil_())),
+                    List<std::shared_ptr<List<
+                        std::shared_ptr<List<unsigned int>>>>>::ctor::nil_()));
 
   static inline const bank updated_bank = [](void) {
     std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> ch =
         sample_bank->nth(
-            0, List<std::shared_ptr<List<unsigned int>>>::ctor::nil_());
+            0u, List<std::shared_ptr<List<unsigned int>>>::ctor::nil_());
     std::shared_ptr<List<unsigned int>> rg =
-        std::move(ch)->nth((0 + 1), List<unsigned int>::ctor::nil_());
- std::shared_ptr<List<unsigned int>> rg_ = upd_main_in_reg(std::move(rg), ((0 + 1) + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
- std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> ch_ =
-     upd_reg_in_chip(std::move(ch), (0 + 1), std::move(rg_));
- return upd_chip_in_bank(sample_bank, 0, std::move(ch_));
+        std::move(ch)->nth(1u, List<unsigned int>::ctor::nil_());
+    std::shared_ptr<List<unsigned int>> rg_ =
+        upd_main_in_reg(std::move(rg), 2u, 99u);
+    std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> ch_ =
+        upd_reg_in_chip(std::move(ch), 1u, std::move(rg_));
+    return upd_chip_in_bank(sample_bank, 0u, std::move(ch_));
   }();
 
   static inline const bool t =
       (updated_bank
-           ->nth((0 + 1),
-                 List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())
-           ->nth(0, List<unsigned int>::ctor::nil_())
-           ->nth(((0 + 1) + 1), 0) ==
-       (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+           ->nth(1u, List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())
+           ->nth(0u, List<unsigned int>::ctor::nil_())
+           ->nth(2u, 0u) == 7u);
 };

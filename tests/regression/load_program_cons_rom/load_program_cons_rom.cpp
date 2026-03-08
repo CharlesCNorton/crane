@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-LoadProgramConsRom::rom(const std::shared_ptr<LoadProgramConsRom::state> &s) {
-  return s->rom;
-}
-
-unsigned int LoadProgramConsRom::prom_addr(
-    const std::shared_ptr<LoadProgramConsRom::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int LoadProgramConsRom::prom_data(
-    const std::shared_ptr<LoadProgramConsRom::state> &s) {
-  return s->prom_data;
-}
-
-bool LoadProgramConsRom::prom_enable(
-    const std::shared_ptr<LoadProgramConsRom::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<LoadProgramConsRom::state> LoadProgramConsRom::set_prom_params(
     std::shared_ptr<LoadProgramConsRom::state> s, const unsigned int addr,
     const unsigned int data, const bool enable) {
@@ -65,7 +45,7 @@ std::shared_ptr<LoadProgramConsRom::state> LoadProgramConsRom::load_program(
                        set_prom_params(std::move(s), base, std::move(b), true);
                    std::shared_ptr<LoadProgramConsRom::state> s__ =
                        execute_wpm(std::move(s_));
-                   return load_program(std::move(s__), (base + (0 + 1)),
+                   return load_program(std::move(s__), (base + 1u),
                                        std::move(rest));
                  }},
       bytes->v());

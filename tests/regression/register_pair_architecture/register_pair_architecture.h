@@ -65,7 +65,7 @@ public:
   }
 };
 
-struct Nat {
+struct PeanoNat {
   static bool eqb(const unsigned int n, const unsigned int m);
 
   static bool leb(const unsigned int n, const unsigned int m);
@@ -90,14 +90,8 @@ struct RegisterPairArchitecture {
 
   static bool pair_property(const unsigned int r);
 
-  static inline const std::shared_ptr<List<unsigned int>> regs = ListDef::seq(
-      0,
-      ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
+  static inline const std::shared_ptr<List<unsigned int>> regs =
+      ListDef::seq(0u, 16u);
 
   static inline const bool t = regs->forallb(pair_property);
 };

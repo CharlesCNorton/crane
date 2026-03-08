@@ -21,7 +21,5 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct RegPairEvenProjection {
   static unsigned int pair_base(const unsigned int r);
 
-  static inline const bool t =
-      (pair_base(((((((0 + 1) + 1) + 1) + 1) + 1) + 1)) ==
-       ((((((0 + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool t = (pair_base(6u) == 6u);
 };

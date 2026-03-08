@@ -174,7 +174,6 @@ struct MinCyclesPerInstruction {
                                           instr::ISZZero,
                                           List<instr>::ctor::nil_())))))))));
 
-  static inline const bool t = all_instrs->forallb([](instr i) {
-    return (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) <= cycles(i));
-  });
+  static inline const bool t =
+      all_instrs->forallb([](instr i) { return (8u <= cycles(i)); });
 };

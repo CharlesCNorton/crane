@@ -15,39 +15,30 @@ std::shared_ptr<RepeatEmptyChipWfProp::state>
 RepeatEmptyChipWfProp::reset_state(
     std::shared_ptr<RepeatEmptyChipWfProp::state> s) {
   return std::make_shared<RepeatEmptyChipWfProp::state>(
-      state{s->state_regs, 0, false, 0, List<unsigned int>::ctor::nil_(),
+      state{s->state_regs, 0u, false, 0u, List<unsigned int>::ctor::nil_(),
             s->state_ram, default_sel, s->state_rom});
 }
 
 unsigned int RepeatEmptyChipWfProp::get_main(
     const std::shared_ptr<RepeatEmptyChipWfProp::ram_reg> &rg,
     const unsigned int i) {
-  return rg->reg_main->nth(i, 0);
+  return rg->reg_main->nth(i, 0u);
 }
 
 unsigned int RepeatEmptyChipWfProp::get_stat(
     const std::shared_ptr<RepeatEmptyChipWfProp::ram_reg> &rg,
     const unsigned int i) {
-  return rg->reg_status->nth(i, 0);
+  return rg->reg_status->nth(i, 0u);
 }
 
 std::shared_ptr<RepeatEmptyChipWfProp::ram_reg>
 RepeatEmptyChipWfProp::upd_main_in_reg(
     std::shared_ptr<RepeatEmptyChipWfProp::ram_reg> rg, const unsigned int i,
     const unsigned int v) {
-  return std::make_shared<RepeatEmptyChipWfProp::ram_reg>(ram_reg{
-      update_nth<unsigned int>(
-          std::move(i),
-          (std::move(v) %
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)),
-          rg->reg_main),
-      rg->reg_status});
+  return std::make_shared<RepeatEmptyChipWfProp::ram_reg>(
+      ram_reg{update_nth<unsigned int>(std::move(i), (std::move(v) % 16u),
+                                       rg->reg_main),
+              rg->reg_status});
 }
 
 std::shared_ptr<RepeatEmptyChipWfProp::ram_reg>
@@ -55,18 +46,8 @@ RepeatEmptyChipWfProp::upd_stat_in_reg(
     std::shared_ptr<RepeatEmptyChipWfProp::ram_reg> rg, const unsigned int i,
     const unsigned int v) {
   return std::make_shared<RepeatEmptyChipWfProp::ram_reg>(ram_reg{
-      rg->reg_main,
-      update_nth<unsigned int>(
-          std::move(i),
-          (std::move(v) %
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)),
-          rg->reg_status)});
+      rg->reg_main, update_nth<unsigned int>(std::move(i), (std::move(v) % 16u),
+                                             rg->reg_status)});
 }
 
 std::shared_ptr<RepeatEmptyChipWfProp::ram_reg>
@@ -89,16 +70,8 @@ RepeatEmptyChipWfProp::upd_reg_in_chip(
 std::shared_ptr<RepeatEmptyChipWfProp::ram_chip>
 RepeatEmptyChipWfProp::upd_port_in_chip(
     std::shared_ptr<RepeatEmptyChipWfProp::ram_chip> ch, const unsigned int v) {
-  return std::make_shared<RepeatEmptyChipWfProp::ram_chip>(ram_chip{
-      std::move(ch)->chip_regs,
-      (std::move(v) %
-       ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-             1) +
-            1) +
-           1) +
-          1) +
-         1) +
-        1))});
+  return std::make_shared<RepeatEmptyChipWfProp::ram_chip>(
+      ram_chip{std::move(ch)->chip_regs, (std::move(v) % 16u)});
 }
 
 std::shared_ptr<RepeatEmptyChipWfProp::ram_chip>

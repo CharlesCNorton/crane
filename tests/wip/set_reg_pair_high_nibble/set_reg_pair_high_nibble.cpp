@@ -11,15 +11,10 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetRegPairHighNibble::regs(
-    const std::shared_ptr<SetRegPairHighNibble::state> &s) {
-  return s->regs;
-}
-
 unsigned int SetRegPairHighNibble::get_reg(
     const std::shared_ptr<SetRegPairHighNibble::state> &s,
     const unsigned int r) {
-  return s->regs->nth(r, 0);
+  return s->regs->nth(r, 0u);
 }
 
 std::shared_ptr<List<unsigned int>>
@@ -36,26 +31,11 @@ SetRegPairHighNibble::update_nth_nat(const unsigned int n, const unsigned int x,
 std::shared_ptr<SetRegPairHighNibble::state> SetRegPairHighNibble::set_reg_pair(
     std::shared_ptr<SetRegPairHighNibble::state> s, const unsigned int r,
     const unsigned int v) {
-  unsigned int base =
-      (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
-  unsigned int hi = Nat::div(
-      v,
-      ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
-  unsigned int lo =
-      (v % ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1));
+  unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
+  unsigned int hi = Nat::div(v, 16u);
+  unsigned int lo = (v % 16u);
   return std::make_shared<SetRegPairHighNibble::state>(state{
-      update_nth_nat((base + (0 + 1)), std::move(lo),
+      update_nth_nat((base + 1u), std::move(lo),
                      update_nth_nat(base, std::move(hi), std::move(s)->regs))});
 }
 
@@ -81,6 +61,6 @@ unsigned int Nat::div(const unsigned int x, const unsigned int y) {
     return std::move(y);
   } else {
     unsigned int y_ = y - 1;
-    return Nat::divmod(x, y_, 0, y_).first;
+    return Nat::divmod(x, y_, 0u, y_).first;
   }
 }

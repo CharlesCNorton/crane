@@ -127,16 +127,6 @@ struct SrcWrrUpdatesRomPort {
     unsigned int sel_rom;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom_ports(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_rom(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -151,39 +141,27 @@ struct SrcWrrUpdatesRomPort {
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{
           List<unsigned int>::ctor::cons_(
-              0,
+              0u,
               List<unsigned int>::ctor::cons_(
-                  0,
+                  0u,
                   List<unsigned int>::ctor::cons_(
-                      ((0 + 1) + 1),
+                      2u,
                       List<unsigned int>::ctor::cons_(
-                          (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                             1) +
-                            1) +
-                           1),
+                          11u,
                           List<unsigned int>::ctor::cons_(
-                              0, List<unsigned int>::ctor::cons_(
-                                     0, List<unsigned int>::ctor::nil_())))))),
-          (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-             1) +
-            1) +
-           1),
+                              0u,
+                              List<unsigned int>::ctor::cons_(
+                                  0u, List<unsigned int>::ctor::nil_())))))),
+          13u,
           List<unsigned int>::ctor::cons_(
-              (0 + 1), List<unsigned int>::ctor::cons_(
-                           ((0 + 1) + 1),
-                           List<unsigned int>::ctor::cons_(
-                               (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                               List<unsigned int>::ctor::cons_(
-                                   ((((0 + 1) + 1) + 1) + 1),
-                                   List<unsigned int>::ctor::nil_())))),
-          0});
+              1u, List<unsigned int>::ctor::cons_(
+                      2u, List<unsigned int>::ctor::cons_(
+                              7u, List<unsigned int>::ctor::cons_(
+                                      4u, List<unsigned int>::ctor::nil_())))),
+          0u});
 
   static inline const std::shared_ptr<state> after =
-      execute_wrr(execute_src(sample, (((0 + 1) + 1) + 1)));
+      execute_wrr(execute_src(sample, 3u));
 
-  static inline const bool t =
-      (after->rom_ports->nth(((0 + 1) + 1), 0) ==
-       (((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-         1) +
-        1));
+  static inline const bool t = (after->rom_ports->nth(2u, 0u) == 13u);
 };

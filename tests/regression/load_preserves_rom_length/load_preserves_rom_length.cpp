@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> LoadPreservesRomLength::rom(
-    const std::shared_ptr<LoadPreservesRomLength::state> &s) {
-  return s->rom;
-}
-
-unsigned int LoadPreservesRomLength::prom_addr(
-    const std::shared_ptr<LoadPreservesRomLength::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int LoadPreservesRomLength::prom_data(
-    const std::shared_ptr<LoadPreservesRomLength::state> &s) {
-  return s->prom_data;
-}
-
-bool LoadPreservesRomLength::prom_enable(
-    const std::shared_ptr<LoadPreservesRomLength::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<LoadPreservesRomLength::state>
 LoadPreservesRomLength::set_prom_params(
     std::shared_ptr<LoadPreservesRomLength::state> s, const unsigned int addr,
@@ -68,7 +48,7 @@ LoadPreservesRomLength::load_program(
                        set_prom_params(std::move(s), base, std::move(b), true);
                    std::shared_ptr<LoadPreservesRomLength::state> s__ =
                        execute_wpm(std::move(s_));
-                   return load_program(std::move(s__), (base + (0 + 1)),
+                   return load_program(std::move(s__), (base + 1u),
                                        std::move(rest));
                  }},
       bytes->v());

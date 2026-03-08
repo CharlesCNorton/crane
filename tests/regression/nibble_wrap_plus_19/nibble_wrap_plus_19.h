@@ -21,15 +21,5 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct NibbleWrapPlus19 {
   static unsigned int nibble_of_nat(const unsigned int n);
 
-  static inline const unsigned int t = nibble_of_nat(
-      (((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1));
+  static inline const unsigned int t = nibble_of_nat(19u);
 };

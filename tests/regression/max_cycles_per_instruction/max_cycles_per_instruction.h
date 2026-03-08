@@ -174,24 +174,6 @@ struct MaxCyclesPerInstruction {
                                           instr::ISZZero,
                                           List<instr>::ctor::nil_())))))))));
 
-  static inline const bool t = all_instrs->forallb([](instr i) {
-    return (
-        cycles(i) <=
-        ((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1) +
-         1));
-  });
+  static inline const bool t =
+      all_instrs->forallb([](instr i) { return (cycles(i) <= 24u); });
 };

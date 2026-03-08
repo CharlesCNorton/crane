@@ -118,16 +118,6 @@ struct WrmThenRdmReadsBack {
     unsigned int sel_char;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  ram(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_char(const std::shared_ptr<state> &s);
-
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
 
@@ -144,32 +134,30 @@ struct WrmThenRdmReadsBack {
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{
           List<unsigned int>::ctor::cons_(
-              0,
+              0u,
               List<unsigned int>::ctor::cons_(
-                  0,
+                  0u,
                   List<unsigned int>::ctor::cons_(
-                      (0 + 1),
+                      1u,
                       List<unsigned int>::ctor::cons_(
-                          (((0 + 1) + 1) + 1),
+                          3u,
                           List<unsigned int>::ctor::cons_(
-                              0, List<unsigned int>::ctor::cons_(
-                                     0, List<unsigned int>::ctor::nil_())))))),
-          ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-           1),
+                              0u, List<unsigned int>::ctor::cons_(
+                                      0u,
+                                      List<unsigned int>::ctor::nil_())))))),
+          12u,
           List<unsigned int>::ctor::cons_(
-              0, List<unsigned int>::ctor::cons_(
-                     0, List<unsigned int>::ctor::cons_(
-                            0, List<unsigned int>::ctor::cons_(
-                                   (((((0 + 1) + 1) + 1) + 1) + 1),
-                                   List<unsigned int>::ctor::cons_(
-                                       0, List<unsigned int>::ctor::nil_()))))),
-          0});
+              0u,
+              List<unsigned int>::ctor::cons_(
+                  0u,
+                  List<unsigned int>::ctor::cons_(
+                      0u, List<unsigned int>::ctor::cons_(
+                              5u, List<unsigned int>::ctor::cons_(
+                                      0u, List<unsigned int>::ctor::nil_()))))),
+          0u});
 
   static inline const std::shared_ptr<state> roundtrip =
-      execute_rdm(execute_wrm(execute_src(sample, (((0 + 1) + 1) + 1))));
+      execute_rdm(execute_wrm(execute_src(sample, 3u)));
 
-  static inline const bool t =
-      (roundtrip->acc ==
-       ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-        1));
+  static inline const bool t = (roundtrip->acc == 12u);
 };

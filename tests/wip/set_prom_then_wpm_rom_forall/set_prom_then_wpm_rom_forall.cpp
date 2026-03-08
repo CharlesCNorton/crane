@@ -10,26 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> SetPromThenWpmRomForall::rom(
-    const std::shared_ptr<SetPromThenWpmRomForall::state> &s) {
-  return s->rom;
-}
-
-unsigned int SetPromThenWpmRomForall::prom_addr(
-    const std::shared_ptr<SetPromThenWpmRomForall::state> &s) {
-  return s->prom_addr;
-}
-
-unsigned int SetPromThenWpmRomForall::prom_data(
-    const std::shared_ptr<SetPromThenWpmRomForall::state> &s) {
-  return s->prom_data;
-}
-
-bool SetPromThenWpmRomForall::prom_enable(
-    const std::shared_ptr<SetPromThenWpmRomForall::state> &s) {
-  return s->prom_enable;
-}
-
 std::shared_ptr<SetPromThenWpmRomForall::state>
 SetPromThenWpmRomForall::set_prom_params(
     std::shared_ptr<SetPromThenWpmRomForall::state> s, const unsigned int addr,

@@ -11,11 +11,6 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>>
-PopStackSomeAddr::stack(const std::shared_ptr<PopStackSomeAddr::state> &s) {
-  return s->stack;
-}
-
 std::pair<std::optional<unsigned int>, std::shared_ptr<PopStackSomeAddr::state>>
 PopStackSomeAddr::pop_stack(std::shared_ptr<PopStackSomeAddr::state> s) {
   return std::visit(
@@ -43,6 +38,6 @@ PopStackSomeAddr::option_or_zero(const std::optional<unsigned int> o) {
     unsigned int n = *o;
     return n;
   } else {
-    return 0;
+    return 0u;
   }
 }

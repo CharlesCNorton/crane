@@ -65,18 +65,6 @@ struct SetPromPreservesRegs {
     bool prom_enable;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  regs(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_addr(const std::shared_ptr<state> &s);
-
-  static unsigned int prom_data(const std::shared_ptr<state> &s);
-
-  static bool prom_enable(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> set_prom_params(std::shared_ptr<state> s,
                                                 const unsigned int addr,
                                                 const unsigned int data,
@@ -84,17 +72,14 @@ struct SetPromPreservesRegs {
 
   static inline const std::shared_ptr<state> sample = std::make_shared<state>(
       state{List<unsigned int>::ctor::cons_(
-                (0 + 1),
-                List<unsigned int>::ctor::cons_(
-                    ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
-                                       (((0 + 1) + 1) + 1),
-                                       List<unsigned int>::ctor::nil_()))),
+                1u, List<unsigned int>::ctor::cons_(
+                        2u, List<unsigned int>::ctor::cons_(
+                                3u, List<unsigned int>::ctor::nil_()))),
             List<unsigned int>::ctor::cons_(
-                (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                List<unsigned int>::ctor::cons_(
-                    ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                    List<unsigned int>::ctor::nil_())),
-            0, 0, false});
+                9u, List<unsigned int>::ctor::cons_(
+                        8u, List<unsigned int>::ctor::nil_())),
+            0u, 0u, false});
 
- static inline const bool t = nat_list_eqb(set_prom_params(sample, ((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1), true)->regs, sample->regs);
+  static inline const bool t =
+      nat_list_eqb(set_prom_params(sample, 12u, 99u, true)->regs, sample->regs);
 };

@@ -34,6 +34,6 @@ JumpTargetSomeJms::option_nat_or_zero(const std::optional<unsigned int> o) {
     unsigned int n = *o;
     return n;
   } else {
-    return 0;
+    return 0u;
   }
 }

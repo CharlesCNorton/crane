@@ -58,19 +58,15 @@ struct PushStackOverflowHead {
     std::shared_ptr<List<unsigned int>> stack;
   };
 
-  static std::shared_ptr<List<unsigned int>>
-  stack(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> push_stack(const std::shared_ptr<state> &s,
                                            const unsigned int addr);
 
   static unsigned int top_or_zero(const std::shared_ptr<state> &s);
 
-  static inline const unsigned int t = top_or_zero(push_stack(
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
-          (0 + 1), List<unsigned int>::ctor::cons_(
-                       ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
-                                          (((0 + 1) + 1) + 1),
-                                          List<unsigned int>::ctor::nil_())))}),
-      (((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1)));
+  static inline const unsigned int t = top_or_zero(
+      push_stack(std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+                     1u, List<unsigned int>::ctor::cons_(
+                             2u, List<unsigned int>::ctor::cons_(
+                                     3u, List<unsigned int>::ctor::nil_())))}),
+                 9u));
 };

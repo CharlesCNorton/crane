@@ -10,11 +10,6 @@
 #include <string>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> PushStackOverflowHead::stack(
-    const std::shared_ptr<PushStackOverflowHead::state> &s) {
-  return s->stack;
-}
-
 std::shared_ptr<PushStackOverflowHead::state> PushStackOverflowHead::push_stack(
     const std::shared_ptr<PushStackOverflowHead::state> &s,
     const unsigned int addr) {
@@ -87,7 +82,7 @@ unsigned int PushStackOverflowHead::top_or_zero(
   return std::visit(
       Overloaded{
           [](const typename List<unsigned int>::nil _args) -> unsigned int {
-            return 0;
+            return 0u;
           },
           [](const typename List<unsigned int>::cons _args) -> unsigned int {
             unsigned int x = _args._a0;

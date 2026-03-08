@@ -116,102 +116,20 @@ struct RamWriteMainPreservesOtherBank {
   };
 
   static std::shared_ptr<List<unsigned int>>
-  ram_sys(const std::shared_ptr<state> &s);
-
-  static unsigned int cur_bank(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
   ram_write_main_sys(const std::shared_ptr<state> &s, const unsigned int v);
 
   static std::shared_ptr<state> execute_write(std::shared_ptr<state> s,
                                               const unsigned int v);
 
-  static inline const std::shared_ptr<state> sample = std::make_shared<
-      state>(state{
-      List<unsigned int>::ctor::cons_(
-          ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-          List<unsigned int>::ctor::cons_(
-              ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1),
-              List<unsigned int>::ctor::cons_(
-                  ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
-                                           1) +
-                                          1) +
-                                         1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1),
-                  List<unsigned int>::ctor::cons_(
-                      ((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) +
-                                                           1) +
-                                                          1) +
-                                                         1) +
-                                                        1) +
-                                                       1) +
-                                                      1) +
-                                                     1) +
-                                                    1) +
-                                                   1) +
-                                                  1) +
-                                                 1) +
-                                                1) +
-                                               1) +
-                                              1) +
-                                             1) +
-                                            1) +
-                                           1) +
-                                          1) +
-                                         1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1),
-                      List<unsigned int>::ctor::nil_())))),
-      (0 + 1)});
+  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
+      state{List<unsigned int>::ctor::cons_(
+                10u,
+                List<unsigned int>::ctor::cons_(
+                    20u, List<unsigned int>::ctor::cons_(
+                             30u, List<unsigned int>::ctor::cons_(
+                                      40u, List<unsigned int>::ctor::nil_())))),
+            1u});
 
- static inline const bool t = (execute_write(sample, (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1))->ram_sys->nth((((0 + 1) + 1) + 1), 0) == ((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+  static inline const bool t =
+      (execute_write(sample, 99u)->ram_sys->nth(3u, 0u) == 40u);
 };

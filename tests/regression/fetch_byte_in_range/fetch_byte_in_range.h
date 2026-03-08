@@ -79,55 +79,10 @@ struct FetchByteInRange {
   static unsigned int fetch_byte(const std::shared_ptr<List<unsigned int>> &rom,
                                  const unsigned int addr);
 
-  static inline const unsigned int t = fetch_byte(
-      List<unsigned int>::ctor::cons_(
-          (((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-          List<unsigned int>::ctor::cons_(
-              ((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1),
-              List<unsigned int>::ctor::cons_(
-                  (((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
-                                              1) +
-                                             1) +
-                                            1) +
-                                           1) +
-                                          1) +
-                                         1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1),
-                  List<unsigned int>::ctor::nil_()))),
-      (0 + 1));
+  static inline const unsigned int t =
+      fetch_byte(List<unsigned int>::ctor::cons_(
+                     11u, List<unsigned int>::ctor::cons_(
+                              22u, List<unsigned int>::ctor::cons_(
+                                       33u, List<unsigned int>::ctor::nil_()))),
+                 1u);
 };

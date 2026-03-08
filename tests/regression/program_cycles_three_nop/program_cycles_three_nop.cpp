@@ -10,15 +10,10 @@
 #include <string>
 #include <variant>
 
-unsigned int ProgramCyclesThreeNop::acc(
-    const std::shared_ptr<ProgramCyclesThreeNop::state> &s) {
-  return s->acc;
-}
-
 unsigned int ProgramCyclesThreeNop::cycles(
     const std::shared_ptr<ProgramCyclesThreeNop::state> &_x,
     const ProgramCyclesThreeNop::instruction _x0) {
-  return ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+  return 8u;
 }
 
 unsigned int ProgramCyclesThreeNop::program_cycles(
@@ -27,7 +22,7 @@ unsigned int ProgramCyclesThreeNop::program_cycles(
   return std::visit(
       Overloaded{
           [](const typename List<ProgramCyclesThreeNop::instruction>::nil _args)
-              -> unsigned int { return 0; },
+              -> unsigned int { return 0u; },
           [&](const typename List<ProgramCyclesThreeNop::instruction>::cons
                   _args) -> unsigned int {
             ProgramCyclesThreeNop::instruction i = _args._a0;

@@ -22,8 +22,4 @@ struct ValidLayoutSmallProp {
     unsigned int base_addr;
     unsigned int code_size;
   };
-
-  static unsigned int base_addr(const std::shared_ptr<layout> &l);
-
-  static unsigned int code_size(const std::shared_ptr<layout> &l);
 };

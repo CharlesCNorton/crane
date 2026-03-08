@@ -11,36 +11,17 @@
 #include <utility>
 #include <variant>
 
-std::shared_ptr<List<unsigned int>> LdPreservesAllPairs::regs(
-    const std::shared_ptr<LdPreservesAllPairs::state> &s) {
-  return s->regs;
-}
-
-unsigned int
-LdPreservesAllPairs::acc(const std::shared_ptr<LdPreservesAllPairs::state> &s) {
-  return s->acc;
-}
-
 unsigned int LdPreservesAllPairs::get_reg(
     const std::shared_ptr<LdPreservesAllPairs::state> &s,
     const unsigned int r) {
-  return s->regs->nth(r, 0);
+  return s->regs->nth(r, 0u);
 }
 
 unsigned int LdPreservesAllPairs::get_reg_pair(
     const std::shared_ptr<LdPreservesAllPairs::state> &s,
     const unsigned int r) {
-  unsigned int base =
-      (((r - (r % ((0 + 1) + 1))) > r ? 0 : (r - (r % ((0 + 1) + 1)))));
-  return ((get_reg(s, base) *
-           ((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1)) +
-          get_reg(s, (base + (0 + 1))));
+  unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
+  return ((get_reg(s, base) * 16u) + get_reg(s, (base + 1u)));
 }
 
 std::shared_ptr<LdPreservesAllPairs::state>

@@ -664,200 +664,52 @@ struct ExecuteDaaWfProp {
   static std::shared_ptr<state> execute(std::shared_ptr<state> s,
                                         const std::shared_ptr<instr> &i);
 
-  static inline const std::shared_ptr<state> sample = std::make_shared<
-      state>(state{
-      (((0 + 1) + 1) + 1),
-      List<unsigned int>::ctor::cons_(
-          (0 + 1),
+  static inline const std::shared_ptr<state> sample =
+      std::make_shared<state>(state{
+          3u,
           List<unsigned int>::ctor::cons_(
-              ((0 + 1) + 1),
+              1u,
               List<unsigned int>::ctor::cons_(
-                  (((0 + 1) + 1) + 1),
+                  2u,
                   List<unsigned int>::ctor::cons_(
-                      ((((0 + 1) + 1) + 1) + 1),
+                      3u,
                       List<unsigned int>::ctor::cons_(
-                          (((((0 + 1) + 1) + 1) + 1) + 1),
+                          4u,
                           List<unsigned int>::ctor::cons_(
-                              ((((((0 + 1) + 1) + 1) + 1) + 1) + 1),
-                              List<unsigned int>::ctor::cons_(
-                                  (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-                                  List<unsigned int>::ctor::cons_(
-                                      ((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                        1) +
-                                       1),
+                              5u, List<unsigned int>::ctor::cons_(
+                                      6u,
                                       List<unsigned int>::ctor::cons_(
-                                          (((((((((0 + 1) + 1) + 1) + 1) + 1) +
-                                              1) +
-                                             1) +
-                                            1) +
-                                           1),
+                                          7u,
                                           List<unsigned int>::ctor::cons_(
-                                              ((((((((((0 + 1) + 1) + 1) + 1) +
-                                                    1) +
-                                                   1) +
-                                                  1) +
-                                                 1) +
-                                                1) +
-                                               1),
+                                              8u,
                                               List<unsigned int>::ctor::cons_(
-                                                  (((((((((((0 + 1) + 1) + 1) +
-                                                          1) +
-                                                         1) +
-                                                        1) +
-                                                       1) +
-                                                      1) +
-                                                     1) +
-                                                    1) +
-                                                   1),
+                                                  9u,
                                                   List<unsigned int>::ctor::cons_(
-                                                      ((((((((((((0 + 1) + 1) +
-                                                                1) +
-                                                               1) +
-                                                              1) +
-                                                             1) +
-                                                            1) +
-                                                           1) +
-                                                          1) +
-                                                         1) +
-                                                        1) +
-                                                       1),
+                                                      10u,
                                                       List<unsigned int>::ctor::cons_(
-                                                          (((((((((((((0 + 1) +
-                                                                      1) +
-                                                                     1) +
-                                                                    1) +
-                                                                   1) +
-                                                                  1) +
-                                                                 1) +
-                                                                1) +
-                                                               1) +
-                                                              1) +
-                                                             1) +
-                                                            1) +
-                                                           1),
+                                                          11u,
                                                           List<unsigned int>::ctor::cons_(
-                                                              ((((((((((((((0 +
-                                                                            1) +
-                                                                           1) +
-                                                                          1) +
-                                                                         1) +
-                                                                        1) +
-                                                                       1) +
-                                                                      1) +
-                                                                     1) +
-                                                                    1) +
-                                                                   1) +
-                                                                  1) +
-                                                                 1) +
-                                                                1) +
-                                                               1),
+                                                              12u,
                                                               List<unsigned int>::ctor::cons_(
-                                                                  (((((((((((((((0 +
-                                                                                 1) +
-                                                                                1) +
-                                                                               1) +
-                                                                              1) +
-                                                                             1) +
-                                                                            1) +
-                                                                           1) +
-                                                                          1) +
-                                                                         1) +
-                                                                        1) +
-                                                                       1) +
-                                                                      1) +
-                                                                     1) +
-                                                                    1) +
-                                                                   1),
+                                                                  13u,
                                                                   List<unsigned int>::ctor::cons_(
-                                                                      0,
-                                                                      List<
-                                                                          unsigned int>::ctor::
-                                                                          nil_())))))))))))))))),
-      false, ((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-      List<unsigned int>::ctor::cons_(
-          ((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1),
+                                                                      14u,
+                                                                      List<unsigned int>::ctor::cons_(
+                                                                          15u,
+                                                                          List<unsigned int>::ctor::cons_(
+                                                                              0u,
+                                                                              List<
+                                                                                  unsigned int>::ctor::
+                                                                                  nil_())))))))))))))))),
+          false, 10u,
           List<unsigned int>::ctor::cons_(
-              ((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1),
-              List<unsigned int>::ctor::nil_())),
-      ((((((((((((((((((((((((((((((((((((((((((0 + 1) + 1) + 1) + 1) + 1) +
-                                           1) +
-                                          1) +
-                                         1) +
-                                        1) +
-                                       1) +
-                                      1) +
-                                     1) +
-                                    1) +
-                                   1) +
-                                  1) +
-                                 1) +
-                                1) +
-                               1) +
-                              1) +
-                             1) +
-                            1) +
-                           1) +
-                          1) +
-                         1) +
-                        1) +
-                       1) +
-                      1) +
-                     1) +
-                    1) +
-                   1) +
-                  1) +
-                 1) +
-                1) +
-               1) +
-              1) +
-             1) +
-            1) +
-           1) +
-          1) +
-         1) +
-        1) +
-       1),
-      List<unsigned int>::ctor::cons_(
-          (0 + 1),
+              20u, List<unsigned int>::ctor::cons_(
+                       30u, List<unsigned int>::ctor::nil_())),
+          42u,
           List<unsigned int>::ctor::cons_(
-              ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
-                                 (((0 + 1) + 1) + 1),
-                                 List<unsigned int>::ctor::cons_(
-                                     ((((0 + 1) + 1) + 1) + 1),
-                                     List<unsigned int>::ctor::nil_()))))});
+              1u,
+              List<unsigned int>::ctor::cons_(
+                  2u, List<unsigned int>::ctor::cons_(
+                          3u, List<unsigned int>::ctor::cons_(
+                                  4u, List<unsigned int>::ctor::nil_()))))});
 };

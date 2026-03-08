@@ -117,27 +117,18 @@ struct WrrPreservesOtherPorts {
     unsigned int sel_rom;
   };
 
-  static unsigned int acc(const std::shared_ptr<state> &s);
-
-  static std::shared_ptr<List<unsigned int>>
-  rom_ports(const std::shared_ptr<state> &s);
-
-  static unsigned int sel_rom(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<state> execute_wrr(std::shared_ptr<state> s);
 
-  static inline const std::shared_ptr<state> sample = std::make_shared<state>(
-      state{(((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1),
-            List<unsigned int>::ctor::cons_(
-                (0 + 1),
-                List<unsigned int>::ctor::cons_(
-                    ((0 + 1) + 1), List<unsigned int>::ctor::cons_(
-                                       (((0 + 1) + 1) + 1),
-                                       List<unsigned int>::ctor::cons_(
-                                           ((((0 + 1) + 1) + 1) + 1),
-                                           List<unsigned int>::ctor::nil_())))),
-            ((0 + 1) + 1)});
+  static inline const std::shared_ptr<state> sample =
+      std::make_shared<state>(state{
+          11u,
+          List<unsigned int>::ctor::cons_(
+              1u, List<unsigned int>::ctor::cons_(
+                      2u, List<unsigned int>::ctor::cons_(
+                              3u, List<unsigned int>::ctor::cons_(
+                                      4u, List<unsigned int>::ctor::nil_())))),
+          2u});
 
   static inline const bool t =
-      (execute_wrr(sample)->rom_ports->nth(0, 0) == (0 + 1));
+      (execute_wrr(sample)->rom_ports->nth(0u, 0u) == 1u);
 };

@@ -34,9 +34,6 @@
   (deps mutual_coind.t.exe)
   (action (run ./mutual_coind.t.exe))))
 
-
-
-
 (subdir coind_guard
  (rule
   (targets coind_guard.t.exe)
@@ -59,72 +56,6 @@
   (deps monadic.t.exe)
   (action (run ./monadic.t.exe))))
 
-(subdir disassemble_drop_window
- (rule
-  (targets disassemble_drop_window.t.exe)
-  (deps DisassembleDropWindow.vo disassemble_drop_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} disassemble_drop_window.t.exe disassemble_drop_window.cpp disassemble_drop_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps disassemble_drop_window.t.exe)
-  (action (run ./disassemble_drop_window.t.exe))))
-
-(subdir fetch_window_next_ptr
- (rule
-  (targets fetch_window_next_ptr.t.exe)
-  (deps FetchWindowNextPtr.vo fetch_window_next_ptr.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} fetch_window_next_ptr.t.exe fetch_window_next_ptr.cpp fetch_window_next_ptr.t.cpp)))
- (rule
-  (alias runtest)
-  (deps fetch_window_next_ptr.t.exe)
-  (action (run ./fetch_window_next_ptr.t.exe))))
-
-(subdir prom_params_update
- (rule
-  (targets prom_params_update.t.exe)
-  (deps PromParamsUpdate.vo prom_params_update.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_update.t.exe prom_params_update.cpp prom_params_update.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_params_update.t.exe)
-  (action (run ./prom_params_update.t.exe))))
-
-(subdir page_base_next_pc
- (rule
-  (targets page_base_next_pc.t.exe)
-  (deps PageBaseNextPc.vo page_base_next_pc.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_base_next_pc.t.exe page_base_next_pc.cpp page_base_next_pc.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_base_next_pc.t.exe)
-  (action (run ./page_base_next_pc.t.exe))))
-
-(subdir steps_counter_unroll
- (rule
-  (targets steps_counter_unroll.t.exe)
-  (deps StepsCounterUnroll.vo steps_counter_unroll.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} steps_counter_unroll.t.exe steps_counter_unroll.cpp steps_counter_unroll.t.cpp)))
- (rule
-  (alias runtest)
-  (deps steps_counter_unroll.t.exe)
-  (action (run ./steps_counter_unroll.t.exe))))
-
-(subdir valid_layout_window
- (rule
-  (targets valid_layout_window.t.exe)
-  (deps ValidLayoutWindow.vo valid_layout_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} valid_layout_window.t.exe valid_layout_window.cpp valid_layout_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps valid_layout_window.t.exe)
-  (action (run ./valid_layout_window.t.exe))))
-
 (subdir program_targets_region_scan
  (rule
   (targets program_targets_region_scan.t.exe)
@@ -135,28 +66,6 @@
   (alias runtest)
   (deps program_targets_region_scan.t.exe)
   (action (run ./program_targets_region_scan.t.exe))))
-
-(subdir jcn_branch_target_choice
- (rule
-  (targets jcn_branch_target_choice.t.exe)
-  (deps JcnBranchTargetChoice.vo jcn_branch_target_choice.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} jcn_branch_target_choice.t.exe jcn_branch_target_choice.cpp jcn_branch_target_choice.t.cpp)))
- (rule
-  (alias runtest)
-  (deps jcn_branch_target_choice.t.exe)
-  (action (run ./jcn_branch_target_choice.t.exe))))
-
-(subdir prom_flagged_sum
- (rule
-  (targets prom_flagged_sum.t.exe)
-  (deps PromFlaggedSum.vo prom_flagged_sum.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_flagged_sum.t.exe prom_flagged_sum.cpp prom_flagged_sum.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_flagged_sum.t.exe)
-  (action (run ./prom_flagged_sum.t.exe))))
 
 (subdir update_nth_length_preserve
  (rule
@@ -180,28 +89,6 @@
   (deps decode_list_odd_tail.t.exe)
   (action (run ./decode_list_odd_tail.t.exe))))
 
-(subdir page_offset_recompose
- (rule
-  (targets page_offset_recompose.t.exe)
-  (deps PageOffsetRecompose.vo page_offset_recompose.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_offset_recompose.t.exe page_offset_recompose.cpp page_offset_recompose.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_offset_recompose.t.exe)
-  (action (run ./page_offset_recompose.t.exe))))
-
-(subdir prom_params_large_state
- (rule
-  (targets prom_params_large_state.t.exe)
-  (deps PromParamsLargeState.vo prom_params_large_state.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_large_state.t.exe prom_params_large_state.cpp prom_params_large_state.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_params_large_state.t.exe)
-  (action (run ./prom_params_large_state.t.exe))))
-
 (subdir program_wf_targets_prop
  (rule
   (targets program_wf_targets_prop.t.exe)
@@ -213,50 +100,6 @@
   (deps program_wf_targets_prop.t.exe)
   (action (run ./program_wf_targets_prop.t.exe))))
 
-(subdir init_state_rom_length
- (rule
-  (targets init_state_rom_length.t.exe)
-  (deps InitStateRomLength.vo init_state_rom_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_rom_length.t.exe init_state_rom_length.cpp init_state_rom_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_rom_length.t.exe)
-  (action (run ./init_state_rom_length.t.exe))))
-
-(subdir disassemble_next_address
- (rule
-  (targets disassemble_next_address.t.exe)
-  (deps DisassembleNextAddress.vo disassemble_next_address.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} disassemble_next_address.t.exe disassemble_next_address.cpp disassemble_next_address.t.cpp)))
- (rule
-  (alias runtest)
-  (deps disassemble_next_address.t.exe)
-  (action (run ./disassemble_next_address.t.exe))))
-
-(subdir init_state_register_count
- (rule
-  (targets init_state_register_count.t.exe)
-  (deps InitStateRegisterCount.vo init_state_register_count.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_register_count.t.exe init_state_register_count.cpp init_state_register_count.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_register_count.t.exe)
-  (action (run ./init_state_register_count.t.exe))))
-
-(subdir pc_inc1_wrap_modulo
- (rule
-  (targets pc_inc1_wrap_modulo.t.exe)
-  (deps PcInc1WrapModulo.vo pc_inc1_wrap_modulo.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc1_wrap_modulo.t.exe pc_inc1_wrap_modulo.cpp pc_inc1_wrap_modulo.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc1_wrap_modulo.t.exe)
-  (action (run ./pc_inc1_wrap_modulo.t.exe))))
-
 (subdir load_program_head_write
  (rule
   (targets load_program_head_write.t.exe)
@@ -267,39 +110,6 @@
   (alias runtest)
   (deps load_program_head_write.t.exe)
   (action (run ./load_program_head_write.t.exe))))
-
-(subdir addr12_wrap_window
- (rule
-  (targets addr12_wrap_window.t.exe)
-  (deps Addr12WrapWindow.vo addr12_wrap_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_wrap_window.t.exe addr12_wrap_window.cpp addr12_wrap_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_wrap_window.t.exe)
-  (action (run ./addr12_wrap_window.t.exe))))
-
-(subdir pc_inc2_wrap_modulo
- (rule
-  (targets pc_inc2_wrap_modulo.t.exe)
-  (deps PcInc2WrapModulo.vo pc_inc2_wrap_modulo.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc2_wrap_modulo.t.exe pc_inc2_wrap_modulo.cpp pc_inc2_wrap_modulo.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc2_wrap_modulo.t.exe)
-  (action (run ./pc_inc2_wrap_modulo.t.exe))))
-
-(subdir base_for_next1_page_cross
- (rule
-  (targets base_for_next1_page_cross.t.exe)
-  (deps BaseForNext1PageCross.vo base_for_next1_page_cross.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} base_for_next1_page_cross.t.exe base_for_next1_page_cross.cpp base_for_next1_page_cross.t.cpp)))
- (rule
-  (alias runtest)
-  (deps base_for_next1_page_cross.t.exe)
-  (action (run ./base_for_next1_page_cross.t.exe))))
 
 (subdir decode_list_empty
  (rule
@@ -322,71 +132,6 @@
   (alias runtest)
   (deps decode_list_pair_count.t.exe)
   (action (run ./decode_list_pair_count.t.exe))))
-(subdir addr_page_decomp_edge_0007
- (rule
-  (targets addr_page_decomp_edge_0007.t.exe)
-  (deps AddrPageDecompEdge0007.vo addr_page_decomp_edge_0007.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr_page_decomp_edge_0007.t.exe addr_page_decomp_edge_0007.cpp addr_page_decomp_edge_0007.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr_page_decomp_edge_0007.t.exe)
-  (action (run ./addr_page_decomp_edge_0007.t.exe))))
-
-(subdir addr12_of_nat_add_edge_0025
- (rule
-  (targets addr12_of_nat_add_edge_0025.t.exe)
-  (deps Addr12OfNatAddEdge0025.vo addr12_of_nat_add_edge_0025.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_of_nat_add_edge_0025.t.exe addr12_of_nat_add_edge_0025.cpp addr12_of_nat_add_edge_0025.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_of_nat_add_edge_0025.t.exe)
-  (action (run ./addr12_of_nat_add_edge_0025.t.exe))))
-
-(subdir addr12_of_nat_edge_0001
- (rule
-  (targets addr12_of_nat_edge_0001.t.exe)
-  (deps Addr12OfNatEdge0001.vo addr12_of_nat_edge_0001.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_of_nat_edge_0001.t.exe addr12_of_nat_edge_0001.cpp addr12_of_nat_edge_0001.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_of_nat_edge_0001.t.exe)
-  (action (run ./addr12_of_nat_edge_0001.t.exe))))
-
-(subdir addr12_reconstruction_edge_0023
- (rule
-  (targets addr12_reconstruction_edge_0023.t.exe)
-  (deps Addr12ReconstructionEdge0023.vo addr12_reconstruction_edge_0023.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_reconstruction_edge_0023.t.exe addr12_reconstruction_edge_0023.cpp addr12_reconstruction_edge_0023.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_reconstruction_edge_0023.t.exe)
-  (action (run ./addr12_reconstruction_edge_0023.t.exe))))
-
-(subdir addr12_wrap_window
- (rule
-  (targets addr12_wrap_window.t.exe)
-  (deps Addr12WrapWindow.vo addr12_wrap_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr12_wrap_window.t.exe addr12_wrap_window.cpp addr12_wrap_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr12_wrap_window.t.exe)
-  (action (run ./addr12_wrap_window.t.exe))))
-
-(subdir addr_page_decomp_1027
- (rule
-  (targets addr_page_decomp_1027.t.exe)
-  (deps AddrPageDecomp1027.vo addr_page_decomp_1027.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} addr_page_decomp_1027.t.exe addr_page_decomp_1027.cpp addr_page_decomp_1027.t.cpp)))
- (rule
-  (alias runtest)
-  (deps addr_page_decomp_1027.t.exe)
-  (action (run ./addr_page_decomp_1027.t.exe))))
 
 (subdir addr_page_decomp_edge_0007
  (rule
@@ -454,28 +199,6 @@
   (deps bad_state_wrong_reg_count_not_wf_prop.t.exe)
   (action (run ./bad_state_wrong_reg_count_not_wf_prop.t.exe))))
 
-(subdir base_for_next1_page_cross
- (rule
-  (targets base_for_next1_page_cross.t.exe)
-  (deps BaseForNext1PageCross.vo base_for_next1_page_cross.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} base_for_next1_page_cross.t.exe base_for_next1_page_cross.cpp base_for_next1_page_cross.t.cpp)))
- (rule
-  (alias runtest)
-  (deps base_for_next1_page_cross.t.exe)
-  (action (run ./base_for_next1_page_cross.t.exe))))
-
-(subdir base_for_next2_page_cross
- (rule
-  (targets base_for_next2_page_cross.t.exe)
-  (deps BaseForNext2PageCross.vo base_for_next2_page_cross.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} base_for_next2_page_cross.t.exe base_for_next2_page_cross.cpp base_for_next2_page_cross.t.cpp)))
- (rule
-  (alias runtest)
-  (deps base_for_next2_page_cross.t.exe)
-  (action (run ./base_for_next2_page_cross.t.exe))))
-
 (subdir bbl_pops_stack_prop
  (rule
   (targets bbl_pops_stack_prop.t.exe)
@@ -486,17 +209,6 @@
   (alias runtest)
   (deps bbl_pops_stack_prop.t.exe)
   (action (run ./bbl_pops_stack_prop.t.exe))))
-
-(subdir binary_nums
- (rule
-  (targets binary_nums.t.exe)
-  (deps BinaryNums.vo binary_nums.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} binary_nums.t.exe binary_nums.cpp binary_nums.t.cpp)))
- (rule
-  (alias runtest)
-  (deps binary_nums.t.exe)
-  (action (run ./binary_nums.t.exe))))
 
 (subdir branch_target_in_page_prop
  (rule
@@ -520,39 +232,6 @@
   (deps clb_clears_volatile_prop.t.exe)
   (action (run ./clb_clears_volatile_prop.t.exe))))
 
-(subdir coind_guard
- (rule
-  (targets coind_guard.t.exe)
-  (deps CoindGuard.vo coind_guard.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} coind_guard.t.exe coind_guard.cpp coind_guard.t.cpp)))
- (rule
-  (alias runtest)
-  (deps coind_guard.t.exe)
-  (action (run ./coind_guard.t.exe))))
-
-(subdir cotree
- (rule
-  (targets cotree.t.exe)
-  (deps Cotree.vo cotree.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cotree.t.exe cotree.cpp cotree.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cotree.t.exe)
-  (action (run ./cotree.t.exe))))
-
-(subdir decode_2_concrete_even_edge_0021
- (rule
-  (targets decode_2_concrete_even_edge_0021.t.exe)
-  (deps Decode2ConcreteEvenEdge0021.vo decode_2_concrete_even_edge_0021.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_2_concrete_even_edge_0021.t.exe decode_2_concrete_even_edge_0021.cpp decode_2_concrete_even_edge_0021.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_2_concrete_even_edge_0021.t.exe)
-  (action (run ./decode_2_concrete_even_edge_0021.t.exe))))
-
 (subdir decode_add_wf_edge_0063
  (rule
   (targets decode_add_wf_edge_0063.t.exe)
@@ -575,61 +254,6 @@
   (deps decode_addr12_helper_edge_0027.t.exe)
   (action (run ./decode_addr12_helper_edge_0027.t.exe))))
 
-(subdir decode_bbl_wf_edge_0067
- (rule
-  (targets decode_bbl_wf_edge_0067.t.exe)
-  (deps DecodeBblWfEdge0067.vo decode_bbl_wf_edge_0067.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_bbl_wf_edge_0067.t.exe decode_bbl_wf_edge_0067.cpp decode_bbl_wf_edge_0067.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_bbl_wf_edge_0067.t.exe)
-  (action (run ./decode_bbl_wf_edge_0067.t.exe))))
-
-(subdir decode_fim_wf_edge_0055
- (rule
-  (targets decode_fim_wf_edge_0055.t.exe)
-  (deps DecodeFimWfEdge0055.vo decode_fim_wf_edge_0055.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_fim_wf_edge_0055.t.exe decode_fim_wf_edge_0055.cpp decode_fim_wf_edge_0055.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_fim_wf_edge_0055.t.exe)
-  (action (run ./decode_fim_wf_edge_0055.t.exe))))
-
-(subdir decode_fin_wf_edge_0057
- (rule
-  (targets decode_fin_wf_edge_0057.t.exe)
-  (deps DecodeFinWfEdge0057.vo decode_fin_wf_edge_0057.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_fin_wf_edge_0057.t.exe decode_fin_wf_edge_0057.cpp decode_fin_wf_edge_0057.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_fin_wf_edge_0057.t.exe)
-  (action (run ./decode_fin_wf_edge_0057.t.exe))))
-
-(subdir decode_inc_wf_edge_0061
- (rule
-  (targets decode_inc_wf_edge_0061.t.exe)
-  (deps DecodeIncWfEdge0061.vo decode_inc_wf_edge_0061.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_inc_wf_edge_0061.t.exe decode_inc_wf_edge_0061.cpp decode_inc_wf_edge_0061.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_inc_wf_edge_0061.t.exe)
-  (action (run ./decode_inc_wf_edge_0061.t.exe))))
-
-(subdir decode_instr_wf_edge_0087
- (rule
-  (targets decode_instr_wf_edge_0087.t.exe)
-  (deps DecodeInstrWfEdge0087.vo decode_instr_wf_edge_0087.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_instr_wf_edge_0087.t.exe decode_instr_wf_edge_0087.cpp decode_instr_wf_edge_0087.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_instr_wf_edge_0087.t.exe)
-  (action (run ./decode_instr_wf_edge_0087.t.exe))))
-
 (subdir decode_jun_wf_edge_0059
  (rule
   (targets decode_jun_wf_edge_0059.t.exe)
@@ -641,50 +265,6 @@
   (deps decode_jun_wf_edge_0059.t.exe)
   (action (run ./decode_jun_wf_edge_0059.t.exe))))
 
-(subdir decode_ld_wf_edge_0065
- (rule
-  (targets decode_ld_wf_edge_0065.t.exe)
-  (deps DecodeLdWfEdge0065.vo decode_ld_wf_edge_0065.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_ld_wf_edge_0065.t.exe decode_ld_wf_edge_0065.cpp decode_ld_wf_edge_0065.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_ld_wf_edge_0065.t.exe)
-  (action (run ./decode_ld_wf_edge_0065.t.exe))))
-
-(subdir decode_list_empty
- (rule
-  (targets decode_list_empty.t.exe)
-  (deps DecodeListEmpty.vo decode_list_empty.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_empty.t.exe decode_list_empty.cpp decode_list_empty.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_list_empty.t.exe)
-  (action (run ./decode_list_empty.t.exe))))
-
-(subdir decode_list_odd_tail
- (rule
-  (targets decode_list_odd_tail.t.exe)
-  (deps DecodeListOddTail.vo decode_list_odd_tail.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_odd_tail.t.exe decode_list_odd_tail.cpp decode_list_odd_tail.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_list_odd_tail.t.exe)
-  (action (run ./decode_list_odd_tail.t.exe))))
-
-(subdir decode_list_pair_count
- (rule
-  (targets decode_list_pair_count.t.exe)
-  (deps DecodeListPairCount.vo decode_list_pair_count.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_list_pair_count.t.exe decode_list_pair_count.cpp decode_list_pair_count.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_list_pair_count.t.exe)
-  (action (run ./decode_list_pair_count.t.exe))))
-
 (subdir decode_list_single_pair
  (rule
   (targets decode_list_single_pair.t.exe)
@@ -695,50 +275,6 @@
   (alias runtest)
   (deps decode_list_single_pair.t.exe)
   (action (run ./decode_list_single_pair.t.exe))))
-
-(subdir decode_nop_wf_edge_0053
- (rule
-  (targets decode_nop_wf_edge_0053.t.exe)
-  (deps DecodeNopWfEdge0053.vo decode_nop_wf_edge_0053.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_nop_wf_edge_0053.t.exe decode_nop_wf_edge_0053.cpp decode_nop_wf_edge_0053.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_nop_wf_edge_0053.t.exe)
-  (action (run ./decode_nop_wf_edge_0053.t.exe))))
-
-(subdir decode_opcode_0_wf_edge_0043
- (rule
-  (targets decode_opcode_0_wf_edge_0043.t.exe)
-  (deps DecodeOpcode0WfEdge0043.vo decode_opcode_0_wf_edge_0043.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_opcode_0_wf_edge_0043.t.exe decode_opcode_0_wf_edge_0043.cpp decode_opcode_0_wf_edge_0043.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_opcode_0_wf_edge_0043.t.exe)
-  (action (run ./decode_opcode_0_wf_edge_0043.t.exe))))
-
-(subdir decode_opcode_2_wf_edge_0045
- (rule
-  (targets decode_opcode_2_wf_edge_0045.t.exe)
-  (deps DecodeOpcode2WfEdge0045.vo decode_opcode_2_wf_edge_0045.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_opcode_2_wf_edge_0045.t.exe decode_opcode_2_wf_edge_0045.cpp decode_opcode_2_wf_edge_0045.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_opcode_2_wf_edge_0045.t.exe)
-  (action (run ./decode_opcode_2_wf_edge_0045.t.exe))))
-
-(subdir decode_opcode_4_wf_edge_0047
- (rule
-  (targets decode_opcode_4_wf_edge_0047.t.exe)
-  (deps DecodeOpcode4WfEdge0047.vo decode_opcode_4_wf_edge_0047.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_opcode_4_wf_edge_0047.t.exe decode_opcode_4_wf_edge_0047.cpp decode_opcode_4_wf_edge_0047.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_opcode_4_wf_edge_0047.t.exe)
-  (action (run ./decode_opcode_4_wf_edge_0047.t.exe))))
 
 (subdir decode_opcode_6_to_13_wf_edge_0049
  (rule
@@ -773,17 +309,6 @@
   (deps decode_wf_opcode_11_edge_0081.t.exe)
   (action (run ./decode_wf_opcode_11_edge_0081.t.exe))))
 
-(subdir decode_wf_opcode_15_edge_0085
- (rule
-  (targets decode_wf_opcode_15_edge_0085.t.exe)
-  (deps DecodeWfOpcode15Edge0085.vo decode_wf_opcode_15_edge_0085.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_15_edge_0085.t.exe decode_wf_opcode_15_edge_0085.cpp decode_wf_opcode_15_edge_0085.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_15_edge_0085.t.exe)
-  (action (run ./decode_wf_opcode_15_edge_0085.t.exe))))
-
 (subdir decode_wf_opcode_1_edge_0071
  (rule
   (targets decode_wf_opcode_1_edge_0071.t.exe)
@@ -806,39 +331,6 @@
   (deps decode_wf_opcode_3_edge_0073.t.exe)
   (action (run ./decode_wf_opcode_3_edge_0073.t.exe))))
 
-(subdir decode_wf_opcode_5_edge_0075
- (rule
-  (targets decode_wf_opcode_5_edge_0075.t.exe)
-  (deps DecodeWfOpcode5Edge0075.vo decode_wf_opcode_5_edge_0075.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_5_edge_0075.t.exe decode_wf_opcode_5_edge_0075.cpp decode_wf_opcode_5_edge_0075.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_5_edge_0075.t.exe)
-  (action (run ./decode_wf_opcode_5_edge_0075.t.exe))))
-
-(subdir decode_wf_opcode_7_edge_0077
- (rule
-  (targets decode_wf_opcode_7_edge_0077.t.exe)
-  (deps DecodeWfOpcode7Edge0077.vo decode_wf_opcode_7_edge_0077.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_7_edge_0077.t.exe decode_wf_opcode_7_edge_0077.cpp decode_wf_opcode_7_edge_0077.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_7_edge_0077.t.exe)
-  (action (run ./decode_wf_opcode_7_edge_0077.t.exe))))
-
-(subdir decode_wf_opcode_9_edge_0079
- (rule
-  (targets decode_wf_opcode_9_edge_0079.t.exe)
-  (deps DecodeWfOpcode9Edge0079.vo decode_wf_opcode_9_edge_0079.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_wf_opcode_9_edge_0079.t.exe decode_wf_opcode_9_edge_0079.cpp decode_wf_opcode_9_edge_0079.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_wf_opcode_9_edge_0079.t.exe)
-  (action (run ./decode_wf_opcode_9_edge_0079.t.exe))))
-
 (subdir default_sel_wf_prop
  (rule
   (targets default_sel_wf_prop.t.exe)
@@ -849,28 +341,6 @@
   (alias runtest)
   (deps default_sel_wf_prop.t.exe)
   (action (run ./default_sel_wf_prop.t.exe))))
-
-(subdir disassemble_drop_window
- (rule
-  (targets disassemble_drop_window.t.exe)
-  (deps DisassembleDropWindow.vo disassemble_drop_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} disassemble_drop_window.t.exe disassemble_drop_window.cpp disassemble_drop_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps disassemble_drop_window.t.exe)
-  (action (run ./disassemble_drop_window.t.exe))))
-
-(subdir disassemble_next_address
- (rule
-  (targets disassemble_next_address.t.exe)
-  (deps DisassembleNextAddress.vo disassemble_next_address.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} disassemble_next_address.t.exe disassemble_next_address.cpp disassemble_next_address.t.cpp)))
- (rule
-  (alias runtest)
-  (deps disassemble_next_address.t.exe)
-  (action (run ./disassemble_next_address.t.exe))))
 
 (subdir empty_bank_wf_prop
  (rule
@@ -904,28 +374,6 @@
   (alias runtest)
   (deps empty_reg_wf_prop.t.exe)
   (action (run ./empty_reg_wf_prop.t.exe))))
-
-(subdir encode_decode_canonical_edge_0029
- (rule
-  (targets encode_decode_canonical_edge_0029.t.exe)
-  (deps EncodeDecodeCanonicalEdge0029.vo encode_decode_canonical_edge_0029.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} encode_decode_canonical_edge_0029.t.exe encode_decode_canonical_edge_0029.cpp encode_decode_canonical_edge_0029.t.cpp)))
- (rule
-  (alias runtest)
-  (deps encode_decode_canonical_edge_0029.t.exe)
-  (action (run ./encode_decode_canonical_edge_0029.t.exe))))
-
-(subdir encode_jun_bytes_in_range
- (rule
-  (targets encode_jun_bytes_in_range.t.exe)
-  (deps EncodeJunBytesInRange.vo encode_jun_bytes_in_range.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} encode_jun_bytes_in_range.t.exe encode_jun_bytes_in_range.cpp encode_jun_bytes_in_range.t.cpp)))
- (rule
-  (alias runtest)
-  (deps encode_jun_bytes_in_range.t.exe)
-  (action (run ./encode_jun_bytes_in_range.t.exe))))
 
 (subdir execute_add_wf_prop
  (rule
@@ -1004,17 +452,6 @@
   (deps execute_cmc_wf_prop.t.exe)
   (action (run ./execute_cmc_wf_prop.t.exe))))
 
-(subdir execute_daa_wf_edge_0107
- (rule
-  (targets execute_daa_wf_edge_0107.t.exe)
-  (deps ExecuteDaaWfEdge0107.vo execute_daa_wf_edge_0107.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_daa_wf_edge_0107.t.exe execute_daa_wf_edge_0107.cpp execute_daa_wf_edge_0107.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_daa_wf_edge_0107.t.exe)
-  (action (run ./execute_daa_wf_edge_0107.t.exe))))
-
 (subdir execute_daa_wf_prop
  (rule
   (targets execute_daa_wf_prop.t.exe)
@@ -1025,17 +462,6 @@
   (alias runtest)
   (deps execute_daa_wf_prop.t.exe)
   (action (run ./execute_daa_wf_prop.t.exe))))
-
-(subdir execute_dac_wf_edge_0097
- (rule
-  (targets execute_dac_wf_edge_0097.t.exe)
-  (deps ExecuteDacWfEdge0097.vo execute_dac_wf_edge_0097.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_dac_wf_edge_0097.t.exe execute_dac_wf_edge_0097.cpp execute_dac_wf_edge_0097.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_dac_wf_edge_0097.t.exe)
-  (action (run ./execute_dac_wf_edge_0097.t.exe))))
 
 (subdir execute_dac_wf_prop
  (rule
@@ -1080,17 +506,6 @@
   (alias runtest)
   (deps execute_iac_wf_prop.t.exe)
   (action (run ./execute_iac_wf_prop.t.exe))))
-
-(subdir execute_inc_wf_edge_0093
- (rule
-  (targets execute_inc_wf_edge_0093.t.exe)
-  (deps ExecuteIncWfEdge0093.vo execute_inc_wf_edge_0093.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_inc_wf_edge_0093.t.exe execute_inc_wf_edge_0093.cpp execute_inc_wf_edge_0093.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_inc_wf_edge_0093.t.exe)
-  (action (run ./execute_inc_wf_edge_0093.t.exe))))
 
 (subdir execute_inc_wf_prop
  (rule
@@ -1147,17 +562,6 @@
   (deps execute_jms_wf_prop.t.exe)
   (action (run ./execute_jms_wf_prop.t.exe))))
 
-(subdir execute_jun_wf_edge_0109
- (rule
-  (targets execute_jun_wf_edge_0109.t.exe)
-  (deps ExecuteJunWfEdge0109.vo execute_jun_wf_edge_0109.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_jun_wf_edge_0109.t.exe execute_jun_wf_edge_0109.cpp execute_jun_wf_edge_0109.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_jun_wf_edge_0109.t.exe)
-  (action (run ./execute_jun_wf_edge_0109.t.exe))))
-
 (subdir execute_jun_wf_prop
  (rule
   (targets execute_jun_wf_prop.t.exe)
@@ -1212,17 +616,6 @@
   (alias runtest)
   (deps execute_ldm_wf_prop.t.exe)
   (action (run ./execute_ldm_wf_prop.t.exe))))
-
-(subdir execute_nop_wf_edge_0089
- (rule
-  (targets execute_nop_wf_edge_0089.t.exe)
-  (deps ExecuteNopWfEdge0089.vo execute_nop_wf_edge_0089.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_nop_wf_edge_0089.t.exe execute_nop_wf_edge_0089.cpp execute_nop_wf_edge_0089.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_nop_wf_edge_0089.t.exe)
-  (action (run ./execute_nop_wf_edge_0089.t.exe))))
 
 (subdir execute_nop_wf_prop
  (rule
@@ -1301,17 +694,6 @@
   (deps execute_src_wf_prop.t.exe)
   (action (run ./execute_src_wf_prop.t.exe))))
 
-(subdir execute_stc_wf_edge_0099
- (rule
-  (targets execute_stc_wf_edge_0099.t.exe)
-  (deps ExecuteStcWfEdge0099.vo execute_stc_wf_edge_0099.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_stc_wf_edge_0099.t.exe execute_stc_wf_edge_0099.cpp execute_stc_wf_edge_0099.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_stc_wf_edge_0099.t.exe)
-  (action (run ./execute_stc_wf_edge_0099.t.exe))))
-
 (subdir execute_stc_wf_prop
  (rule
   (targets execute_stc_wf_prop.t.exe)
@@ -1388,17 +770,6 @@
   (alias runtest)
   (deps execute_xch_wf_prop.t.exe)
   (action (run ./execute_xch_wf_prop.t.exe))))
-
-(subdir fetch_window_next_ptr
- (rule
-  (targets fetch_window_next_ptr.t.exe)
-  (deps FetchWindowNextPtr.vo fetch_window_next_ptr.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} fetch_window_next_ptr.t.exe fetch_window_next_ptr.cpp fetch_window_next_ptr.t.cpp)))
- (rule
-  (alias runtest)
-  (deps fetch_window_next_ptr.t.exe)
-  (action (run ./fetch_window_next_ptr.t.exe))))
 
 (subdir forall_firstn_prop
  (rule
@@ -1576,50 +947,6 @@
   (deps init_is_reset_with_cleared_memory_prop.t.exe)
   (action (run ./init_is_reset_with_cleared_memory_prop.t.exe))))
 
-(subdir init_state_edge_0033
- (rule
-  (targets init_state_edge_0033.t.exe)
-  (deps InitStateEdge0033.vo init_state_edge_0033.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_edge_0033.t.exe init_state_edge_0033.cpp init_state_edge_0033.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_edge_0033.t.exe)
-  (action (run ./init_state_edge_0033.t.exe))))
-
-(subdir init_state_register_count
- (rule
-  (targets init_state_register_count.t.exe)
-  (deps InitStateRegisterCount.vo init_state_register_count.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_register_count.t.exe init_state_register_count.cpp init_state_register_count.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_register_count.t.exe)
-  (action (run ./init_state_register_count.t.exe))))
-
-(subdir init_state_rom_length
- (rule
-  (targets init_state_rom_length.t.exe)
-  (deps InitStateRomLength.vo init_state_rom_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_rom_length.t.exe init_state_rom_length.cpp init_state_rom_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_rom_length.t.exe)
-  (action (run ./init_state_rom_length.t.exe))))
-
-(subdir init_state_wf_edge_0035
- (rule
-  (targets init_state_wf_edge_0035.t.exe)
-  (deps InitStateWfEdge0035.vo init_state_wf_edge_0035.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} init_state_wf_edge_0035.t.exe init_state_wf_edge_0035.cpp init_state_wf_edge_0035.t.cpp)))
- (rule
-  (alias runtest)
-  (deps init_state_wf_edge_0035.t.exe)
-  (action (run ./init_state_wf_edge_0035.t.exe))))
-
 (subdir init_state_wf_prop
  (rule
   (targets init_state_wf_prop.t.exe)
@@ -1697,28 +1024,6 @@
   (deps instr_wf_nop_prop.t.exe)
   (action (run ./instr_wf_nop_prop.t.exe))))
 
-(subdir jcn_branch_target_choice
- (rule
-  (targets jcn_branch_target_choice.t.exe)
-  (deps JcnBranchTargetChoice.vo jcn_branch_target_choice.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} jcn_branch_target_choice.t.exe jcn_branch_target_choice.cpp jcn_branch_target_choice.t.cpp)))
- (rule
-  (alias runtest)
-  (deps jcn_branch_target_choice.t.exe)
-  (action (run ./jcn_branch_target_choice.t.exe))))
-
-(subdir jms_bbl_roundtrip
- (rule
-  (targets jms_bbl_roundtrip.t.exe)
-  (deps JmsBblRoundtrip.vo jms_bbl_roundtrip.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} jms_bbl_roundtrip.t.exe jms_bbl_roundtrip.cpp jms_bbl_roundtrip.t.cpp)))
- (rule
-  (alias runtest)
-  (deps jms_bbl_roundtrip.t.exe)
-  (action (run ./jms_bbl_roundtrip.t.exe))))
-
 (subdir ldm_loads_immediate_prop
  (rule
   (targets ldm_loads_immediate_prop.t.exe)
@@ -1729,50 +1034,6 @@
   (alias runtest)
   (deps ldm_loads_immediate_prop.t.exe)
   (action (run ./ldm_loads_immediate_prop.t.exe))))
-
-(subdir load_program_head_write
- (rule
-  (targets load_program_head_write.t.exe)
-  (deps LoadProgramHeadWrite.vo load_program_head_write.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} load_program_head_write.t.exe load_program_head_write.cpp load_program_head_write.t.cpp)))
- (rule
-  (alias runtest)
-  (deps load_program_head_write.t.exe)
-  (action (run ./load_program_head_write.t.exe))))
-
-(subdir load_program_step_preserves_wf_simple
- (rule
-  (targets load_program_step_preserves_wf_simple.t.exe)
-  (deps LoadProgramStepPreservesWfSimple.vo load_program_step_preserves_wf_simple.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} load_program_step_preserves_wf_simple.t.exe load_program_step_preserves_wf_simple.cpp load_program_step_preserves_wf_simple.t.cpp)))
- (rule
-  (alias runtest)
-  (deps load_program_step_preserves_wf_simple.t.exe)
-  (action (run ./load_program_step_preserves_wf_simple.t.exe))))
-
-(subdir monadic
- (rule
-  (targets monadic.t.exe)
-  (deps Monadic.vo monadic.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} monadic.t.exe monadic.cpp monadic.t.cpp)))
- (rule
-  (alias runtest)
-  (deps monadic.t.exe)
-  (action (run ./monadic.t.exe))))
-
-(subdir mutual_coind
- (rule
-  (targets mutual_coind.t.exe)
-  (deps MutualCoind.vo mutual_coind.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_coind.t.exe mutual_coind.cpp mutual_coind.t.cpp)))
- (rule
-  (alias runtest)
-  (deps mutual_coind.t.exe)
-  (action (run ./mutual_coind.t.exe))))
 
 (subdir nth_forall_lt_prop
  (rule
@@ -1795,17 +1056,6 @@
   (alias runtest)
   (deps page_base_idempotent_prop.t.exe)
   (action (run ./page_base_idempotent_prop.t.exe))))
-
-(subdir page_base_next_pc
- (rule
-  (targets page_base_next_pc.t.exe)
-  (deps PageBaseNextPc.vo page_base_next_pc.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_base_next_pc.t.exe page_base_next_pc.cpp page_base_next_pc.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_base_next_pc.t.exe)
-  (action (run ./page_base_next_pc.t.exe))))
 
 (subdir page_base_plus_offset_bound_prop
  (rule
@@ -1862,17 +1112,6 @@
   (deps page_decomposition_prop.t.exe)
   (action (run ./page_decomposition_prop.t.exe))))
 
-(subdir page_of_edge_0013
- (rule
-  (targets page_of_edge_0013.t.exe)
-  (deps PageOfEdge0013.vo page_of_edge_0013.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_of_edge_0013.t.exe page_of_edge_0013.cpp page_of_edge_0013.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_of_edge_0013.t.exe)
-  (action (run ./page_of_edge_0013.t.exe))))
-
 (subdir page_of_inc2_cross_255_prop
  (rule
   (targets page_of_inc2_cross_255_prop.t.exe)
@@ -1894,17 +1133,6 @@
   (alias runtest)
   (deps page_of_page_base_prop.t.exe)
   (action (run ./page_of_page_base_prop.t.exe))))
-
-(subdir page_offset_recompose
- (rule
-  (targets page_offset_recompose.t.exe)
-  (deps PageOffsetRecompose.vo page_offset_recompose.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_offset_recompose.t.exe page_offset_recompose.cpp page_offset_recompose.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_offset_recompose.t.exe)
-  (action (run ./page_offset_recompose.t.exe))))
 
 (subdir page_wrap_to_zero_prop
  (rule
@@ -1949,39 +1177,6 @@
   (alias runtest)
   (deps pair_successor_bounded_prop.t.exe)
   (action (run ./pair_successor_bounded_prop.t.exe))))
-
-(subdir pc_inc1_edge_0011
- (rule
-  (targets pc_inc1_edge_0011.t.exe)
-  (deps PcInc1Edge0011.vo pc_inc1_edge_0011.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc1_edge_0011.t.exe pc_inc1_edge_0011.cpp pc_inc1_edge_0011.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc1_edge_0011.t.exe)
-  (action (run ./pc_inc1_edge_0011.t.exe))))
-
-(subdir pc_inc1_wrap_modulo
- (rule
-  (targets pc_inc1_wrap_modulo.t.exe)
-  (deps PcInc1WrapModulo.vo pc_inc1_wrap_modulo.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc1_wrap_modulo.t.exe pc_inc1_wrap_modulo.cpp pc_inc1_wrap_modulo.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc1_wrap_modulo.t.exe)
-  (action (run ./pc_inc1_wrap_modulo.t.exe))))
-
-(subdir pc_inc2_wrap_modulo
- (rule
-  (targets pc_inc2_wrap_modulo.t.exe)
-  (deps PcInc2WrapModulo.vo pc_inc2_wrap_modulo.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} pc_inc2_wrap_modulo.t.exe pc_inc2_wrap_modulo.cpp pc_inc2_wrap_modulo.t.cpp)))
- (rule
-  (alias runtest)
-  (deps pc_inc2_wrap_modulo.t.exe)
-  (action (run ./pc_inc2_wrap_modulo.t.exe))))
 
 (subdir pc_shape_fim_prop
  (rule
@@ -2071,17 +1266,6 @@
   (deps pop_stack_forall_addr12_prop.t.exe)
   (action (run ./pop_stack_forall_addr12_prop.t.exe))))
 
-(subdir program_targets_region_scan
- (rule
-  (targets program_targets_region_scan.t.exe)
-  (deps ProgramTargetsRegionScan.vo program_targets_region_scan.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} program_targets_region_scan.t.exe program_targets_region_scan.cpp program_targets_region_scan.t.cpp)))
- (rule
-  (alias runtest)
-  (deps program_targets_region_scan.t.exe)
-  (action (run ./program_targets_region_scan.t.exe))))
-
 (subdir program_wf_targets_outside_prop
  (rule
   (targets program_wf_targets_outside_prop.t.exe)
@@ -2092,50 +1276,6 @@
   (alias runtest)
   (deps program_wf_targets_outside_prop.t.exe)
   (action (run ./program_wf_targets_outside_prop.t.exe))))
-
-(subdir program_wf_targets_prop
- (rule
-  (targets program_wf_targets_prop.t.exe)
-  (deps ProgramWfTargetsProp.vo program_wf_targets_prop.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} program_wf_targets_prop.t.exe program_wf_targets_prop.cpp program_wf_targets_prop.t.cpp)))
- (rule
-  (alias runtest)
-  (deps program_wf_targets_prop.t.exe)
-  (action (run ./program_wf_targets_prop.t.exe))))
-
-(subdir prom_flagged_sum
- (rule
-  (targets prom_flagged_sum.t.exe)
-  (deps PromFlaggedSum.vo prom_flagged_sum.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_flagged_sum.t.exe prom_flagged_sum.cpp prom_flagged_sum.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_flagged_sum.t.exe)
-  (action (run ./prom_flagged_sum.t.exe))))
-
-(subdir prom_params_large_state
- (rule
-  (targets prom_params_large_state.t.exe)
-  (deps PromParamsLargeState.vo prom_params_large_state.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_large_state.t.exe prom_params_large_state.cpp prom_params_large_state.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_params_large_state.t.exe)
-  (action (run ./prom_params_large_state.t.exe))))
-
-(subdir prom_params_update
- (rule
-  (targets prom_params_update.t.exe)
-  (deps PromParamsUpdate.vo prom_params_update.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} prom_params_update.t.exe prom_params_update.cpp prom_params_update.t.cpp)))
- (rule
-  (alias runtest)
-  (deps prom_params_update.t.exe)
-  (action (run ./prom_params_update.t.exe))))
 
 (subdir push_return_bound_prop
  (rule
@@ -2180,17 +1320,6 @@
   (alias runtest)
   (deps ram_read_main_bound_prop.t.exe)
   (action (run ./ram_read_main_bound_prop.t.exe))))
-
-(subdir ram_read_main_edge_0015
- (rule
-  (targets ram_read_main_edge_0015.t.exe)
-  (deps RamReadMainEdge0015.vo ram_read_main_edge_0015.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_read_main_edge_0015.t.exe ram_read_main_edge_0015.cpp ram_read_main_edge_0015.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_read_main_edge_0015.t.exe)
-  (action (run ./ram_read_main_edge_0015.t.exe))))
 
 (subdir ram_write_main_sys_preserves_len_prop
  (rule
@@ -2246,17 +1375,6 @@
   (alias runtest)
   (deps ram_write_status_sys_preserves_wf_bank_prop.t.exe)
   (action (run ./ram_write_status_sys_preserves_wf_bank_prop.t.exe))))
-
-(subdir reg_index_bound_edge_0003
- (rule
-  (targets reg_index_bound_edge_0003.t.exe)
-  (deps RegIndexBoundEdge0003.vo reg_index_bound_edge_0003.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} reg_index_bound_edge_0003.t.exe reg_index_bound_edge_0003.cpp reg_index_bound_edge_0003.t.cpp)))
- (rule
-  (alias runtest)
-  (deps reg_index_bound_edge_0003.t.exe)
-  (action (run ./reg_index_bound_edge_0003.t.exe))))
 
 (subdir reg_pair_odd_edge_0005
  (rule
@@ -2335,39 +1453,6 @@
   (deps reset_state_wf_prop.t.exe)
   (action (run ./reset_state_wf_prop.t.exe))))
 
-(subdir set_prom_then_wpm_pc_bound
- (rule
-  (targets set_prom_then_wpm_pc_bound.t.exe)
-  (deps SetPromThenWpmPcBound.vo set_prom_then_wpm_pc_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_pc_bound.t.exe set_prom_then_wpm_pc_bound.cpp set_prom_then_wpm_pc_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_pc_bound.t.exe)
-  (action (run ./set_prom_then_wpm_pc_bound.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_acc_bound
- (rule
-  (targets set_prom_then_wpm_preserves_acc_bound.t.exe)
-  (deps SetPromThenWpmPreservesAccBound.vo set_prom_then_wpm_preserves_acc_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_acc_bound.t.exe set_prom_then_wpm_preserves_acc_bound.cpp set_prom_then_wpm_preserves_acc_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_acc_bound.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_acc_bound.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_bank_bound
- (rule
-  (targets set_prom_then_wpm_preserves_bank_bound.t.exe)
-  (deps SetPromThenWpmPreservesBankBound.vo set_prom_then_wpm_preserves_bank_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_bank_bound.t.exe set_prom_then_wpm_preserves_bank_bound.cpp set_prom_then_wpm_preserves_bank_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_bank_bound.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_bank_bound.t.exe))))
-
 (subdir set_prom_then_wpm_preserves_ram_forall
  (rule
   (targets set_prom_then_wpm_preserves_ram_forall.t.exe)
@@ -2390,17 +1475,6 @@
   (deps set_prom_then_wpm_preserves_regs_forall.t.exe)
   (action (run ./set_prom_then_wpm_preserves_regs_forall.t.exe))))
 
-(subdir set_prom_then_wpm_preserves_regs_length
- (rule
-  (targets set_prom_then_wpm_preserves_regs_length.t.exe)
-  (deps SetPromThenWpmPreservesRegsLength.vo set_prom_then_wpm_preserves_regs_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_regs_length.t.exe set_prom_then_wpm_preserves_regs_length.cpp set_prom_then_wpm_preserves_regs_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_regs_length.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_regs_length.t.exe))))
-
 (subdir set_prom_then_wpm_preserves_rom_ports_forall
  (rule
   (targets set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
@@ -2411,28 +1485,6 @@
   (alias runtest)
   (deps set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
   (action (run ./set_prom_then_wpm_preserves_rom_ports_forall.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_rom_ports_length
- (rule
-  (targets set_prom_then_wpm_preserves_rom_ports_length.t.exe)
-  (deps SetPromThenWpmPreservesRomPortsLength.vo set_prom_then_wpm_preserves_rom_ports_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_rom_ports_length.t.exe set_prom_then_wpm_preserves_rom_ports_length.cpp set_prom_then_wpm_preserves_rom_ports_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_rom_ports_length.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_rom_ports_length.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_sel_rom_bound
- (rule
-  (targets set_prom_then_wpm_preserves_sel_rom_bound.t.exe)
-  (deps SetPromThenWpmPreservesSelRomBound.vo set_prom_then_wpm_preserves_sel_rom_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_sel_rom_bound.t.exe set_prom_then_wpm_preserves_sel_rom_bound.cpp set_prom_then_wpm_preserves_sel_rom_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_sel_rom_bound.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_sel_rom_bound.t.exe))))
 
 (subdir set_prom_then_wpm_preserves_sel_wf
  (rule
@@ -2456,39 +1508,6 @@
   (deps set_prom_then_wpm_preserves_stack_forall.t.exe)
   (action (run ./set_prom_then_wpm_preserves_stack_forall.t.exe))))
 
-(subdir set_prom_then_wpm_preserves_stack_length
- (rule
-  (targets set_prom_then_wpm_preserves_stack_length.t.exe)
-  (deps SetPromThenWpmPreservesStackLength.vo set_prom_then_wpm_preserves_stack_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_stack_length.t.exe set_prom_then_wpm_preserves_stack_length.cpp set_prom_then_wpm_preserves_stack_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_stack_length.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_stack_length.t.exe))))
-
-(subdir set_prom_then_wpm_prom_addr_bound
- (rule
-  (targets set_prom_then_wpm_prom_addr_bound.t.exe)
-  (deps SetPromThenWpmPromAddrBound.vo set_prom_then_wpm_prom_addr_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_prom_addr_bound.t.exe set_prom_then_wpm_prom_addr_bound.cpp set_prom_then_wpm_prom_addr_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_prom_addr_bound.t.exe)
-  (action (run ./set_prom_then_wpm_prom_addr_bound.t.exe))))
-
-(subdir set_prom_then_wpm_prom_data_bound
- (rule
-  (targets set_prom_then_wpm_prom_data_bound.t.exe)
-  (deps SetPromThenWpmPromDataBound.vo set_prom_then_wpm_prom_data_bound.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_prom_data_bound.t.exe set_prom_then_wpm_prom_data_bound.cpp set_prom_then_wpm_prom_data_bound.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_prom_data_bound.t.exe)
-  (action (run ./set_prom_then_wpm_prom_data_bound.t.exe))))
-
 (subdir set_prom_then_wpm_rom_forall
  (rule
   (targets set_prom_then_wpm_rom_forall.t.exe)
@@ -2499,17 +1518,6 @@
   (alias runtest)
   (deps set_prom_then_wpm_rom_forall.t.exe)
   (action (run ./set_prom_then_wpm_rom_forall.t.exe))))
-
-(subdir set_prom_then_wpm_rom_length
- (rule
-  (targets set_prom_then_wpm_rom_length.t.exe)
-  (deps SetPromThenWpmRomLength.vo set_prom_then_wpm_rom_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_rom_length.t.exe set_prom_then_wpm_rom_length.cpp set_prom_then_wpm_rom_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_rom_length.t.exe)
-  (action (run ./set_prom_then_wpm_rom_length.t.exe))))
 
 (subdir set_reg_pair_high_nibble
  (rule
@@ -2555,28 +1563,6 @@
   (deps step_edge_0031.t.exe)
   (action (run ./step_edge_0031.t.exe))))
 
-(subdir steps_counter_unroll
- (rule
-  (targets steps_counter_unroll.t.exe)
-  (deps StepsCounterUnroll.vo steps_counter_unroll.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} steps_counter_unroll.t.exe steps_counter_unroll.cpp steps_counter_unroll.t.cpp)))
- (rule
-  (alias runtest)
-  (deps steps_counter_unroll.t.exe)
-  (action (run ./steps_counter_unroll.t.exe))))
-
-(subdir timing_preserves_wf_simple
- (rule
-  (targets timing_preserves_wf_simple.t.exe)
-  (deps TimingPreservesWfSimple.vo timing_preserves_wf_simple.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} timing_preserves_wf_simple.t.exe timing_preserves_wf_simple.cpp timing_preserves_wf_simple.t.cpp)))
- (rule
-  (alias runtest)
-  (deps timing_preserves_wf_simple.t.exe)
-  (action (run ./timing_preserves_wf_simple.t.exe))))
-
 (subdir update_nth_length_edge_0009
  (rule
   (targets update_nth_length_edge_0009.t.exe)
@@ -2587,17 +1573,6 @@
   (alias runtest)
   (deps update_nth_length_edge_0009.t.exe)
   (action (run ./update_nth_length_edge_0009.t.exe))))
-
-(subdir update_nth_length_preserve
- (rule
-  (targets update_nth_length_preserve.t.exe)
-  (deps UpdateNthLengthPreserve.vo update_nth_length_preserve.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_length_preserve.t.exe update_nth_length_preserve.cpp update_nth_length_preserve.t.cpp)))
- (rule
-  (alias runtest)
-  (deps update_nth_length_preserve.t.exe)
-  (action (run ./update_nth_length_preserve.t.exe))))
 
 (subdir update_nth_out_of_bounds_length
  (rule
@@ -2620,17 +1595,6 @@
   (alias runtest)
   (deps valid_layout_small_prop.t.exe)
   (action (run ./valid_layout_small_prop.t.exe))))
-
-(subdir valid_layout_window
- (rule
-  (targets valid_layout_window.t.exe)
-  (deps ValidLayoutWindow.vo valid_layout_window.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} valid_layout_window.t.exe valid_layout_window.cpp valid_layout_window.t.cpp)))
- (rule
-  (alias runtest)
-  (deps valid_layout_window.t.exe)
-  (action (run ./valid_layout_window.t.exe))))
 
 (subdir wf_bank_from_sys_prop
  (rule
