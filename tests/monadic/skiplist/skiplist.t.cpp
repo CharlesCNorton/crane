@@ -22,16 +22,14 @@
 #include <variant>
 #include <vector>
 
-// Thread-safe random number generator
+// Thread-safe deterministic random number generator.
+// Each thread gets a unique but reproducible seed derived from an atomic
+// counter, ensuring tests are deterministic across runs.
 static int thread_safe_rand() {
     static std::atomic<unsigned int> seed_counter{0};
     thread_local std::mt19937 gen([]() {
-        // Combine random_device, time, and a counter for better seeding
-        std::random_device rd;
-        auto t = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-        auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         auto counter = seed_counter.fetch_add(1, std::memory_order_relaxed);
-        return static_cast<unsigned int>(rd() ^ t ^ tid ^ counter);
+        return static_cast<unsigned int>(counter * 2654435761u + 42u);
     }());
     thread_local std::uniform_int_distribution<int> dist(0, RAND_MAX);
     return dist(gen);
