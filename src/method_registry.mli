@@ -69,8 +69,14 @@ type method_info = {
       and callers must use [std::any_cast] to recover the value. *)
 }
 
+(** A method candidate: (func_ref, body, type, this_position).
+    Stored during pre-scan indexed by the eponymous inductive they
+    belong to, so cpp.ml can retrieve them without re-collecting. *)
+type method_candidate = GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int
+
 (** Opaque registry type.  Internally a hashtable from [GlobRef.t]
-    (the function reference) to [method_info]. *)
+    (the function reference) to [method_info], plus a reverse index
+    from inductive [GlobRef.t] to its method candidates. *)
 type t
 
 (** Build the registry by scanning the full [ml_structure].
@@ -115,6 +121,13 @@ val lookup_ind_tvar_positions : t -> GlobRef.t -> int list
     Returns [false] if the function is not registered. *)
 val method_returns_any : t -> GlobRef.t -> bool
 
+(** Return all method candidates for a given inductive type.
+    Returns candidates as [(func_ref, body, type, this_position)] tuples.
+    These are collected during the pre-scan and can be used directly
+    by cpp.ml to generate method bodies without re-scanning the structure.
+    Returns [[]] if no candidates are registered. *)
+val get_candidates : t -> GlobRef.t -> method_candidate list
+
 (** {2 Mutation interface}
 
     During rendering, additional methods may be discovered that were not
@@ -129,6 +142,10 @@ val method_returns_any : t -> GlobRef.t -> bool
     @param this_pos       argument index that becomes [this]
     @param ind_tvar_positions  type-variable indices deducible from receiver *)
 val register_method : t -> GlobRef.t -> GlobRef.t -> int -> ind_tvar_positions:int list -> unit
+
+(** Add a method candidate for an inductive after initial creation.
+    Appends the candidate to the existing list for that inductive. *)
+val add_candidate : t -> GlobRef.t -> method_candidate -> unit
 
 (** Mark an existing registered method as returning [std::any].
     No-op if the function is not registered. *)

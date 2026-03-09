@@ -286,14 +286,6 @@ let unmerged_wrappers : (string, unit) Hashtbl.t = Hashtbl.create 16
    as both an inductive from BinNums and a module from BinNat). *)
 let global_inductive_names : (string, ModPath.t) Hashtbl.t = Hashtbl.create 16
 
-(* Pending method candidates from dependency modules.
-   Maps an inductive type's GlobRef to a list of (func_ref, body, type, this_position).
-   Populated during PASS 1 (pp_wrapper_module_dual) when a function from a dependency
-   module is a registered method for an inductive type.
-   Consumed during PASS 2 (pp_cpp_ind_header) to inject methods into the inductive struct. *)
-let pending_method_candidates :
-  (GlobRef.t, (GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int) list ref) Hashtbl.t
-  = Hashtbl.create 16
 
 
 (* Check if a GlobRef belongs to a wrapper module and return the qualified name.
@@ -415,7 +407,7 @@ let reset_cpp_state () =
   Hashtbl.clear pending_wrapper_decls;
   Hashtbl.clear unmerged_wrappers;
   Hashtbl.clear global_inductive_names;
-  Hashtbl.clear pending_method_candidates;
+
   template_static_accessors := [];
   Hashtbl.clear functor_app_sources
 
@@ -2236,7 +2228,8 @@ let pp_cpp_ind_header kn ind =
             (match Method_registry.find_epon_arg_pos ind_ref ty with
             | Some (pos, ind_tvar_positions) ->
               methods := (r, body, ty, pos) :: !methods;
-              register_method r ind_ref pos ~ind_tvar_positions ()
+              register_method r ind_ref pos ~ind_tvar_positions ();
+              Method_registry.add_candidate (get_method_registry ()) ind_ref (r, body, ty, pos)
             | None -> ())
         | SEdecl (Dfix (rv, defs, typs)) ->
           Array.iteri (fun i r ->
@@ -2247,7 +2240,8 @@ let pp_cpp_ind_header kn ind =
               match Method_registry.find_epon_arg_pos ind_ref ty with
               | Some (pos, ind_tvar_positions) ->
                 methods := (r, body, ty, pos) :: !methods;
-                register_method r ind_ref pos ~ind_tvar_positions ()
+                register_method r ind_ref pos ~ind_tvar_positions ();
+                Method_registry.add_candidate (get_method_registry ()) ind_ref (r, body, ty, pos)
               | None -> ()
             end
           ) rv
@@ -2306,17 +2300,18 @@ let pp_cpp_ind_header kn ind =
                 (* Inside a module, non-eponymous inductives don't get methods *)
                 []
           in
-          (* Also include method candidates collected from dependency modules
-             (e.g., Nat::add from Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
+          (* Also include method candidates from the registry (e.g., Nat::add from
+             Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
              Deduplicate: skip any that are already in the methods list. *)
-          let methods = match Hashtbl.find_opt pending_method_candidates ind_ref with
-            | Some bucket ->
+          let methods =
+            let reg_candidates = Method_registry.get_candidates (get_method_registry ()) ind_ref in
+            if reg_candidates = [] then methods
+            else
               let existing = List.map (fun (r, _, _, _) -> r) methods in
               let new_methods = List.filter (fun (r, _, _, _) ->
                 not (List.exists (Environ.QGlobRef.equal Environ.empty_env r) existing)
-              ) !bucket in
+              ) reg_candidates in
               methods @ new_methods
-            | None -> methods
           in
           (* Compute parameter-only type vars.
              Parameters (before the colon) become template params.
@@ -2943,7 +2938,8 @@ let rec pp_structure_elem ~is_header f = function
                      (match Method_registry.find_epon_arg_pos epon_ref ty with
                      | Some (pos, ind_tvar_positions) ->
                        method_candidates := (r, body, ty, pos) :: !method_candidates;
-                       register_method r epon_ref pos ~ind_tvar_positions ()
+                       register_method r epon_ref pos ~ind_tvar_positions ();
+                       Method_registry.add_candidate (get_method_registry ()) epon_ref (r, body, ty, pos)
                      | None -> ())
                  | SEdecl (Dfix (rv, defs, typs)) ->
                    (* Handle fixpoints similarly - only from same module *)
@@ -2954,7 +2950,8 @@ let rec pp_structure_elem ~is_header f = function
                        match Method_registry.find_epon_arg_pos epon_ref ty with
                        | Some (pos, ind_tvar_positions) ->
                          method_candidates := (r, body, ty, pos) :: !method_candidates;
-                         register_method r epon_ref pos ~ind_tvar_positions ()
+                         register_method r epon_ref pos ~ind_tvar_positions ();
+                         Method_registry.add_candidate (get_method_registry ()) epon_ref (r, body, ty, pos)
                        | None -> ()
                      end
                    ) rv
@@ -3300,14 +3297,15 @@ let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
     | SEdecl (Dterm (r,_,_)) when is_suppressed_projection r -> ([], [], [])
     | SEdecl (Dterm (r, _, _)) when is_method_candidate r -> ([], [], [])
     | SEdecl (Dterm (r, body, ty)) when is_registered_method r <> None ->
-      (* Collect this method candidate for injection into the inductive struct *)
+      (* Method already registered during pre-scan; ensure candidate body is available *)
       (match is_registered_method r with
        | Some (epon_ref, pos) ->
-         let bucket = match Hashtbl.find_opt pending_method_candidates epon_ref with
-           | Some b -> b
-           | None -> let b = ref [] in Hashtbl.replace pending_method_candidates epon_ref b; b
-         in
-         bucket := (r, body, ty, pos) :: !bucket
+         let reg = get_method_registry () in
+         let already = List.exists (fun (r', _, _, _) ->
+           Environ.QGlobRef.equal Environ.empty_env r r'
+         ) (Method_registry.get_candidates reg epon_ref) in
+         if not already then
+           Method_registry.add_candidate reg epon_ref (r, body, ty, pos)
        | None -> ());
       ([], [], [])
     | SEdecl (Dterm (r, _a, Tglob (ty, _args, _e))) when is_monad ty -> ([], [], [])
@@ -3337,15 +3335,16 @@ let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
        GROUPING: Keep all functions from this Dfix as a list so they can be
        rendered as a single block (no blank lines between them) in Phase 3. *)
     | SEdecl (Dfix (rv, defs, typs)) ->
-      (* Collect registered methods into pending_method_candidates before filtering *)
+      (* Ensure registered methods have their candidates in the registry *)
       Array.iteri (fun i r ->
         match is_registered_method r with
         | Some (epon_ref, pos) ->
-          let bucket = match Hashtbl.find_opt pending_method_candidates epon_ref with
-            | Some b -> b
-            | None -> let b = ref [] in Hashtbl.replace pending_method_candidates epon_ref b; b
-          in
-          bucket := (r, defs.(i), typs.(i), pos) :: !bucket
+          let reg = get_method_registry () in
+          let already = List.exists (fun (r', _, _, _) ->
+            Environ.QGlobRef.equal Environ.empty_env r r'
+          ) (Method_registry.get_candidates reg epon_ref) in
+          if not already then
+            Method_registry.add_candidate reg epon_ref (r, defs.(i), typs.(i), pos)
         | None -> ()
       ) rv;
       let filter = Array.to_list (Array.map (fun x ->
@@ -3442,8 +3441,6 @@ let do_struct_with_decl_tracking ~is_header f s =
      The extraction framework calls pp_struct/pp_hstruct multiple times
      (dry run, impl, intf) and lifted decls can leak between passes. *)
   ignore (Translation.take_lifted_decls ());
-  (* Clear pending method candidates from previous passes (dry run, impl, intf). *)
-  Hashtbl.clear pending_method_candidates;
   (* Resolve std/bsl names once for this extraction pass *)
   init_std_names ();
   (* Build the method registry by scanning the entire structure BEFORE any

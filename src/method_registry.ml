@@ -33,8 +33,13 @@ type method_info = {
   returns_any : bool;
 }
 
+type method_candidate = GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int
+
 type t = {
   methods : (GlobRef.t, method_info) Hashtbl.t;
+  (* Reverse index: inductive GlobRef -> list of method candidates.
+     Populated during pre-scan so cpp.ml doesn't need to re-collect. *)
+  candidates : (GlobRef.t, method_candidate list) Hashtbl.t;
 }
 
 (* ------------------------------------------------------------------ *)
@@ -241,7 +246,7 @@ let register_into tbl (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : 
    Custom types and enum-only inductives are excluded — custom types have
    user-provided C++ implementations, and enums are rendered as [enum class]
    values with no struct to attach methods to. *)
-let register_methods_for_epon tbl ?(cross_module=false) ?(wrapper_module_name : string option = None) epon_ref decls =
+let register_methods_for_epon tbl cands ?(cross_module=false) ?(wrapper_module_name : string option = None) epon_ref decls =
   if is_custom epon_ref || Table.is_enum_inductive epon_ref then ()
   else
   let epon_modpath = modpath_of_r epon_ref in
@@ -268,13 +273,21 @@ let register_methods_for_epon tbl ?(cross_module=false) ?(wrapper_module_name : 
       | _ -> false
   in
   let same_module r = cross_module || from_wrapper_module r || ModPath.equal (modpath_of_r r) epon_modpath in
+  (* Helper to add a candidate to both the method table and candidates table *)
+  let add_candidate r body ty pos ind_tvar_positions =
+    register_into tbl r epon_ref pos ~ind_tvar_positions;
+    let existing = match Hashtbl.find_opt cands epon_ref with
+      | Some l -> l | None -> []
+    in
+    Hashtbl.replace cands epon_ref (existing @ [(r, body, ty, pos)])
+  in
   List.iter (fun (_l, se) ->
     match se with
     | SEdecl (Dterm (r, body, ty)) ->
       if same_module r && body_safe_for_method body then
         (match find_epon_arg_pos epon_ref ty with
          | Some (pos, ind_tvar_positions) ->
-           register_into tbl r epon_ref pos ~ind_tvar_positions
+           add_candidate r body ty pos ind_tvar_positions
          | None -> ())
     | SEdecl (Dfix (rv, defs, typs)) ->
       (* Mutual fixpoints: check each function in the fixpoint block. *)
@@ -282,7 +295,7 @@ let register_methods_for_epon tbl ?(cross_module=false) ?(wrapper_module_name : 
         if same_module r && body_safe_for_method defs.(i) then
           match find_epon_arg_pos epon_ref typs.(i) with
           | Some (pos, ind_tvar_positions) ->
-            register_into tbl r epon_ref pos ~ind_tvar_positions
+            add_candidate r defs.(i) typs.(i) pos ind_tvar_positions
           | None -> ()
       ) rv
     | _ -> ()
@@ -319,7 +332,7 @@ let register_methods_for_epon tbl ?(cross_module=false) ?(wrapper_module_name : 
    [parent_decls] accumulates declarations from enclosing scopes,
    enabling cross-module method registration (e.g. a function in an
    outer module that takes an inner module's eponymous type). *)
-let rec pre_register_methods_from_structure tbl ~at_top_level (parent_decls : (Label.t * Miniml.ml_structure_elem) list) (sel : (Label.t * Miniml.ml_structure_elem) list) : unit =
+let rec pre_register_methods_from_structure tbl cands ~at_top_level (parent_decls : (Label.t * Miniml.ml_structure_elem) list) (sel : (Label.t * Miniml.ml_structure_elem) list) : unit =
   (* Handle top-level inductives that may have sibling methods. *)
   if at_top_level then
     List.iter (fun (_l, se) ->
@@ -343,11 +356,11 @@ let rec pre_register_methods_from_structure tbl ~at_top_level (parent_decls : (L
            | TypeClass _ -> ()
            | _ ->
              (* Register methods from sibling declarations at this level. *)
-             register_methods_for_epon tbl ind_ref sel;
+             register_methods_for_epon tbl cands ind_ref sel;
              (* Also check parent-level declarations for wrapper module
                 functions (e.g. [ListAux.foo] taking a [list] argument). *)
              let ind_name = Common.pp_global_name Type ind_ref in
-             register_methods_for_epon tbl ~wrapper_module_name:(Some ind_name) ind_ref parent_decls)
+             register_methods_for_epon tbl cands ~wrapper_module_name:(Some ind_name) ind_ref parent_decls)
         ) ind.ind_packets
       | _ -> ()
     ) sel;
@@ -380,31 +393,31 @@ let rec pre_register_methods_from_structure tbl ~at_top_level (parent_decls : (L
          (match find_eponymous_inductive module_name_str inner_sel with
           | Some epon_ref ->
             (* Register methods from within the module. *)
-            register_methods_for_epon tbl epon_ref inner_sel;
+            register_methods_for_epon tbl cands epon_ref inner_sel;
             (* Also register cross-module methods: functions in parent
                declarations whose module name starts with the eponymous
                type name. *)
-            register_methods_for_epon tbl ~cross_module:true
+            register_methods_for_epon tbl cands ~cross_module:true
               ~wrapper_module_name:(Some module_name_str) epon_ref parent_decls
           | None -> ());
          (* Recurse into the module's contents.  Accumulate current-level
             declarations into [parent_decls] for nested modules. *)
-         pre_register_methods_from_structure tbl ~at_top_level:false (parent_decls @ sel) inner_sel
+         pre_register_methods_from_structure tbl cands ~at_top_level:false (parent_decls @ sel) inner_sel
        | MEfunctor (_mbid, _mt, body) ->
          (* Recurse into functor bodies — they may contain modules with
             eponymous types. *)
-         pre_register_methods_from_module_expr tbl (parent_decls @ sel) body
+         pre_register_methods_from_module_expr tbl cands (parent_decls @ sel) body
        | _ -> ())
     | _ -> ()
   ) sel
 
 (* Recurse into module expressions (struct bodies and functor bodies)
    to find nested modules with eponymous types. *)
-and pre_register_methods_from_module_expr tbl (parent_decls : (Label.t * Miniml.ml_structure_elem) list) = function
+and pre_register_methods_from_module_expr tbl cands (parent_decls : (Label.t * Miniml.ml_structure_elem) list) = function
   | MEstruct (_mp, sel) ->
-    pre_register_methods_from_structure tbl ~at_top_level:false parent_decls sel
+    pre_register_methods_from_structure tbl cands ~at_top_level:false parent_decls sel
   | MEfunctor (_mbid, _mt, body) ->
-    pre_register_methods_from_module_expr tbl parent_decls body
+    pre_register_methods_from_module_expr tbl cands parent_decls body
   | _ -> ()
 
 (* ------------------------------------------------------------------ *)
@@ -518,16 +531,17 @@ let compute_returns_any tbl (s : ml_structure) =
    correctly. *)
 let create (s : ml_structure) : t =
   let tbl = Hashtbl.create 100 in
+  let cands = Hashtbl.create 32 in
   (* Gather all top-level declarations across all modules.  These serve as
      [parent_decls] for the recursive scan, enabling cross-module method
      detection (e.g. a function at file scope that takes a type from a
      sub-module as its argument). *)
   let all_top_level_decls = List.concat_map snd s in
   List.iter (fun (_mp, sel) ->
-    pre_register_methods_from_structure tbl ~at_top_level:true all_top_level_decls sel
+    pre_register_methods_from_structure tbl cands ~at_top_level:true all_top_level_decls sel
   ) s;
   compute_returns_any tbl s;
-  { methods = tbl }
+  { methods = tbl; candidates = cands }
 
 let lookup (reg : t) (func_ref : GlobRef.t) : method_info option =
   Hashtbl.find_opt reg.methods func_ref
@@ -547,8 +561,19 @@ let method_returns_any (reg : t) (func_ref : GlobRef.t) : bool =
   | Some info -> info.returns_any
   | None -> false
 
+let get_candidates (reg : t) (ind_ref : GlobRef.t) : method_candidate list =
+  match Hashtbl.find_opt reg.candidates ind_ref with
+  | Some l -> l
+  | None -> []
+
 let register_method (reg : t) (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) ~(ind_tvar_positions : int list) =
   register_into reg.methods func_ref epon_ref this_pos ~ind_tvar_positions
+
+let add_candidate (reg : t) (ind_ref : GlobRef.t) (cand : method_candidate) =
+  let existing = match Hashtbl.find_opt reg.candidates ind_ref with
+    | Some l -> l | None -> []
+  in
+  Hashtbl.replace reg.candidates ind_ref (existing @ [cand])
 
 let register_method_returns_any (reg : t) (func_ref : GlobRef.t) =
   match Hashtbl.find_opt reg.methods func_ref with
