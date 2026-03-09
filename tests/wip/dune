@@ -1792,3 +1792,58 @@
   (alias runtest)
   (deps todo_dependent_field_alias.t.exe)
   (action (run ./todo_dependent_field_alias.t.exe))))
+
+(subdir todo_type_app_instance_alias
+ (rule
+  (targets todo_type_app_instance_alias.t.exe)
+  (deps TodoTypeAppInstanceAlias.vo todo_type_app_instance_alias.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_type_app_instance_alias.t.exe todo_type_app_instance_alias.cpp todo_type_app_instance_alias.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_type_app_instance_alias.t.exe)
+  (action (run ./todo_type_app_instance_alias.t.exe))))
+
+(subdir todo_inline_custom_symbol
+ (rule
+  (targets todo_inline_custom_symbol.t.exe)
+  (deps TodoInlineCustomSymbol.vo todo_inline_custom_symbol.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_inline_custom_symbol.t.exe todo_inline_custom_symbol.cpp todo_inline_custom_symbol.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_inline_custom_symbol.t.exe)
+  (action (run ./todo_inline_custom_symbol.t.exe))))
+
+(subdir todo_type_subst_pack_alias
+ (rule
+  (targets todo_type_subst_pack_alias.t.exe)
+  (deps TodoTypeSubstPackAlias.vo todo_type_subst_pack_alias.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_type_subst_pack_alias.t.exe todo_type_subst_pack_alias.cpp todo_type_subst_pack_alias.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_type_subst_pack_alias.t.exe)
+  (action (run ./todo_type_subst_pack_alias.t.exe))))
+
+(subdir todo_inline_custom_poly_id
+ (rule
+  (targets todo_inline_custom_poly_id.t.exe)
+  (deps TodoInlineCustomPolyId.vo todo_inline_custom_poly_id.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_inline_custom_poly_id.t.exe todo_inline_custom_poly_id.cpp todo_inline_custom_poly_id.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_inline_custom_poly_id.t.exe)
+  (action (run ./todo_inline_custom_poly_id.t.exe))))
+
+(subdir todo_erased_instance_param
+ (rule
+  (targets todo_erased_instance_param.t.exe)
+  (deps TodoErasedInstanceParam.vo todo_erased_instance_param.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_erased_instance_param.t.exe todo_erased_instance_param.cpp todo_erased_instance_param.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_erased_instance_param.t.exe)
+  (action (run ./todo_erased_instance_param.t.exe))))
