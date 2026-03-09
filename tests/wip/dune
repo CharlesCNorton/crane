@@ -276,17 +276,6 @@
   (deps execute_tcc_wf_edge_0105.t.exe)
   (action (run ./execute_tcc_wf_edge_0105.t.exe))))
 
-(subdir forall_list
- (rule
-  (targets forall_list.t.exe)
-  (deps ForallList.vo forall_list.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} forall_list.t.exe forall_list.cpp forall_list.t.cpp)))
- (rule
-  (alias runtest)
-  (deps forall_list.t.exe)
-  (action (run ./forall_list.t.exe))))
-
 (subdir get_pair_bound_prop
  (rule
   (targets get_pair_bound_prop.t.exe)
@@ -364,17 +353,6 @@
   (deps mutual_coind.t.exe)
   (action (run ./mutual_coind.t.exe))))
 
-(subdir page_address
- (rule
-  (targets page_address.t.exe)
-  (deps PageAddress.vo page_address.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} page_address.t.exe page_address.cpp page_address.t.cpp)))
- (rule
-  (alias runtest)
-  (deps page_address.t.exe)
-  (action (run ./page_address.t.exe))))
-
 (subdir program_targets_region_scan
  (rule
   (targets program_targets_region_scan.t.exe)
@@ -386,61 +364,6 @@
   (deps program_targets_region_scan.t.exe)
   (action (run ./program_targets_region_scan.t.exe))))
 
-(subdir program_wf
- (rule
-  (targets program_wf.t.exe)
-  (deps ProgramWf.vo program_wf.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} program_wf.t.exe program_wf.cpp program_wf.t.cpp)))
- (rule
-  (alias runtest)
-  (deps program_wf.t.exe)
-  (action (run ./program_wf.t.exe))))
-
-(subdir ram_accessor
- (rule
-  (targets ram_accessor.t.exe)
-  (deps RamAccessor.vo ram_accessor.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_accessor.t.exe ram_accessor.cpp ram_accessor.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_accessor.t.exe)
-  (action (run ./ram_accessor.t.exe))))
-
-(subdir ram_bad_state
- (rule
-  (targets ram_bad_state.t.exe)
-  (deps RamBadState.vo ram_bad_state.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_bad_state.t.exe ram_bad_state.cpp ram_bad_state.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_bad_state.t.exe)
-  (action (run ./ram_bad_state.t.exe))))
-
-(subdir ram_empty_wf
- (rule
-  (targets ram_empty_wf.t.exe)
-  (deps RamEmptyWf.vo ram_empty_wf.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_empty_wf.t.exe ram_empty_wf.cpp ram_empty_wf.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_empty_wf.t.exe)
-  (action (run ./ram_empty_wf.t.exe))))
-
-(subdir ram_init_reset
- (rule
-  (targets ram_init_reset.t.exe)
-  (deps RamInitReset.vo ram_init_reset.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_init_reset.t.exe ram_init_reset.cpp ram_init_reset.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_init_reset.t.exe)
-  (action (run ./ram_init_reset.t.exe))))
-
 (subdir ram_read_main_bound_edge_0041
  (rule
   (targets ram_read_main_bound_edge_0041.t.exe)
@@ -451,17 +374,6 @@
   (alias runtest)
   (deps ram_read_main_bound_edge_0041.t.exe)
   (action (run ./ram_read_main_bound_edge_0041.t.exe))))
-
-(subdir ram_write
- (rule
-  (targets ram_write.t.exe)
-  (deps RamWrite.vo ram_write.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_write.t.exe ram_write.cpp ram_write.t.cpp)))
- (rule
-  (alias runtest)
-  (deps ram_write.t.exe)
-  (action (run ./ram_write.t.exe))))
 
 (subdir ram_write_status_sys_edge_0017
  (rule
