@@ -36,7 +36,7 @@ struct TodoWithTypeConstraint {
   struct NatBase {
     using t = unsigned int;
 
-    static inline const unsigned int zero = 0;
+    static inline const unsigned int zero = 0u;
 
     static unsigned int bump(const unsigned int n);
   };

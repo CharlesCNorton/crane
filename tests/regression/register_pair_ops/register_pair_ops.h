@@ -52,6 +52,17 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
+  template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<A>::nil _args) -> bool { return true; },
+            [&](const typename List<A>::cons _args) -> bool {
+              A a = _args._a0;
+              std::shared_ptr<List<A>> l0 = _args._a1;
+              return (f(a) && std::move(l0)->forallb(f));
+            }},
+        this->v());
+  }
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -73,17 +84,6 @@ public:
               }},
           this->v());
     }
-  }
-  template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
-    return std::visit(
-        Overloaded{
-            [](const typename List<A>::nil _args) -> bool { return true; },
-            [&](const typename List<A>::cons _args) -> bool {
-              A a = _args._a0;
-              std::shared_ptr<List<A>> l0 = _args._a1;
-              return (f(a) && std::move(l0)->forallb(f));
-            }},
-        this->v());
   }
 };
 

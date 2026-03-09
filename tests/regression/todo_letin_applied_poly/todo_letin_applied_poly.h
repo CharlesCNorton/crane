@@ -18,8 +18,7 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct TodoLetinAppliedPoly {
-  static inline const unsigned int demo_nat =
-      (((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1);
+  static inline const unsigned int demo_nat = 7u;
 
   static inline const bool demo_bool = true;
 
@@ -27,7 +26,7 @@ struct TodoLetinAppliedPoly {
     if (demo_bool) {
       return demo_nat;
     } else {
-      return 0;
+      return 0u;
     }
   }();
 };

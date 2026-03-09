@@ -22,14 +22,13 @@ struct TodoExplicitTypeAppAlias {
 
   static inline const unsigned int test_value = []() {
     return [](void) {
-      unsigned int kept_nat =
-          _anon_alias((((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+      unsigned int kept_nat = _anon_alias(9u);
       bool kept_bool = _anon_alias(true);
       return (std::move(kept_nat) + [&](void) {
         if (std::move(kept_bool)) {
-          return (0 + 1);
+          return 1u;
         } else {
-          return 0;
+          return 0u;
         }
       }());
     }();

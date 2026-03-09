@@ -17,25 +17,22 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename I, typename carrier>
-concept Magma = requires(carrier a0, carrier a1) {
-  { I::op(a1, a0) } -> std::convertible_to<carrier>;
+template <typename I>
+concept Magma = requires(typename I::carrier a0, typename I::carrier a1) {
+  typename I::carrier;
+  { I::op(a1, a0) } -> std::convertible_to<typename I::carrier>;
 };
 
 struct TodoDependentFieldAlias {
   using carrier = std::any;
 
-  template <typename _tcI0, typename carrier>
-  static carrier op(const carrier _x0, const carrier _x1) {
-    return _tcI0::op(_x0, _x1);
-  }
-
   struct nat_magma {
+    using carrier = unsigned int;
     static unsigned int op(unsigned int a0, unsigned int a1) {
       return (a0 + a1);
     }
   };
-  static_assert(Magma<nat_magma, unsigned int>);
+  static_assert(Magma<nat_magma>);
 
   template <typename _tcI0, typename carrier>
   static carrier pick_op(const carrier _x0, const carrier _x1) {
@@ -47,6 +44,6 @@ struct TodoDependentFieldAlias {
                                                            const carrier _x1) {
       return pick_op<nat_magma>(_x0, _x1);
     };
-    return alias(((0 + 1) + 1), (((0 + 1) + 1) + 1));
+    return alias(2u, 3u);
   }();
 };

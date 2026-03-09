@@ -21,9 +21,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct TodoExtractConstantNoninline {
   static unsigned int foreign_inc(const unsigned int);
 
-  static inline const unsigned int test_value =
-      foreign_inc(((((0 + 1) + 1) + 1) + 1));
+  static inline const unsigned int test_value = foreign_inc(4u);
 
-  static inline const unsigned int twice_value =
-      foreign_inc(foreign_inc(((0 + 1) + 1)));
+  static inline const unsigned int twice_value = foreign_inc(foreign_inc(2u));
 };

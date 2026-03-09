@@ -46,7 +46,7 @@ struct TodoNestedModuleType {
   struct NatInner {
     using t = unsigned int;
 
-    static inline const unsigned int zero = 0;
+    static inline const unsigned int zero = 0u;
   };
 
   struct NatOuter {

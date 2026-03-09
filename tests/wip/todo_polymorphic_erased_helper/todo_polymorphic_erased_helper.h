@@ -20,14 +20,13 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct TodoPolymorphicErasedHelper {
   static inline const unsigned int test_value = []() {
     return [](void) {
-      unsigned int kept_nat =
-          _anon_aux((((((((0 + 1) + 1) + 1) + 1) + 1) + 1) + 1));
+      unsigned int kept_nat = _anon_aux(7u);
       bool kept_bool = _anon_aux(true);
       return (std::move(kept_nat) + [&](void) {
         if (std::move(kept_bool)) {
-          return (0 + 1);
+          return 1u;
         } else {
-          return 0;
+          return 0u;
         }
       }());
     }();

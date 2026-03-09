@@ -13,5 +13,7 @@
 
 unsigned int TodoExtractConstantNoninline::foreign_inc(const unsigned int _x0) {
   throw std::logic_error(
-      "unrealized axiom: Top.TodoExtractConstantNoninline.foreign_inc");
+      "unrealized axiom: "
+      "CraneTestsWIP.todo_extract_constant_noninline."
+      "TodoExtractConstantNoninline.TodoExtractConstantNoninline.foreign_inc");
 }

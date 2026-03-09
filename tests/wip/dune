@@ -1760,17 +1760,6 @@
   (deps todo_extract_constant_noninline.t.exe)
   (action (run ./todo_extract_constant_noninline.t.exe))))
 
-(subdir todo_letin_applied_poly
- (rule
-  (targets todo_letin_applied_poly.t.exe)
-  (deps TodoLetinAppliedPoly.vo todo_letin_applied_poly.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_letin_applied_poly.t.exe todo_letin_applied_poly.cpp todo_letin_applied_poly.t.cpp)))
- (rule
-  (alias runtest)
-  (deps todo_letin_applied_poly.t.exe)
-  (action (run ./todo_letin_applied_poly.t.exe))))
-
 (subdir todo_polymorphic_erased_helper
  (rule
   (targets todo_polymorphic_erased_helper.t.exe)
