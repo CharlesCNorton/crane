@@ -121,7 +121,7 @@ struct Nat {
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
-struct CpuInstrWf {
+struct CpuEmulator {
   template <typename T1>
   static std::shared_ptr<List<T1>>
   update_nth(const unsigned int n, const T1 x,
@@ -714,6 +714,15 @@ struct CpuInstrWf {
                           3u, List<unsigned int>::ctor::cons_(
                                   4u, List<unsigned int>::ctor::nil_()))))});
 
+  static inline const unsigned int add_result =
+      execute(sample, instr::ctor::ADD_(4u))->ex_acc;
+
   static inline const unsigned int nop_acc =
       execute(sample, instr::ctor::NOP_())->ex_acc;
+
+  static inline const unsigned int ldm_result =
+      execute(sample, instr::ctor::LDM_(5u))->ex_acc;
+
+  static inline const unsigned int jun_pc =
+      execute(sample, instr::ctor::JUN_(1024u))->ex_pc;
 };

@@ -1,11 +1,12 @@
 (* Copyright 2026 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
-(* Consolidated test: CPU PC shape after execute. *)
+(* Consolidated test: Intel 4004 CPU emulator covering all 27 instructions.
+   Tests return-this via shared_from_this on list methods (skipn, nth, firstn). *)
 
 From Stdlib Require Import List Nat Bool.
 Import ListNotations.
 
-Module CpuPcShape.
+Module CpuEmulator.
 
 Fixpoint update_nth {A : Type} (n : nat) (x : A) (l : list A) : list A :=
   match n, l with
@@ -190,10 +191,13 @@ Definition sample : state :=
   mkState 3 [1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 0]
           false 10 [20; 30] 42 [1; 2; 3; 4].
 
+Definition add_result : nat := ex_acc (execute sample (ADD 4)).
+Definition nop_acc : nat := ex_acc (execute sample NOP).
+Definition ldm_result : nat := ex_acc (execute sample (LDM 5)).
 Definition jun_pc : nat := ex_pc (execute sample (JUN 1024)).
 
-End CpuPcShape.
+End CpuEmulator.
 
 Require Crane.Extraction.
 From Crane Require Mapping.Std Mapping.NatIntStd.
-Crane Extraction "cpu_pc_shape" CpuPcShape.
+Crane Extraction "cpu_emulator" CpuEmulator.

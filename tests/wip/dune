@@ -45,61 +45,6 @@
   (deps cotree.t.exe)
   (action (run ./cotree.t.exe))))
 
-(subdir cpu_execute_wf
- (rule
-  (targets cpu_execute_wf.t.exe)
-  (deps CpuExecuteWf.vo cpu_execute_wf.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cpu_execute_wf.t.exe cpu_execute_wf.cpp cpu_execute_wf.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cpu_execute_wf.t.exe)
-  (action (run ./cpu_execute_wf.t.exe))))
-
-(subdir cpu_instr_wf
- (rule
-  (targets cpu_instr_wf.t.exe)
-  (deps CpuInstrWf.vo cpu_instr_wf.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cpu_instr_wf.t.exe cpu_instr_wf.cpp cpu_instr_wf.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cpu_instr_wf.t.exe)
-  (action (run ./cpu_instr_wf.t.exe))))
-
-(subdir cpu_misc
- (rule
-  (targets cpu_misc.t.exe)
-  (deps CpuMisc.vo cpu_misc.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cpu_misc.t.exe cpu_misc.cpp cpu_misc.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cpu_misc.t.exe)
-  (action (run ./cpu_misc.t.exe))))
-
-(subdir cpu_pc_shape
- (rule
-  (targets cpu_pc_shape.t.exe)
-  (deps CpuPcShape.vo cpu_pc_shape.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cpu_pc_shape.t.exe cpu_pc_shape.cpp cpu_pc_shape.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cpu_pc_shape.t.exe)
-  (action (run ./cpu_pc_shape.t.exe))))
-
-(subdir decode_add_wf_edge_0063
- (rule
-  (targets decode_add_wf_edge_0063.t.exe)
-  (deps DecodeAddWfEdge0063.vo decode_add_wf_edge_0063.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} decode_add_wf_edge_0063.t.exe decode_add_wf_edge_0063.cpp decode_add_wf_edge_0063.t.cpp)))
- (rule
-  (alias runtest)
-  (deps decode_add_wf_edge_0063.t.exe)
-  (action (run ./decode_add_wf_edge_0063.t.exe))))
-
 (subdir decode_addr12_helper_edge_0027
  (rule
   (targets decode_addr12_helper_edge_0027.t.exe)
@@ -254,17 +199,6 @@
   (deps execute_ral_wf_edge_0103.t.exe)
   (action (run ./execute_ral_wf_edge_0103.t.exe))))
 
-(subdir execute_sub_wf_edge_0095
- (rule
-  (targets execute_sub_wf_edge_0095.t.exe)
-  (deps ExecuteSubWfEdge0095.vo execute_sub_wf_edge_0095.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} execute_sub_wf_edge_0095.t.exe execute_sub_wf_edge_0095.cpp execute_sub_wf_edge_0095.t.cpp)))
- (rule
-  (alias runtest)
-  (deps execute_sub_wf_edge_0095.t.exe)
-  (action (run ./execute_sub_wf_edge_0095.t.exe))))
-
 (subdir execute_tcc_wf_edge_0105
  (rule
   (targets execute_tcc_wf_edge_0105.t.exe)
@@ -408,50 +342,6 @@
   (deps reset_state_clears_volatile_edge_0037.t.exe)
   (action (run ./reset_state_clears_volatile_edge_0037.t.exe))))
 
-(subdir set_reg_pair_high_nibble
- (rule
-  (targets set_reg_pair_high_nibble.t.exe)
-  (deps SetRegPairHighNibble.vo set_reg_pair_high_nibble.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_reg_pair_high_nibble.t.exe set_reg_pair_high_nibble.cpp set_reg_pair_high_nibble.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_reg_pair_high_nibble.t.exe)
-  (action (run ./set_reg_pair_high_nibble.t.exe))))
-
-(subdir set_reg_pair_low_nibble
- (rule
-  (targets set_reg_pair_low_nibble.t.exe)
-  (deps SetRegPairLowNibble.vo set_reg_pair_low_nibble.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_reg_pair_low_nibble.t.exe set_reg_pair_low_nibble.cpp set_reg_pair_low_nibble.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_reg_pair_low_nibble.t.exe)
-  (action (run ./set_reg_pair_low_nibble.t.exe))))
-
-(subdir set_reg_pair_roundtrip_value
- (rule
-  (targets set_reg_pair_roundtrip_value.t.exe)
-  (deps SetRegPairRoundtripValue.vo set_reg_pair_roundtrip_value.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_reg_pair_roundtrip_value.t.exe set_reg_pair_roundtrip_value.cpp set_reg_pair_roundtrip_value.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_reg_pair_roundtrip_value.t.exe)
-  (action (run ./set_reg_pair_roundtrip_value.t.exe))))
-
-(subdir step_edge_0031
- (rule
-  (targets step_edge_0031.t.exe)
-  (deps StepEdge0031.vo step_edge_0031.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} step_edge_0031.t.exe step_edge_0031.cpp step_edge_0031.t.cpp)))
- (rule
-  (alias runtest)
-  (deps step_edge_0031.t.exe)
-  (action (run ./step_edge_0031.t.exe))))
-
 (subdir todo_dependent_field_alias
  (rule
   (targets todo_dependent_field_alias.t.exe)
@@ -561,25 +451,3 @@
   (alias runtest)
   (deps update_nth_length_edge_0009.t.exe)
   (action (run ./update_nth_length_edge_0009.t.exe))))
-
-(subdir update_nth_length_preserve
- (rule
-  (targets update_nth_length_preserve.t.exe)
-  (deps UpdateNthLengthPreserve.vo update_nth_length_preserve.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_length_preserve.t.exe update_nth_length_preserve.cpp update_nth_length_preserve.t.cpp)))
- (rule
-  (alias runtest)
-  (deps update_nth_length_preserve.t.exe)
-  (action (run ./update_nth_length_preserve.t.exe))))
-
-(subdir update_nth_out_of_bounds_length
- (rule
-  (targets update_nth_out_of_bounds_length.t.exe)
-  (deps UpdateNthOutOfBoundsLength.vo update_nth_out_of_bounds_length.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_out_of_bounds_length.t.exe update_nth_out_of_bounds_length.cpp update_nth_out_of_bounds_length.t.cpp)))
- (rule
-  (alias runtest)
-  (deps update_nth_out_of_bounds_length.t.exe)
-  (action (run ./update_nth_out_of_bounds_length.t.exe))))

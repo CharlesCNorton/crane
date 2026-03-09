@@ -1444,3 +1444,25 @@
   (alias runtest)
   (deps ram_write.t.exe)
   (action (run ./ram_write.t.exe))))
+
+(subdir cpu_emulator
+ (rule
+  (targets cpu_emulator.t.exe)
+  (deps CpuEmulator.vo cpu_emulator.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} cpu_emulator.t.exe cpu_emulator.cpp cpu_emulator.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps cpu_emulator.t.exe)
+  (action (run ./cpu_emulator.t.exe))))
+
+(subdir update_nth_bounds
+ (rule
+  (targets update_nth_bounds.t.exe)
+  (deps UpdateNthBounds.vo update_nth_bounds.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} update_nth_bounds.t.exe update_nth_bounds.cpp update_nth_bounds.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps update_nth_bounds.t.exe)
+  (action (run ./update_nth_bounds.t.exe))))

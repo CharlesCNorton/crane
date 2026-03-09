@@ -7,7 +7,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 
 template <typename F, typename R, typename... Args>
@@ -88,28 +87,6 @@ public:
           this->v());
     }
   }
-  A nth(const unsigned int n, const A default0) const {
-    if (n <= 0) {
-      return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
-                                     return default0;
-                                   },
-                                   [](const typename List<A>::cons _args) -> A {
-                                     A x = _args._a0;
-                                     return x;
-                                   }},
-                        this->v());
-    } else {
-      unsigned int m = n - 1;
-      return std::visit(
-          Overloaded{
-              [&](const typename List<A>::nil _args) -> A { return default0; },
-              [&](const typename List<A>::cons _args) -> A {
-                std::shared_ptr<List<A>> l_ = _args._a1;
-                return std::move(l_)->nth(m, default0);
-              }},
-          this->v());
-    }
-  }
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -135,42 +112,33 @@ public:
   }
 };
 
-struct Nat {
-  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                                      const unsigned int y,
-                                                      const unsigned int q,
-                                                      const unsigned int u);
+struct UpdateNthBounds {
+  template <typename T1>
+  static std::shared_ptr<List<T1>> update_nth(const unsigned int n, const T1 x,
+                                              std::shared_ptr<List<T1>> l) {
+    if ((n < l->length())) {
+      return l->firstn(n)->app(List<T1>::ctor::cons_(x, l->skipn((n + 1))));
+    } else {
+      return std::move(l);
+    }
+  }
 
-  static unsigned int div(const unsigned int x, const unsigned int y);
-};
+  static inline const unsigned int in_bounds_length =
+      update_nth<unsigned int>(
+          2u, 9u,
+          List<unsigned int>::ctor::cons_(
+              1u, List<unsigned int>::ctor::cons_(
+                      2u, List<unsigned int>::ctor::cons_(
+                              3u, List<unsigned int>::ctor::cons_(
+                                      4u, List<unsigned int>::ctor::nil_())))))
+          ->length();
 
-struct SetRegPairRoundtripValue {
-  struct state {
-    std::shared_ptr<List<unsigned int>> regs;
-  };
-
-  static unsigned int get_reg(const std::shared_ptr<state> &s,
-                              const unsigned int r);
-
-  static std::shared_ptr<List<unsigned int>>
-  update_nth_nat(const unsigned int n, const unsigned int x,
-                 std::shared_ptr<List<unsigned int>> l);
-
-  static unsigned int get_reg_pair(const std::shared_ptr<state> &s,
-                                   const unsigned int r);
-
-  static std::shared_ptr<state> set_reg_pair(std::shared_ptr<state> s,
-                                             const unsigned int r,
-                                             const unsigned int v);
-
-  static inline const unsigned int t = get_reg_pair(
-      set_reg_pair(
-          std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
-              0u,
-              List<unsigned int>::ctor::cons_(
-                  0u, List<unsigned int>::ctor::cons_(
-                          0u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_()))))}),
-          2u, 171u),
-      2u);
+  static inline const unsigned int out_of_bounds_length =
+      update_nth<unsigned int>(
+          9u, 7u,
+          List<unsigned int>::ctor::cons_(
+              1u, List<unsigned int>::ctor::cons_(
+                      2u, List<unsigned int>::ctor::cons_(
+                              3u, List<unsigned int>::ctor::nil_()))))
+          ->length();
 };
