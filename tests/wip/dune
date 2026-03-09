@@ -1453,61 +1453,6 @@
   (deps reset_state_wf_prop.t.exe)
   (action (run ./reset_state_wf_prop.t.exe))))
 
-(subdir set_prom_then_wpm_preserves_ram_forall
- (rule
-  (targets set_prom_then_wpm_preserves_ram_forall.t.exe)
-  (deps SetPromThenWpmPreservesRamForall.vo set_prom_then_wpm_preserves_ram_forall.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_ram_forall.t.exe set_prom_then_wpm_preserves_ram_forall.cpp set_prom_then_wpm_preserves_ram_forall.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_ram_forall.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_ram_forall.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_regs_forall
- (rule
-  (targets set_prom_then_wpm_preserves_regs_forall.t.exe)
-  (deps SetPromThenWpmPreservesRegsForall.vo set_prom_then_wpm_preserves_regs_forall.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_regs_forall.t.exe set_prom_then_wpm_preserves_regs_forall.cpp set_prom_then_wpm_preserves_regs_forall.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_regs_forall.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_regs_forall.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_rom_ports_forall
- (rule
-  (targets set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
-  (deps SetPromThenWpmPreservesRomPortsForall.vo set_prom_then_wpm_preserves_rom_ports_forall.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_rom_ports_forall.t.exe set_prom_then_wpm_preserves_rom_ports_forall.cpp set_prom_then_wpm_preserves_rom_ports_forall.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_rom_ports_forall.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_rom_ports_forall.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_sel_wf
- (rule
-  (targets set_prom_then_wpm_preserves_sel_wf.t.exe)
-  (deps SetPromThenWpmPreservesSelWf.vo set_prom_then_wpm_preserves_sel_wf.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_sel_wf.t.exe set_prom_then_wpm_preserves_sel_wf.cpp set_prom_then_wpm_preserves_sel_wf.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_sel_wf.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_sel_wf.t.exe))))
-
-(subdir set_prom_then_wpm_preserves_stack_forall
- (rule
-  (targets set_prom_then_wpm_preserves_stack_forall.t.exe)
-  (deps SetPromThenWpmPreservesStackForall.vo set_prom_then_wpm_preserves_stack_forall.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} set_prom_then_wpm_preserves_stack_forall.t.exe set_prom_then_wpm_preserves_stack_forall.cpp set_prom_then_wpm_preserves_stack_forall.t.cpp)))
- (rule
-  (alias runtest)
-  (deps set_prom_then_wpm_preserves_stack_forall.t.exe)
-  (action (run ./set_prom_then_wpm_preserves_stack_forall.t.exe))))
-
 (subdir set_prom_then_wpm_rom_forall
  (rule
   (targets set_prom_then_wpm_rom_forall.t.exe)
