@@ -26,6 +26,26 @@ open Minicpp
 open Translation
 
 
+(* The method registry is created once per extraction pass by scanning the full
+   ml_structure. It replaces the old global_method_registry and methods_returning_any
+   hashtables. Queries go through get_method_registry(). *)
+let method_registry : Method_registry.t option ref = ref None
+
+let get_method_registry () =
+  match !method_registry with
+  | Some r -> r
+  | None -> failwith "method_registry not initialized"
+
+(* Pre-computed name resolution cache — populated once per extraction pass.
+   Queries go through get_name_cache(). *)
+let name_cache : Name_resolution.t option ref = ref None
+
+let get_name_cache () =
+  match !name_cache with
+  | Some c -> c
+  | None -> failwith "name_cache not initialized"
+
+
 (*s Some utility functions. *)
 
 let pp_tvar id = str (Id.to_string id)
@@ -85,21 +105,57 @@ let sig_preamble _ comment used_modules usf =
 
 (*s The pretty-printer for C++ syntax*)
 
-(* Context tracking for code generation *)
+(* ============================================================================
+   Render context — mutable state tracking the rendering position.
+   These refs are saved/restored around sub-renders using with_render_ctx.
+   ============================================================================ *)
+
+(* Inside a struct body? Affects qualification of nested type references. *)
 let in_struct_context = ref false
-(* Track whether type class concepts have been hoisted for the current module.
-   When true, TypeClass inductives in the body are skipped (already emitted). *)
+(* TypeClass concepts already emitted for the current module? *)
 let concepts_hoisted = ref false
-(* Track when we're in a non-local context (static inline variable initialization).
-   Lambdas in non-local contexts cannot have capture-default [&]. *)
-let in_nonlocal_context = ref false
-(* Track current struct name for qualifying out-of-struct definitions *)
+(* Current struct name for qualifying out-of-struct definitions *)
 let current_struct_name : Pp.t option ref = ref None
-(* Track current struct's ModPath for ModPath-based qualification checks.
-   Needed when the C++ struct name differs from the Rocq module path (e.g., Coq_Pos vs BinPos.Pos). *)
+(* Current struct's ModPath for ModPath-based qualification checks.
+   Needed when the C++ struct name differs from the Rocq module path. *)
 let current_struct_mp : ModPath.t option ref = ref None
-(* Track whether we're inside a template struct (functor) *)
+(* Inside a template struct (functor)? Affects typename keyword insertion. *)
 let in_template_struct = ref false
+
+(* Snapshot of render context state for save/restore.
+   Using a record prevents individual fields from drifting out of sync
+   across save/restore boundaries. *)
+type render_ctx_snapshot = {
+  rcs_in_struct : bool;
+  rcs_concepts_hoisted : bool;
+  rcs_struct_name : Pp.t option;
+  rcs_struct_mp : ModPath.t option;
+  rcs_in_template : bool;
+}
+
+let save_render_ctx () = {
+  rcs_in_struct = !in_struct_context;
+  rcs_concepts_hoisted = !concepts_hoisted;
+  rcs_struct_name = !current_struct_name;
+  rcs_struct_mp = !current_struct_mp;
+  rcs_in_template = !in_template_struct;
+}
+
+let restore_render_ctx s =
+  in_struct_context := s.rcs_in_struct;
+  concepts_hoisted := s.rcs_concepts_hoisted;
+  current_struct_name := s.rcs_struct_name;
+  current_struct_mp := s.rcs_struct_mp;
+  in_template_struct := s.rcs_in_template
+
+(* Execute [f] with modified render context, restoring the snapshot afterward.
+   This replaces the error-prone pattern of manually saving/restoring individual refs. *)
+let with_render_ctx ~(setup : unit -> unit) (f : unit -> 'a) : 'a =
+  let saved = save_render_ctx () in
+  setup ();
+  let result = f () in
+  restore_render_ctx saved;
+  result
 (* Track definitions rendered as function accessors (Meyers singletons)
    instead of static inline variables, due to template static init ordering.
    Stores (functor_modpath, label) pairs. At call sites, we match by label
@@ -124,10 +180,76 @@ let method_candidates : (GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int) list 
    Stores: (record_ref, field_refs, ind_packet) *)
 let eponymous_record : (GlobRef.t * GlobRef.t option list * Miniml.ml_ind_packet) option ref = ref None
 
-(* Global registry of methods across all modules.
-   Maps function GlobRef to (eponymous_type_ref, this_position).
-   This allows cross-module method call transformation. *)
-let global_method_registry : (GlobRef.t, GlobRef.t * int * int list) Hashtbl.t = Hashtbl.create 100
+(* NOTE: The global method registry has moved to Method_registry.
+   Lookups go through get_method_registry(). *)
+
+(* Resolved standard library names — computed once per extraction pass
+   from Table.std_lib() and queried everywhere instead of 20+ scattered checks. *)
+type std_names = {
+  shared_ptr : string;     (* "std::shared_ptr" or "bsl::shared_ptr" *)
+  unique_ptr : string;     (* "std::unique_ptr" or "bsl::unique_ptr" *)
+  make_shared : string;    (* "std::make_shared" or "bsl::make_shared" *)
+  make_unique : string;    (* "std::make_unique" or "bsl::make_unique" *)
+  visit : string;          (* "std::visit" or "bsl::visit" *)
+  move : string;           (* "std::move" or "bsl::move" *)
+  forward : string;        (* "std::forward" or "bsl::forward" *)
+  any_cast : string;       (* "std::any_cast" or "bsl::any_cast" *)
+  logic_error : string;    (* "std::logic_error" or "bsl::logic_error" *)
+  overloaded : string;     (* "Overloaded" or "bdlf::Overloaded" *)
+  ns : string;             (* "std" or "bsl" — general prefix *)
+  str_suffix : string;     (* "s" or "_s" — string literal suffix *)
+  same_as : string;        (* "std::same_as" or "same_as" *)
+  declval : string;        (* "std::declval" or "bsl::declval" *)
+  convertible_to : string; (* "std::convertible_to" or "convertible_to" *)
+}
+
+let std_names : std_names ref = ref {
+  shared_ptr = "std::shared_ptr"; unique_ptr = "std::unique_ptr";
+  make_shared = "std::make_shared"; make_unique = "std::make_unique";
+  visit = "std::visit"; move = "std::move"; forward = "std::forward";
+  any_cast = "std::any_cast";
+  logic_error = "std::logic_error"; overloaded = "Overloaded";
+  ns = "std"; str_suffix = "s";
+  same_as = "std::same_as"; declval = "std::declval";
+  convertible_to = "std::convertible_to";
+}
+
+let init_std_names () =
+  if Table.std_lib () = "BDE" then
+    std_names := {
+      shared_ptr = "bsl::shared_ptr"; unique_ptr = "bsl::unique_ptr";
+      make_shared = "bsl::make_shared"; make_unique = "bsl::make_unique";
+      visit = "bsl::visit"; move = "bsl::move"; forward = "bsl::forward";
+      any_cast = "bsl::any_cast";
+      logic_error = "bsl::logic_error"; overloaded = "bdlf::Overloaded";
+      ns = "bsl";
+      str_suffix = "_s"; same_as = "same_as"; declval = "bsl::declval";
+      convertible_to = "convertible_to";
+    }
+  else
+    std_names := {
+      shared_ptr = "std::shared_ptr"; unique_ptr = "std::unique_ptr";
+      make_shared = "std::make_shared"; make_unique = "std::make_unique";
+      visit = "std::visit"; move = "std::move"; forward = "std::forward";
+      any_cast = "std::any_cast";
+      logic_error = "std::logic_error"; overloaded = "Overloaded";
+      ns = "std"; str_suffix = "s";
+      same_as = "std::same_as"; declval = "std::declval";
+      convertible_to = "std::convertible_to";
+    }
+
+let sn () = !std_names
+
+(* Inline check: is a term a typeclass instance? Replaces is_typeclass_instance.
+   A term is a typeclass instance if its return type is a Tglob referencing a typeclass. *)
+let is_typeclass_instance _body ty =
+  let rec return_type = function
+    | Miniml.Tarr (_, rest) -> return_type rest
+    | t -> t
+  in
+  match return_type ty with
+  | Miniml.Tglob (class_ref, _, _) -> Table.is_typeclass class_ref
+  | _ -> false
 
 (* Wrapper module table: maps ModPath.t of imported modules to their
    wrapper struct name. When a module like Stdlib.Init.Nat is wrapped
@@ -163,14 +285,6 @@ let unmerged_wrappers : (string, unit) Hashtbl.t = Hashtbl.create 16
    as both an inductive from BinNums and a module from BinNat). *)
 let global_inductive_names : (string, ModPath.t) Hashtbl.t = Hashtbl.create 16
 
-(* Pending method candidates from dependency modules.
-   Maps an inductive type's GlobRef to a list of (func_ref, body, type, this_position).
-   Populated during PASS 1 (pp_wrapper_module_dual) when a function from a dependency
-   module is a registered method for an inductive type.
-   Consumed during PASS 2 (pp_cpp_ind_header) to inject methods into the inductive struct. *)
-let pending_method_candidates :
-  (GlobRef.t, (GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int) list ref) Hashtbl.t
-  = Hashtbl.create 16
 
 
 (* Check if a GlobRef belongs to a wrapper module and return the qualified name.
@@ -203,12 +317,10 @@ let wrapper_qualify_name (r : GlobRef.t) (name : string) : string =
     | _ -> name
 
 let register_method (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) ?(ind_tvar_positions : int list = []) () =
-  Hashtbl.replace global_method_registry func_ref (epon_ref, this_pos, ind_tvar_positions)
+  Method_registry.register_method (get_method_registry ()) func_ref epon_ref this_pos ~ind_tvar_positions
 
 let is_registered_method (func_ref : GlobRef.t) : (GlobRef.t * int) option =
-  match Hashtbl.find_opt global_method_registry func_ref with
-  | Some (epon_ref, this_pos, _) -> Some (epon_ref, this_pos)
-  | None -> None
+  Method_registry.is_registered_method (get_method_registry ()) func_ref
 
 (* Look up the inductive's type variable positions (0-based indices into
    the function's tys list) for a registered method.
@@ -216,24 +328,13 @@ let is_registered_method (func_ref : GlobRef.t) : (GlobRef.t * int) option =
    are already deducible from the receiver object and should be omitted
    from explicit template arguments in method calls. *)
 let lookup_method_ind_tvar_positions (func_ref : GlobRef.t) : int list =
-  match Hashtbl.find_opt global_method_registry func_ref with
-  | Some (_, _, positions) -> positions
-  | None -> []
-
-(* Registry of methods that return std::any (from indexed inductives).
-   When a method's return type is erased to std::any due to GADT indexing,
-   we need to wrap calls with any_cast. Regular polymorphic methods (like fst)
-   don't need this - their type variables are template parameters.
-
-   This is separate from the method registry because not all methods of
-   inductive types return std::any - only those with index-dependent returns. *)
-let methods_returning_any : (GlobRef.t, unit) Hashtbl.t = Hashtbl.create 100
+  Method_registry.lookup_ind_tvar_positions (get_method_registry ()) func_ref
 
 let register_method_returns_any (func_ref : GlobRef.t) =
-  Hashtbl.replace methods_returning_any func_ref ()
+  Method_registry.register_method_returns_any (get_method_registry ()) func_ref
 
 let method_returns_any (func_ref : GlobRef.t) : bool =
-  Hashtbl.mem methods_returning_any func_ref
+  Method_registry.method_returns_any (get_method_registry ()) func_ref
 
 (* Global registry of eponymous records.
    When a module M contains a record with the same name (e.g., module CHT with record CHT),
@@ -285,17 +386,19 @@ let current_structure_decls : (Label.t * Miniml.ml_structure_elem) list ref = re
    This prevents state from one extraction affecting another when running multiple
    extractions in the same process (e.g., during 'dune build'). *)
 let reset_cpp_state () =
-  in_struct_context := false;
-  concepts_hoisted := false;
-  in_nonlocal_context := false;
-  current_struct_name := None;
-  current_struct_mp := None;
-  in_template_struct := false;
+  restore_render_ctx {
+    rcs_in_struct = false;
+    rcs_concepts_hoisted = false;
+    rcs_struct_name = None;
+    rcs_struct_mp = None;
+    rcs_in_template = false;
+  };
   eponymous_type_ref := None;
   eponymous_record := None;
   method_candidates := [];
   current_structure_decls := [];
-  Hashtbl.clear global_method_registry;
+  method_registry := None;
+  name_cache := None;
   Hashtbl.clear global_eponymous_record_registry;
   Hashtbl.clear wrapper_module_table;
   Hashtbl.clear collision_wrapper_table;
@@ -303,277 +406,9 @@ let reset_cpp_state () =
   Hashtbl.clear pending_wrapper_decls;
   Hashtbl.clear unmerged_wrappers;
   Hashtbl.clear global_inductive_names;
-  Hashtbl.clear pending_method_candidates;
+
   template_static_accessors := [];
   Hashtbl.clear functor_app_sources
-
-(* Check if a function body is safe to turn into a method.
-   A method uses 'this' (raw pointer) for the first argument instead of shared_ptr.
-   If the body returns the first argument directly (bare MLrel in result position),
-   that would produce 'return this' which can't convert to shared_ptr.
-   Returns true if safe.
-
-   Note: we only check for DIRECT returns of the first argument. Using the first
-   argument for field access (record projection), match dispatch, or passing to
-   other methods is fine — those translate to this->field, this->v(), and
-   this->method() respectively. *)
-let body_safe_for_method body =
-  (* Strip outer lambdas, counting them *)
-  let rec strip_lams n = function
-    | MLlam (_, _, b) -> strip_lams (n + 1) b
-    | b -> (n, b)
-  in
-  let (num_lams, inner) = strip_lams 0 body in
-  (* The first argument (position 0) has de Bruijn index = num_lams *)
-  let target_db = num_lams in
-  (* Check if MLrel target_db appears as a direct return value in the AST.
-     A "direct return" means the expression IS just MLrel (not wrapped in
-     MLapp, MLcons, etc.). We recurse through match branches, let bodies,
-     and fixpoints to find all result positions. *)
-  let rec returns_target depth = function
-    | MLrel i -> i = target_db + depth
-    | MLcase (_, _scrut, branches) ->
-      Array.exists (fun (ids, _, _, branch_body) ->
-        let n_bindings = List.length ids in
-        returns_target (depth + n_bindings) branch_body
-      ) branches
-    | MLletin (_, _, _, b) -> returns_target (depth + 1) b
-    | MLmagic a -> returns_target depth a
-    (* All other forms (MLapp, MLcons, MLlam, etc.) produce a NEW value,
-       not a bare return of the argument. So they're safe. *)
-    | _ -> false
-  in
-  (* Check the inner body. If it's a match on the first arg, only check branches *)
-  match inner with
-  | MLcase (_, MLrel scrut_idx, branches) when scrut_idx = target_db ->
-    (* Top-level match on first arg: only check branches, not scrutinee *)
-    not (Array.exists (fun (ids, _, _, branch_body) ->
-      let n_bindings = List.length ids in
-      returns_target n_bindings branch_body
-    ) branches)
-  | MLfix (fix_idx, _, funs, _) ->
-    (* Top-level fixpoint: check the fix body *)
-    let n_funs = Array.length funs in
-    let fix_body = funs.(fix_idx) in
-    let (fix_lams, fix_inner) = strip_lams 0 fix_body in
-    let fix_target_db = target_db + n_funs + fix_lams in
-    (match fix_inner with
-     | MLcase (_, MLrel scrut_idx, branches) when scrut_idx = fix_target_db ->
-       not (Array.exists (fun (ids, _, _, branch_body) ->
-         let n_bindings = List.length ids in
-         returns_target (n_funs + fix_lams + n_bindings) branch_body
-       ) branches)
-     | _ -> not (returns_target n_funs fix_body))
-  | _ ->
-    (* Not a simple match on first arg: check if target appears anywhere *)
-    not (returns_target 0 inner)
-
-(* Pre-register all methods from the entire structure before code generation.
-   This ensures that cross-module method calls (like List.app from stmtest)
-   are recognized correctly during code generation.
-
-   The function recursively scans all modules, finds eponymous types,
-   and registers functions that take those types as their first argument.
-
-   at_top_level: true if we're at the actual top level of the extraction,
-   false if we're inside a module. Top-level inductives (like stdlib's list)
-   may have sibling methods, but inductives inside modules should use the
-   normal eponymous type detection. *)
-let rec pre_register_methods_from_structure ~at_top_level (parent_decls : (Label.t * Miniml.ml_structure_elem) list) (sel : (Label.t * Miniml.ml_structure_elem) list) : unit =
-  (* Helper: find eponymous inductive in a module's declarations *)
-  let find_eponymous_inductive module_name_str decls =
-    let lowercase_module = String.lowercase_ascii module_name_str in
-    List.find_map (fun (_l, se) ->
-      match se with
-      | SEdecl (Dind (kn, ind)) ->
-        let rec find_in_packets i =
-          if i >= Array.length ind.ind_packets then None
-          else
-            let _p = ind.ind_packets.(i) in
-            let ind_ref = GlobRef.IndRef (kn, i) in
-            let ind_name = Common.pp_global_name Type ind_ref in
-            if String.lowercase_ascii ind_name = lowercase_module then
-              match ind.ind_kind with
-              | TypeClass _ -> None  (* Type classes become concepts, not methods *)
-              | Record _ -> Some ind_ref  (* Eponymous record *)
-              | _ -> Some ind_ref  (* Eponymous inductive *)
-            else find_in_packets (i + 1)
-        in
-        find_in_packets 0
-      | _ -> None
-    ) decls
-  in
-  (* Helper: find the position of the first argument matching the eponymous type.
-     Returns Some (pos, ind_tvar_positions) if found, None otherwise.
-     pos: which argument position becomes 'this'
-     ind_tvar_positions: 0-based indices into the function's tys list that
-       correspond to the inductive's type params (already deducible from receiver).
-     For methods, this argument becomes 'this'. *)
-  let find_epon_arg_pos epon_ref ty =
-    let rec aux pos = function
-      | Miniml.Tarr (Miniml.Tglob (arg_ref, tvar_args, _), rest)
-        when Environ.QGlobRef.equal Environ.empty_env arg_ref epon_ref ->
-        (* Extract 0-based Tvar indices from the Tglob's type arguments.
-           For list A, tvar_args = [Tvar 1], so ind_tvar_positions = [0]
-           (Tvar i maps to position i-1 in the 0-based tys list). *)
-        let ind_tvar_positions = List.filter_map (fun t ->
-          match t with
-          | Miniml.Tvar i | Miniml.Tvar' i -> Some (i - 1)
-          | _ -> None
-        ) tvar_args in
-        Some (pos, ind_tvar_positions)
-      | Miniml.Tarr (_, rest) -> aux (pos + 1) rest
-      | _ -> None
-    in
-    aux 0 ty
-  in
-  (* Helper: register methods for a given eponymous type from a list of declarations.
-     ~cross_module:true allows registering methods from different modules (e.g., Nat.add
-     from Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
-     ~wrapper_module_name: if set, also allow functions from modules whose last
-     path component matches this name (case-insensitive). This handles the case where
-     functions like Nat.add appear as bare Dfix entries at the top level. *)
-  let register_methods_for_epon ?(cross_module=false) ?(wrapper_module_name : string option = None) epon_ref decls =
-    (* Don't register methods for custom types (e.g., nat mapped to unsigned int).
-       Method calls use -> which doesn't work on primitive types.
-       Also skip enum-only inductives which don't have shared_ptr semantics. *)
-    if is_custom epon_ref || Table.is_enum_inductive epon_ref then ()
-    else
-    let epon_modpath = modpath_of_r epon_ref in
-    let from_wrapper_module r =
-      match wrapper_module_name with
-      | None -> false
-      | Some name ->
-        let func_mp = modpath_of_r r in
-        let lc_name = String.lowercase_ascii name in
-        (* Check if module name matches or starts with the inductive name.
-           The Rocq extraction framework may deduplicate module names by appending
-           suffixes (e.g., "ListDef" for a second module named "List"), so we
-           use a prefix match to catch these cases. *)
-        let name_matches mp_name =
-          mp_name = lc_name ||
-          (String.length mp_name > String.length lc_name &&
-           String.sub mp_name 0 (String.length lc_name) = lc_name)
-        in
-        match func_mp with
-        | MPdot (_, lbl) ->
-          name_matches (String.lowercase_ascii (Label.to_string lbl))
-        | MPfile dp ->
-          (match DirPath.repr dp with
-           | id :: _ -> name_matches (String.lowercase_ascii (Id.to_string id))
-           | [] -> false)
-        | _ -> false
-    in
-    let same_module r = cross_module || from_wrapper_module r || ModPath.equal (modpath_of_r r) epon_modpath in
-    List.iter (fun (_l, se) ->
-      match se with
-      | SEdecl (Dterm (r, body, ty)) ->
-        if same_module r && body_safe_for_method body then
-          (match find_epon_arg_pos epon_ref ty with
-           | Some (pos, ind_tvar_positions) ->
-             register_method r epon_ref pos ~ind_tvar_positions ()
-           | None -> ())
-      | SEdecl (Dfix (rv, defs, typs)) ->
-        Array.iteri (fun i r ->
-          if same_module r && body_safe_for_method defs.(i) then
-            match find_epon_arg_pos epon_ref typs.(i) with
-            | Some (pos, ind_tvar_positions) ->
-              register_method r epon_ref pos ~ind_tvar_positions ()
-            | None -> ()
-        ) rv
-      | _ -> ()
-    ) decls
-  in
-  (* Handle top-level inductives that may have sibling methods.
-     For example, stdlib's 'list' (Dind) and 'app' (Dfix) appear as siblings at the top level.
-     This only applies at the actual top level of the extraction, not inside modules
-     where the normal eponymous type detection handles method registration. *)
-  if at_top_level then
-    List.iter (fun (_l, se) ->
-      match se with
-      | SEdecl (Dind (kn, ind)) ->
-        let is_mutual = Array.length ind.ind_packets > 1 in
-        Array.iteri (fun i p ->
-          let ind_ref = GlobRef.IndRef (kn, i) in
-          (* Early enum detection: identify enum inductives before method registration
-             so that register_methods_for_epon can skip them (method calls use ->
-             which doesn't work on enum types). *)
-          if not (is_custom ind_ref) && not is_mutual then begin
-            let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p.ip_types in
-            let param_sign = List.firstn ind.ind_nparams p.ip_sign in
-            let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
-            if all_nullary && num_param_vars = 0 && Array.length p.ip_types > 0 then
-              Table.add_enum_inductive ind_ref
-          end;
-          (* Skip type classes - they become concepts, not eponymous types *)
-          (match ind.ind_kind with
-           | TypeClass _ -> ()
-           | _ ->
-             (* Register methods from sibling declarations (same module) *)
-             register_methods_for_epon ind_ref sel;
-             (* Also register methods from wrapper modules with matching names.
-                For example, Nat.add is from Corelib.Init.Nat; nat is from
-                Corelib.Init.Datatypes. At the top level, these appear as bare
-                Dfix/Dterm entries in different (mp, sel) entries in the structure.
-                We scan parent_decls (= all_top_level_decls) to find functions
-                from modules whose last path component matches the inductive name. *)
-             let ind_name = Common.pp_global_name Type ind_ref in
-             register_methods_for_epon ~wrapper_module_name:(Some ind_name) ind_ref parent_decls)
-        ) ind.ind_packets
-      | _ -> ()
-    ) sel;
-  (* Process each declaration in the structure *)
-  List.iter (fun (l, se) ->
-    match se with
-    | SEmodule m ->
-      (match m.ml_mod_expr with
-       | MEstruct (_mp, inner_sel) ->
-         (* Early enum detection for inductives inside this module *)
-         List.iter (fun (_l', se') ->
-           match se' with
-           | SEdecl (Dind (kn', ind')) ->
-             let is_mutual' = Array.length ind'.ind_packets > 1 in
-             Array.iteri (fun i' p' ->
-               let ind_ref' = GlobRef.IndRef (kn', i') in
-               if not (is_custom ind_ref') && not is_mutual' then begin
-                 let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p'.ip_types in
-                 let param_sign = List.firstn ind'.ind_nparams p'.ip_sign in
-                 let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
-                 if all_nullary && num_param_vars = 0 && Array.length p'.ip_types > 0 then
-                   Table.add_enum_inductive ind_ref'
-               end
-             ) ind'.ind_packets
-           | _ -> ()
-         ) inner_sel;
-         (* Get module name from the label *)
-         let module_name_str = Label.to_string l in
-         (* Find eponymous type in this module *)
-         (match find_eponymous_inductive module_name_str inner_sel with
-          | Some epon_ref ->
-            (* Register methods from the module itself (same-module only) *)
-            register_methods_for_epon epon_ref inner_sel;
-            (* Register methods from parent declarations with cross-module enabled.
-               This allows functions from OTHER modules (e.g., map from Stdlib.Lists.List)
-               to become methods on eponymous types (e.g., list from Corelib.Init.Datatypes).
-               Also match wrapper modules by name (e.g., Nat.add for nat). *)
-            register_methods_for_epon ~cross_module:true
-              ~wrapper_module_name:(Some module_name_str) epon_ref parent_decls
-          | None -> ());
-         (* Recursively process nested modules - not at top level anymore *)
-         pre_register_methods_from_structure ~at_top_level:false (parent_decls @ sel) inner_sel
-       | MEfunctor (_mbid, _mt, body) ->
-         (* For functors, process the body with current context *)
-         pre_register_methods_from_module_expr (parent_decls @ sel) body
-       | _ -> ())
-    | _ -> ()
-  ) sel
-
-and pre_register_methods_from_module_expr (parent_decls : (Label.t * Miniml.ml_structure_elem) list) = function
-  | MEstruct (_mp, sel) ->
-    pre_register_methods_from_structure ~at_top_level:false parent_decls sel
-  | MEfunctor (_mbid, _mt, body) ->
-    pre_register_methods_from_module_expr parent_decls body
-  | _ -> ()
 
 (* Check if a function is a projection for the eponymous record.
    Such projections are redundant when the record fields are merged into the module struct. *)
@@ -590,6 +425,28 @@ let is_eponymous_record_projection r =
 
 let is_suppressed_projection r =
   Table.is_projection r && not (Table.is_higher_order_projection r)
+
+(** Filter a Dfix group, removing entries that are inline customs,
+    method candidates (local or globally registered), eponymous record
+    projections, or suppressed projections.  Returns the three filtered
+    arrays (refs, bodies, types). *)
+let filter_dfix rv defs typs =
+  let is_method_candidate x =
+    List.exists (fun (r', _, _, _) ->
+      Environ.QGlobRef.equal Environ.empty_env x r'
+    ) !method_candidates
+  in
+  let is_global_method x = is_registered_method x <> None in
+  let filter = Array.to_list (Array.map (fun x ->
+    not (is_inline_custom x) &&
+    not (is_method_candidate x) &&
+    not (is_global_method x) &&
+    not (is_eponymous_record_projection x) &&
+    not (is_suppressed_projection x)
+  ) rv) in
+  (Array.filter_with filter rv,
+   Array.filter_with filter defs,
+   Array.filter_with filter typs)
 
 (* Beware of the side-effects of [pp_global] and [pp_modname].
    They are used to update table of content for modules. Many [let]
@@ -827,6 +684,70 @@ let needs_global_qualifier x =
           | None -> true)
   | None -> false
 
+(* ============================================================================
+   Cache-backed name resolution helpers
+   ============================================================================
+   These query the pre-computed Name_resolution cache, falling back to the
+   original logic when the cache doesn't have an entry (e.g., for local
+   inductives discovered during rendering). *)
+
+(* ============================================================================
+   Cache-backed name resolution helpers
+   ============================================================================
+   These query the pre-computed Name_resolution cache for classification
+   information (eponymous, enum, record, merged status).  The actual display
+   name rendering is still done by the original functions (pp_inductive_type_name,
+   inductive_name_info, etc.) since they depend on the visibility context which
+   is only available during rendering.
+
+   The cache accelerates boolean queries that cpp.ml uses frequently to decide
+   HOW to render a name, while the original functions produce the actual name. *)
+
+(* Cache-backed is_eponymous_record check — avoids hashtable lookup. *)
+let is_eponymous_record_cached (r : GlobRef.t) : bool =
+  match !name_cache with
+  | Some cache -> Name_resolution.is_eponymous cache r
+  | None -> is_eponymous_record_global r
+
+(* Cache-backed is_global_scope_enum check — avoids hashtable lookup. *)
+let is_global_scope_enum_cached (r : GlobRef.t) : bool =
+  match !name_cache with
+  | Some cache -> Name_resolution.is_global_scope_enum cache r
+  | None -> Hashtbl.mem global_scope_enum_table r
+
+(* Cache-backed is_merged_inductive check — avoids hashtable lookup. *)
+let is_merged_inductive_cached (r : GlobRef.t) : bool =
+  match !name_cache with
+  | Some cache ->
+    (match Name_resolution.resolve_type cache r with
+     | Some rtn -> rtn.Name_resolution.rtn_is_merged
+     | None -> is_merged_inductive r)
+  | None -> is_merged_inductive r
+
+(* Cache-backed inductive classification queries. *)
+let get_ind_kind_cached (r : GlobRef.t) : Minicpp.cpp_ind_kind option =
+  match !name_cache with
+  | Some cache -> Name_resolution.get_ind_kind cache r
+  | None -> None
+
+let is_enum_cached (r : GlobRef.t) : bool =
+  match get_ind_kind_cached r with
+  | Some IK_Enum -> true
+  | Some _ -> false
+  | None -> is_enum_inductive r
+
+let is_record_cached (r : GlobRef.t) : bool =
+  match get_ind_kind_cached r with
+  | Some (IK_Record _ | IK_Eponymous _) -> true
+  | Some _ -> false
+  | None -> is_record_inductive r
+
+(* For display names, delegate to original functions — they need visibility context.
+   These are thin wrappers for now; they become useful when we have more context. *)
+let pp_inductive_type_name_cached r = pp_inductive_type_name r
+let inductive_name_info_cached r = inductive_name_info r
+let wrapper_qualify_name_cached r name = wrapper_qualify_name r name
+
 (* Look up method info for a function reference.
    Checks both local method_candidates and global method_registry.
    Returns Some this_pos if the function is a method, None otherwise. *)
@@ -871,7 +792,7 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
   let rec collect_from_expr (refs, decls) e =
     match e with
     | CPPvar id -> (IdSet.add id refs, decls)
-    | CPPvar' _ -> (refs, decls)  (* de Bruijn - ignore *)
+    (* CPPvar' removed — all vars now use CPPvar *)
     | CPPthis -> uses_this := true; (refs, decls)  (* 'this' requires capture *)
     | CPPfun_call (f, args) ->
         let acc = collect_from_expr (refs, decls) f in
@@ -892,9 +813,6 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
         let inner_free = IdSet.diff inner_refs (IdSet.union inner_param_names inner_decls) in
         (IdSet.union refs inner_free, decls)
     | CPPoverloaded exprs -> List.fold_left collect_from_expr (refs, decls) exprs
-    | CPPmatch (scrut, cases) ->
-        let acc = collect_from_expr (refs, decls) scrut in
-        List.fold_left (fun a (p, b) -> collect_from_expr (collect_from_expr a p) b) acc cases
     | CPPstructmk (_, _, args) -> List.fold_left collect_from_expr (refs, decls) args
     | CPPstruct (_, _, args) -> List.fold_left collect_from_expr (refs, decls) args
     | CPPstruct_id (_, _, args) -> List.fold_left collect_from_expr (refs, decls) args
@@ -924,8 +842,8 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
   and collect_from_stmt (refs, decls) stmt =
     match stmt with
     (* Simple statements *)
-    | SreturnVoid -> (refs, decls)
-    | Sreturn e -> collect_from_expr (refs, decls) e
+    | Sreturn None -> (refs, decls)
+    | Sreturn (Some e) -> collect_from_expr (refs, decls) e
     | Sexpr e -> collect_from_expr (refs, decls) e
 
     (* Declarations and assignments *)
@@ -985,8 +903,6 @@ and expr_contains_capturing_lambda (e : Minicpp.cpp_expr) : bool =
   | CPPmove e' -> expr_contains_capturing_lambda e'
   | CPPforward (_, e') -> expr_contains_capturing_lambda e'
   | CPPoverloaded exprs -> List.exists expr_contains_capturing_lambda exprs
-  | CPPmatch (scrut, cases) ->
-      expr_contains_capturing_lambda scrut || List.exists (fun (p, b) -> expr_contains_capturing_lambda p || expr_contains_capturing_lambda b) cases
   | CPPstructmk (_, _, args) -> List.exists expr_contains_capturing_lambda args
   | CPPstruct (_, _, args) -> List.exists expr_contains_capturing_lambda args
   | CPPstruct_id (_, _, args) -> List.exists expr_contains_capturing_lambda args
@@ -1002,7 +918,7 @@ and expr_contains_capturing_lambda (e : Minicpp.cpp_expr) : bool =
   | CPPqualified (e', _) -> expr_contains_capturing_lambda e'
   | CPPrequires (_, constraints, _) -> List.exists (fun (e', _) -> expr_contains_capturing_lambda e') constraints
   | CPPbinop (_, lhs, rhs) -> expr_contains_capturing_lambda lhs || expr_contains_capturing_lambda rhs
-  | CPPvar _ | CPPvar' _ | CPPglob _ | CPPvisit | CPPmk_shared _ | CPPmk_unique _ | CPPstring _ | CPPuint _ | CPPfloat _ | CPPthis | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ -> false
+  | CPPvar _ | CPPglob _ | CPPvisit | CPPmk_shared _ | CPPmk_unique _ | CPPstring _ | CPPuint _ | CPPfloat _ | CPPthis | CPPconvertible_to _ | CPPabort _ | CPPenum_val _ | CPPraw _ -> false
 
 and stmt_contains_capturing_lambda (s : Minicpp.cpp_stmt) : bool =
   let open Minicpp in
@@ -1010,7 +926,8 @@ and stmt_contains_capturing_lambda (s : Minicpp.cpp_stmt) : bool =
   let expr = expr_contains_capturing_lambda in
   match s with
   (* Statements with expressions *)
-  | Sreturn e | Sexpr e | Sasgn (_, _, e) -> expr e
+  | Sreturn (Some e) | Sexpr e | Sasgn (_, _, e) -> expr e
+  | Sreturn None -> false
   | Sassign_field (obj, _, e) -> expr obj || expr e
 
   (* Control flow *)
@@ -1021,7 +938,7 @@ and stmt_contains_capturing_lambda (s : Minicpp.cpp_stmt) : bool =
       expr scrut || List.exists (fun (_, _, stmts) -> any stmts) branches
 
   (* No lambdas possible *)
-  | SreturnVoid | Sdecl _ | Sthrow _ | Sassert _ | Sraw _ -> false
+  | Sdecl _ | Sthrow _ | Sassert _ | Sraw _ -> false
 
 (* pretty printing c++ syntax *)
 let try_cpp c o =
@@ -1034,9 +951,7 @@ let pp_tymod = function
   | TMextern -> str "extern "
 
 let std_angle label s =
-  if Table.std_lib () = "BDE"
-    then str "bsl::" ++ str label ++ str "<" ++ s ++ str ">"
-    else str "std::" ++ str label ++ str "<" ++ s ++ str ">"
+  str (sn ()).ns ++ str "::" ++ str label ++ str "<" ++ s ++ str ">"
 
 let cpp_angle label s = str label ++ str "<" ++ s ++ str ">"
 
@@ -1182,7 +1097,7 @@ let rec pp_cpp_type par vl t =
             pp_custom (Pp.string_of_ppcmds (GlobRef.print r) ^ " := " ^ s) (empty_env ()) None None tys [] args [] vl cmds
         | _ ->
             (* Non-custom cases *)
-            let type_name = pp_inductive_type_name r in
+            let type_name = pp_inductive_type_name_cached r in
             let name_str = Pp.string_of_ppcmds type_name in
             (match tys with
             | [] ->
@@ -1192,13 +1107,6 @@ let rec pp_cpp_type par vl t =
                 type_name ++ str "<" ++ pp_list (pp_rec false) l ++ str ">")))
 
     | Tfun (d,c) -> std_angle "function" (pp_rec false c ++ pp_par true (pp_list (pp_rec false) d))
-    | Tstruct (id, args) ->
-      let id_str = Pp.string_of_ppcmds (pp_global Type id) in
-      let templates =
-        (match args with
-        | [] -> mt ()
-        | args -> str "<" ++ pp_list (pp_rec false) args ++ str ">") in
-      typename_prefix_for id_str ++ pp_global Type id ++ templates
     | Tref t -> pp_rec false t ++ str "&"
     | Tmod (m, t) -> pp_tymod m ++ pp_rec false t
     | Tnamespace (r,t) ->
@@ -1207,7 +1115,7 @@ let rec pp_cpp_type par vl t =
            Local inductives don't need namespace wrapping; non-local ones get the prefix.
            EXCEPTION: Eponymous records are merged into the module struct, so we use just
            the capitalized name without namespace qualification (CHT, not CHT::cHT). *)
-        let (name, _needs_ns) = inductive_name_info r in
+        let (name, _needs_ns) = inductive_name_info_cached r in
         (* Check if inner type is Tglob with the same reference *)
         (match (r, t) with
          | GlobRef.IndRef _, Tglob (r', args, _) when Environ.QGlobRef.equal Environ.empty_env r r' ->
@@ -1218,17 +1126,17 @@ let rec pp_cpp_type par vl t =
            (* Skip prefix if type name already contains module path (::) *)
            let type_name_str = str_global Type r' in
            (* Check eponymous record FIRST because they can also be local *)
-           if is_eponymous_record_global r' then
+           if is_eponymous_record_cached r' then
              (* Eponymous record: use capitalized name directly, no namespace nesting.
                 Use pp_global_name to get just the base name, not the qualified path. *)
              str (String.capitalize_ascii (Common.pp_global_name Type r')) ++ templates
-           else if is_enum_inductive r' then
+           else if is_enum_cached r' then
              (* Enum types at global scope need no struct qualification.
                 Enums inside structs (e.g., Comparison::cmp) need it. *)
              let qualifier =
                match !current_struct_name with
                | Some struct_name when not !in_struct_context ->
-                   if Hashtbl.mem global_scope_enum_table r' then
+                   if is_global_scope_enum_cached r' then
                      mt ()
                    else
                      let full_path = Pp.string_of_ppcmds (GlobRef.print r') in
@@ -1244,7 +1152,7 @@ let rec pp_cpp_type par vl t =
            else if is_qualified_name type_name_str then
              (* Already qualified (e.g., C::t from module parameter): add typename if in template *)
              typename_prefix_for type_name_str ++ str type_name_str ++ templates
-           else if is_merged_inductive r' then
+           else if is_merged_inductive_cached r' then
              (* Merged: use capitalized name directly *)
              name ++ templates
            else
@@ -1262,8 +1170,8 @@ let rec pp_cpp_type par vl t =
             if is_qualified_name type_name_str then
               pp_rec false base_ty
             else
-              let (ns_name, needs_ns) = inductive_name_info r in
-              if needs_ns && not (is_merged_inductive r) then
+              let (ns_name, needs_ns) = inductive_name_info_cached r in
+              if needs_ns && not (is_merged_inductive_cached r) then
                 (* Unmerged: need wrapper prefix *)
                 ns_name ++ str "::" ++ pp_rec false base_ty
               else
@@ -1273,17 +1181,9 @@ let rec pp_cpp_type par vl t =
         str "typename " ++ base_str ++ str "::" ++ Id.print nested_id
     | Tvariant tys -> std_angle "variant" (pp_list (pp_rec false) tys)
     | Tshared_ptr t ->
-        if Table.std_lib () = "BDE"
-          then cpp_angle "bsl::shared_ptr" (pp_rec false t)
-          else cpp_angle "std::shared_ptr" (pp_rec false t)
+        cpp_angle (sn ()).shared_ptr (pp_rec false t)
     | Tunique_ptr t ->
-        if Table.std_lib () = "BDE"
-          then cpp_angle "bsl::unique_ptr" (pp_rec false t)
-          else cpp_angle "std::unique_ptr" (pp_rec false t)
-    | Tstring ->
-        if Table.std_lib () = "BDE"
-          then str "bsl::string"
-          else str "std::string"
+        cpp_angle (sn ()).unique_ptr (pp_rec false t)
     | Tvoid -> str "void"
     | Ttodo -> str "auto"
     | Tunknown -> str "UNKNOWN" (* TODO: BAD *)
@@ -1294,14 +1194,13 @@ let rec pp_cpp_type par vl t =
 and pp_cpp_expr env args t =
   let apply st = pp_apply_cpp st args in
   match t with
-  | CPPvar' id -> (try apply (Id.print (get_db_name id env)) (* very confused by evar now *)
-               with Failure _ -> str "BadCPPVar")
+  (* CPPvar' removed — all vars now use CPPvar *)
   | CPPvar id -> Id.print id
-  | CPPglob (x, tys) when is_inline_custom x ->
-    let custom = find_custom x in
+  | CPPglob (x, tys, Some ci) when ci.ci_inline <> None ->
+    let custom = Option.get ci.ci_inline in
     let cmds = parse_numbered_args "t" (fun i -> CCty_arg i) custom in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print x) ^ " := " ^ custom) env None None tys [] [] [] [] cmds
-  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+  | CPPglob (x, _tys, _) when lookup_method_this_pos x <> None
     && (match is_registered_method x with
         | Some (epon_ref, _) ->
           (* Only use this-> for methods belonging to the current struct.
@@ -1319,7 +1218,7 @@ and pp_cpp_expr env args t =
        Generate this->method() - a call to the method via this, not a function pointer. *)
     let method_name = Id.of_string (Common.pp_global_name Term x) in
     str "this->" ++ Id.print method_name ++ str "()"
-  | CPPglob (x, _tys) when lookup_method_this_pos x <> None
+  | CPPglob (x, _tys, _) when lookup_method_this_pos x <> None
     && (match is_registered_method x with
         | Some (epon_ref, _) ->
           (* Bare reference to a method on a DIFFERENT struct (used as a function value).
@@ -1334,14 +1233,14 @@ and pp_cpp_expr env args t =
         | None -> false) ->
     let method_name = Id.of_string (Common.pp_global_name Term x) in
     str "[](const auto &_x) { return _x->" ++ Id.print method_name ++ str "(); }"
-  | CPPglob (x, tys) ->
+  | CPPglob (x, tys, _) ->
     (* Determine the base name for a global reference *)
     let base_name = match x with
       | GlobRef.IndRef _ ->
-        let (ns_name, needs_ns) = inductive_name_info x in
+        let (ns_name, needs_ns) = inductive_name_info_cached x in
         let type_name_str = str_global Type x in
         (* Check eponymous record FIRST because they can also be local *)
-        if is_eponymous_record_global x then
+        if is_eponymous_record_cached x then
           (* Eponymous record: use capitalized name (merged into module struct).
              Use pp_global_name to get just the base name, not the qualified path. *)
           str (String.capitalize_ascii (Common.pp_global_name Type x))
@@ -1350,7 +1249,7 @@ and pp_cpp_expr env args t =
              Do NOT lowercase - the qualifier (like module param C) should keep case *)
           str type_name_str
         else if needs_ns then
-          if is_merged_inductive x then
+          if is_merged_inductive_cached x then
             (* Merged non-local inductive: use capitalized name directly *)
             ns_name
           else
@@ -1403,7 +1302,7 @@ and pp_cpp_expr env args t =
          | None, _ ->
            (* Normal case: function not in eponymous struct *)
            let name = str_global Term x in
-           let qualified_name = wrapper_qualify_name x name in
+           let qualified_name = wrapper_qualify_name_cached x name in
            if qualified_name <> name then
              (* Name was qualified by wrapper module (e.g., Nat::div) *)
              str qualified_name
@@ -1441,10 +1340,10 @@ and pp_cpp_expr env args t =
       apply base_name ++ str "<" ++ ty_args ++ str ">")
   | CPPnamespace (r, t) ->
       (* Use inductive_name_info to get proper namespace name *)
-      let (name, _) = inductive_name_info r in
+      let (name, _) = inductive_name_info_cached r in
       h (name ++ str "::" ++ pp_cpp_expr env args t)
-  | CPPfun_call (CPPglob (n,tys), ts) when is_inline_custom n ->
-    let s = find_custom n in
+  | CPPfun_call (CPPglob (n,tys, Some ci), ts) when ci.ci_inline <> None ->
+    let s = Option.get ci.ci_inline in
     let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
     let cmds = List.fold_left
     (fun prev curr -> match curr with
@@ -1468,7 +1367,7 @@ and pp_cpp_expr env args t =
       with _ -> []
     in
     pp_custom (Pp.string_of_ppcmds (GlobRef.print n) ^ " := " ^ s) env None None tys [] (List.rev ts) arg_types [] cmds
-  | CPPfun_call (CPPglob (n, tys), ts) when lookup_method_this_pos n <> None ->
+  | CPPfun_call (CPPglob (n, tys, _), ts) when lookup_method_this_pos n <> None ->
     (* Transform function call to method call: f(a0, a1, ...) -> a[this_pos]->f(other_args)
        Handles both local method_candidates and cross-module registered methods.
        For methods with non-deducible template params (e.g., map's output element type),
@@ -1504,20 +1403,16 @@ and pp_cpp_expr env args t =
        obj_s ++ str "->" ++ template_kw ++ Id.print method_name ++ ty_args_s ++ str "(" ++ args_s ++ str ")"
      | None ->
        (* Fallback - shouldn't happen for registered methods *)
-       pp_cpp_expr env args (CPPglob (n, tys)) ++ str "()")
+       pp_cpp_expr env args (CPPglob (n, tys, None)) ++ str "()")
   | CPPfun_call (f, ts) ->
     let args_s = pp_list (pp_cpp_expr env args) (List.rev ts) in
     pp_cpp_expr env args f ++ str "(" ++ args_s ++ str ")"
   | CPPderef e ->
       str "*" ++ (pp_cpp_expr env args e)
   | CPPmove e ->
-      if Table.std_lib () = "BDE"
-        then str "bsl::move(" ++ (pp_cpp_expr env args e) ++ str ")"
-        else str "std::move(" ++ (pp_cpp_expr env args e) ++ str ")"
+      str (sn ()).move ++ str "(" ++ (pp_cpp_expr env args e) ++ str ")"
   | CPPforward (ty, e) ->
-      if Table.std_lib () = "BDE"
-        then str "bsl::forward<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
-        else str "std::forward<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
+      str (sn ()).forward ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
   | CPPlambda (params, ret_ty, body, capture_by_value) ->
       (* Use [] for closed lambdas (no captured variables), [&] for ref capture, [=] for value capture *)
       let needs_capture = lambda_needs_capture params body in
@@ -1536,27 +1431,14 @@ and pp_cpp_expr env args t =
       | None ->
         h (capture ++ params_s ++ str ")") ++ str " {" ++ fnl () ++ body_s ++ fnl () ++ str "}"
       end
-  | CPPvisit ->
-      if Table.std_lib () = "BDE"
-        then str "bsl::visit"
-        else str "std::visit"
+  | CPPvisit -> str (sn ()).visit
   | CPPmk_shared t ->
-      if Table.std_lib () = "BDE"
-        then cpp_angle "bsl::make_shared" (pp_cpp_type false [] t)
-        else cpp_angle "std::make_shared" (pp_cpp_type false [] t)
+      cpp_angle (sn ()).make_shared (pp_cpp_type false [] t)
   | CPPmk_unique t ->
-      if Table.std_lib () = "BDE"
-        then cpp_angle "bsl::make_unique" (pp_cpp_type false [] t)
-        else cpp_angle "std::make_unique" (pp_cpp_type false [] t)
+      cpp_angle (sn ()).make_unique (pp_cpp_type false [] t)
   | CPPoverloaded ls ->
       let ls_s = pp_list_newline (pp_cpp_expr env args) ls in
-      let o = if Table.std_lib () = "BDE" then str "bdlf::Overloaded" else str "Overloaded" in
-      o ++ str " {" ++ fnl () ++ ls_s ++ fnl () ++ str "}"
-  | CPPmatch (scrut, ls) -> mt () (*
-      let scrut_s = pp_cpp_expr env args scrut in
-      let ls_s = pp_list_newline (pp_cpp_expr env args) ls in
-      let o = if Table.std_lib () = "BDE" then str "bsl::visit(bdlf::Overloaded" else str "std::visit(Overloaded" in
-      o ++ str " {" ++ fnl () ++ ls_s ++ fnl () ++ str "}, " ++ scrut_s ++ str ")" *)
+      str (sn ()).overloaded ++ str " {" ++ fnl () ++ ls_s ++ fnl () ++ str "}"
   | CPPstructmk (id, tys, es) ->
       let es_s = pp_list (pp_cpp_expr env args) es in
       let templates =
@@ -1564,7 +1446,7 @@ and pp_cpp_expr env args t =
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
       let struct_name = match id with
-        | GlobRef.IndRef _ when is_eponymous_record_global id ->
+        | GlobRef.IndRef _ when is_eponymous_record_cached id ->
             str (String.capitalize_ascii (Common.pp_global_name Type id))
         | _ -> pp_global Type id
       in
@@ -1576,7 +1458,7 @@ and pp_cpp_expr env args t =
         | [] -> mt ()
         | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">") in
       let struct_name = match id with
-        | GlobRef.IndRef _ when is_eponymous_record_global id ->
+        | GlobRef.IndRef _ when is_eponymous_record_cached id ->
             str (String.capitalize_ascii (Common.pp_global_name Type id))
         | _ -> pp_global Type id
       in
@@ -1633,11 +1515,9 @@ and pp_cpp_expr env args t =
   | CPPnew (ty, exprs) ->
       str "new " ++ pp_cpp_type false [] ty ++ str "(" ++ pp_list (pp_cpp_expr env args) exprs ++ str ")"
   | CPPshared_ptr_ctor (ty, expr) ->
-      let std_shared_ptr = if Table.std_lib () = "BDE" then "bsl::shared_ptr" else "std::shared_ptr" in
-      str std_shared_ptr ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ pp_cpp_expr env args expr ++ str ")"
+      str (sn ()).shared_ptr ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ pp_cpp_expr env args expr ++ str ")"
   | CPPunique_ptr_ctor (ty, expr) ->
-      let std_unique_ptr = if Table.std_lib () = "BDE" then "bsl::unique_ptr" else "std::unique_ptr" in
-      str std_unique_ptr ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ pp_cpp_expr env args expr ++ str ")"
+      str (sn ()).unique_ptr ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ pp_cpp_expr env args expr ++ str ")"
   | CPPthis -> str "this"
   | CPPmember (e, id) ->
       pp_cpp_expr env args e ++ str "." ++ Id.print id
@@ -1651,12 +1531,7 @@ and pp_cpp_expr env args t =
   | CPPconvertible_to ty ->
       str "std::convertible_to<" ++ pp_cpp_type false [] ty ++ str ">"
   | CPPabort msg ->
-      (* Generate unreachable code for absurd cases like empty match.
-         We use a lambda with auto return type that throws - this works in any expression context
-         because the lambda's return type is deduced (though never used since it throws). *)
-      if Table.std_lib () = "BDE"
-        then str "([&]() -> auto { throw bsl::logic_error(\"" ++ str msg ++ str "\"); })()"
-        else str "([&]() -> auto { throw std::logic_error(\"" ++ str msg ++ str "\"); })()"
+      str "([&]() -> auto { throw " ++ str (sn ()).logic_error ++ str "(\"" ++ str msg ++ str "\"); })()"
   | CPPenum_val (ind, ctor) ->
       (* Generate EnumType::Constructor for enum class values.
          Use str_global for proper module qualification (e.g., Outer::color::Red). *)
@@ -1667,15 +1542,10 @@ and pp_cpp_expr env args t =
   | CPPbinop (op, lhs, rhs) ->
       str "(" ++ pp_cpp_expr env args lhs ++ str " " ++ str op ++ str " " ++ pp_cpp_expr env args rhs ++ str ")"
 and pp_cpp_stmt env args = function
-| SreturnVoid -> str "return;"
-| Sreturn (CPPabort msg) ->
-    (* When returning an abort expression, emit a bare throw instead of
-       return throw_iife; — the IIFE has void return type which can't be
-       returned from non-void functions. *)
-    if Table.std_lib () = "BDE"
-      then str "throw bsl::logic_error(\"" ++ str msg ++ str "\");"
-      else str "throw std::logic_error(\"" ++ str msg ++ str "\");"
-| Sreturn e ->
+| Sreturn None -> str "return;"
+| Sreturn (Some (CPPabort msg)) ->
+    str "throw " ++ str (sn ()).logic_error ++ str "(\"" ++ str msg ++ str "\");"
+| Sreturn (Some e) ->
     str "return " ++ pp_cpp_expr env args e ++ str ";"
 | Sdecl (id, ty) -> (pp_cpp_type false [] ty) ++ str " " ++ Id.print id ++ str ";"
 | Sasgn (id, Some ty, e) ->
@@ -1685,10 +1555,7 @@ and pp_cpp_stmt env args = function
 | Sexpr e ->
     pp_cpp_expr env args e ++ str ";"
 | Sthrow msg ->
-    (* Generate a throw statement for unreachable/absurd cases *)
-    if Table.std_lib () = "BDE"
-      then str "throw bsl::logic_error(\"" ++ str msg ++ str "\");"
-      else str "throw std::logic_error(\"" ++ str msg ++ str "\");"
+    str "throw " ++ str (sn ()).logic_error ++ str "(\"" ++ str msg ++ str "\");"
 | Sswitch (scrut, ind, branches) ->
     (* Generate switch statement for enum class matching.
        Use pp_global_name to get the unqualified base name. *)
@@ -1758,8 +1625,8 @@ and is_concrete_cpp_type = function
    These are methods of indexed inductives (GADTs). Regular polymorphic methods
    (like fst) have type variables that become template parameters, not std::any. *)
 and expr_is_any_returning_method = function
-  | CPPmethod_call (CPPglob (n, _), _, _) -> method_returns_any n
-  | CPPfun_call (CPPglob (n, _), _) when lookup_method_this_pos n <> None -> method_returns_any n
+  | CPPmethod_call (CPPglob (n, _, _), _, _) -> method_returns_any n
+  | CPPfun_call (CPPglob (n, _, _), _) when lookup_method_this_pos n <> None -> method_returns_any n
   | _ -> false
 
 (* Wrap an expression with any_cast if needed.
@@ -1768,8 +1635,7 @@ and expr_is_any_returning_method = function
    This is needed because indexed inductives have type-erased return types in C++. *)
 and wrap_any_cast_if_needed expr expr_printed expected_ty vl =
   if expr_is_any_returning_method expr && is_concrete_cpp_type expected_ty then
-    let std_prefix = if Table.std_lib () = "BDE" then "bsl" else "std" in
-    str std_prefix ++ str "::any_cast<" ++ pp_cpp_type false vl expected_ty ++ str ">(" ++ expr_printed ++ str ")"
+    str (sn ()).any_cast ++ str "<" ++ pp_cpp_type false vl expected_ty ++ str ">(" ++ expr_printed ++ str ")"
   else
     expr_printed
 
@@ -1782,9 +1648,7 @@ and pp_custom custom env typ t tyargs cases args arg_types vl cmds =
           (* Append string literal suffix for custom inlined operations.
              Using C++ string literal operators: "hello"s (std) or "hello"_s (BDE). *)
           let t_printed = match t_expr with
-            | CPPstring _ ->
-                let suffix = if Table.std_lib () = "BDE" then "_s" else "s" in
-                t_printed ++ str suffix
+            | CPPstring _ -> t_printed ++ str (sn ()).str_suffix
             | _ -> t_printed
           in
           (* Wrap scrutinee with any_cast if it's a method call returning std::any *)
@@ -1819,9 +1683,7 @@ and pp_custom custom env typ t tyargs cases args arg_types vl cmds =
            This allows string literals to support operations like + (concatenation)
            or .length() without explicit std::string() wrapping. *)
         let arg = match arg_expr with
-          | CPPstring _ ->
-              let suffix = if Table.std_lib () = "BDE" then "_s" else "s" in
-              arg ++ str suffix
+          | CPPstring _ -> arg ++ str (sn ()).str_suffix
           | _ -> arg
         in
         (* Wrap with any_cast if this is a method call returning std::any *)
@@ -1862,22 +1724,22 @@ let rec pp_cpp_field ?(struct_name : Pp.t option) env = function
       pp_list (fun (id, ty) ->
           (pp_cpp_type false [] ty) ++ str " " ++ Id.print id) (List.rev params)
     in h ((pp_cpp_type false [] ret_ty) ++ str " " ++ Id.print id ++ pp_par true params_s) ++ str ";"
-| Fmethod (id, template_params, ret_ty, params, body, is_const, is_static) ->
+| Fmethod { mf_name; mf_tparams; mf_ret_type; mf_params; mf_body; mf_is_const; mf_is_static } ->
     let params_s =
       pp_list (fun (id, ty) ->
-          (pp_cpp_type false [] ty) ++ str " " ++ Id.print id) params
+          (pp_cpp_type false [] ty) ++ str " " ++ Id.print id) mf_params
     in
-    let const_s = if is_const then str " const" else mt () in
-    let static_s = if is_static then str "static " else mt () in
-    let body_s = pp_list_stmt (pp_cpp_stmt env []) body in
-    let template_s = match template_params with
+    let const_s = if mf_is_const then str " const" else mt () in
+    let static_s = if mf_is_static then str "static " else mt () in
+    let body_s = pp_list_stmt (pp_cpp_stmt env []) mf_body in
+    let template_s = match mf_tparams with
       | [] -> mt ()
       | _ ->
-        let args = pp_list pp_template_param template_params in
+        let args = pp_list pp_template_param mf_tparams in
         str "template <" ++ args ++ str ">" ++ fnl ()
     in
     template_s ++
-      h (static_s ++ (pp_cpp_type false [] ret_ty) ++ str " " ++ Id.print id ++ pp_par true params_s ++ const_s ++ str " {") ++ fnl () ++ body_s ++ str "}"
+      h (static_s ++ (pp_cpp_type false [] mf_ret_type) ++ str " " ++ Id.print mf_name ++ pp_par true params_s ++ const_s ++ str " {") ++ fnl () ++ body_s ++ str "}"
 | Fconstructor (params, init_list, is_explicit) ->
     let sname = match struct_name with Some s -> s | None -> str "UNKNOWN_STRUCT" in
     let params_s =
@@ -1950,32 +1812,27 @@ function
       | _ -> string_of_ppcmds (pp_global Type id)
     in
     let has_pending = Hashtbl.mem pending_wrapper_decls struct_name_str in
-    (* MERGE: When a Dnspace has a single Dstruct (or Dtemplate wrapping a Dstruct)
-       and no pending wrapper declarations, merge the inner struct into the wrapper.
+    (* MERGE: When a Dnspace has a single Dstruct and no pending wrapper declarations,
+       merge the inner struct into the wrapper.
        This eliminates the redundant nesting: struct Nat { struct nat { ... }; }
        becomes just struct Nat { ... }.
        When there ARE pending wrapper declarations (e.g., module functions like rev),
        keep the two-level structure so wrapper functions can reference the template class. *)
     (match decls, has_pending with
-    | [Dstruct (_inner_id, fields)], false ->
+    | [Dstruct { ds_fields = fields; ds_tparams = []; _ }], false ->
       (* MERGE non-template: struct Nat { ... } *)
       let struct_name = str struct_name_str in
-      let old_context = !in_struct_context in
-      in_struct_context := true;
-      let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
-      in_struct_context := old_context;
+      let f_s = with_render_ctx
+        ~setup:(fun () -> in_struct_context := true)
+        (fun () -> pp_cpp_fields_with_vis ~struct_name env fields) in
       str "struct " ++ struct_name ++ str " {" ++ fnl ()
         ++ f_s ++ fnl () ++ str "};"
-    | [Dtemplate (temps, cstr, Dstruct (_inner_id, fields))], false ->
+    | [Dstruct { ds_fields = fields; ds_tparams = temps; ds_constraint = cstr; _ }], false ->
       (* MERGE template: template<typename A> struct List { ... } *)
       let struct_name = str struct_name_str in
-      let old_context = !in_struct_context in
-      let old_template = !in_template_struct in
-      in_struct_context := true;
-      in_template_struct := true;
-      let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
-      in_struct_context := old_context;
-      in_template_struct := old_template;
+      let f_s = with_render_ctx
+        ~setup:(fun () -> in_struct_context := true; in_template_struct := true)
+        (fun () -> pp_cpp_fields_with_vis ~struct_name env fields) in
       let args = pp_list pp_template_param temps in
       h (str "template <" ++ args ++ str ">")
       ++ (match cstr with
@@ -1985,10 +1842,9 @@ function
         ++ f_s ++ fnl () ++ str "};"
     | _ ->
       (* No merge: keep wrapper struct (has pending decls or multiple children) *)
-      let old_context = !in_struct_context in
-      in_struct_context := true;
-      let ds = pp_list_stmt (pp_cpp_decl env) decls in
-      in_struct_context := old_context;
+      let ds = with_render_ctx
+        ~setup:(fun () -> in_struct_context := true)
+        (fun () -> pp_list_stmt (pp_cpp_decl env) decls) in
       let pending_fwd = match Hashtbl.find_opt pending_wrapper_decls struct_name_str with
         | Some specs ->
           Hashtbl.remove pending_wrapper_decls struct_name_str;
@@ -2049,25 +1905,39 @@ function
     let is_struct_member = is_qualified || !in_struct_context in
     let static_kw = if is_struct_member then str "static " else mt () in
     h (static_kw ++ (pp_cpp_type false [] ret_ty) ++ str " " ++ name ++ pp_par true params_s) ++ str ";"
-| Dstruct (id, fields) ->
+| Dstruct { ds_ref = id; ds_fields = fields; ds_tparams = tparams; ds_constraint = cstr } ->
     (* Struct name for inductive types.
        Regular inductives use their original Rocq name.
        EXCEPTION 1: Records keep their original case.
        EXCEPTION 2: Eponymous records use the capitalized name directly.
        Check eponymous FIRST, then records, then default. *)
     let struct_name = match id with
-      | GlobRef.IndRef _ when is_eponymous_record_global id ->
+      | GlobRef.IndRef _ when is_eponymous_record_cached id ->
           (* Use pp_global_name to get just the base name, not the qualified path. *)
           str (String.capitalize_ascii (Common.pp_global_name Type id))
-      | GlobRef.IndRef _ when is_record_inductive id ->
+      | GlobRef.IndRef _ when is_record_cached id ->
           (* Records keep original case - no namespace wrapper *)
           pp_global Type id
       | GlobRef.IndRef _ ->
           pp_global Type id
       | _ -> pp_global Type id
     in
-    let f_s = pp_cpp_fields_with_vis ~struct_name env fields in
-    str "struct " ++ struct_name ++ str " {" ++ fnl () ++ f_s ++ fnl () ++ str "};"
+    let f_s = match tparams with
+      | [] -> pp_cpp_fields_with_vis ~struct_name env fields
+      | _ -> with_render_ctx
+        ~setup:(fun () -> in_template_struct := true)
+        (fun () -> pp_cpp_fields_with_vis ~struct_name env fields)
+    in
+    let tmpl = match tparams with
+      | [] -> mt ()
+      | _ ->
+        let args = pp_list pp_template_param tparams in
+        h (str "template <" ++ args ++ str ">")
+        ++ (match cstr with
+            | None -> fnl ()
+            | Some c -> pp_cpp_expr env [] c ++ fnl ())
+    in
+    tmpl ++ str "struct " ++ struct_name ++ str " {" ++ fnl () ++ f_s ++ fnl () ++ str "};"
 | Dstruct_decl id ->
     str "struct " ++ pp_global Type id ++ str ";"
 | Dusing (id, ty) ->
@@ -2134,7 +2004,7 @@ function
     (match so with
     | None -> h (str "static_assert(" ++ pp_cpp_expr env [] e ++ str ");")
     | Some s -> h (str "static_assert(" ++ pp_cpp_expr env [] e ++ str ", \"" ++ str s ++ str "\");"))
-| Denum (name, ctors) ->
+| Denum { de_ref = name; de_ctors = ctors; _ } ->
     let struct_name = match name with
       | GlobRef.IndRef _ ->
           str (Common.pp_global_name Type name)
@@ -2178,7 +2048,7 @@ let pp_cpp_ind kn ind =
       let ip = (kn,i) in
       let p = ind.ind_packets.(i) in
       if is_custom (GlobRef.IndRef ip) then pp (i+1)
-      else if is_enum_inductive (GlobRef.IndRef ip) then pp (i+1)  (* Enums have no .cpp body *)
+      else if is_enum_cached (GlobRef.IndRef ip) then pp (i+1)  (* Enums have no .cpp body *)
       else
         (* Compute parameter-only type vars (same as in pp_cpp_ind_header) *)
         let param_sign = List.firstn ind.ind_nparams p.ip_sign in
@@ -2215,7 +2085,7 @@ let pp_decl = function
     | Dterm (r, _, _) when is_registered_method r <> None ->
           (* Skip - this function is registered as a method in another module *)
           mt ()
-    | Dterm (r, a, t) when Translation.is_typeclass_instance a t ->
+    | Dterm (r, a, t) when is_typeclass_instance a t ->
           (* Type class instances: fully defined in header, skip in implementation *)
           mt ()
     | Dterm (r, a, t) ->
@@ -2225,13 +2095,7 @@ let pp_decl = function
         | _ , _ -> mt ()
         end
     | Dfix (rv,defs,typs) ->
-          (* Filter out inline custom, method candidates, globally registered methods, and eponymous record projections *)
-          let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
-          let is_global_method x = is_registered_method x <> None in
-          let filter = Array.to_list (Array.map (fun x -> not (is_inline_custom x) && not (is_method_candidate x) && not (is_global_method x) && not (is_eponymous_record_projection x) && not (is_suppressed_projection x)) rv) in
-          let rv = Array.filter_with filter rv in
-          let defs = Array.filter_with filter defs in
-          let typs = Array.filter_with filter typs in
+          let (rv, defs, typs) = filter_dfix rv defs typs in
           if Array.length rv = 0 then mt ()
           else
           let defs = List.filter (fun (_,_,l) -> l == []) (gen_dfuns (rv, defs, typs)) in
@@ -2361,19 +2225,6 @@ let pp_cpp_ind_header kn ind =
         | Miniml.Tmeta {contents = Some t} -> refs_excluded t
         | _ -> false
       in
-      (* Find the position of the first argument matching the inductive type *)
-      let rec find_ind_arg_pos pos = function
-        | Miniml.Tarr (Miniml.Tglob (arg_ref, tvar_args, _), rest)
-          when Environ.QGlobRef.equal Environ.empty_env arg_ref ind_ref ->
-          let ind_tvar_positions = List.filter_map (fun t ->
-            match t with
-            | Miniml.Tvar i | Miniml.Tvar' i -> Some (i - 1)
-            | _ -> None
-          ) tvar_args in
-          Some (pos, ind_tvar_positions)
-        | Miniml.Tarr (_, rest) -> find_ind_arg_pos (pos + 1) rest
-        | _ -> None
-      in
       (* Check if function comes from the same Rocq module as the inductive *)
       let same_module r = ModPath.equal (modpath_of_r r) ind_modpath in
       let methods = ref [] in
@@ -2381,26 +2232,24 @@ let pp_cpp_ind_header kn ind =
         match se with
         | SEdecl (Dterm (r, body, ty)) ->
           (* Skip if function signature references an excluded type (alias or forward inductive) *)
-          if same_module r && not (refs_excluded ty) && body_safe_for_method body then
-            (match find_ind_arg_pos 0 ty with
+          if same_module r && not (refs_excluded ty) && Method_registry.body_safe_for_method body then
+            (match Method_registry.find_epon_arg_pos ind_ref ty with
             | Some (pos, ind_tvar_positions) ->
-              (* Note: We allow functions with extra type variables beyond the inductive's.
-                 These extra type vars become template parameters on the method. *)
               methods := (r, body, ty, pos) :: !methods;
-              register_method r ind_ref pos ~ind_tvar_positions ()
+              register_method r ind_ref pos ~ind_tvar_positions ();
+              Method_registry.add_candidate (get_method_registry ()) ind_ref (r, body, ty, pos)
             | None -> ())
         | SEdecl (Dfix (rv, defs, typs)) ->
           Array.iteri (fun i r ->
             let ty = typs.(i) in
             (* Skip if function signature references an excluded type (alias or forward inductive) *)
-            if same_module r && not (refs_excluded ty) && body_safe_for_method defs.(i) then begin
+            if same_module r && not (refs_excluded ty) && Method_registry.body_safe_for_method defs.(i) then begin
               let body = defs.(i) in
-              match find_ind_arg_pos 0 ty with
+              match Method_registry.find_epon_arg_pos ind_ref ty with
               | Some (pos, ind_tvar_positions) ->
-                (* Note: We allow functions with extra type variables beyond the inductive's.
-                   These extra type vars become template parameters on the method. *)
                 methods := (r, body, ty, pos) :: !methods;
-                register_method r ind_ref pos ~ind_tvar_positions ()
+                register_method r ind_ref pos ~ind_tvar_positions ();
+                Method_registry.add_candidate (get_method_registry ()) ind_ref (r, body, ty, pos)
               | None -> ()
             end
           ) rv
@@ -2459,17 +2308,18 @@ let pp_cpp_ind_header kn ind =
                 (* Inside a module, non-eponymous inductives don't get methods *)
                 []
           in
-          (* Also include method candidates collected from dependency modules
-             (e.g., Nat::add from Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
+          (* Also include method candidates from the registry (e.g., Nat::add from
+             Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
              Deduplicate: skip any that are already in the methods list. *)
-          let methods = match Hashtbl.find_opt pending_method_candidates ind_ref with
-            | Some bucket ->
+          let methods =
+            let reg_candidates = Method_registry.get_candidates (get_method_registry ()) ind_ref in
+            if reg_candidates = [] then methods
+            else
               let existing = List.map (fun (r, _, _, _) -> r) methods in
               let new_methods = List.filter (fun (r, _, _, _) ->
                 not (List.exists (Environ.QGlobRef.equal Environ.empty_env r) existing)
-              ) !bucket in
+              ) reg_candidates in
               methods @ new_methods
-            | None -> methods
           in
           (* Compute parameter-only type vars.
              Parameters (before the colon) become template params.
@@ -2544,7 +2394,7 @@ let pp_hdecl = function
     | Dterm (r, _, _) when is_registered_method r <> None ->
           (* Skip - this function is registered as a method in another module *)
           mt ()
-    | Dterm (r, a, t) when Translation.is_typeclass_instance a t ->
+    | Dterm (r, a, t) when is_typeclass_instance a t ->
           (* Type class instances: generate struct with static methods and static_assert *)
           let (ds_opt, class_ref_opt, type_args) = Translation.gen_instance_struct r a t in
           let struct_pp = match ds_opt with
@@ -2552,10 +2402,11 @@ let pp_hdecl = function
             | None -> mt ()
           in
           (* Generate static_assert to verify the instance satisfies the concept.
-             Skip for template instances (Dtemplate) — we can't instantiate a concept
-             check without concrete types. *)
+             Skip for template instances (Dtemplate or Dstruct with tparams) —
+             we can't instantiate a concept check without concrete types. *)
           let is_template = match ds_opt with
             | Some (Dtemplate _) -> true
+            | Some (Dstruct { ds_tparams = _ :: _; _ }) -> true
             | _ -> false
           in
           let static_assert_pp = match class_ref_opt with
@@ -2589,13 +2440,7 @@ let pp_hdecl = function
                   let (ds, env) = gen_spec r a t in pp_cpp_decl env ds
             end
     | Dfix (rv,defs,typs) ->
-          (* Filter out inline custom, method candidates, and globally registered methods *)
-          let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
-          let is_global_method x = is_registered_method x <> None in
-          let filter = Array.to_list (Array.map (fun x -> not (is_inline_custom x) && not (is_method_candidate x) && not (is_global_method x) && not (is_eponymous_record_projection x) && not (is_suppressed_projection x)) rv) in
-          let rv = Array.filter_with filter rv in
-          let defs = Array.filter_with filter defs in
-          let typs = Array.filter_with filter typs in
+          let (rv, defs, typs) = filter_dfix rv defs typs in
           if Array.length rv = 0 then mt ()
           else
           (* For template structs, generate full definitions inline, not just declarations *)
@@ -2630,7 +2475,7 @@ let pp_hdecl_spec_only = function
     | Dterm (r, _, _) when List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env r r') !method_candidates -> mt ()
     | Dterm (r, _, _) when is_registered_method r <> None -> mt ()
     | Dterm (r, a, Tglob (ty, args,e)) when is_monad ty -> mt () (* skip monadic for spec *)
-    | Dterm (r, a, t) when Translation.is_typeclass_instance a t -> mt () (* skip typeclasses for spec *)
+    | Dterm (r, a, t) when is_typeclass_instance a t -> mt () (* skip typeclasses for spec *)
     | Dterm (r, a, t) ->
         (* Use gen_decl_for_pp to get the same signature as the full definition,
            then convert to a spec. This ensures forward declarations match
@@ -2643,12 +2488,7 @@ let pp_hdecl_spec_only = function
             let (ds, env) = gen_spec r a t in pp_cpp_decl env ds
         end
     | Dfix (rv,defs,typs) ->
-          let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
-          let is_global_method x = is_registered_method x <> None in
-          let filter = Array.to_list (Array.map (fun x -> not (is_inline_custom x) && not (is_method_candidate x) && not (is_global_method x) && not (is_eponymous_record_projection x) && not (is_suppressed_projection x)) rv) in
-          let rv = Array.filter_with filter rv in
-          let defs = Array.filter_with filter defs in
-          let typs = Array.filter_with filter typs in
+          let (rv, defs, typs) = filter_dfix rv defs typs in
           if Array.length rv = 0 then mt ()
           else
             (* Generate specs derived from the full definition signatures (gen_dfuns_spec)
@@ -2795,11 +2635,10 @@ and pp_spec_as_requirement modtype_refs = function
       let (args, ret_ty) = get_function_parts t in
       let cpp_ret = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ret_ty in
       (* Determine stdlib namespace prefix based on configuration *)
-      let (stdlib_ns, same_as, declval, convertible_to) =
-        if Table.std_lib () = "BDE"
-        then ("bsl::", "same_as", "bsl::declval", "convertible_to")
-        else ("std::", "std::same_as", "std::declval", "std::convertible_to")
-      in
+      let stdlib_ns = (sn ()).ns ^ "::" in
+      let same_as = (sn ()).same_as in
+      let declval = (sn ()).declval in
+      let convertible_to = (sn ()).convertible_to in
       (* Helper to qualify type names with M:: *)
       let rec qualify_type = function
         | Tglob (r, [], _) when not (is_custom r) ->
@@ -2984,13 +2823,9 @@ let rec pp_structure_elem ~is_header f = function
                str ">"
              in
              (* Set context: we're inside a template struct *)
-             let old_context = !in_struct_context in
-             let old_template = !in_template_struct in
-             in_struct_context := true;
-             in_template_struct := true;  (* Mark that we're in a template *)
-             let struct_body = pp_module_expr ~is_header f (List.map (fun (mbid, _) -> MPbound mbid) template_params) body in
-             in_struct_context := old_context;
-             in_template_struct := old_template;  (* Restore template context *)
+             let struct_body = with_render_ctx
+               ~setup:(fun () -> in_struct_context := true; in_template_struct := true)
+               (fun () -> pp_module_expr ~is_header f (List.map (fun (mbid, _) -> MPbound mbid) template_params) body) in
              template_decl ++ fnl () ++
              str "struct " ++ name ++ str " {" ++ fnl () ++
              struct_body ++
@@ -3089,19 +2924,6 @@ let rec pp_structure_elem ~is_header f = function
              | Some epon_ref ->
                (* Get the module path of the eponymous type/record *)
                let epon_modpath = modpath_of_r epon_ref in
-               (* Find the position of the first argument matching the eponymous type/record *)
-               let rec find_epon_arg_pos_local pos = function
-                 | Miniml.Tarr (Miniml.Tglob (arg_ref, tvar_args, _), rest)
-                   when Environ.QGlobRef.equal Environ.empty_env arg_ref epon_ref ->
-                   let ind_tvar_positions = List.filter_map (fun t ->
-                     match t with
-                     | Miniml.Tvar i | Miniml.Tvar' i -> Some (i - 1)
-                     | _ -> None
-                   ) tvar_args in
-                   Some (pos, ind_tvar_positions)
-                 | Miniml.Tarr (_, rest) -> find_epon_arg_pos_local (pos + 1) rest
-                 | _ -> None
-               in
                (* Check if function comes from the same Rocq module as eponymous type/record *)
                let same_module r = ModPath.equal (modpath_of_r r) epon_modpath in
                (* Helper to process a single declaration *)
@@ -3110,12 +2932,11 @@ let rec pp_structure_elem ~is_header f = function
                  | SEdecl (Dterm (r, body, ty)) ->
                    (* Only consider functions from the same Rocq module as the eponymous type/record *)
                    if same_module r then
-                     (match find_epon_arg_pos_local 0 ty with
+                     (match Method_registry.find_epon_arg_pos epon_ref ty with
                      | Some (pos, ind_tvar_positions) ->
-                       (* Note: We allow functions with extra type variables beyond the eponymous type's.
-                          These extra type vars become template parameters on the method. *)
                        method_candidates := (r, body, ty, pos) :: !method_candidates;
-                       register_method r epon_ref pos ~ind_tvar_positions ()
+                       register_method r epon_ref pos ~ind_tvar_positions ();
+                       Method_registry.add_candidate (get_method_registry ()) epon_ref (r, body, ty, pos)
                      | None -> ())
                  | SEdecl (Dfix (rv, defs, typs)) ->
                    (* Handle fixpoints similarly - only from same module *)
@@ -3123,12 +2944,11 @@ let rec pp_structure_elem ~is_header f = function
                      if same_module r then begin
                        let ty = typs.(i) in
                        let body = defs.(i) in
-                       match find_epon_arg_pos_local 0 ty with
+                       match Method_registry.find_epon_arg_pos epon_ref ty with
                        | Some (pos, ind_tvar_positions) ->
-                         (* Note: We allow functions with extra type variables beyond the eponymous type's.
-                            These extra type vars become template parameters on the method. *)
                          method_candidates := (r, body, ty, pos) :: !method_candidates;
-                         register_method r epon_ref pos ~ind_tvar_positions ()
+                         register_method r epon_ref pos ~ind_tvar_positions ();
+                         Method_registry.add_candidate (get_method_registry ()) epon_ref (r, body, ty, pos)
                        | None -> ()
                      end
                    ) rv
@@ -3330,22 +3150,17 @@ let rec pp_structure_elem ~is_header f = function
              end (* has_sibling_inductive_collision else branch *)
          | MEident _ ->
              (* Module alias: generate as is *)
-             let old_context = !in_struct_context in
-             let old_struct_name = !current_struct_name in
-             let old_struct_mp = !current_struct_mp in
-             if is_header then
-               in_struct_context := true
-             else begin
-               (* Track struct name for qualification - combine with parent for nested modules *)
-               current_struct_name := (match old_struct_name with
-                 | Some parent -> Some (parent ++ str "::" ++ name)
-                 | None -> Some name);
-               current_struct_mp := Some mp
-             end;
-             let body = pp_module_expr ~is_header f [] m.ml_mod_expr in
-             in_struct_context := old_context;
-             current_struct_name := old_struct_name;
-             current_struct_mp := old_struct_mp;
+             let body = with_render_ctx
+               ~setup:(fun () ->
+                 if is_header then
+                   in_struct_context := true
+                 else begin
+                   current_struct_name := (match !current_struct_name with
+                     | Some parent -> Some (parent ++ str "::" ++ name)
+                     | None -> Some name);
+                   current_struct_mp := Some mp
+                 end)
+               (fun () -> pp_module_expr ~is_header f [] m.ml_mod_expr) in
              if is_header then
                str "struct " ++ name ++ str " {" ++ fnl () ++ body ++ str "};"
              else
@@ -3423,35 +3238,6 @@ let rec prlist_sep_nonempty sep f = function
      if Pp.ismt e then r
      else e ++ sep () ++ r
 
-(* Pre-scan structure to register all-nullary inductives as enum types.
-   Must be called before any code generation so that both .h and .cpp
-   generation paths see the enum registration. *)
-let rec pre_register_enum_inductives (sel : (Label.t * Miniml.ml_structure_elem) list) : unit =
-  List.iter (fun (_l, se) ->
-    match se with
-    | SEdecl (Dind (kn, ind)) ->
-      (match ind.ind_kind with
-       | Record _ | TypeClass _ -> ()
-       | _ ->
-         let is_mutual = Array.length ind.ind_packets > 1 in
-         Array.iteri (fun i p ->
-           let ind_ref = GlobRef.IndRef (kn, i) in
-           if not (is_custom ind_ref) && not is_mutual then begin
-             let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p.ip_types in
-             let param_sign = List.firstn ind.ind_nparams p.ip_sign in
-             let num_param_vars = List.length (List.filter (fun x -> x == Miniml.Keep) param_sign) in
-             if all_nullary && num_param_vars = 0 && Array.length p.ip_types > 0 then
-               Table.add_enum_inductive ind_ref
-           end
-         ) ind.ind_packets)
-    | SEmodule m ->
-      (match m.ml_mod_expr with
-       | MEstruct (_mp, inner_sel) ->
-         pre_register_enum_inductives inner_sel
-       | _ -> ())
-    | _ -> ()
-  ) sel
-
 (* PERFORMANCE OPTIMIZATION: Process wrapper module function declarations in a SINGLE pass.
 
    This function generates both forward declarations and full definitions from a single
@@ -3480,7 +3266,6 @@ let rec pre_register_enum_inductives (sel : (Label.t * Miniml.ml_structure_elem)
    The is_header parameter controls which definitions are generated via gen_dfuns_dual/gen_decl_for_pp_dual. *)
 let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
   let is_method_candidate x = List.exists (fun (r', _, _, _) -> Environ.QGlobRef.equal Environ.empty_env x r') !method_candidates in
-  let is_global_method x = is_registered_method x <> None in
 
   (* PHASE 1: Code generation (the expensive part — do this ONCE per function)
 
@@ -3508,18 +3293,19 @@ let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
     | SEdecl (Dterm (r,_,_)) when is_suppressed_projection r -> ([], [], [])
     | SEdecl (Dterm (r, _, _)) when is_method_candidate r -> ([], [], [])
     | SEdecl (Dterm (r, body, ty)) when is_registered_method r <> None ->
-      (* Collect this method candidate for injection into the inductive struct *)
+      (* Method already registered during pre-scan; ensure candidate body is available *)
       (match is_registered_method r with
        | Some (epon_ref, pos) ->
-         let bucket = match Hashtbl.find_opt pending_method_candidates epon_ref with
-           | Some b -> b
-           | None -> let b = ref [] in Hashtbl.replace pending_method_candidates epon_ref b; b
-         in
-         bucket := (r, body, ty, pos) :: !bucket
+         let reg = get_method_registry () in
+         let already = List.exists (fun (r', _, _, _) ->
+           Environ.QGlobRef.equal Environ.empty_env r r'
+         ) (Method_registry.get_candidates reg epon_ref) in
+         if not already then
+           Method_registry.add_candidate reg epon_ref (r, body, ty, pos)
        | None -> ());
       ([], [], [])
     | SEdecl (Dterm (r, _a, Tglob (ty, _args, _e))) when is_monad ty -> ([], [], [])
-    | SEdecl (Dterm (r, a, t)) when Translation.is_typeclass_instance a t -> ([], [], [])
+    | SEdecl (Dterm (r, a, t)) when is_typeclass_instance a t -> ([], [], [])
 
     (* DTERM: Single function declaration
        Call gen_decl_for_pp_dual ONCE to generate both forward declaration and full definition.
@@ -3545,24 +3331,19 @@ let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
        GROUPING: Keep all functions from this Dfix as a list so they can be
        rendered as a single block (no blank lines between them) in Phase 3. *)
     | SEdecl (Dfix (rv, defs, typs)) ->
-      (* Collect registered methods into pending_method_candidates before filtering *)
+      (* Ensure registered methods have their candidates in the registry *)
       Array.iteri (fun i r ->
         match is_registered_method r with
         | Some (epon_ref, pos) ->
-          let bucket = match Hashtbl.find_opt pending_method_candidates epon_ref with
-            | Some b -> b
-            | None -> let b = ref [] in Hashtbl.replace pending_method_candidates epon_ref b; b
-          in
-          bucket := (r, defs.(i), typs.(i), pos) :: !bucket
+          let reg = get_method_registry () in
+          let already = List.exists (fun (r', _, _, _) ->
+            Environ.QGlobRef.equal Environ.empty_env r r'
+          ) (Method_registry.get_candidates reg epon_ref) in
+          if not already then
+            Method_registry.add_candidate reg epon_ref (r, defs.(i), typs.(i), pos)
         | None -> ()
       ) rv;
-      let filter = Array.to_list (Array.map (fun x ->
-        not (is_inline_custom x) && not (is_method_candidate x) &&
-        not (is_global_method x) && not (is_eponymous_record_projection x) &&
-        not (is_suppressed_projection x)) rv) in
-      let rv = Array.filter_with filter rv in
-      let defs = Array.filter_with filter defs in
-      let typs = Array.filter_with filter typs in
+      let (rv, defs, typs) = filter_dfix rv defs typs in
       if Array.length rv = 0 then ([], [], [])
       else
         let results = gen_dfuns_dual ~is_header (rv, defs, typs) in
@@ -3622,22 +3403,19 @@ let pp_wrapper_module_dual ~is_header ~wrapper_mp wrapper_name func_sels =
 
   (* Render forward declarations with in_struct_context=true
      This makes pp_cpp_decl render as "static type func(...)" for injection into Dnspace struct *)
-  let old_context = !in_struct_context in
-  in_struct_context := true;
-  let specs_pp = prlist_sep_nonempty cut2 render_sel_specs all_results in
-  in_struct_context := old_context;
+  let specs_pp = with_render_ctx
+    ~setup:(fun () -> in_struct_context := true)
+    (fun () -> prlist_sep_nonempty cut2 render_sel_specs all_results) in
 
   (* Render definitions with current_struct_name set
      This makes pp_cpp_decl render as "WrapperName::func(...)" for out-of-line definitions.
      The Dfundef case in pp_cpp_decl checks current_struct_name and adds the
      "WrapperName::" prefix to the function name. *)
-  let old_struct_name = !current_struct_name in
-  let old_struct_mp = !current_struct_mp in
-  current_struct_name := Some (str wrapper_name);
-  current_struct_mp := Some wrapper_mp;
-  let defs_pp = prlist_sep_nonempty cut2 render_sel_defs all_results in
-  current_struct_name := old_struct_name;
-  current_struct_mp := old_struct_mp;
+  let defs_pp = with_render_ctx
+    ~setup:(fun () ->
+      current_struct_name := Some (str wrapper_name);
+      current_struct_mp := Some wrapper_mp)
+    (fun () -> prlist_sep_nonempty cut2 render_sel_defs all_results) in
 
   (* Render lifted decls (template helpers like _foo_aux)
      These are template functions extracted from local fixpoints during gen_dfun.
@@ -3653,195 +3431,39 @@ let do_struct_with_decl_tracking ~is_header f s =
      The extraction framework calls pp_struct/pp_hstruct multiple times
      (dry run, impl, intf) and lifted decls can leak between passes. *)
   ignore (Translation.take_lifted_decls ());
-  (* Clear pending method candidates from previous passes (dry run, impl, intf). *)
-  Hashtbl.clear pending_method_candidates;
-  (* Pre-register all methods from the entire structure BEFORE any code generation.
-     This ensures cross-module method calls (like List.app from stmtest) are
-     recognized correctly when generating code.
-     Pass all_top_level_decls so that cross-module method registration can find
-     functions from other modules (e.g., Nat.add for nat defined in Datatypes). *)
-  let all_top_level_decls = List.concat_map snd s in
-  List.iter (fun (_mp, sel) -> pre_register_methods_from_structure ~at_top_level:true all_top_level_decls sel) s;
-  (* Pre-register enum inductives so type conversion and code gen see them *)
-  List.iter (fun (_mp, sel) -> pre_register_enum_inductives sel) s;
-  (* Pre-populate global_inductive_names with all inductive type names across all modules.
-     This is used to detect module-inductive name collisions (e.g., N/Z). *)
+  (* Resolve std/bsl names once for this extraction pass *)
+  init_std_names ();
+  (* Build the method registry by scanning the entire structure BEFORE any
+     code generation.  This replaces the old pre_register_methods_from_structure
+     pre-pass and also computes returns_any information up front.
+     The registry is stored in a module-level ref so that helper functions
+     (is_registered_method, method_returns_any, etc.) can access it. *)
+  method_registry := Some (Method_registry.create s);
+  (* Run structure analysis: enum registration, inductive name collection,
+     module classification, and topological sort — all in one pass. *)
+  let analysis = Structure_analysis.analyze (get_method_registry ()) s in
+  (* Populate cpp.ml hashtables from analysis results *)
   Hashtbl.clear global_inductive_names;
-  let rec collect_inductive_names sel =
-    List.iter (fun (_l, se) ->
-      match se with
-      | SEdecl (Dind (kn, ind)) ->
-        let ind_mp = Names.MutInd.modpath kn in
-        Array.iteri (fun i _p ->
-          let ind_ref = GlobRef.IndRef (kn, i) in
-          let ind_name = Common.pp_global_name Type ind_ref in
-          let ind_name_cap = String.capitalize_ascii ind_name in
-          Hashtbl.replace global_inductive_names ind_name_cap ind_mp
-        ) ind.ind_packets
-      | SEmodule m ->
-        (match m.ml_mod_expr with
-         | MEstruct (_mp, inner_sel) -> collect_inductive_names inner_sel
-         | _ -> ())
-      | _ -> ()
-    ) sel
-  in
-  List.iter (fun (_mp, sel) -> collect_inductive_names sel) s;
-  (* Pre-populate global_scope_enum_table with enum inductives that will be
-     rendered at global scope (not inside any struct). Top-level SEdecl entries
-     are rendered at global scope. This must be done before both .h and .cpp
-     rendering since the .cpp is rendered first and needs this information
-     for type qualification. *)
+  List.iter (fun (name, mp) ->
+    Hashtbl.replace global_inductive_names name mp
+  ) analysis.inductive_names;
   Hashtbl.clear global_scope_enum_table;
-  List.iter (fun (_mp, sel) ->
-    List.iter (fun (_l, se) ->
-      match se with
-      | SEdecl (Dind (kn, ind)) ->
-        Array.iteri (fun i _p ->
-          let ind_ref = GlobRef.IndRef (kn, i) in
-          if Table.is_enum_inductive ind_ref then
-            Hashtbl.replace global_scope_enum_table ind_ref ()
-        ) ind.ind_packets
-      | _ -> ()
-    ) sel
-  ) s;
-  (* The main module is the last entry in the structure list.
-     Only imported dependency modules should get wrapper structs. *)
-  let main_mp = match List.rev s with
-    | (mp, _) :: _ -> Some mp
-    | [] -> None in
-  (* Classify which modules need wrapper structs.
-     Imported modules (like Stdlib.Init.Nat) contribute bare SEdecl entries,
-     while the main extraction module uses SEmodule which already wraps in a struct.
-     To avoid struct name collisions (e.g., both inductive `nat` via Dnspace and
-     module `Nat` producing `struct Nat`), we separate type and function declarations:
-     - Type declarations (inductives) render normally with Dnspace wrapping
-     - Function declarations are stored in pending_wrapper_decls for injection
-       into the matching Dnspace struct, or emitted as a standalone wrapper struct
-       if no Dnspace struct with that name exists. *)
+  List.iter (fun r ->
+    Hashtbl.replace global_scope_enum_table r ()
+  ) analysis.global_scope_enums;
+  (* Register wrapper modules in the wrapper_module_table *)
+  List.iter (fun (mi : Structure_analysis.module_info) ->
+    match mi.wrapper_name with
+    | Some name -> Hashtbl.replace wrapper_module_table mi.modpath name
+    | None -> ()
+  ) analysis.sorted_modules;
+  (* Convert analysis results to the format used by rendering passes *)
   let is_func_decl (_, se) = match se with
     | SEdecl (Dterm _ | Dfix _) -> true
     | _ -> false in
-  let classify_module (mp, sel) =
-    let has_func = List.exists is_func_decl sel in
-    let has_bare = List.exists (fun (_, se) -> match se with SEdecl _ -> true | _ -> false) sel in
-    let all_bare = not (List.exists (fun (_, se) -> match se with SEmodule _ | SEmodtype _ -> true | _ -> false) sel) in
-    let is_main = match main_mp with Some m -> ModPath.equal mp m | None -> false in
-    if has_bare && all_bare && is_modfile mp && has_func && not is_main then begin
-      let name = String.capitalize_ascii (string_of_modfile mp) in
-      Hashtbl.replace wrapper_module_table mp name;
-      Some name
-    end else
-      None in
-  (* Pre-compute wrapper names for all modules *)
-  let wrapper_names_unsorted = List.map (fun (mp, sel) -> ((mp, sel), classify_module (mp, sel))) s in
-  (* ============================================================================
-     TOPOLOGICAL SORT: Reorder all module entries by cross-module dependencies
-     ============================================================================
-
-     Rocq functions turned into C++ methods are inlined into struct definitions.
-     Their bodies may reference types/functions from other modules (e.g., String's
-     length method calls Nat::ctor::O_()). Similarly, inductive field types may
-     reference types from other modules (e.g., String's constructor stores Ascii).
-     These references require the target structs to be declared before the source.
-
-     The extraction framework outputs modules in import order, which may not
-     satisfy these dependencies. We topologically sort ALL non-main module entries
-     (both wrapper and non-wrapper) so dependencies are emitted first.
-
-     The main module (last entry) stays at the end since it's the user's code
-     and should be emitted after all imported dependencies. *)
-  let wrapper_names =
-    (* Build a mapping from ModPath to the module's sort key (index in the list).
-       Each module entry gets a unique integer ID for the topological sort.
-       The main module is excluded from sorting. *)
-    let n = List.length wrapper_names_unsorted in
-    let is_main_entry i = (i = n - 1) in
-    (* Map from ModPath to sort index, for resolving cross-module references *)
-    let mp_to_idx : (ModPath.t, int) Hashtbl.t = Hashtbl.create 16 in
-    List.iteri (fun i ((mp, _sel), _wn) ->
-      if not (is_main_entry i) then
-        Hashtbl.replace mp_to_idx mp i
-    ) wrapper_names_unsorted;
-    (* Build dependency graph: index -> set of prerequisite indices.
-       We scan ALL declarations in each module (inductives, terms, fixes)
-       for cross-module references. This captures:
-       - Type-level deps: inductive field types referencing types in other modules
-         (e.g., String's constructor has a field of type Ascii)
-       - Method-body deps: inlined methods referencing functions in other modules
-         (e.g., ascii_dec calling Bool::bool_dec)
-       - Constructor deps: pattern matching on types from other modules *)
-    let deps : (int, int list) Hashtbl.t = Hashtbl.create 16 in
-    List.iteri (fun i ((_mp, sel), _wn) ->
-      if is_main_entry i then ()
-      else begin
-        let dep_set : (int, unit) Hashtbl.t = Hashtbl.create 8 in
-        let add_dep r =
-          let rmp = modpath_of_r r in
-          (match Hashtbl.find_opt mp_to_idx rmp with
-           | Some j when j <> i -> Hashtbl.replace dep_set j ()
-           | _ -> ());
-          (* Also check if the reference is a registered method whose eponymous
-             type lives in another module *)
-          match is_registered_method r with
-          | Some (epon_ref, _pos) ->
-            let epon_mp = modpath_of_r epon_ref in
-            (match Hashtbl.find_opt mp_to_idx epon_mp with
-             | Some j when j <> i -> Hashtbl.replace dep_set j ()
-             | _ -> ())
-          | None -> ()
-        in
-        List.iter (fun (_l, se) ->
-          match se with
-          | SEdecl d -> Modutil.decl_iter_references add_dep add_dep add_dep d
-          | _ -> ()
-        ) sel;
-        let dep_list = Hashtbl.fold (fun k () acc -> k :: acc) dep_set [] in
-        if dep_list <> [] then
-          Hashtbl.replace deps i dep_list
-      end
-    ) wrapper_names_unsorted;
-    (* Topological sort (Kahn's algorithm) on module indices *)
-    if Hashtbl.length deps = 0 then
-      wrapper_names_unsorted
-    else begin
-      let non_main_indices = List.init (n - 1) (fun i -> i) in
-      let in_degree : (int, int) Hashtbl.t = Hashtbl.create 16 in
-      List.iter (fun i -> Hashtbl.replace in_degree i 0) non_main_indices;
-      (* deps maps dependent -> [prerequisites]. Each prerequisite increments
-         the dependent's in-degree. *)
-      Hashtbl.iter (fun idx dep_list ->
-        let count = List.length (List.filter (fun dep -> Hashtbl.mem in_degree dep) dep_list) in
-        if count > 0 then
-          Hashtbl.replace in_degree idx ((try Hashtbl.find in_degree idx with Not_found -> 0) + count)
-      ) deps;
-      let queue = Queue.create () in
-      (* Seed with zero-in-degree nodes in original order for stability *)
-      List.iter (fun i ->
-        if Hashtbl.find in_degree i = 0 then Queue.push i queue
-      ) non_main_indices;
-      let sorted = ref [] in
-      while not (Queue.is_empty queue) do
-        let idx = Queue.pop queue in
-        sorted := idx :: !sorted;
-        Hashtbl.iter (fun dependent dep_list ->
-          if List.mem idx dep_list then begin
-            let new_deg = Hashtbl.find in_degree dependent - 1 in
-            Hashtbl.replace in_degree dependent new_deg;
-            if new_deg = 0 then Queue.push dependent queue
-          end
-        ) deps
-      done;
-      let sorted_indices = List.rev !sorted in
-      if List.length sorted_indices <> List.length non_main_indices then
-        (* Cycle detected: fall back to original order *)
-        wrapper_names_unsorted
-      else
-        let arr = Array.of_list wrapper_names_unsorted in
-        let sorted_entries = List.map (fun i -> arr.(i)) sorted_indices in
-        (* Append the main module at the end *)
-        sorted_entries @ [arr.(n - 1)]
-    end
-  in
+  let wrapper_names = List.map (fun (mi : Structure_analysis.module_info) ->
+    ((mi.modpath, mi.sels), mi.wrapper_name)
+  ) analysis.sorted_modules in
   (* ============================================================================
      COMBINED PASS: PERFORMANCE OPTIMIZATION TO ELIMINATE DUPLICATE CODE GENERATION
      ============================================================================
@@ -3920,6 +3542,17 @@ let do_struct_with_decl_tracking ~is_header f s =
   ) wrapper_names;
   let deferred_defs = !deferred_defs_acc in
   let deferred_lifted = !deferred_lifted_acc in
+  (* Build the name resolution cache AFTER PASS 1 so that unmerged_wrappers
+     and collision_wrapper_table are fully populated.  The cache pre-computes
+     all C++ names so the pretty-printer can look them up directly. *)
+  name_cache := Some (Name_resolution.create
+    ~structure_analysis:analysis
+    ~wrapper_modules:wrapper_module_table
+    ~collision_wrappers:collision_wrapper_table
+    ~global_scope_enums:global_scope_enum_table
+    ~eponymous_records:global_eponymous_record_registry
+    ~unmerged:unmerged_wrappers
+    s);
   (* PASS 2: Render all modules. For wrapper modules, only render non-function
      declarations (inductives, types). For non-wrapper modules, render everything
      normally. Dnspace rendering picks up pending_wrapper_decls entries.
@@ -4064,63 +3697,58 @@ let do_struct_with_decl_tracking ~is_header f s =
           (* Render: colliding child modules have their body rendered directly
              (functions as flat forward declarations), non-colliding entries render normally *)
           if is_header then begin
-            let old_context = !in_struct_context in
-            in_struct_context := true;
-            (* Render non-colliding entries normally *)
-            let non_colliding = List.filter (fun (l, se) ->
-              match se with
-              | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
-              | _ -> true
-            ) sel in
-            let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
-            (* Render colliding child modules: extract their inner body directly,
-               pushing/popping visibility for proper name resolution *)
-            let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
-              match se with
-              | SEmodule m ->
-                (match m.ml_mod_expr with
-                 | MEstruct (inner_mp, inner_sel) ->
-                   push_visible inner_mp [];
-                   let inner_func_sels = List.filter is_func_decl inner_sel in
-                   let body = prlist_sep_nonempty cut2 f inner_func_sels in
-                   pop_visible ();
-                   body
-                 | _ -> mt ())
-              | _ -> mt ()
-            ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
-            in_struct_context := old_context;
+            let (non_colliding_pp, colliding_pp) = with_render_ctx
+              ~setup:(fun () -> in_struct_context := true)
+              (fun () ->
+                let non_colliding = List.filter (fun (l, se) ->
+                  match se with
+                  | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
+                  | _ -> true
+                ) sel in
+                let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
+                let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
+                  match se with
+                  | SEmodule m ->
+                    (match m.ml_mod_expr with
+                     | MEstruct (inner_mp, inner_sel) ->
+                       push_visible inner_mp [];
+                       let inner_func_sels = List.filter is_func_decl inner_sel in
+                       let body = prlist_sep_nonempty cut2 f inner_func_sels in
+                       pop_visible ();
+                       body
+                     | _ -> mt ())
+                  | _ -> mt ()
+                ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
+                (non_colliding_pp, colliding_pp)) in
             let body = if Pp.ismt non_colliding_pp then colliding_pp
               else if Pp.ismt colliding_pp then non_colliding_pp
               else non_colliding_pp ++ cut2 () ++ colliding_pp in
             str "struct " ++ str parent_name ++ str " {" ++ fnl () ++ body ++ fnl () ++ str "};"
           end else begin
-            let old_struct_name = !current_struct_name in
-            let old_struct_mp = !current_struct_mp in
-            current_struct_name := Some (str parent_name);
-            current_struct_mp := Some mp;
-            (* Render non-colliding entries normally *)
-            let non_colliding = List.filter (fun (l, se) ->
-              match se with
-              | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
-              | _ -> true
-            ) sel in
-            let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
-            (* Render colliding child modules: extract their inner body directly,
-               keeping current_struct_name as the parent name *)
-            let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
-              match se with
-              | SEmodule m ->
-                (match m.ml_mod_expr with
-                 | MEstruct (inner_mp, inner_sel) ->
-                   push_visible inner_mp [];
-                   let body = prlist_sep_nonempty cut2 f inner_sel in
-                   pop_visible ();
-                   body
-                 | _ -> mt ())
-              | _ -> mt ()
-            ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
-            current_struct_name := old_struct_name;
-            current_struct_mp := old_struct_mp;
+            let (non_colliding_pp, colliding_pp) = with_render_ctx
+              ~setup:(fun () ->
+                current_struct_name := Some (str parent_name);
+                current_struct_mp := Some mp)
+              (fun () ->
+                let non_colliding = List.filter (fun (l, se) ->
+                  match se with
+                  | SEmodule se_inner -> not (is_colliding_child l (SEmodule se_inner))
+                  | _ -> true
+                ) sel in
+                let non_colliding_pp = prlist_sep_nonempty cut2 f non_colliding in
+                let colliding_pp = prlist_sep_nonempty cut2 (fun (_l, se) ->
+                  match se with
+                  | SEmodule m ->
+                    (match m.ml_mod_expr with
+                     | MEstruct (inner_mp, inner_sel) ->
+                       push_visible inner_mp [];
+                       let body = prlist_sep_nonempty cut2 f inner_sel in
+                       pop_visible ();
+                       body
+                     | _ -> mt ())
+                  | _ -> mt ()
+                ) (List.filter (fun (l, se) -> is_colliding_child l se) sel) in
+                (non_colliding_pp, colliding_pp)) in
             let body = if Pp.ismt non_colliding_pp then colliding_pp
               else if Pp.ismt colliding_pp then non_colliding_pp
               else non_colliding_pp ++ cut2 () ++ colliding_pp in

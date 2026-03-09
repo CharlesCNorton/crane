@@ -52,26 +52,21 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
-  A nth(const unsigned int n, const A default0) const {
+  std::shared_ptr<List<A>> skipn(const unsigned int n) const {
     if (n <= 0) {
-      return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
-                                     return default0;
+      return this;
+    } else {
+      unsigned int n0 = n - 1;
+      return std::visit(Overloaded{[](const typename List<A>::nil _args)
+                                       -> std::shared_ptr<List<A>> {
+                                     return List<A>::ctor::nil_();
                                    },
-                                   [](const typename List<A>::cons _args) -> A {
-                                     A x = _args._a0;
-                                     return x;
+                                   [&](const typename List<A>::cons _args)
+                                       -> std::shared_ptr<List<A>> {
+                                     std::shared_ptr<List<A>> l0 = _args._a1;
+                                     return std::move(l0)->skipn(n0);
                                    }},
                         this->v());
-    } else {
-      unsigned int m = n - 1;
-      return std::visit(
-          Overloaded{
-              [&](const typename List<A>::nil _args) -> A { return default0; },
-              [&](const typename List<A>::cons _args) -> A {
-                std::shared_ptr<List<A>> l_ = _args._a1;
-                return std::move(l_)->nth(m, default0);
-              }},
-          this->v());
     }
   }
   std::shared_ptr<List<A>> firstn(const unsigned int n) const {
@@ -92,21 +87,26 @@ public:
           this->v());
     }
   }
-  std::shared_ptr<List<A>> skipn(const unsigned int n) const {
+  A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
-      return this;
-    } else {
-      unsigned int n0 = n - 1;
-      return std::visit(Overloaded{[](const typename List<A>::nil _args)
-                                       -> std::shared_ptr<List<A>> {
-                                     return List<A>::ctor::nil_();
+      return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
+                                     return default0;
                                    },
-                                   [&](const typename List<A>::cons _args)
-                                       -> std::shared_ptr<List<A>> {
-                                     std::shared_ptr<List<A>> l0 = _args._a1;
-                                     return std::move(l0)->skipn(n0);
+                                   [](const typename List<A>::cons _args) -> A {
+                                     A x = _args._a0;
+                                     return x;
                                    }},
                         this->v());
+    } else {
+      unsigned int m = n - 1;
+      return std::visit(
+          Overloaded{
+              [&](const typename List<A>::nil _args) -> A { return default0; },
+              [&](const typename List<A>::cons _args) -> A {
+                std::shared_ptr<List<A>> l_ = _args._a1;
+                return std::move(l_)->nth(m, default0);
+              }},
+          this->v());
     }
   }
   unsigned int length() const {

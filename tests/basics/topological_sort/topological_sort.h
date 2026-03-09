@@ -53,80 +53,6 @@ public:
   };
   const variant_t &v() const { return v_; }
   variant_t &v_mut() { return v_; }
-  template <typename T1, MapsTo<T1, A> F0>
-  std::shared_ptr<List<T1>> map(F0 &&f) const {
-    return std::visit(
-        Overloaded{
-            [](const typename List<A>::nil _args) -> std::shared_ptr<List<T1>> {
-              return List<T1>::ctor::nil_();
-            },
-            [&](const typename List<A>::cons _args)
-                -> std::shared_ptr<List<T1>> {
-              A a = _args._a0;
-              std::shared_ptr<List<A>> l0 = _args._a1;
-              return List<T1>::ctor::cons_(f(a),
-                                           std::move(l0)->template map<T1>(f));
-            }},
-        this->v());
-  }
-  template <typename T1> std::shared_ptr<List<T1>> concat() const {
-    return std::visit(
-        Overloaded{
-            [](const typename List<std::shared_ptr<List<T1>>>::nil _args)
-                -> std::shared_ptr<List<T1>> { return List<T1>::ctor::nil_(); },
-            [](const typename List<std::shared_ptr<List<T1>>>::cons _args)
-                -> std::shared_ptr<List<T1>> {
-              std::shared_ptr<List<T1>> x = _args._a0;
-              std::shared_ptr<List<std::shared_ptr<List<T1>>>> l0 = _args._a1;
-              return std::move(x)->app(std::move(l0)->template concat<T1>());
-            }},
-        this->v());
-  }
-  template <typename T1, MapsTo<T1, A, T1> F0>
-  T1 fold_right(F0 &&f, const T1 a0) const {
-    return std::visit(
-        Overloaded{[&](const typename List<A>::nil _args) -> T1 { return a0; },
-                   [&](const typename List<A>::cons _args) -> T1 {
-                     A b = _args._a0;
-                     std::shared_ptr<List<A>> l0 = _args._a1;
-                     return f(b, std::move(l0)->template fold_right<T1>(f, a0));
-                   }},
-        this->v());
-  }
-  template <MapsTo<bool, A> F0> std::shared_ptr<List<A>> filter(F0 &&f) const {
-    return std::visit(
-        Overloaded{
-            [](const typename List<A>::nil _args) -> std::shared_ptr<List<A>> {
-              return List<A>::ctor::nil_();
-            },
-            [&](const typename List<A>::cons _args)
-                -> std::shared_ptr<List<A>> {
-              A x = _args._a0;
-              std::shared_ptr<List<A>> l0 = _args._a1;
-              if (f(x)) {
-                return List<A>::ctor::cons_(x, std::move(l0)->filter(f));
-              } else {
-                return std::move(l0)->filter(f);
-              }
-            }},
-        this->v());
-  }
-  template <MapsTo<bool, A> F0> std::optional<A> find(F0 &&f) const {
-    return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> std::optional<A> {
-                     return std::nullopt;
-                   },
-                   [&](const typename List<A>::cons _args) -> std::optional<A> {
-                     A x = _args._a0;
-                     std::shared_ptr<List<A>> tl = _args._a1;
-                     if (f(x)) {
-                       return std::make_optional<A>(x);
-                     } else {
-                       return std::move(tl)->find(f);
-                     }
-                   }},
-        this->v());
-  }
   template <typename T1>
   std::shared_ptr<List<std::pair<A, T1>>>
   combine(const std::shared_ptr<List<T1>> &l_) const {
@@ -156,6 +82,80 @@ public:
                              }},
                          l_->v());
                    }},
+        this->v());
+  }
+  template <MapsTo<bool, A> F0> std::optional<A> find(F0 &&f) const {
+    return std::visit(
+        Overloaded{[](const typename List<A>::nil _args) -> std::optional<A> {
+                     return std::nullopt;
+                   },
+                   [&](const typename List<A>::cons _args) -> std::optional<A> {
+                     A x = _args._a0;
+                     std::shared_ptr<List<A>> tl = _args._a1;
+                     if (f(x)) {
+                       return std::make_optional<A>(x);
+                     } else {
+                       return std::move(tl)->find(f);
+                     }
+                   }},
+        this->v());
+  }
+  template <MapsTo<bool, A> F0> std::shared_ptr<List<A>> filter(F0 &&f) const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<A>::nil _args) -> std::shared_ptr<List<A>> {
+              return List<A>::ctor::nil_();
+            },
+            [&](const typename List<A>::cons _args)
+                -> std::shared_ptr<List<A>> {
+              A x = _args._a0;
+              std::shared_ptr<List<A>> l0 = _args._a1;
+              if (f(x)) {
+                return List<A>::ctor::cons_(x, std::move(l0)->filter(f));
+              } else {
+                return std::move(l0)->filter(f);
+              }
+            }},
+        this->v());
+  }
+  template <typename T1, MapsTo<T1, A, T1> F0>
+  T1 fold_right(F0 &&f, const T1 a0) const {
+    return std::visit(
+        Overloaded{[&](const typename List<A>::nil _args) -> T1 { return a0; },
+                   [&](const typename List<A>::cons _args) -> T1 {
+                     A b = _args._a0;
+                     std::shared_ptr<List<A>> l0 = _args._a1;
+                     return f(b, std::move(l0)->template fold_right<T1>(f, a0));
+                   }},
+        this->v());
+  }
+  template <typename T1> std::shared_ptr<List<T1>> concat() const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<std::shared_ptr<List<T1>>>::nil _args)
+                -> std::shared_ptr<List<T1>> { return List<T1>::ctor::nil_(); },
+            [](const typename List<std::shared_ptr<List<T1>>>::cons _args)
+                -> std::shared_ptr<List<T1>> {
+              std::shared_ptr<List<T1>> x = _args._a0;
+              std::shared_ptr<List<std::shared_ptr<List<T1>>>> l0 = _args._a1;
+              return std::move(x)->app(std::move(l0)->template concat<T1>());
+            }},
+        this->v());
+  }
+  template <typename T1, MapsTo<T1, A> F0>
+  std::shared_ptr<List<T1>> map(F0 &&f) const {
+    return std::visit(
+        Overloaded{
+            [](const typename List<A>::nil _args) -> std::shared_ptr<List<T1>> {
+              return List<T1>::ctor::nil_();
+            },
+            [&](const typename List<A>::cons _args)
+                -> std::shared_ptr<List<T1>> {
+              A a = _args._a0;
+              std::shared_ptr<List<A>> l0 = _args._a1;
+              return List<T1>::ctor::cons_(f(a),
+                                           std::move(l0)->template map<T1>(f));
+            }},
         this->v());
   }
   unsigned int length() const {
