@@ -36,7 +36,7 @@ concept OUTER = requires {
   } -> std::same_as<typename M::Inner::t>;
 };
 template <typename M>
-concept OUTER_NAT = requires { TodoWithModuleConstraint::OUTER };
+concept OUTER_NAT = OUTER<M>;
 
 struct TodoWithModuleConstraint {
   struct NatInner {

@@ -1510,3 +1510,25 @@
   (alias runtest)
   (deps todo_nested_module_type.t.exe)
   (action (run ./todo_nested_module_type.t.exe))))
+
+(subdir todo_with_module_constraint
+ (rule
+  (targets todo_with_module_constraint.t.exe)
+  (deps TodoWithModuleConstraint.vo todo_with_module_constraint.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_with_module_constraint.t.exe todo_with_module_constraint.cpp todo_with_module_constraint.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_with_module_constraint.t.exe)
+  (action (run ./todo_with_module_constraint.t.exe))))
+
+(subdir todo_with_type_constraint
+ (rule
+  (targets todo_with_type_constraint.t.exe)
+  (deps TodoWithTypeConstraint.vo todo_with_type_constraint.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_with_type_constraint.t.exe todo_with_type_constraint.cpp todo_with_type_constraint.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_with_type_constraint.t.exe)
+  (action (run ./todo_with_type_constraint.t.exe))))

@@ -375,28 +375,6 @@
   (deps todo_polymorphic_erased_helper.t.exe)
   (action (run ./todo_polymorphic_erased_helper.t.exe))))
 
-(subdir todo_with_module_constraint
- (rule
-  (targets todo_with_module_constraint.t.exe)
-  (deps TodoWithModuleConstraint.vo todo_with_module_constraint.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_with_module_constraint.t.exe todo_with_module_constraint.cpp todo_with_module_constraint.t.cpp)))
- (rule
-  (alias runtest)
-  (deps todo_with_module_constraint.t.exe)
-  (action (run ./todo_with_module_constraint.t.exe))))
-
-(subdir todo_with_type_constraint
- (rule
-  (targets todo_with_type_constraint.t.exe)
-  (deps TodoWithTypeConstraint.vo todo_with_type_constraint.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_with_type_constraint.t.exe todo_with_type_constraint.cpp todo_with_type_constraint.t.cpp)))
- (rule
-  (alias runtest)
-  (deps todo_with_type_constraint.t.exe)
-  (action (run ./todo_with_type_constraint.t.exe))))
-
 (subdir update_nth_length_edge_0009
  (rule
   (targets update_nth_length_edge_0009.t.exe)

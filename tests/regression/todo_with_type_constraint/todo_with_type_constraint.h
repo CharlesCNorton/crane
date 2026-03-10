@@ -30,7 +30,7 @@ concept BASE = requires {
   { M::bump(std::declval<typename M::t>()) } -> std::same_as<typename M::t>;
 };
 template <typename M>
-concept NAT_BASE = requires { TodoWithTypeConstraint::BASE };
+concept NAT_BASE = BASE<M>;
 
 struct TodoWithTypeConstraint {
   struct NatBase {

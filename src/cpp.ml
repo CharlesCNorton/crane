@@ -3116,23 +3116,40 @@ let rec pp_structure_elem ~is_header f = function
                List.filter_map (fun (l, se) ->
                  match se with
                  | SEmodtype m ->
-                     let old_hoisted = !hoisted_concept_defs in
-                     hoisted_concept_defs := [];
-                     let def = pp_module_type [] m in
-                     let hoisted = List.rev !hoisted_concept_defs in
-                     hoisted_concept_defs := old_hoisted;
                      let modtype_name = str (Label.to_string l) in
-                     let concept_pp =
-                       if Pp.ismt def then
-                         str "template<typename M>" ++ fnl () ++
-                         hov 1 (str "concept " ++ modtype_name ++ str " = true;")
-                       else
-                         str "template<typename M>" ++ fnl () ++
-                         hov 1 (str "concept " ++ modtype_name ++ str " = requires {" ++ fnl () ++ def ++ str "};")
+                     (* Check if this is a concept alias (MTident or MTwith wrapping MTident) *)
+                     let rec get_base_concept = function
+                       | MTident kn -> Some kn
+                       | MTwith (mt, _) -> get_base_concept mt
+                       | _ -> None
                      in
-                     (* Prepend any hoisted nested concepts before the main concept *)
-                     let all = List.append hoisted [concept_pp] in
-                     Some (prlist_with_sep (fun () -> fnl () ++ fnl ()) identity all)
+                     let concept_pp = match get_base_concept m with
+                     | Some base_kn ->
+                         let base_name = match base_kn with
+                           | MPdot (_, l') -> str (Label.to_string l')
+                           | _ -> pp_modname base_kn
+                         in
+                         str "template<typename M>" ++ fnl () ++
+                         hov 1 (str "concept " ++ modtype_name ++ str " = " ++ base_name ++ str "<M>;")
+                     | None ->
+                         let old_hoisted = !hoisted_concept_defs in
+                         hoisted_concept_defs := [];
+                         let def = pp_module_type [] m in
+                         let hoisted = List.rev !hoisted_concept_defs in
+                         hoisted_concept_defs := old_hoisted;
+                         let main_concept =
+                           if Pp.ismt def then
+                             str "template<typename M>" ++ fnl () ++
+                             hov 1 (str "concept " ++ modtype_name ++ str " = true;")
+                           else
+                             str "template<typename M>" ++ fnl () ++
+                             hov 1 (str "concept " ++ modtype_name ++ str " = requires {" ++ fnl () ++ def ++ str "};")
+                         in
+                         (* Prepend any hoisted nested concepts before the main concept *)
+                         let all = List.append hoisted [main_concept] in
+                         prlist_with_sep (fun () -> fnl () ++ fnl ()) identity all
+                     in
+                     Some concept_pp
                  | _ -> None
                ) sel
              else [] in
@@ -3251,22 +3268,37 @@ let rec pp_structure_elem ~is_header f = function
          When inside a struct context, concepts have been hoisted to namespace scope
          (see module type concept hoisting), so skip them here. *)
       if not is_header || render_ctx.rc_in_struct then mt () else
-      let old_hoisted = !hoisted_concept_defs in
-      hoisted_concept_defs := [];
-      let def = pp_module_type [] m in
-      let hoisted = List.rev !hoisted_concept_defs in
-      hoisted_concept_defs := old_hoisted;
       let name = pp_modname (MPdot (top_visible_mp (), l)) in
-      let hoisted_pp = if hoisted = [] then mt ()
-        else prlist_with_sep fnl identity hoisted ++ fnl () ++ fnl () in
-      (* Generate a C++ concept with template parameter *)
-      let concept_pp =
-        if Pp.ismt def then
-          hov 1 (str "concept " ++ name ++ str " = true;")
-        else
-          hov 1 (str "concept " ++ name ++ str " = requires {" ++ fnl () ++ def ++ str "};")
+      (* Check if this is a concept alias (MTident or MTwith wrapping MTident).
+         These generate 'concept X = BaseConcept<M>' instead of 'requires { ... }'. *)
+      let rec get_base_concept = function
+        | MTident kn -> Some kn
+        | MTwith (mt, _) -> get_base_concept mt
+        | _ -> None
       in
-      hoisted_pp ++
+      let concept_pp = match get_base_concept m with
+      | Some base_kn ->
+          let base_name = match base_kn with
+            | MPdot (_, l') -> str (Label.to_string l')
+            | _ -> pp_modname base_kn
+          in
+          hov 1 (str "concept " ++ name ++ str " = " ++ base_name ++ str "<M>;")
+      | None ->
+          let old_hoisted = !hoisted_concept_defs in
+          hoisted_concept_defs := [];
+          let def = pp_module_type [] m in
+          let hoisted = List.rev !hoisted_concept_defs in
+          hoisted_concept_defs := old_hoisted;
+          let hoisted_pp = if hoisted = [] then mt ()
+            else prlist_with_sep fnl identity hoisted ++ fnl () ++ fnl () in
+          let body =
+            if Pp.ismt def then
+              hov 1 (str "concept " ++ name ++ str " = true;")
+            else
+              hov 1 (str "concept " ++ name ++ str " = requires {" ++ fnl () ++ def ++ str "};")
+          in
+          hoisted_pp ++ body
+      in
       str "template<typename M>" ++ fnl () ++
       concept_pp ++
       (match Common.get_duplicate (top_visible_mp ()) l with
