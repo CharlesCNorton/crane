@@ -2028,10 +2028,28 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
     (* Check if all parameters are dummy/void - if so, this is likely a thunk for monadic ops *)
     let all_params_dummy = List.for_all (fun (_, ty) -> isTdummy ty || ml_type_is_void ty) params in
 
-    (* Don't lift thunks (all-dummy params) that capture free variables - these are typically
-       for monadic operations where the lambda is passed to a higher-order function that
-       immediately invokes it, and lifting creates type mismatches. *)
-    if free_vars <> [] && all_params_dummy then gen_normal_letin ()
+    if all_params_dummy then begin
+      (* All lambda params are erased type params — this is a polymorphic function
+         alias like `let alias := @id`.  Don't lift to a top-level template;
+         instead inline the lambda into the continuation and beta-reduce, so that
+         call sites like `alias nat 9` become direct calls like `id(9)`. *)
+      let b' = ast_subst a b in
+      let rec beta_red_app args = function
+        | MLlam (_, _, body) ->
+            (match args with
+             | [] -> MLlam (Dummy, Tdummy Ktype, beta_normalize body)
+             | _ :: rest -> beta_red_app rest (ast_pop body))
+        | f ->
+            let f = beta_normalize f in
+            if args = [] then f
+            else MLapp (f, List.map beta_normalize args)
+      and beta_normalize = function
+        | MLapp (MLlam _ as f, args) -> beta_red_app args f
+        | t -> ast_map beta_normalize t
+      in
+      let b' = beta_normalize b' in
+      gen_stmts env k b'
+    end
     else begin
 
     (* 2. Build tvar names: outer tvars keep their names, extra tvars get fresh names *)

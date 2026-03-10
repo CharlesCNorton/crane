@@ -342,17 +342,6 @@
   (deps reset_state_clears_volatile_edge_0037.t.exe)
   (action (run ./reset_state_clears_volatile_edge_0037.t.exe))))
 
-(subdir todo_explicit_type_app_alias
- (rule
-  (targets todo_explicit_type_app_alias.t.exe)
-  (deps TodoExplicitTypeAppAlias.vo todo_explicit_type_app_alias.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_explicit_type_app_alias.t.exe todo_explicit_type_app_alias.cpp todo_explicit_type_app_alias.t.cpp)))
- (rule
-  (alias runtest)
-  (deps todo_explicit_type_app_alias.t.exe)
-  (action (run ./todo_explicit_type_app_alias.t.exe))))
-
 (subdir todo_extract_constant_noninline
  (rule
   (targets todo_extract_constant_noninline.t.exe)

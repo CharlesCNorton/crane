@@ -37,7 +37,7 @@ unsigned int ParallelTest::ack(const std::pair<unsigned int, unsigned int> p) {
 
 std::pair<unsigned int, unsigned int> ParallelTest::fast(const unsigned int m,
                                                          const unsigned int n) {
-  std::pair<unsigned int, unsigned int> f = [&](void) {
+  return [&](void) {
     std::pair<unsigned int, unsigned int> p = std::make_pair(m, n);
     std::future<unsigned int> t1 = std::async(std::launch::async, ack, p);
     std::future<unsigned int> t2 = std::async(std::launch::async, ack, p);
@@ -45,7 +45,6 @@ std::pair<unsigned int, unsigned int> ParallelTest::fast(const unsigned int m,
     unsigned int r2 = t2.get();
     return std::make_pair(r1, r2);
   }();
-  return f;
 }
 
 std::pair<unsigned int, unsigned int> ParallelTest::slow(const unsigned int m,

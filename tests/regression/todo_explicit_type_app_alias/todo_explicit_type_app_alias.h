@@ -22,8 +22,8 @@ struct TodoExplicitTypeAppAlias {
 
   static inline const unsigned int test_value = []() {
     return [](void) {
-      unsigned int kept_nat = _anon_alias(9u);
-      bool kept_bool = _anon_alias(true);
+      unsigned int kept_nat = id(9u);
+      bool kept_bool = id(true);
       return (std::move(kept_nat) + [&](void) {
         if (std::move(kept_bool)) {
           return 1u;
@@ -34,4 +34,3 @@ struct TodoExplicitTypeAppAlias {
     }();
   }();
 };
-template <typename T1> T1 _anon_alias() { return TodoExplicitTypeAppAlias::id; }
