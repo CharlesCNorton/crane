@@ -10,6 +10,8 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
+(** Traversal, search, and optimization functions over MiniML module structures. *)
+
 open Names
 open ModPath
 open CErrors
@@ -18,21 +20,21 @@ open Miniml
 open Table
 open Mlutil
 
-(*S Functions upon ML modules. *)
+(** {1 Functions upon ML modules} *)
 
 (** Note: a syntax like [(F M) with ...] is actually legal, see for instance
     bug #4720. Hence the code below tries to handle [MTsig], maybe not in
     a perfect way, but that should be enough for the use of [se_iter] below. *)
 
+(** Extract module path from a module type. *)
 let rec msid_of_mt = function
   | MTident mp -> mp
   | MTsig(mp,_) -> mp
   | MTwith(mt,_)-> msid_of_mt mt
   | MTfunsig _ -> assert false (* A functor cannot be inside a MTwith *)
 
-(*s Apply some functions upon all [ml_decl] and [ml_spec] found in a
-   [ml_structure]. *)
-
+(** Apply some functions upon all [ml_decl] and [ml_spec] found in a
+    [ml_structure]. *)
 let se_iter do_decl do_spec do_mp =
   let rec mt_iter = function
     | MTident mp -> do_mp mp
@@ -70,19 +72,22 @@ let se_iter do_decl do_spec do_mp =
   in
   se_iter
 
+(** Iterate callbacks over all elements of a structure. *)
 let struct_iter do_decl do_spec do_mp s =
   List.iter
     (function (_,sel) -> List.iter (se_iter do_decl do_spec do_mp) sel) s
 
-(*s Apply some functions upon all references in [ml_type], [ml_ast],
-  [ml_decl], [ml_spec] and [ml_structure]. *)
+(** {2 Reference iteration} *)
 
+(** Callback type for reference iteration. *)
 type do_ref = GlobRef.t -> unit
 
+(** Iterate over field references in an inductive kind (Record/TypeClass). *)
 let record_iter_references do_term = function
   | Record l | TypeClass l -> List.iter (Option.iter do_term) l
   | _ -> ()
 
+(** Iterate over all GlobRef.t occurring in an ML type. *)
 let type_iter_references do_type t =
   let rec iter = function
     | Tglob (r,l,_) -> do_type r; List.iter iter l
@@ -90,6 +95,7 @@ let type_iter_references do_type t =
     | _ -> ()
   in iter t
 
+(** Iterate over constructor references in a pattern. *)
 let patt_iter_references do_cons p =
   let rec iter = function
     | Pcons (r,l) -> do_cons r; List.iter iter l
@@ -98,6 +104,7 @@ let patt_iter_references do_cons p =
     | Prel _ | Pwild -> ()
   in iter p
 
+(** Iterate over term, constructor, and type references in an ML AST. *)
 let ast_iter_references do_term do_cons do_type a =
   let rec iter a =
     ast_iter iter a;
@@ -113,6 +120,7 @@ let ast_iter_references do_term do_cons do_type a =
       | MLstring _ | MLparray _ -> ()
   in iter a
 
+(** Iterate over all references in an inductive definition. *)
 let ind_iter_references do_term do_cons do_type kn ind =
   let type_iter = type_iter_references do_type in
   let cons_iter cp l = do_cons (GlobRef.ConstructRef cp); List.iter type_iter l in
@@ -127,6 +135,7 @@ let ind_iter_references do_term do_cons do_type kn ind =
   if lang () == Cpp then record_iter_references do_term ind.ind_kind;
     Array.iteri (fun i -> packet_iter (kn,i)) ind.ind_packets
 
+(** Iterate over all references in an ML declaration. *)
 let decl_iter_references do_term do_cons do_type =
   let type_iter = type_iter_references do_type
   and ast_iter = ast_iter_references do_term do_cons do_type in
@@ -137,32 +146,39 @@ let decl_iter_references do_term do_cons do_type =
     | Dfix(rv,c,t) ->
         Array.iter do_term rv; Array.iter ast_iter c; Array.iter type_iter t
 
+(** Iterate over all references in an ML specification. *)
 let spec_iter_references do_term do_cons do_type = function
   | Sind (kn,ind) -> ind_iter_references do_term do_cons do_type kn ind
   | Stype (r,_,ot) -> do_type r; Option.iter (type_iter_references do_type) ot
   | Sval (r,_,t) -> do_term r; type_iter_references do_type t
 
-(*s Searching occurrences of a particular term (no lifting done). *)
+(** {2 Searching occurrences of a particular term} *)
 
+(** Raised during AST/type search when a match is found. *)
 exception Found
 
+(** Search for an AST node matching a predicate. *)
 let rec ast_search f a =
   if f a then raise Found else ast_iter (ast_search f) a
 
+(** Search for an AST node in a declaration. *)
 let decl_ast_search f = function
   | Dterm (_,a,_) -> ast_search f a
   | Dfix (_,c,_) -> Array.iter (ast_search f) c
   | _ -> ()
 
+(** Search for an AST node anywhere in a structure. *)
 let struct_ast_search f s =
   try struct_iter (decl_ast_search f) (fun _ -> ()) (fun _ -> ()) s; false
   with Found -> true
 
+(** Search for a type matching a predicate. *)
 let rec type_search f = function
   | Tarr (a,b) -> type_search f a; type_search f b
   | Tglob (r,l,_) -> List.iter (type_search f) l
   | u -> if f u then raise Found
 
+(** Search for a type in a declaration. *)
 let decl_type_search f = function
   | Dind (_,{ind_packets=p})  ->
       Array.iter
@@ -171,6 +187,7 @@ let decl_type_search f = function
   | Dfix (_,_,v) -> Array.iter (type_search f) v
   | Dtype (_,_,u) -> type_search f u
 
+(** Search for a type in a specification. *)
 let spec_type_search f = function
   | Sind (_,{ind_packets=p}) ->
       Array.iter
@@ -178,6 +195,7 @@ let spec_type_search f = function
   | Stype (_,_,ot) -> Option.iter (type_search f) ot
   | Sval (_,_,u) -> type_search f u
 
+(** Search for a type anywhere in a structure. *)
 let struct_type_search f s =
   try
     struct_iter (decl_type_search f) (spec_type_search f) (fun _ -> ()) s;
@@ -185,8 +203,9 @@ let struct_type_search f s =
   with Found -> true
 
 
-(*s Generating the signature. *)
+(** {2 Generating the signature} *)
 
+(** Convert a module structure to a module signature. *)
 let rec msig_of_ms = function
   | [] -> []
   | (l,SEdecl (Dind (kn,i))) :: ms ->
@@ -204,26 +223,31 @@ let rec msig_of_ms = function
   | (l,SEmodule m) :: ms -> (l,Smodule m.ml_mod_type) :: (msig_of_ms ms)
   | (l,SEmodtype m) :: ms -> (l,Smodtype m) :: (msig_of_ms ms)
 
+(** Convert a full structure to its type signature. *)
 let signature_of_structure s =
   List.map (fun (mp,ms) -> mp,msig_of_ms ms) s
 
+(** Convert a module expression to its module type. *)
 let rec mtyp_of_mexpr = function
   | MEfunctor (id,ty,e) -> MTfunsig (id,ty, mtyp_of_mexpr e)
   | MEstruct (mp,str) -> MTsig (mp, msig_of_ms str)
   | _ -> assert false
 
 
-(*s Searching one [ml_decl] in a [ml_structure] by its [global_reference] *)
+(** {2 Searching a declaration in a structure} *)
 
+(** Test whether a structure element is modular (module or module type). *)
 let is_modular = function
   | SEdecl _ -> false
   | SEmodule _ | SEmodtype _ -> true
 
+(** Search for a label in a structure. *)
 let rec search_structure l m = function
   | [] -> raise Not_found
   | (lab,d)::_ when Label.equal lab l && (is_modular d : bool) == m -> d
   | _::fields -> search_structure l m fields
 
+(** Look up a declaration by its GlobRef in a structure. *)
 let get_decl_in_structure r struc =
   try
     let base_mp,ll = labels_of_ref r in
@@ -247,14 +271,15 @@ let get_decl_in_structure r struc =
     anomaly (Pp.str "reference not found in extracted structure.")
 
 
-(*s Optimization of a [ml_structure]. *)
+(** {2 Optimization of a ml_structure} *)
 
-(* Some transformations of ML terms. [optimize_struct] simplify
-   all beta redexes (when the argument does not occur, it is just
-   thrown away; when it occurs exactly once it is substituted; otherwise
-   a let-in redex is created for clarity) and iota redexes, plus some other
-   optimizations. *)
+(** Some transformations of ML terms. [optimize_struct] simplify
+    all beta redexes (when the argument does not occur, it is just
+    thrown away; when it occurs exactly once it is substituted; otherwise
+    a let-in redex is created for clarity) and iota redexes, plus some other
+    optimizations. *)
 
+(** Convert a Dfix group to an MLfix term for inlining. *)
 let dfix_to_mlfix rv av tv i =
   let rec make_subst n s =
     if n < 0 then s
@@ -271,11 +296,10 @@ let dfix_to_mlfix rv av tv i =
   let c = Array.map (subst 0) av
   in MLfix(i, ids, c, false)
 
-(* [optim_se] applies the [normalize] function everywhere and does the
-   inlining of code. The inlined functions are kept for the moment in
-   order to preserve the global interface, later [depcheck_se] will get
-   rid of them if possible *)
-
+(** [optim_se] applies the [normalize] function everywhere and does the
+    inlining of code. The inlined functions are kept for the moment in
+    order to preserve the global interface, later [depcheck_se] will get
+    rid of them if possible *)
 let rec optim_se top to_appear s = function
   | [] -> []
   | (l,SEdecl (Dterm (r,a,t))) :: lse ->
@@ -310,16 +334,18 @@ and optim_me to_appear s = function
       MEapply (optim_me to_appear s me, optim_me to_appear s me')
   | MEfunctor (mbid,mt,me) -> MEfunctor (mbid,mt, optim_me to_appear s me)
 
-(* After these optimisations, some dependencies may not be needed anymore.
-   For non-library extraction, we recompute a minimal set of dependencies
-   for first-level definitions (no module pruning yet). *)
+(** After these optimisations, some dependencies may not be needed anymore.
+    For non-library extraction, we recompute a minimal set of dependencies
+    for first-level definitions (no module pruning yet). *)
 
+(** Normalize a GlobRef to its base inductive reference. *)
 let base_r = let open GlobRef in function
   | ConstRef c as r -> r
   | IndRef (kn,_) -> IndRef (kn,0)
   | ConstructRef ((kn,_),_) -> IndRef (kn,0)
   | _ -> assert false
 
+(** Dependency tracking: manage the set of needed references. *)
 let reset_needed, add_needed, add_needed_mp, found_needed, is_needed =
   let needed = ref Refset'.empty
   and needed_mps = ref MPset.empty in
@@ -331,15 +357,15 @@ let reset_needed, add_needed, add_needed_mp, found_needed, is_needed =
      let r = base_r r in
      Refset'.mem r !needed || MPset.mem (modpath_of_r r) !needed_mps))
 
+(** List all GlobRef.t declared by a declaration. *)
 let declared_refs = function
   | Dind (kn,_) -> [GlobRef.IndRef (kn,0)]
   | Dtype (r,_,_) -> [r]
   | Dterm (r,_,_) -> [r]
   | Dfix (rv,_,_) -> Array.to_list rv
 
-(* Computes the dependencies of a declaration, except in case
-   of custom extraction. *)
-
+(** Computes the dependencies of a declaration, except in case
+    of custom extraction. *)
 let compute_deps_decl = function
   | Dind (kn,ind) ->
       (* Todo Later : avoid dependencies when Extract Inductive *)
@@ -353,6 +379,7 @@ let compute_deps_decl = function
   | Dfix _ as d ->
       decl_iter_references add_needed add_needed add_needed d
 
+(** Compute dependencies for a specification. *)
 let compute_deps_spec = function
   | Sind (kn,ind) ->
       (* Todo Later : avoid dependencies when Extract Inductive *)
@@ -362,6 +389,7 @@ let compute_deps_spec = function
   | Sval (r,_,t) ->
       type_iter_references add_needed t
 
+(** Dead code elimination: keep only needed declarations. *)
 let rec depcheck_se = function
   | [] -> []
   | ((l,SEdecl d) as t) :: se ->
@@ -386,6 +414,7 @@ let rec depcheck_se = function
     se_iter compute_deps_decl compute_deps_spec add_needed_mp t;
     t :: se'
 
+(** Dead code elimination at the structure level. *)
 let rec depcheck_struct = function
   | [] -> []
   | (mp,lse)::struc ->
@@ -393,8 +422,10 @@ let rec depcheck_struct = function
       let lse' = depcheck_se lse in
       if List.is_empty lse' then struc' else (mp,lse')::struc'
 
+(** Raised when an implicit argument remains after optimization. *)
 exception RemainingImplicit of kill_reason
 
+(** Warn if any implicit arguments remain in the structure. *)
 let check_for_remaining_implicits struc =
   let check = function
     | MLdummy (Kimplicit _ as k) -> raise (RemainingImplicit k)
@@ -403,6 +434,7 @@ let check_for_remaining_implicits struc =
   try ignore (struct_ast_search check struc)
   with RemainingImplicit k -> err_or_warn_remaining_implicit k
 
+(** Full optimization pipeline: normalize, inline, eliminate dead code. *)
 let optimize_struct to_appear struc =
   let subst = ref (Refmap'.empty : ml_ast Refmap'.t) in
   let opt_struc =

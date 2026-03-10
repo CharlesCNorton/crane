@@ -113,7 +113,7 @@ let sig_preamble _ comment used_modules usf =
   pp_header_comment comment (* ++
   then_nl (pp_tdummy usf) *)
 
-(** {2 The pretty-printer for C++ syntax*)
+(*s The pretty-printer for C++ syntax*)
 
 (* ============================================================================
    Render context — mutable state tracking the rendering position.
@@ -178,27 +178,23 @@ let with_render_ctx ~(setup : unit -> unit) (f : unit -> 'a) : 'a =
   let result = f () in
   restore_render_ctx saved;
   result
-
 (** Track definitions rendered as function accessors (Meyers singletons)
-    instead of static inline variables, due to template static init ordering.
-    Stores (functor_modpath, label) pairs. At call sites, we match by label
-    and check if the caller's modpath corresponds to an application of the
-    functor. This is needed because functor application creates new constants
-    with distinct canonical names that can't be matched by GlobRef equality. *)
+   instead of static inline variables, due to template static init ordering.
+   Stores (functor_modpath, label) pairs. At call sites, we match by label
+   and check if the caller's modpath corresponds to an application of the
+   functor. This is needed because functor application creates new constants
+   with distinct canonical names that can't be matched by GlobRef equality. *)
 let template_static_accessors : (ModPath.t * Label.t) list ref = ref []
-
 (** Maps applied module paths to their functor source modpaths.
-    E.g., NatWrapper's modpath -> Wrapper's modpath.
-    Populated when processing MEapply. *)
+   E.g., NatWrapper's modpath → Wrapper's modpath.
+   Populated when processing MEapply. *)
 let functor_app_sources : (ModPath.t, ModPath.t) Hashtbl.t = Hashtbl.create 16
-
 (** Track eponymous type info for method generation.
-    When a module M contains an inductive type m (lowercase of M),
-    functions taking shared_ptr<m> as first arg become methods on m. *)
+   When a module M contains an inductive type m (lowercase of M),
+   functions taking shared_ptr<m> as first arg become methods on m. *)
 let eponymous_type_ref : GlobRef.t option ref = ref None
-
 (** Collected method candidates: (function_ref, body, type, this_position) for current eponymous type.
-    this_position is the index (0-based) of the first argument that matches the eponymous type. *)
+   this_position is the index (0-based) of the first argument that matches the eponymous type. *)
 let method_candidates : (GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int) list ref = ref []
 
 (** Eponymous record: when a module M contains a record with the same name (e.g., module CHT with record CHT),
@@ -487,7 +483,7 @@ let str_global k r = str_global_with_key k (repr_of_r r) r
 let pp_global_with_key k key r = str (str_global_with_key k key r)
 
 let pp_global k r = str (str_global k r)
-(*
+(**
 let pp_lowercase r = str (String.uncapitalize_ascii (str_global Type r))
 
 let pp_uppercase r = str (String.capitalize_ascii (str_global Type r))
@@ -981,8 +977,6 @@ let std_angle label s =
 let cpp_angle label s = str label ++ str "<" ++ s ++ str ">"
 
 
-
-(** Custom extraction syntax placeholder types for template string substitution. *)
 type custom_case =
 | CCscrut
 | CCty
@@ -2056,17 +2050,17 @@ function
       (fun id -> Id.print id) ctors in
     str "enum class " ++ struct_name ++ str " {" ++ fnl () ++ str "  " ++ ctors_s ++ fnl () ++ str "};"
 
-(** {2 Pretty-printing of types. [par] is a boolean indicating whether parentheses
-    are needed or not. } *)
+(**s Pretty-printing of types. [par] is a boolean indicating whether parentheses
+    are needed or not. *)
 
 let pp_type par vl t =
   let cty = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] t in
   pp_cpp_type par vl cty
 
-(** {2 Pretty-printing of expressions. [par] indicates whether
+(**s Pretty-printing of expressions. [par] indicates whether
     parentheses are needed or not. [env] is the list of names for the
     de Bruijn variables. [args] is the list of collected arguments
-    (already pretty-printed). } *)
+    (already pretty-printed). *)
 
 let cut2 () = brk (0,-100000) ++ brk (0,0)
 

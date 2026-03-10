@@ -25,7 +25,7 @@ open Modutil
 open Common
 
 (****************************************)
-(*S Part I: computing Rocq environment. *)
+(** {1 Part I: computing Rocq environment} *)
 (****************************************)
 
 let toplevel_env () =
@@ -46,8 +46,8 @@ let environment_until dir_opt =
   in parse (Library.loaded_libraries ())
 
 
-(*s Visit:
-  a structure recording the needed dependencies for the current extraction *)
+(** {2 Visit:
+  a structure recording the needed dependencies for the current extraction} *)
 
 module type VISIT = sig
   (* Reset the dependencies by emptying the visit lists *)
@@ -478,7 +478,7 @@ let mono_environment ~opaque_access refs mpl =
     l
 
 (**************************************)
-(*S Part II : Input/Output primitives *)
+(** {1 Part II : Input/Output primitives} *)
 (**************************************)
 
 let descr () = match lang () with
@@ -561,7 +561,7 @@ let module_filename mp =
   let fimpl = Filename.concat (output_directory_for_module ()) fimpl_base in
   Some fimpl, Option.map ((^) f) d.sig_suffix, id
 
-(*s Extraction of one decl to stdout. *)
+(** {2 Extraction of one decl to stdout} *)
 
 let print_one_decl struc mp decl =
   let d = descr () in
@@ -574,7 +574,7 @@ let print_one_decl struc mp decl =
   pop_visible ();
   v 0 ans
 
-(*s Extraction of a ml struct to a file. *)
+(** {2 Extraction of a ml struct to a file} *)
 
 (** For Recursive Extraction, writing directly on stdout
     won't work with rocqide, we use a buffer instead *)
@@ -799,7 +799,7 @@ let print_structure_to_file (fn,si,mo) dry struc =
 
 
 (*********************************************)
-(*s Part III: the actual extraction commands *)
+(** {2 Part III: the actual extraction commands} *)
 (*********************************************)
 
 
@@ -838,10 +838,10 @@ let rec locate_ref = function
            warning_ambiguous_name ?loc:qid.CAst.loc (qid,mp,r);
            let refs,mps = locate_ref l in refs,mp::mps
 
-(*s Recursive extraction in the Rocq toplevel. The vernacular command is
+(** {2 Recursive extraction in the Rocq toplevel. The vernacular command is
     \verb!Recursive Extraction! [qualid1] ... [qualidn]. Also used when
     extracting to a file with the command:
-    \verb!Extraction "file"! [qualid1] ... [qualidn]. *)
+    \verb!Extraction "file"! [qualid1] ... [qualidn]} *)
 
 let full_extr opaque_access f (refs,mps) =
   init false false;
@@ -854,8 +854,8 @@ let full_extr opaque_access f (refs,mps) =
 let full_extraction ~opaque_access f lr =
   full_extr opaque_access f (locate_ref lr)
 
-(*s Separate extraction is similar to recursive extraction, with the output
-   decomposed in many files, one per Rocq .v file *)
+(** {2 Separate extraction is similar to recursive extraction, with the output
+   decomposed in many files, one per Rocq .v file} *)
 
 let separate_extraction ~opaque_access lr =
   init true false;
@@ -876,8 +876,8 @@ let separate_extraction ~opaque_access lr =
   List.iter print struc;
   reset ()
 
-(*s Simple extraction in the Rocq toplevel. The vernacular command
-    is \verb!Extraction! [qualid]. *)
+(** {2 Simple extraction in the Rocq toplevel. The vernacular command
+    is \verb!Extraction! [qualid]} *)
 
 let simple_extraction ~opaque_access r =
   match locate_ref [r] with
@@ -893,8 +893,8 @@ let simple_extraction ~opaque_access r =
   | _ -> assert false
 
 
-(*s (Recursive) Extraction of a library. The vernacular command is
-  \verb!(Recursive) Extraction Library! [M]. *)
+(** {2 (Recursive) Extraction of a library. The vernacular command is
+  \verb!(Recursive) Extraction Library! [M]} *)
 
 let extraction_library ~opaque_access is_rec CAst.{loc;v=m} =
   init true true;

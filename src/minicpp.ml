@@ -1,7 +1,7 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 
-(* Target language for extraction: a core C++ called MiniCpp.
+(** Target language for extraction: a core C++ called MiniCpp.
 
    Crane's extraction pipeline has two intermediate representations:
 
@@ -41,16 +41,22 @@
 
 open Names
 
-(*s Pre-resolved C++ name.
+(** {2 Pre-resolved C++ name}
    Computed during translation so the pretty-printer doesn't need
    name-resolution logic. *)
+
+(** Pre-resolved C++ name, computed during translation. *)
 type cpp_name = {
   cn_base : string;               (* e.g., "add", "list", "Nat" *)
   cn_qualified : string option;    (* Some "Nat::" for wrapper-qualified names *)
   cn_needs_typename : bool;        (* true if dependent type in template context *)
 }
 
-(*s Inductive classification — determined once during translation. *)
+(** {2 Inductive classification}
+
+    Determined once during translation. *)
+
+(** Classification of an inductive type for C++ code generation. *)
 type cpp_ind_kind =
   | IK_Standard                             (* std::variant sum type *)
   | IK_Enum                                 (* enum class *)
@@ -58,16 +64,18 @@ type cpp_ind_kind =
   | IK_Eponymous of GlobRef.t option list   (* record merged into module *)
   | IK_TypeClass of GlobRef.t option list   (* C++ concept *)
 
-(*s Custom extraction info — resolved once during translation. *)
+(** Custom extraction info, resolved once during translation. *)
 type custom_info = {
   ci_inline : string option;   (* Some code if to_inline, None otherwise *)
   ci_is_custom : bool;
 }
 
-(*s Visibility for struct members. *)
+(** Visibility for struct members. *)
 type cpp_visibility = VPublic | VPrivate
 
-(*s C++ type expressions. *)
+(** {2 C++ type expressions} *)
+
+(** C++ type modifiers. *)
 type cpp_tymod =
   | TMconst
   | TMstatic
@@ -90,8 +98,10 @@ type cpp_type =
   | Tunknown
   | Tany  (* std::any - for type-erased storage of existential types *)
 
+(** C++ type meta-variable for unification. *)
 and cpp_meta = { id : int; mutable contents : cpp_type option }
 
+(** C++ statements. *)
 and cpp_stmt =
   | Sreturn of cpp_expr option
   | Sdecl of Id.t * cpp_type
@@ -111,6 +121,7 @@ and cpp_stmt =
       (* Field assignment: obj.field = expr.
          Used for in-place mutation during memory reuse. *)
 
+(** C++ expressions. *)
 and cpp_expr =
   | CPPvar of Id.t
   | CPPglob of GlobRef.t * cpp_type list * custom_info option
@@ -154,15 +165,17 @@ and cpp_expr =
       (* Binary operator: operator string, lhs, rhs.
          Used for conditions in reuse optimization (&&, ==). *)
 
+(** A C++ constraint expression (used in requires clauses). *)
 and cpp_constraint = cpp_expr
 
+(** Template parameter kinds. *)
 and template_type =
   | TTtypename
   | TTtypename_default of cpp_type  (* typename T = default_type *)
   | TTfun of (cpp_type list * cpp_type)
   | TTconcept of GlobRef.t  (* e.g., 'Eq T' *)
 
-(* TODO: maybe switch all Id.t to GlobRef.t *)
+(** Struct/class field declarations. *)
 and cpp_field =
   | Fvar of Id.t * cpp_type
   | Fvar' of GlobRef.t * cpp_type
@@ -178,6 +191,7 @@ and cpp_field =
   (* Deleted default constructor: ctor() = delete *)
   | Fdeleted_ctor
 
+(** Method field descriptor for struct methods. *)
 and method_field = {
   mf_name : Id.t;
   mf_tparams : (template_type * Id.t) list;
@@ -188,14 +202,17 @@ and method_field = {
   mf_is_static : bool;
 }
 
-(* C++ type schema.
-   The integer is the number of variables in the schema. *)
-
+(** C++ type schema.
+    The integer is the number of variables in the schema. *)
 type cpp_schema = int * cpp_type
 
+(** Construct a shared_ptr type wrapping an inductive type. *)
 let ind_ty_ptr id vars = Tshared_ptr (Tglob (id, vars, []))
+
+(** Construct a unique_ptr type wrapping an inductive type. *)
 let ind_ty_uptr id vars = Tunique_ptr (Tglob (id, vars, []))
 
+(** C++ top-level declarations. *)
 type cpp_decl =
   | Dtemplate of (template_type * Id.t) list  * cpp_constraint option * cpp_decl
   | Dnspace of GlobRef.t option * cpp_decl list

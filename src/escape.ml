@@ -1,7 +1,7 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 
-(* Smart pointer optimization for MiniML AST.
+(** Smart pointer optimization for MiniML AST.
 
    This module performs escape analysis on MiniML terms to determine
    ownership and uniqueness of values, enabling three optimizations:
@@ -26,11 +26,9 @@
 open Miniml
 open Table
 
-(* ========================================================================== *)
-(*  Utility: occurrence counting                                             *)
-(* ========================================================================== *)
+(** {2 Utility: occurrence counting} *)
 
-(* Count occurrences of de Bruijn index [k] in [t].
+(** Count occurrences of de Bruijn index [k] in [t].
    For case expressions, use max over branches (conservative estimate). *)
 let nb_occur_match =
   let rec nb k = function
@@ -56,11 +54,9 @@ let nb_occur_match =
     | MLuint _ | MLfloat _ | MLstring _ -> 0
   in nb
 
-(* ========================================================================== *)
-(*  Phase 1: Escape analysis for unique_ptr promotion                        *)
-(* ========================================================================== *)
+(** {2 Phase 1: Escape analysis for unique_ptr promotion} *)
 
-(* Check if de Bruijn index [k] escapes in [t].
+(** Check if de Bruijn index [k] escapes in [t].
 
    Escaping positions (value outlives its scope):
      - Constructor argument (MLcons) → stored in data structure
@@ -142,17 +138,15 @@ let escapes k t =
 
   in check k true t
 
-(* ========================================================================== *)
-(*  Combined analysis: occurrence counting + escape analysis                 *)
-(* ========================================================================== *)
+(** {2 Combined analysis: occurrence counting + escape analysis} *)
 
-(* Combined analysis result for a specific de Bruijn index. *)
+(** Combined analysis result for a specific de Bruijn index. *)
 type occur_escape_result = {
   count: int;     (* Number of occurrences *)
   escapes: bool;  (* Whether the variable escapes *)
 }
 
-(* Analyze both occurrence count and escape status in a single traversal.
+(** Analyze both occurrence count and escape status in a single traversal.
    This is more efficient than calling nb_occur_match and escapes separately,
    as it only walks the AST once instead of twice. *)
 let analyze_occur_escape k t =
@@ -261,11 +255,9 @@ let analyze_occur_escape k t =
   check k true t;
   { count = !count; escapes = !escaped }
 
-(* ========================================================================== *)
-(*  Phase 2: Owned/borrowed parameter inference                              *)
-(* ========================================================================== *)
+(** {2 Phase 2: Owned/borrowed parameter inference} *)
 
-(* Determine if parameters need ownership (pass by value) or can borrow
+(** Determine if parameters need ownership (pass by value) or can borrow
    (pass by const ref).
 
    A parameter needs ownership when:
@@ -283,13 +275,11 @@ let analyze_occur_escape k t =
 let infer_owned_params n_params body =
   List.init n_params (fun i -> escapes (i + 1) body)
 
-(* ========================================================================== *)
-(*  Utility functions                                                        *)
-(* ========================================================================== *)
+(** {2 Utility functions} *)
 
 module IntSet = Set.Make(Int)
 
-(* Compute free de Bruijn indices in [t], shifted by [depth].
+(** Compute free de Bruijn indices in [t], shifted by [depth].
    An index [i > depth] in [t] contributes [i - depth] to the result. *)
 let free_rels depth t =
   let free = ref IntSet.empty in
@@ -323,7 +313,7 @@ let free_rels depth t =
   collect depth t;
   !free
 
-(* Check if [ty] is a non-enum, non-coinductive inductive
+(** Check if [ty] is a non-enum, non-coinductive inductive
    (wrapped in shared_ptr in C++). Resolves Tmeta chains. *)
 let rec is_shared_ptr_type = function
   | Tglob (r, _, _) ->
@@ -335,7 +325,7 @@ let rec is_shared_ptr_type = function
   | Tmeta { contents = Some ty } -> is_shared_ptr_type ty
   | _ -> false
 
-(* Analyze [body] to find MLletin bindings safe for unique_ptr.
+(** Analyze [body] to find MLletin bindings safe for unique_ptr.
 
    Returns list of letin depth indices (0-based) where binding satisfies:
      1. Non-enum, non-coinductive inductive type (shared_ptr candidate)
@@ -387,26 +377,16 @@ let analyze body =
   walk 0 body;
   List.rev !safe
 
-(* ========================================================================== *)
-(*  Phase 3: Reset/reuse optimization                                        *)
-(* ========================================================================== *)
+(** {2 Phase 3: Reset/reuse optimization} *)
 
-(* For case expressions, identify branches where we can reuse the scrutinee's
-   memory cell when use_count() == 1 at runtime.
-
-   Reuse is safe when:
-     1. Branch tail constructs same inductive type as scrutinee
-     2. Constructor arity matches matched pattern arity
-     3. Type arguments match exactly (conservative check) *)
-
-(* Extract constructor at tail position, if any *)
+(** Extract constructor at tail position, if any *)
 let rec tail_constructor = function
   | MLcons (ty, ctor, args) -> Some (ty, ctor, args)
   | MLletin (_, _, _, cont) -> tail_constructor cont
   | MLmagic body -> tail_constructor body
   | _ -> None
 
-(* Check if two types refer to the same inductive with same type arguments *)
+(** Check if two types refer to the same inductive with same type arguments *)
 let same_inductive t1 t2 =
   match t1, t2 with
   | Tglob (r1, args1, _), Tglob (r2, args2, _) ->
@@ -414,7 +394,15 @@ let same_inductive t1 t2 =
       List.length args1 = List.length args2
   | _ -> false
 
-(* Find branches suitable for memory reuse *)
+(** Find branches suitable for memory reuse.
+
+   For case expressions, identify branches where we can reuse the scrutinee's
+   memory cell when use_count() == 1 at runtime.
+
+   Reuse is safe when:
+     1. Branch tail constructs same inductive type as scrutinee
+     2. Constructor arity matches matched pattern arity
+     3. Type arguments match exactly (conservative check) *)
 let find_reuse_candidates scrutinee_type branches =
   Array.to_list (Array.mapi (fun idx (ids, _, pat, body) ->
     match pat with

@@ -1,6 +1,8 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
-(*s Conversion functions from Miniml to Minicpp types *)
+(** {2 Conversion functions from Miniml to Minicpp types} *)
+
+(** MiniML to MiniCpp translation: converts ML-style AST to C++-oriented AST. *)
 
 open Common
 open Miniml
@@ -11,9 +13,10 @@ open Table
 open Str
 open Util
 
+(** Placeholder exception for unimplemented features *)
 exception TODO
 
-(* Mutable context tracking inductives defined in the current module scope.
+(** Mutable context tracking inductives defined in the current module scope.
    When set, references to these inductives won't be wrapped in Tnamespace,
    so they appear as sibling types rather than outer-namespace-qualified types. *)
 let local_inductives : GlobRef.t list ref = ref []
@@ -27,7 +30,7 @@ let clear_local_inductives () =
 let get_local_inductives () =
   !local_inductives
 
-(* Helper to create CPPglob with pre-computed custom_info *)
+(** Helper to create CPPglob with pre-computed custom_info *)
 let mk_cppglob (r : GlobRef.t) (tys : cpp_type list) : cpp_expr =
   let ci = {
     ci_inline = (if Table.to_inline r then Table.find_custom_opt r else None);
@@ -35,16 +38,16 @@ let mk_cppglob (r : GlobRef.t) (tys : cpp_type list) : cpp_expr =
   } in
   CPPglob (r, tys, Some ci)
 
-(* Helper for local variables (VarRef) - no custom extraction applies *)
+(** Helper for local variables (VarRef) - no custom extraction applies *)
 let mk_cppglob_local (r : GlobRef.t) (tys : cpp_type list) : cpp_expr =
   CPPglob (r, tys, None)
 
-(* Safe wrappers for Table lookups that may fail *)
+(** Safe wrappers for Table lookups that may fail *)
 let find_type_opt (r : GlobRef.t) : ml_type option =
   try Some (Table.find_type r) with Not_found -> None
 
 (* ========================================================================== *)
-(*  Translation context — consolidated mutable state for expression compilation.
+(**  Translation context — consolidated mutable state for expression compilation.
     All fields except local_inductives (which has a different lifecycle and is
     exported to cpp.ml) are grouped here in a single mutable record.        *)
 (* ========================================================================== *)
@@ -80,7 +83,7 @@ let tctx = {
   move_n_params = 0;
 }
 
-(* Accessor wrappers — thin layer over tctx fields. *)
+(** Accessor wrappers — thin layer over tctx fields. *)
 let set_current_type_vars (tvars : Id.t list) =
   tctx.current_type_vars <- tvars
 let get_current_type_vars () = tctx.current_type_vars
@@ -110,7 +113,7 @@ let ml_type_is_void : ml_type -> bool = function
 | Tglob (r, _, _) -> is_void r
 | _ -> false
 
-(* Run escape analysis on [body], saving and restoring the analysis state
+(** Run escape analysis on [body], saving and restoring the analysis state
    around the call to [f]. This is needed because escape analysis runs at
    multiple nesting levels (lambdas, let-in expressions, top-level functions)
    and each level has its own set of safe bindings. *)
@@ -133,12 +136,12 @@ let with_escape_analysis body f =
   tctx.move_n_params <- saved_nparams;
   result
 
-(* Swap shared_ptr to unique_ptr in a C++ type. *)
+(** Swap shared_ptr to unique_ptr in a C++ type. *)
 let shared_to_unique = function
   | Tshared_ptr inner -> Tunique_ptr inner
   | other -> other
 
-(* Swap shared_ptr construction to unique_ptr construction in a C++ expression.
+(** Swap shared_ptr construction to unique_ptr construction in a C++ expression.
    Handles three patterns:
    1. shared_ptr<T>(expr) -> unique_ptr<T>(expr)
    2. make_shared<T>(args) -> make_unique<T>(args)
@@ -160,7 +163,7 @@ let shared_expr_to_unique = function
 
 module IntSet = Escape.IntSet
 
-(* Collect all Tvar indices from an ml_type.
+(** Collect all Tvar indices from an ml_type.
    Used to find type variables beyond those of the containing inductive/record. *)
 let rec collect_tvars_set acc = function
   | Miniml.Tvar i | Miniml.Tvar' i -> IntSet.add i acc
@@ -172,7 +175,7 @@ let rec collect_tvars_set acc = function
 let collect_tvars acc ty =
   IntSet.elements (collect_tvars_set (IntSet.of_list acc) ty)
 
-(* Check if a C++ type is a dummy type glob (e.g., dummy_type, dummy_prop, dummy_implicit).
+(** Check if a C++ type is a dummy type glob (e.g., dummy_type, dummy_prop, dummy_implicit).
    These arise from Tdummy Ktype/Kprop/Kimplicit in the ML AST, which
    convert_ml_type_to_cpp_type maps to Tglob(VarRef "dummy_type") etc.  These
    intermediate markers are used by the filtering pipeline (gen_expr, eta_fun,
@@ -184,13 +187,13 @@ let is_cpp_dummy_type = function
       name = "dummy_type" || name = "dummy_prop" || name = "dummy_implicit"
   | _ -> false
 
-(* True if a C++ type represents an erased parameter — either Tany (from an
+(** True if a C++ type represents an erased parameter — either Tany (from an
    unresolved Tmeta in the ML AST) or a dummy_type glob (from Tdummy).  When
    any type arg in a template argument list is erased, ALL explicit type args
    must be dropped (see filter_erased_type_args). *)
 let is_erased_type t = t = Minicpp.Tany || is_cpp_dummy_type t
 
-(* Recursively check whether a C++ type contains Tany (std::any).
+(** Recursively check whether a C++ type contains Tany (std::any).
    Used to detect when a let-binding's type annotation has unresolved
    carrier projections that should be replaced by concrete types from
    the generated lambda expression. *)
@@ -202,7 +205,7 @@ let rec has_tany_in_type = function
   | Tunique_ptr t -> has_tany_in_type t
   | _ -> false
 
-(* If any type arg is erased (Tany or dummy_type), drop ALL explicit type args
+(** If any type arg is erased (Tany or dummy_type), drop ALL explicit type args
    and let the C++ compiler deduce everything.  We must drop ALL args (not just
    the erased ones) because C++ template arguments are positional: removing only
    the erased slots would shift the remaining args into the wrong positions,
@@ -211,7 +214,7 @@ let rec has_tany_in_type = function
 let filter_erased_type_args tys =
   if List.exists is_erased_type tys then [] else tys
 
-(* Recursively check whether a C++ type tree contains erased HKT markers
+(** Recursively check whether a C++ type tree contains erased HKT markers
    (Tany or dummy_type globs).  These markers arise when a higher-kinded type
    constructor (e.g., F : Type -> Type) is erased during extraction — the
    type constructor itself becomes Tany/dummy_type, but it may be nested inside
@@ -249,7 +252,7 @@ let rec collect_tvars_ast acc = function
   | MLtuple args -> List.fold_left collect_tvars_ast acc args
   | MLrel _ | MLexn _ | MLdummy _ | MLaxiom _ | MLuint _ | MLfloat _ | MLstring _ -> acc
 
-(* Check if an ML type contains any unresolved type variable or placeholder.
+(** Check if an ML type contains any unresolved type variable or placeholder.
    Returns true for Tvar, Tvar', unresolved Tmeta, and Tunknown.
    Used to guard Tvar substitution: we only substitute with fully concrete types. *)
 let rec has_tvar = function
@@ -261,7 +264,7 @@ let rec has_tvar = function
   | Miniml.Tmeta { contents = None } -> true
   | _ -> false
 
-(* Apply a type-level transformation to every type annotation in an ML AST. *)
+(** Apply a type-level transformation to every type annotation in an ML AST. *)
 let rec map_types_in_ast (f : ml_type -> ml_type) = function
   | MLlam (id, ty, body) ->
     MLlam (id, f ty, map_types_in_ast f body)
@@ -287,7 +290,7 @@ let rec map_types_in_ast (f : ml_type -> ml_type) = function
   | (MLrel _ | MLexn _ | MLdummy _ | MLaxiom _ | MLuint _
     | MLfloat _ | MLstring _) as t -> t
 
-(* Build Tvar i -> concrete_type substitution by unifying two ML types structurally.
+(** Build Tvar i -> concrete_type substitution by unifying two ML types structurally.
    Walks both types in parallel; when one side has Tvar i and the other has a concrete
    type, records the mapping. Conflicting mappings are discarded. *)
 let build_tvar_subst_from_unify ty_with_tvars ty_concrete =
@@ -314,7 +317,7 @@ let build_tvar_subst_from_unify ty_with_tvars ty_concrete =
   unify ty_with_tvars ty_concrete;
   Hashtbl.fold (fun i v acc -> match v with Some ty -> (i, ty) :: acc | None -> acc) seen []
 
-(* Collect all types that should be unified with the top-level function type.
+(** Collect all types that should be unified with the top-level function type.
    Returns a list of types to unify pairwise with the top-level type:
    - The arrow type reconstructed from MLlam annotations
    - The type annotation on the MLfix binding (if present)
@@ -332,7 +335,7 @@ let collect_body_types_for_unify body =
   let outer = from_lams body in
   outer :: !types
 
-(* Apply a Tvar substitution to an ML type. *)
+(** Apply a Tvar substitution to an ML type. *)
 let rec subst_tvars_type subst = function
   | Miniml.Tvar i | Miniml.Tvar' i ->
     (match List.assoc_opt i subst with Some t -> t | None -> Miniml.Tvar i)
@@ -341,7 +344,7 @@ let rec subst_tvars_type subst = function
   | Miniml.Tmeta {contents = Some t} -> subst_tvars_type subst t
   | t -> t
 
-(* Resolve Tvars in the body by unifying body type annotations with the top-level type.
+(** Resolve Tvars in the body by unifying body type annotations with the top-level type.
    Only applied when the top-level type is fully concrete (no Tvars, no unresolved metas).
    Returns the (possibly substituted) body. *)
 let resolve_body_tvars b ty =
@@ -356,7 +359,7 @@ let resolve_body_tvars b ty =
     | [] -> b
     | _ -> map_types_in_ast (subst_tvars_type tvar_subst) b
 
-(* Resolve unresolved metas in an ML AST by walking its sub-types.
+(** Resolve unresolved metas in an ML AST by walking its sub-types.
    resolve_metas should be a function that resolves metas in a single ml_type. *)
 let rec resolve_metas_in_ast resolve_metas = function
   | MLlam (_, ty, body) -> resolve_metas ty; resolve_metas_in_ast resolve_metas body
@@ -377,7 +380,7 @@ let rec resolve_metas_in_ast resolve_metas = function
   | MLtuple args -> List.iter (resolve_metas_in_ast resolve_metas) args
   | MLrel _ | MLexn _ | MLdummy _ | MLaxiom _ | MLuint _ | MLfloat _ | MLstring _ -> ()
 
-(* Substitute a CPPvar with a replacement expression in C++ ASTs.
+(** Substitute a CPPvar with a replacement expression in C++ ASTs.
    Used when lifting inner functions to top-level to rewrite references. *)
 let rec local_var_subst_expr (target : Id.t) (repl : cpp_expr) (e : cpp_expr) =
   let sub = local_var_subst_expr target repl in
@@ -425,7 +428,7 @@ and local_var_subst_stmt (target : Id.t) (repl : cpp_expr) (s : cpp_stmt) =
         List.map (fun (ctor, stmts) -> (ctor, List.map sub_s stmts)) brs)
   | _ -> s
 
-(* Build extended tvar names covering both signature and body Tvar indices.
+(** Build extended tvar names covering both signature and body Tvar indices.
    sig_indices: sorted list of Tvar indices from the function signature
    sig_names: corresponding Id.t names for those indices
    body_tvars: sorted-unique list of all Tvar indices found in the body *)
@@ -458,7 +461,7 @@ let build_extended_tvar_names sig_indices sig_names body_tvars =
       | None -> anon_tvar_id idx)
   else sig_names
 
-(* Convert ML params to C++ types with const/ref wrapping, and create forwarding-ref
+(** Convert ML params to C++ types with const/ref wrapping, and create forwarding-ref
    template parameters for function-typed params.
    convert_fn: function to convert ml_type -> cpp_type (typically convert_ml_type_to_cpp_type env Refset'.empty tvar_names)
    Returns (cpp_params, all_temps_with_funs). *)
@@ -483,17 +486,17 @@ let build_lifted_cpp_params convert_fn base_temps params =
   let all_temps_with_funs = base_temps @ extra_temps in
   (cpp_params, all_temps_with_funs)
 
-(* Extract return type from a function type, stripping all Tarr layers. *)
+(** Extract return type from a function type, stripping all Tarr layers. *)
 let rec ml_return_type = function
   | Tarr (_, rest) -> ml_return_type rest
   | t -> t
 
-(* Extract argument types and return type from a function type. *)
+(** Extract argument types and return type from a function type. *)
 let rec get_args_and_ret acc = function
   | Tarr (t, rest) -> get_args_and_ret (t :: acc) rest
   | ret_ty -> (List.rev acc, ret_ty)
 
-(* Check if a GlobRef returns a typeclass type (possibly through Tarr layers). *)
+(** Check if a GlobRef returns a typeclass type (possibly through Tarr layers). *)
 let ref_returns_typeclass r =
   match find_type_opt r with
   | Some ty -> Table.is_typeclass_type (ml_return_type ty)
@@ -501,7 +504,7 @@ let ref_returns_typeclass r =
 
 (* Use Common.extract_at_pos for extracting elements at a position *)
 
-(* Create a substitution function for extra type variables in C++ types.
+(** Create a substitution function for extra type variables in C++ types.
    num_ind_vars: number of type vars from the containing inductive/record
    extra_tvar_map: mapping from Tvar index to Id for extra type vars *)
 let make_subst_extra_tvars num_ind_vars extra_tvar_map =
@@ -525,7 +528,7 @@ let make_subst_extra_tvars num_ind_vars extra_tvar_map =
   subst
 
 
-(* Replace all unnamed Tvars with Tany (for type erasure in indexed inductives).
+(** Replace all unnamed Tvars with Tany (for type erasure in indexed inductives).
    Used when a type has Tvars that don't correspond to any template parameters.
    This is defined early so it can be used in gen_cpp_pat_lambda and gen_ind_header_v2. *)
 let rec tvar_erase_type (ty : cpp_type) : cpp_type =
@@ -544,7 +547,7 @@ let rec tvar_erase_type (ty : cpp_type) : cpp_type =
   | Tqualified (ty, id) -> Tqualified (tvar_erase_type ty, id)
   | _ -> ty  (* Tvoid, Ttodo, Tunknown, Tany *)
 
-(* Check if a C++ type contains any unnamed Tvar (Tvar(_, None)).
+(** Check if a C++ type contains any unnamed Tvar (Tvar(_, None)).
    Used to detect types that can't be fully resolved in monomorphized contexts
    (tvars=[]), where nested Tvar(_, None) would print as invalid C++ like List<T1>. *)
 let rec has_unnamed_tvar (ty : cpp_type) : bool =
@@ -563,7 +566,7 @@ let rec has_unnamed_tvar (ty : cpp_type) : bool =
   | Tqualified (ty, _) -> has_unnamed_tvar ty
   | _ -> false
 
-(* Check if a C++ type is Tany or contains an unnamed Tvar (which becomes Tany).
+(** Check if a C++ type is Tany or contains an unnamed Tvar (which becomes Tany).
    This is used to identify methods that return std::any due to type erasure in indexed inductives. *)
 let rec type_is_erased (ty : cpp_type) : bool =
   match ty with
@@ -576,7 +579,7 @@ let rec type_is_erased (ty : cpp_type) : bool =
   | Tnamespace (_, inner) -> type_is_erased inner
   | _ -> false
 
-(* Collect de Bruijn indices of free variables in an ML AST.
+(** Collect de Bruijn indices of free variables in an ML AST.
    n_bound is the number of locally bound variables (lambda params, let bindings, etc.).
    Returns indices relative to the outer scope (i.e., i - n_bound for each free MLrel i). *)
 let rec collect_free_rels_set n_bound acc = function
@@ -605,6 +608,9 @@ let rec collect_free_rels_set n_bound acc = function
 let collect_free_rels n_bound body =
   IntSet.elements (collect_free_rels_set n_bound IntSet.empty body)
 
+(** Convert ML type to C++ type.
+    Handles custom types, inductives, type variables, and erased parameters.
+    env: variable environment; ns: set of local references; tvars: type variable names *)
 let rec convert_ml_type_to_cpp_type env (ns : Refset'.t) (tvars : Id.t list) (ml_t : ml_type) : cpp_type =
   match ml_t with
   | Tarr (t1, t2) ->
@@ -694,7 +700,7 @@ let rec convert_ml_type_to_cpp_type env (ns : Refset'.t) (tvars : Id.t list) (ml
       let _ = print_endline "TODO: TMETA OR TDUMMY OR TUNKNOWN OR TAXIOM"  in
       assert false *)
 
-(* Generate code for a custom-extracted constructor application *)
+(** Generate code for a custom-extracted constructor application *)
 and gen_expr_custom_cons env (ty : ml_type) r ts =
   let args = List.rev_map (gen_expr env) ts in
   let app x = (match args with
@@ -714,7 +720,7 @@ and gen_expr_custom_cons env (ty : ml_type) r ts =
     app (mk_cppglob r temps)
   | _ -> app (mk_cppglob r []))
 
-(* Try to fold a Peano numeral chain (nested constructors) into an integer *)
+(** Try to fold a Peano numeral chain (nested constructors) into an integer *)
 and try_fold_numeral info expr =
   match expr with
   | MLcons (_ty, cr, []) ->
@@ -729,7 +735,9 @@ and try_fold_numeral info expr =
   | MLmagic inner -> try_fold_numeral info inner
   | _ -> None
 
-(* TODO: when an MLGlob has monadic type, needs to be funcall *)
+(** Generate C++ expression from ML AST.
+    Main expression compiler - handles lambdas, applications, constructors, pattern matching, etc.
+    TODO: when an MLGlob has monadic type, needs to be funcall *)
 and gen_expr env (ml_e : ml_ast) : cpp_expr =
   match ml_e with
   | MLrel i ->
@@ -2493,8 +2501,8 @@ and gen_fix env ?(all_fix_ids=[]) ~fix_idx (n,ty) f =
   tctx.move_n_params <- saved_nparams;
   result
 
-(* TODO: REDO NAMESPACE AS PART OF NAMES!!! *)
-
+(** Generate C++ namespace with constructor factory functions for an inductive type.
+    TODO: REDO NAMESPACE AS PART OF NAMES!!! *)
 let gen_ind_cpp vars name cnames tys =
   let constrdecl =
     Array.to_list (Array.mapi (fun i tys ->
@@ -2511,6 +2519,7 @@ let gen_ind_cpp vars name cnames tys =
   in
   Dnspace (Some name, constrdecl)
 
+(** Generate C++ struct for a record type *)
 let gen_record_cpp name fields ind =
   let l = List.combine fields ind.ip_types.(0) in
   let l = List.mapi (fun i (x, t) ->
@@ -2521,7 +2530,7 @@ let gen_record_cpp name fields ind =
   let ty_vars = List.map (fun x -> (TTtypename, x)) ind.ip_vars in
   Dstruct { ds_ref = name; ds_fields = l; ds_tparams = ty_vars; ds_constraint = None; ds_needs_shared_from_this = false }
 
-(* Generate a C++ concept from a type class.
+(** Generate a C++ concept from a type class.
    Type class Eq(A) with method eqb : A -> A -> bool becomes:
    template<typename I, typename A>
    concept Eq = requires(A a0, A a1) {
@@ -2677,7 +2686,7 @@ let gen_typeclass_cpp name fields ind =
   in
   Dtemplate (all_params, None, Dconcept (name, concept_body))
 
-(* Generate a C++ struct for a type class instance.
+(** Generate a C++ struct for a type class instance.
    Type class instances become structs with static methods.
    Example: Instance IntEq : Eq int := { eqb := Int.eqb }.
    becomes: struct IntEq { static bool eqb(int a, int b) { ... } };
@@ -2938,13 +2947,13 @@ let gen_instance_struct (name : GlobRef.t) (body : ml_ast) (ty : ml_type)
       | _ -> (None, Some class_ref, type_args))
   | _ -> (None, None, [])
 
-(* Check if a term is a type class instance (constructs a type class record) *)
+(** Check if a term is a type class instance (constructs a type class record) *)
 let is_typeclass_instance (_body : ml_ast) (ty : ml_type) : bool =
   match ml_return_type ty with
   | Tglob (class_ref, _, _) -> Table.is_typeclass class_ref
   | _ -> false
 
-(* Collect (index, name) pairs for all Tvar occurrences, sorted by index *)
+(** Collect (index, name) pairs for all Tvar occurrences, sorted by index *)
 let get_tvars_indexed t =
   let get_name i n =
     match n with
@@ -2965,15 +2974,15 @@ let get_tvars_indexed t =
     | _ -> l in
   List.sort (fun (x,_) (y,_) -> Int.compare x y) (aux [] t)
 
-(* Tvar names, sorted by index *)
+(** Tvar names, sorted by index *)
 let get_tvars t =
   List.map snd (get_tvars_indexed t)
 
-(* Tvar indices only (unsorted) *)
+(** Tvar indices only (unsorted) *)
 let get_tvar_indices t =
   List.map fst (get_tvars_indexed t)
 
-(* Collect tvar indices that are deducible by the C++ compiler: those appearing
+(** Collect tvar indices that are deducible by the C++ compiler: those appearing
    in the codomain or in non-function-typed domain params.  Function-typed
    params are excluded because gen_dfun converts them to auto-deduced Fn&&
    template parameters, hiding their original Rocq-level type variables from
@@ -3060,7 +3069,7 @@ and var_subst_stmt (id : Id.t) (e : cpp_expr) (s : cpp_stmt) =
       Sassign_field (sub_e obj, field, sub_e e')
   | _ -> s
 
-(* Substitute unnamed type variables with named ones based on a variable list.
+(** Substitute unnamed type variables with named ones based on a variable list.
    This is used when generating methods to replace T1, T2, etc. with the struct's
    template parameter names like A, B, etc. *)
 let rec tvar_subst_type (tvars : Id.t list) (ty : cpp_type) : cpp_type =
@@ -3139,8 +3148,8 @@ and tvar_subst_stmt (tvars : Id.t list) (s : cpp_stmt) : cpp_stmt =
   | Sassign_field (obj, field, e) ->
       Sassign_field (subst_e obj, field, subst_e e)
 
-(** Detect function-typed parameter positions that receive a freshly
-    constructed lambda in a self-recursive call.
+(* Detect function-typed parameter positions that receive a freshly
+   constructed lambda in a self-recursive call.
 
     Higher-order function parameters are normally emitted as C++ template
     parameters constrained with a [MapsTo] concept:
@@ -3224,7 +3233,7 @@ let detect_cps_params (self_ref : GlobRef.t) (n_params : int) (body : ml_ast) : 
   walk body;
   Hashtbl.fold (fun k _ acc -> k :: acc) cps_set []
 
-(* TODO: CLEANUP: dom and cod are redundant with ty *)
+(** TODO: CLEANUP: dom and cod are redundant with ty *)
 let gen_dfun n b dom cod ty temps =
   let ids,b = collect_lams b in
   let rec get_dom l ty = match ty with
@@ -3609,7 +3618,7 @@ let gen_dfun n b dom cod ty temps =
     | [] -> inner, env
     | l -> Dtemplate (l, None, inner), env)
 
-(* TODO: is this used? Likely, but the template stuff shouldn't be. *)
+(** TODO: is this used? Likely, but the template stuff shouldn't be. *)
 let gen_sfun n b dom cod temps =
   let all_params, b = collect_lams b in
   let n_params = List.length all_params in
@@ -3643,7 +3652,7 @@ let gen_sfun n b dom cod temps =
     | [] -> inner, env
     | l -> Dtemplate (l, None, inner), env)
 
-(* Build a map from erased field projection GlobRefs to their Tvar index
+(** Build a map from erased field projection GlobRefs to their Tvar index
    for a promoted dependent record / typeclass.
    Returns [(GlobRef.t * int) list] where int is the 1-based Tvar index. *)
 let erased_proj_tvar_map (class_ref : GlobRef.t) : (GlobRef.t * int) list =
@@ -3661,7 +3670,7 @@ let erased_proj_tvar_map (class_ref : GlobRef.t) : (GlobRef.t * int) list =
         ) promoted_vars
   | _ -> []
 
-(* Replace Tglob references to erased projections with Tvar' in an ML type. *)
+(** Replace Tglob references to erased projections with Tvar' in an ML type. *)
 let rec replace_erased_proj_refs (proj_map : (GlobRef.t * int) list) (t : ml_type) : ml_type =
   let find_in_map r =
     List.find_map (fun (ref, idx) ->
@@ -3681,7 +3690,7 @@ let rec replace_erased_proj_refs (proj_map : (GlobRef.t * int) list) (t : ml_typ
   | Miniml.Tunknown -> Miniml.Tvar' 1
   | _ -> t
 
-(* Replace Tunknown in all type annotations within an ML AST body with the
+(** Replace Tunknown in all type annotations within an ML AST body with the
    GlobRef of the first promoted type var (the carrier). This allows
    convert_ml_type_to_cpp_type to detect it as a promoted type var.
    [carrier_refs] is a list of (GlobRef.t * int) from erased_proj_tvar_map. *)
@@ -3734,7 +3743,7 @@ let rec rewrite_ml_ast_types (carrier_refs : (GlobRef.t * int) list) (ast : ml_a
     | MLrel _ | MLdummy _ | MLaxiom _ | MLexn _ | MLuint _ | MLfloat _
     | MLparray _ | MLstring _ -> ast
 
-(* Rewrite projection types for promoted dependent records.
+(** Rewrite projection types for promoted dependent records.
    When a function's first parameter is a promoted typeclass (e.g., Magma),
    and the remaining args/return have erased carrier refs, replace
    them with Tvar references from the typeclass's field types.
@@ -3771,7 +3780,7 @@ let rewrite_typeclass_projection_type (n : GlobRef.t) (ty : ml_type) : ml_type =
       else ty
   | _ -> ty
 
-(* Get the erased projection map for a function's type, if it takes a
+(** Get the erased projection map for a function's type, if it takes a
    promoted typeclass as first argument. *)
 let get_erased_proj_map_from_type (ty : ml_type) : (GlobRef.t * int) list =
   match ty with
@@ -3779,6 +3788,7 @@ let get_erased_proj_map_from_type (ty : ml_type) : (GlobRef.t * int) list =
       erased_proj_tvar_map class_ref
   | _ -> []
 
+(** Generate C++ declaration from ML definition (main entry point) *)
 let gen_decl n b ty =
   let cty = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ty in
   let tvars = get_tvars cty in
@@ -3791,6 +3801,7 @@ let gen_decl n b ty =
       | [] -> inner, empty_env () , tvars
       | l -> Dtemplate (l, None, inner), empty_env () , tvars)
 
+(** Generate C++ declaration with pretty-printing adjustments *)
 let gen_decl_for_pp n b ty =
   let carrier_refs = get_erased_proj_map_from_type ty in
   let b = rewrite_ml_ast_types carrier_refs b in
@@ -3865,7 +3876,7 @@ let gen_decl_for_pp n b ty =
       | [] -> inner, empty_env ()
       | l -> Dtemplate (l, inner), empty_env ())*)
 
-(* TODO: maybe cleanup this function/its name etc.. *)
+(** TODO: maybe cleanup this function/its name etc.. *)
 let gen_decl_for_dfuns n b ty =
   (* Simplify the ML type to resolve metavariables before converting to C++ *)
   let ty = type_simpl ty in
@@ -3905,6 +3916,7 @@ let gen_decl_for_dfuns n b ty =
     f , env , tvars
   | _ -> let (f, env) = gen_dfun n b [Tvoid] cty ty temps in f , env , (tc_param_ids @ tvars)
 
+(** Generate C++ function specification (for header files) *)
 let gen_spec n b ty =
   let ty = type_simpl ty in
   let ty = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ty in
@@ -3919,7 +3931,7 @@ let gen_spec n b ty =
       | [] -> inner, empty_env ()
       | l -> Dtemplate (l, None, inner), empty_env ())
 
-(* TODO: maybe cleanup this function/its name etc.. *)
+(** TODO: maybe cleanup this function/its name etc.. *)
 let gen_spec_for_sfuns n b ty =
   let ty = type_simpl ty in
   let ty = convert_ml_type_to_cpp_type (empty_env ()) Refset'.empty [] ty in
@@ -3929,6 +3941,7 @@ let gen_spec_for_sfuns n b ty =
   | Tfun (dom, cod) -> gen_sfun n b dom cod temps
   | _ -> gen_sfun n b [Tvoid] ty temps
 
+(** Generate multiple function definitions *)
 let gen_dfuns (ns,bs,tys) =
   List.concat_map (fun (i, name) ->
     let result = gen_decl_for_dfuns name bs.(i) tys.(i) in
@@ -3939,7 +3952,7 @@ let gen_dfuns (ns,bs,tys) =
     [result]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
-(* Convert a Dfundef (definition with body) to a Dfundecl (declaration without body).
+(** Convert a Dfundef (definition with body) to a Dfundecl (declaration without body).
    Recursively handles Dtemplate wrappers. Used to generate forward declarations
    that match the full definition's signature (including concept constraints). *)
 let rec decl_to_spec (d : cpp_decl) : cpp_decl =
@@ -3950,6 +3963,7 @@ let rec decl_to_spec (d : cpp_decl) : cpp_decl =
     Dtemplate (temps, cstr, decl_to_spec inner)
   | _ -> d  (* Already a declaration, return as-is *)
 
+(** Generate function declarations for header files *)
 let gen_dfuns_header (ns,bs,tys) =
   List.concat_map (fun (i, name) ->
     let (ds, env, tvars) = gen_decl_for_dfuns name bs.(i) tys.(i) in
@@ -3966,7 +3980,7 @@ let gen_dfuns_header (ns,bs,tys) =
     lifted_results @ [main_result]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
-(* Generate forward declarations (specs) for a group of mutually recursive functions,
+(** Generate forward declarations (specs) for a group of mutually recursive functions,
    using the SAME signature as the full definitions. This ensures the specs match
    the out-of-line definitions (including concept-constrained template parameters).
    Unlike gen_dfuns_header which may use gen_spec_for_sfuns (producing simpler signatures),
@@ -3978,7 +3992,7 @@ let gen_dfuns_spec (ns,bs,tys) =
     [(decl_to_spec ds, empty_env ())]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
-(* Generate both spec and def for a group of mutually recursive functions in one pass.
+(** Generate both spec and def for a group of mutually recursive functions in one pass.
    Calls gen_decl_for_dfuns ONCE per function, then derives:
    - spec: decl_to_spec of the full definition (forward declaration)
    - def: the full definition (for templates) or None (for non-templates in header mode)
@@ -3997,7 +4011,7 @@ let gen_dfuns_dual ~is_header (ns,bs,tys) =
     [(spec, def, lifted)]
   ) (List.mapi (fun i name -> (i, name)) (Array.to_list ns))
 
-(* Generate both spec and def for a single Dterm function in one pass.
+(** Generate both spec and def for a single Dterm function in one pass.
    Calls gen_decl_for_pp ONCE, then derives both spec and def.
    Returns (spec_opt, def_opt, tvars) *)
 let gen_decl_for_pp_dual ~is_header n b ty =
@@ -4019,6 +4033,7 @@ let gen_decl_for_pp_dual ~is_header n b ty =
     let (spec_ds, spec_env) = gen_spec n b ty in
     (Some (spec_ds, spec_env), None, tvars)
 
+(** Generate C++ struct for an inductive type (old version) *)
 let gen_ind_header vars name cnames tys =
   let templates = List.map (fun n -> (TTtypename, n)) vars in
   let add_templates d = match templates with
@@ -4050,7 +4065,7 @@ let gen_ind_header vars name cnames tys =
     tys) in
   Dnspace (Some name, List.append (List.append header [vartydecl]) constrdecl)
 
-(* Replace [Sreturn (Some CPPthis)] with [Sreturn (Some (CPPshared_from_this inner_ty))]
+(** Replace [Sreturn (Some CPPthis)] with [Sreturn (Some (CPPshared_from_this inner_ty))]
    in method bodies, including inside lambdas (e.g., std::visit branches).
    When a method returns [this] directly, the generated C++ would produce
    [return this;] which fails because [this] is a raw pointer but the return
@@ -4086,7 +4101,7 @@ and replace_return_this_stmt inner_ty = function
   | Sexpr e -> Sexpr (replace_return_this_expr inner_ty e)
   | s -> s
 
-(* Check if any expression or statement contains [CPPshared_from_this]. *)
+(** Check if any expression or statement contains [CPPshared_from_this]. *)
 let rec expr_has_shared_from_this = function
   | CPPshared_from_this _ -> true
   | CPPlambda (_, _, body, _) -> List.exists stmt_has_shared_from_this body
@@ -4107,7 +4122,7 @@ and stmt_has_shared_from_this = function
     List.exists (fun (_, stmts) -> List.exists stmt_has_shared_from_this stmts) brs
   | _ -> false
 
-(* Generate a single method from a method candidate.
+(** Generate a single method from a method candidate.
    name: the containing type's GlobRef
    vars: type variables of the containing type
    (func_ref, body, ty, this_pos): the method candidate *)
@@ -4340,8 +4355,8 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
 
   (Fmethod { mf_name = func_name; mf_tparams = template_params; mf_ret_type = ret_cpp; mf_params = params; mf_body = stmts; mf_is_const = true; mf_is_static = false }, VPublic)
 
-(* New inductive generation: encapsulated struct with methods *)
-(* Generates:
+(* New inductive generation: encapsulated struct with methods.
+   Generates:
    struct Tree {
      struct Leaf {};
      struct Node { std::shared_ptr<Tree> left; std::shared_ptr<Tree> right; };
@@ -4609,7 +4624,7 @@ let gen_ind_header_v2 ?(is_mutual=false) vars name cnames tys method_candidates 
   (* Just the struct itself - no extra namespace wrapper *)
   Dstruct { ds_ref = name; ds_fields = all_fields; ds_tparams = templates; ds_constraint = None; ds_needs_shared_from_this = needs_shared_from_this }
 
-(* Generate methods for eponymous records.
+(** Generate methods for eponymous records.
    Uses the shared gen_single_method helper for records where methods are
    generated directly on the module struct (which has record fields merged).
    name: the record's GlobRef (e.g., IndRef for CHT)

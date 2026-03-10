@@ -1,7 +1,7 @@
 (* Copyright 2026 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 
-(* Method registry: pre-scans the full extraction structure to identify
+(** Method registry: pre-scans the full extraction structure to identify
    which functions should become methods on eponymous inductive types.
 
    This module is the first pass in Crane's multi-pass extraction pipeline.
@@ -26,6 +26,7 @@ open Table
 open Miniml
 open Common
 
+(** Metadata for a function that has been promoted to a method. *)
 type method_info = {
   epon_ref : GlobRef.t;
   this_pos : int;
@@ -33,8 +34,10 @@ type method_info = {
   returns_any : bool;
 }
 
+(** A method candidate: (func_ref, body, type, this_pos). *)
 type method_candidate = GlobRef.t * Miniml.ml_ast * Miniml.ml_type * int
 
+(** The method registry: maps function refs to method info and stores candidates. *)
 type t = {
   methods : (GlobRef.t, method_info) Hashtbl.t;
   (* Reverse index: inductive GlobRef -> list of method candidates.
@@ -42,11 +45,9 @@ type t = {
   candidates : (GlobRef.t, method_candidate list) Hashtbl.t;
 }
 
-(* ------------------------------------------------------------------ *)
-(* Body safety check                                                   *)
-(* ------------------------------------------------------------------ *)
+(** {2 Body safety check} *)
 
-(* Check if a function body is safe to turn into a method.
+(** Check if a function body is safe to turn into a method.
 
    Background: when a function becomes a C++ method, its first argument
    is received via the [this] pointer (a raw pointer) rather than as a
@@ -137,11 +138,9 @@ let body_safe_for_method body =
        any tail position. *)
     not (returns_target 0 inner)
 
-(* ------------------------------------------------------------------ *)
-(* Eponymous-type helpers                                              *)
-(* ------------------------------------------------------------------ *)
+(** {2 Eponymous-type helpers} *)
 
-(* Find the eponymous inductive in a module's declarations.
+(** Find the eponymous inductive in a module's declarations.
 
    An inductive is "eponymous" when its lowercase name matches the module
    name (also lowercased).  For example, module [List] has eponymous
@@ -176,7 +175,7 @@ let find_eponymous_inductive module_name_str decls =
     | _ -> None
   ) decls
 
-(* Find the position of the first argument matching an eponymous type.
+(** Find the position of the first argument matching an eponymous type.
 
    Walks the curried arrow type [T1 -> T2 -> ... -> Tn -> R], checking
    each [Ti] to see if it is [Tglob(epon_ref, tvar_args, _)].
@@ -208,11 +207,9 @@ let find_epon_arg_pos epon_ref ty =
   in
   aux 0 ty
 
-(* ------------------------------------------------------------------ *)
-(* Internal: registration helpers                                      *)
-(* ------------------------------------------------------------------ *)
+(** {2 Internal: registration helpers} *)
 
-(* Add a method entry to the hashtable.  [returns_any] is initialized to
+(** Add a method entry to the hashtable.  [returns_any] is initialized to
    [false] and computed in a separate pass after all methods are found. *)
 let register_into tbl (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) ~(ind_tvar_positions : int list) =
   Hashtbl.replace tbl func_ref {
@@ -222,7 +219,7 @@ let register_into tbl (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : 
     returns_any = false;  (* computed later by [compute_returns_any] *)
   }
 
-(* Register all eligible methods for a given eponymous type from a list
+(** Register all eligible methods for a given eponymous type from a list
    of declarations.
 
    A function is eligible if:
@@ -301,11 +298,9 @@ let register_methods_for_epon tbl cands ?(cross_module=false) ?(wrapper_module_n
     | _ -> ()
   ) decls
 
-(* ------------------------------------------------------------------ *)
-(* Pre-registration pass                                               *)
-(* ------------------------------------------------------------------ *)
+(** {2 Pre-registration pass} *)
 
-(* Pre-register all methods from the entire structure before code
+(** Pre-register all methods from the entire structure before code
    generation.  This ensures that cross-module method calls (like
    [List.app] called from a different module) are recognized correctly
    during code generation.
@@ -411,7 +406,7 @@ let rec pre_register_methods_from_structure tbl cands ~at_top_level (parent_decl
     | _ -> ()
   ) sel
 
-(* Recurse into module expressions (struct bodies and functor bodies)
+(** Recurse into module expressions (struct bodies and functor bodies)
    to find nested modules with eponymous types. *)
 and pre_register_methods_from_module_expr tbl cands (parent_decls : (Label.t * Miniml.ml_structure_elem) list) = function
   | MEstruct (_mp, sel) ->
@@ -420,11 +415,9 @@ and pre_register_methods_from_module_expr tbl cands (parent_decls : (Label.t * M
     pre_register_methods_from_module_expr tbl cands parent_decls body
   | _ -> ()
 
-(* ------------------------------------------------------------------ *)
-(* Compute returns_any for all registered methods                      *)
-(* ------------------------------------------------------------------ *)
+(** {2 Compute returns_any for all registered methods} *)
 
-(* After the full structure has been scanned for methods, determine which
+(** After the full structure has been scanned for methods, determine which
    methods return [std::any] (erased indexed return types).
 
    In C++, when an inductive type has type parameters, those parameters
@@ -516,11 +509,9 @@ let compute_returns_any tbl (s : ml_structure) =
            Hashtbl.replace tbl func_ref { info with returns_any = true })
   ) tbl
 
-(* ------------------------------------------------------------------ *)
-(* Public API                                                          *)
-(* ------------------------------------------------------------------ *)
+(** {2 Public API} *)
 
-(* Build the complete method registry from the full extraction structure.
+(** Build the complete method registry from the full extraction structure.
 
    This is the main entry point, called once from [cpp.ml] at the start
    of [do_struct_with_decl_tracking] before any C++ code is rendered.
@@ -543,38 +534,46 @@ let create (s : ml_structure) : t =
   compute_returns_any tbl s;
   { methods = tbl; candidates = cands }
 
+(** Look up method info for a function reference. *)
 let lookup (reg : t) (func_ref : GlobRef.t) : method_info option =
   Hashtbl.find_opt reg.methods func_ref
 
+(** Check if a function is registered as a method, returning the eponymous type and [this] position. *)
 let is_registered_method (reg : t) (func_ref : GlobRef.t) : (GlobRef.t * int) option =
   match Hashtbl.find_opt reg.methods func_ref with
   | Some info -> Some (info.epon_ref, info.this_pos)
   | None -> None
 
+(** Get the list of inductive type variable positions deducible from the receiver. *)
 let lookup_ind_tvar_positions (reg : t) (func_ref : GlobRef.t) : int list =
   match Hashtbl.find_opt reg.methods func_ref with
   | Some info -> info.ind_tvar_positions
   | None -> []
 
+(** Check if a method's return type is erased to [std::any]. *)
 let method_returns_any (reg : t) (func_ref : GlobRef.t) : bool =
   match Hashtbl.find_opt reg.methods func_ref with
   | Some info -> info.returns_any
   | None -> false
 
+(** Get all method candidates for an inductive type. *)
 let get_candidates (reg : t) (ind_ref : GlobRef.t) : method_candidate list =
   match Hashtbl.find_opt reg.candidates ind_ref with
   | Some l -> l
   | None -> []
 
+(** Register a method manually (used by [cpp.ml] for special cases). *)
 let register_method (reg : t) (func_ref : GlobRef.t) (epon_ref : GlobRef.t) (this_pos : int) ~(ind_tvar_positions : int list) =
   register_into reg.methods func_ref epon_ref this_pos ~ind_tvar_positions
 
+(** Add a method candidate manually. *)
 let add_candidate (reg : t) (ind_ref : GlobRef.t) (cand : method_candidate) =
   let existing = match Hashtbl.find_opt reg.candidates ind_ref with
     | Some l -> l | None -> []
   in
   Hashtbl.replace reg.candidates ind_ref (existing @ [cand])
 
+(** Mark a method's return type as erased to [std::any]. *)
 let register_method_returns_any (reg : t) (func_ref : GlobRef.t) =
   match Hashtbl.find_opt reg.methods func_ref with
   | Some info ->

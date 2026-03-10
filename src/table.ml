@@ -33,7 +33,7 @@ module Refset' = GlobRef.Set_env
 module StringMap = HMap.Make(String)
 module StringSet = StringMap.Set
 
-(*S Utilities about [module_path] and [kernel_names] and [global_reference] *)
+(** {1 Utilities about [module_path] and [kernel_names] and [global_reference]} *)
 
 let occur_kn_in_ref kn = let open GlobRef in function
   | IndRef (kn',_)
@@ -105,7 +105,7 @@ let labels_of_ref r =
   parse_labels2 [l] mp
 
 
-(*S The main tables: constants, inductives, records, ... *)
+(** {1 The main tables: constants, inductives, records,} *)
 
 (* These tables are not registered within Rocq save/undo mechanism
    since we reset their contents at each run of Extraction *)
@@ -113,7 +113,7 @@ let labels_of_ref r =
 (* We use [constant_body] (resp. [mutual_inductive_body]) as checksum
    to ensure that the table contents aren't outdated. *)
 
-(*s Constants tables. *)
+(** {2 Constants tables} *)
 
 let typedefs = ref (Cmap_env.empty : (constant_body * ml_type) Cmap_env.t)
 let init_typedefs () = typedefs := Cmap_env.empty
@@ -133,7 +133,7 @@ let lookup_cst_type kn cb =
   | Some (cb0, s) when cb0 == cb -> Some s
   | _ -> None
 
-(*s Inductives table. *)
+(** {2 Inductives table} *)
 
 let inductives =
   ref (Mindmap_env.empty : (mutual_inductive_body * ml_ind) Mindmap_env.t)
@@ -262,14 +262,14 @@ let rec is_typeclass_type_cpp = function
   | Minicpp.Tunique_ptr t -> is_typeclass_type_cpp t (* Unwrap unique_ptr *)
   | _ -> false
 
-(*s Enum inductives table. *)
+(** {2 Enum inductives table} *)
 
 let enum_inductives = ref Refset'.empty
 let init_enum_inductives () = enum_inductives := Refset'.empty
 let add_enum_inductive r = enum_inductives := Refset'.add r !enum_inductives
 let is_enum_inductive r = Refset'.mem r !enum_inductives
 
-(*s Sigma assertion table. *)
+(** {2 Sigma assertion table} *)
 
 type sigma_assertion =
   | AssertExpr of string    (* translatable: C++ expression template, %0 = param name *)
@@ -289,7 +289,7 @@ let get_sigma_assertions r =
   | Some l -> l
   | None -> []
 
-(*s Recursors table. *)
+(** {2 Recursors table} *)
 
 (* NB: here we can use the equivalence between canonical
    and user constant names. *)
@@ -315,7 +315,7 @@ let is_recursor = function
   | GlobRef.ConstRef c -> KNset.mem (Constant.canonical c) !recursors
   | _ -> false
 
-(*s Record tables. *)
+(** {2 Record tables} *)
 
 (* NB: here, working modulo name equivalence is ok *)
 
@@ -355,7 +355,7 @@ let init_higher_order_projections () = higher_order_projections := Refset'.empty
 let mark_higher_order_projection r = higher_order_projections := Refset'.add r !higher_order_projections
 let is_higher_order_projection r = Refset'.mem r !higher_order_projections
 
-(*s Table of used axioms *)
+(** {2 Table of used axioms} *)
 
 let info_axioms = ref Refset'.empty
 let log_axioms = ref Refset'.empty
@@ -372,13 +372,12 @@ let init_opaques () = opaques := Refset'.empty
 let add_opaque r = opaques := Refset'.add r !opaques
 let remove_opaque r = opaques := Refset'.remove r !opaques
 
-(*s Extraction modes: modular or monolithic, library or minimal ?
+(** {2 Extraction modes: modular or monolithic, library or minimal ?
 
 Nota:
  - Crane Recursive Extraction : monolithic, minimal
  - Crane Separate Extraction : modular, minimal
- - Crane Extraction Library : modular, library
-*)
+ - Crane Extraction Library : modular, library} *)
 
 let modular_ref = ref false
 let library_ref = ref false
@@ -394,7 +393,7 @@ let extrcompute = ref false
 let set_extrcompute b = extrcompute := b
 let is_extrcompute () = !extrcompute
 
-(*s Printing. *)
+(** {2 Printing} *)
 
 (* The following functions work even on objects not in [Global.env ()].
    Warning: for inductive objects, this only works if an [extract_inductive]
@@ -441,7 +440,7 @@ let pr_long_mp mp =
 
 let pr_long_global ref = pr_path (Nametab.path_of_global ref)
 
-(*S Warning and Error messages. *)
+(** {1 Warning and Error messages} *)
 
 let err ?loc s = user_err ?loc s
 
@@ -638,7 +637,7 @@ let info_file f =
     (str ("The file "^f^" has been created by extraction."))
 
 
-(*S The Extraction auxiliary commands *)
+(** {1 The Extraction auxiliary commands} *)
 
 (* The objects defined below should survive an arbitrary time,
    so we register them to Rocq save/undo mechanism. *)
@@ -652,7 +651,7 @@ let my_bool_option name value =
   in
   get
 
-(*s Crane Extraction Output Directory *)
+(** {2 Crane Extraction Output Directory} *)
 
 let warn_using_current_directory =
   CWarnings.(create ~name:"crane-extraction-default-directory" ~category:CoreCategories.extraction)
@@ -708,19 +707,19 @@ let output_directory_for_module () =
     | _ -> base_dir
   with _ -> base_dir
 
-(*s Crane Extraction AccessOpaque *)
+(** {2 Crane Extraction AccessOpaque} *)
 
 let access_opaque = my_bool_option "AccessOpaque" true
 
-(*s Crane Extraction AutoInline *)
+(** {2 Crane Extraction AutoInline} *)
 
 let auto_inline = my_bool_option "AutoInline" false
 
-(*s Crane Extraction TypeExpand *)
+(** {2 Crane Extraction TypeExpand} *)
 
 let type_expand = my_bool_option "TypeExpand" true
 
-(*s Crane Extraction Optimize *)
+(** {2 Crane Extraction Optimize} *)
 
 type opt_flag =
     { opt_kill_dum : bool; (* 1 *)
@@ -819,7 +818,7 @@ let { Goptions.get = file_comment } =
     ~value:""
     ()
 
-(*s Crane Extraction Lang *)
+(** {2 Crane Extraction Lang} *)
 
 type lang = Cpp
 type benchmark_lang = BenchmarkOCaml | BenchmarkCpp
@@ -835,7 +834,7 @@ let extr_lang : lang -> obj =
 
 let extraction_language x = Lib.add_leaf (extr_lang x)
 
-(*s Crane Extraction Inline/NoInline *)
+(** {2 Crane Extraction Inline/NoInline} *)
 
 let empty_inline_table = (Refset'.empty,Refset'.empty)
 
@@ -947,7 +946,7 @@ let reset_extraction_foreign () = Lib.add_leaf (reset_foreign ())
 
 let reset_extraction_callback () = Lib.add_leaf (reset_callback ())
 
-(*s Crane Extraction Implicit *)
+(** {2 Crane Extraction Implicit} *)
 
 let safe_implicit = my_bool_option "SafeImplicits" true
 
@@ -999,7 +998,7 @@ let extraction_implicit r l =
   Lib.add_leaf (implicit_extraction (Smartlocate.global_with_alias r,l))
 
 
-(*s Crane Extraction Blacklist of filenames not to use while extracting *)
+(** {2 Crane Extraction Blacklist of filenames not to use while extracting} *)
 
 let blacklist_table = Summary.ref Id.Set.empty ~name:"CraneExtrBlacklist"
 
@@ -1062,7 +1061,7 @@ let reset_blacklist : unit -> obj =
 
 let reset_extraction_blacklist () = Lib.add_leaf (reset_blacklist ())
 
-(*s Crane Extract Constant/Inductive. *)
+(** {2 Crane Extract Constant/Inductive} *)
 
 (* UGLY HACK: to be defined in [extraction.ml] *)
 let (use_type_scheme_nb_args, type_scheme_nb_args_hook) = Hook.make ()
@@ -1496,7 +1495,7 @@ let extract_skip_or_module q =
       Lib.add_leaf (inline_extraction (true,[skip]))
 
 
-(*s Tables synchronization. *)
+(** {2 Tables synchronization} *)
 
 let reset_tables () =
   init_typedefs (); init_cst_types (); init_inductives ();

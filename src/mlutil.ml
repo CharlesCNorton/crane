@@ -18,12 +18,12 @@ open Table
 open Miniml
 (*i*)
 
-(*s Exceptions. *)
+(** {2 Exceptions} *)
 
 exception Found
 exception Impossible
 
-(*S Names operations. *)
+(** {1 Names operations} *)
 
 let anonymous_name = Id.of_string "x"
 let dummy_name = Id.of_string "_x"
@@ -46,7 +46,7 @@ let tmp_id = function
 
 let is_tmp = function Tmp _ -> true | _ -> false
 
-(*S Operations upon ML types (with meta). *)
+(** {1 Operations upon ML types (with meta)} *)
 
 let meta_count = ref 0
 
@@ -108,14 +108,14 @@ let type_subst_vect v t =
     | a -> a
   in subst t
 
-(*s From a type schema to a type. All [Tvar] become fresh [Tmeta]. *)
+(** {2 From a type schema to a type. All [Tvar] become fresh [Tmeta]} *)
 
 let instantiation (nb,t) = type_subst_vect (Array.init nb new_meta) t
 
-(*s Replace all [Tunknown] in a type with fresh [Tmeta].
+(** {2 Replace all [Tunknown] in a type with fresh [Tmeta].
    This is used for existential type variables that were marked as Tunknown
    during extraction. At use sites, we want fresh metas so they can unify
-   with concrete types. *)
+   with concrete types} *)
 
 let instantiate_unknowns t =
   let rec subst t = match t with
@@ -127,7 +127,7 @@ let instantiate_unknowns t =
     | a -> a
   in subst t
 
-(*s Occur-check of a free meta in a type *)
+(** {2 Occur-check of a free meta in a type} *)
 
 let rec type_occurs alpha t =
   match t with
@@ -137,7 +137,7 @@ let rec type_occurs alpha t =
   | Tglob (r,l, a) -> List.exists (type_occurs alpha) l
   | (Tdummy _ | Tvar _ | Tvar' _ | Taxiom | Tunknown | Tstring) -> false
 
-(*s Most General Unificator *)
+(** {2 Most General Unificator} *)
 
 let rec mgu = function
   | Tmeta m, Tmeta m' when Int.equal m.id m'.id -> ()
@@ -183,7 +183,7 @@ let generalizable a =
       | MLapp _ -> false
       | _ -> true (* TODO, this is just an approximation for the moment *)
 
-(*S ML type env. *)
+(** {1 ML type env} *)
 
 module Mlenv = struct
 
@@ -265,9 +265,9 @@ module Mlenv = struct
 
 end
 
-(*S Operations upon ML types (without meta). *)
+(** {1 Operations upon ML types (without meta)} *)
 
-(*s Does a section path occur in a ML type ? *)
+(** {2 Does a section path occur in a ML type ?} *)
 
 let rec type_mem_kn kn = function
   | Tmeta {contents = Some t} -> type_mem_kn kn t
@@ -275,7 +275,7 @@ let rec type_mem_kn kn = function
   | Tarr (a,b) -> (type_mem_kn kn a) || (type_mem_kn kn b)
   | _ -> false
 
-(*s Greatest variable occurring in [t]. *)
+(** {2 Greatest variable occurring in [t]} *)
 
 let type_maxvar t =
   let rec parse n = function
@@ -286,20 +286,20 @@ let type_maxvar t =
     | _ -> n
   in parse 0 t
 
-(*s From [a -> b -> c] to [[a;b],c]. *)
+(** {2 From [a -> b -> c] to [[a;b],c]} *)
 
 let rec type_decomp = function
   | Tmeta {contents = Some t} -> type_decomp t
   | Tarr (a,b) -> let l,h = type_decomp b in a::l, h
   | a -> [],a
 
-(*s The converse: From [[a;b],c] to [a -> b -> c]. *)
+(** {2 The converse: From [[a;b],c] to [a -> b -> c]} *)
 
 let rec type_recomp (l,t) = match l with
   | [] -> t
   | a::l -> Tarr (a, type_recomp (l,t))
 
-(*s Translating [Tvar] to [Tvar'] to avoid clash. *)
+(** {2 Translating [Tvar] to [Tvar'] to avoid clash} *)
 
 let rec var2var' = function
   | Tmeta {contents = Some t} -> var2var' t
@@ -310,8 +310,8 @@ let rec var2var' = function
 
 type abbrev_map = GlobRef.t -> ml_type option
 
-(*s Delta-reduction of type constants everywhere in a ML type [t].
-   [env] is a function of type [ml_type_env]. *)
+(** {2 Delta-reduction of type constants everywhere in a ML type [t].
+   [env] is a function of type [ml_type_env]} *)
 
 let type_expand env t =
   let rec expand = function
@@ -326,7 +326,7 @@ let type_expand env t =
 
 let type_simpl = type_expand (fun _ -> None)
 
-(*s Generating a signature from a ML type. *)
+(** {2 Generating a signature from a ML type} *)
 
 let type_to_sign env t = match type_expand env t with
   | Tdummy d when not (conservative_types ()) -> Kill d
@@ -376,7 +376,7 @@ let rec sign_no_final_keeps = function
      | Keep, [] -> []
      | k, l -> k::l
 
-(*s Removing [Tdummy] from the top level of a ML type. *)
+(** {2 Removing [Tdummy] from the top level of a ML type} *)
 
 let type_expunge_from_sign env s t =
   let rec expunge s t = match s, t with
@@ -398,7 +398,7 @@ let type_expunge_from_sign env s t =
 let type_expunge env t =
   type_expunge_from_sign env (type_to_signature env t) t
 
-(*S Generic functions over ML ast terms. *)
+(** {1 Generic functions over ML ast terms} *)
 
 let mlapp f a = if List.is_empty a then f else MLapp (f,a)
 
@@ -460,8 +460,8 @@ and eq_ml_branch (id1, _, p1, t1) (id2, _, p2, t2) =
   eq_ml_pattern p1 p2 &&
   eq_ml_ast t1 t2
 
-(*s [ast_iter_rel f t] applies [f] on every [MLrel] in t. It takes care
-   of the number of bindings crossed before reaching the [MLrel]. *)
+(** {2 [ast_iter_rel f t] applies [f] on every [MLrel] in t. It takes care
+   of the number of bindings crossed before reaching the [MLrel]} *)
 
 let ast_iter_rel f =
   let rec iter n = function
@@ -479,7 +479,7 @@ let ast_iter_rel f =
     | MLuint _ | MLfloat _ | MLstring _ -> ()
   in iter 0
 
-(*s Map over asts. *)
+(** {2 Map over asts} *)
 
 let ast_map_branch f (c,r,ids,a) = (c,r,ids,f a)
 
@@ -499,7 +499,7 @@ let ast_map f = function
   | MLrel _ | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
   | MLuint _ | MLfloat _ | MLstring _ as a -> a
 
-(*s Map over asts, with binding depth as parameter. *)
+(** {2 Map over asts, with binding depth as parameter} *)
 
 let ast_map_lift_branch f n (ids,r,p,a) = (ids,r,p, f (n+(List.length ids)) a)
 
@@ -519,7 +519,7 @@ let ast_map_lift f n = function
   | MLrel _ | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
   | MLuint _ | MLfloat _ | MLstring _ as a -> a
 
-(*s Iter over asts. *)
+(** {2 Iter over asts} *)
 
 let ast_iter_branch f (c,r,ids,a) = f a
 
@@ -535,17 +535,17 @@ let ast_iter f = function
   | MLrel _ | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
   | MLuint _ | MLfloat _ | MLstring _ -> ()
 
-(*S Operations concerning De Bruijn indices. *)
+(** {1 Operations concerning De Bruijn indices} *)
 
-(*s [ast_occurs k t] returns [true] if [(Rel k)] occurs in [t]. *)
+(** {2 [ast_occurs k t] returns [true] if [(Rel k)] occurs in [t]} *)
 
 let ast_occurs k t =
   try
     ast_iter_rel (fun i -> if Int.equal i k then raise Found) t; false
   with Found -> true
 
-(*s [occurs_itvl k k' t] returns [true] if there is a [(Rel i)]
-   in [t] with [k<=i<=k'] *)
+(** {2 [occurs_itvl k k' t] returns [true] if there is a [(Rel i)]
+   in [t] with [k<=i<=k']} *)
 
 let ast_occurs_itvl k k' t =
   try
@@ -644,8 +644,8 @@ let dump_unused_vars a =
   in
   ren [] a
 
-(*s Lifting on terms.
-    [ast_lift k t] lifts the binding depth of [t] across [k] bindings. *)
+(** {2 Lifting on terms.
+    [ast_lift k t] lifts the binding depth of [t] across [k] bindings} *)
 
 let ast_lift k t =
   let rec liftrec n = function
@@ -655,8 +655,8 @@ let ast_lift k t =
 
 let ast_pop t = ast_lift (-1) t
 
-(*s [permut_rels k k' c] translates [Rel 1 ... Rel k] to [Rel (k'+1) ...
-  Rel (k'+k)] and [Rel (k+1) ... Rel (k+k')] to [Rel 1 ... Rel k'] *)
+(** {2 [permut_rels k k' c] translates [Rel 1 ... Rel k] to [Rel (k'+1) ...
+  Rel (k'+k)] and [Rel (k+1) ... Rel (k+k')] to [Rel 1 ... Rel k']} *)
 
 let permut_rels k k' =
   let rec permut n = function
@@ -668,8 +668,8 @@ let permut_rels k k' =
     | a -> ast_map_lift permut n a
   in permut 0
 
-(*s Substitution. [ml_subst e t] substitutes [e] for [Rel 1] in [t].
-    Lifting (of one binder) is done at the same time. *)
+(** {2 Substitution. [ml_subst e t] substitutes [e] for [Rel 1] in [t].
+    Lifting (of one binder) is done at the same time} *)
 
 let ast_subst e =
   let rec subst n = function
@@ -681,10 +681,10 @@ let ast_subst e =
     | a -> ast_map_lift subst n a
   in subst 0
 
-(*s Generalized substitution.
+(** {2 Generalized substitution.
    [gen_subst v d t] applies to [t] the substitution coded in the
    [v] array: [(Rel i)] becomes [v.(i-1)]. [d] is the correction applied
-   to [Rel] greater than [Array.length v]. *)
+   to [Rel] greater than [Array.length v]} *)
 
 let gen_subst v d t =
   let rec subst n = function
@@ -699,7 +699,7 @@ let gen_subst v d t =
     | a -> ast_map_lift subst n a
   in subst 0 t
 
-(*S Operations concerning match patterns *)
+(** {1 Operations concerning match patterns} *)
 
 let is_basic_pattern = function
   | Prel _ | Pwild -> true
@@ -737,10 +737,10 @@ let is_regular_match br =
       Array.for_all_i is_ref 0 br
     with Impossible -> false
 
-(*S Operations concerning lambdas. *)
+(** {1 Operations concerning lambdas} *)
 
-(*s [collect_lams MLlam(id1,...MLlam(idn,t)...)] returns
-    [[idn;...;id1]] and the term [t]. *)
+(** {2 [collect_lams MLlam(id1,...MLlam(idn,t)...)] returns
+    [[idn;...;id1]] and the term [t]} *)
 
 let collect_lams =
   let rec collect acc = function
@@ -748,7 +748,7 @@ let collect_lams =
     | x           -> acc,x
   in collect []
 
-(*s [collect_n_lams] does the same for a precise number of [MLlam]. *)
+(** {2 [collect_n_lams] does the same for a precise number of [MLlam]} *)
 
 let collect_n_lams =
   let rec collect acc n t =
@@ -758,7 +758,7 @@ let collect_n_lams =
       | _ -> assert false
   in collect []
 
-(*s [remove_n_lams] just removes some [MLlam]. *)
+(** {2 [remove_n_lams] just removes some [MLlam]} *)
 
 let rec remove_n_lams n t =
   if Int.equal n 0 then t
@@ -766,19 +766,19 @@ let rec remove_n_lams n t =
       | MLlam(_,_,t) -> remove_n_lams (n-1) t
       | _ -> assert false
 
-(*s [nb_lams] gives the number of head [MLlam]. *)
+(** {2 [nb_lams] gives the number of head [MLlam]} *)
 
 let rec nb_lams = function
   | MLlam(_,_,t) -> succ (nb_lams t)
   | _ -> 0
 
-(*s [named_lams] does the converse of [collect_lams]. *)
+(** {2 [named_lams] does the converse of [collect_lams]} *)
 
 let rec named_lams ids a = match ids with
   | [] -> a
   | (id,ty) :: ids -> named_lams ids (MLlam (id,ty,a))
 
-(*s The same for a specific identifier (resp. anonymous, dummy) *)
+(** {2 The same for a specific identifier (resp. anonymous, dummy)} *)
 
 let rec many_lams id a = function
   | 0 -> a
@@ -787,7 +787,7 @@ let rec many_lams id a = function
 let anonym_tmp_lams a n = many_lams (Tmp anonymous_name) a n
 let dummy_lams a n = many_lams Dummy a n
 
-(*s mixed according to a signature. *)
+(** {2 mixed according to a signature} *)
 
 let rec anonym_or_dummy_lams a = function
   | [] -> a
@@ -807,28 +807,28 @@ let rec anonym_or_dummy_lams_typed a types = function
     let rest = match types with _ :: ts -> ts | [] -> [] in
     MLlam(Dummy, Tdummy k, anonym_or_dummy_lams_typed a rest s)
 
-(*S Operations concerning eta. *)
+(** {1 Operations concerning eta} *)
 
-(*s The following function creates [MLrel n;...;MLrel 1] *)
+(** {2 The following function creates [MLrel n;...;MLrel 1]} *)
 
 let rec eta_args n =
   if Int.equal n 0 then [] else (MLrel n)::(eta_args (pred n))
 
-(*s Same, but filtered by a signature. *)
+(** {2 Same, but filtered by a signature} *)
 
 let rec eta_args_sign n = function
   | [] -> []
   | Keep :: s -> (MLrel n) :: (eta_args_sign (n-1) s)
   | Kill _ :: s -> eta_args_sign (n-1) s
 
-(*s This one tests [MLrel (n+k); ... ;MLrel (1+k)] *)
+(** {2 This one tests [MLrel (n+k); ... ;MLrel (1+k)]} *)
 
 let rec test_eta_args_lift k n = function
   | [] -> Int.equal n 0
   | MLrel m :: q -> Int.equal (k+n) m && (test_eta_args_lift k (pred n) q)
   | _ -> false
 
-(*s Computes an eta-reduction. *)
+(** {2 Computes an eta-reduction} *)
 
 let eta_red e =
   let ids,t = collect_lams e in
@@ -866,8 +866,8 @@ let atomic_eta_red e =
       | _ -> None)
   | _ -> None
 
-(*s Computes all head linear beta-reductions possible in [(t a)].
-  Non-linear head beta-redex become let-in. *)
+(** {2 Computes all head linear beta-reductions possible in [(t a)].
+  Non-linear head beta-redex become let-in} *)
 
 let rec linear_beta_red a t = match a,t with
   | [], _ -> t
@@ -884,11 +884,10 @@ let rec tmp_head_lams = function
   | MLlam (id, ty, t) -> MLlam (tmp_id id, ty, tmp_head_lams t)
   | e -> e
 
-(*s Applies a substitution [s] of constants by their body, plus
+(** {2 Applies a substitution [s] of constants by their body, plus
   linear beta reductions at modified positions.
   Moreover, we mark some lambdas as suitable for later linear
-  reduction (this helps the inlining of recursors).
-*)
+  reduction (this helps the inlining of recursors)} *)
 
 let rec ast_glob_subst s t = match t with
   | MLapp ((MLglob ((GlobRef.ConstRef kn) as refe, _)) as f, a) ->
@@ -900,7 +899,7 @@ let rec ast_glob_subst s t = match t with
   | _ -> ast_map (ast_glob_subst s) t
 
 
-(*S Auxiliary functions used in simplification of ML cases. *)
+(** {1 Auxiliary functions used in simplification of ML cases} *)
 
 (* Factorisation of some match branches into a common "x -> f x"
    branch may break types sometimes. Example: [type 'x a = A].
@@ -913,10 +912,10 @@ let rec ast_glob_subst s t = match t with
    expansion of type definitions.
 *)
 
-(*s [branch_as_function b typ (l,p,c)] tries to see branch [c]
+(** {2 [branch_as_function b typ (l,p,c)] tries to see branch [c]
   as a function [f] applied to [MLcons(r,l)]. For that it transforms
   any [MLcons(r,l)] in [MLrel 1] and raises [Impossible]
-  if any variable in [l] occurs outside such a [MLcons] *)
+  if any variable in [l] occurs outside such a [MLcons]} *)
 
 let branch_as_fun typ (l,p,c) =
   let nargs = List.length l in
@@ -937,13 +936,12 @@ let branch_as_fun typ (l,p,c) =
     | a -> ast_map_lift genrec n a
   in genrec 0 c
 
-(*s [branch_as_cst (l,p,c)] tries to see branch [c] as a constant
+(** {2 [branch_as_cst (l,p,c)] tries to see branch [c] as a constant
    independent from the pattern [MLcons(r,l)]. For that is raises [Impossible]
    if any variable in [l] occurs in [c], and otherwise returns [c] lifted to
    appear like a function with one arg (for uniformity with [branch_as_fun]).
    NB: [MLcons(r,l)] might occur nonetheless in [c], but only when [l] is
-   empty, i.e. when [r] is a constant constructor
-*)
+   empty, i.e. when [r] is a constant constructor} *)
 
 let branch_as_cst (l,_,c) =
   let n = List.length l in
@@ -1012,7 +1010,7 @@ let factor_branches o typ br = None (* TODO: FIX EVENTUALLY!!!!
     else Some (br_factor, br_set)
   end *)
 
-(*s If all branches are functions, try to permute the case and the functions. *)
+(** {2 If all branches are functions, try to permute the case and the functions} *)
 
 let rec merge_ids ids ids' = match ids,ids' with
   | [],l -> l
@@ -1052,7 +1050,7 @@ let permut_case_fun br acc =
     (!ids,br)
   end
 
-(*S Generalized iota-reduction. *)
+(** {1 Generalized iota-reduction} *)
 
 (* Definition of a generalized iota-redex: it's a [MLcase(e,br)]
    where the head [e] is a [MLcons] or made of [MLcase]'s with
@@ -1111,7 +1109,7 @@ let is_program_branch = function
 let expand_linear_let o id e =
    o.opt_lin_let || is_tmp id || is_program_branch id || is_imm_apply e
 
-(*S The main simplification function. *)
+(** {1 The main simplification function} *)
 
 (* Some beta-iota reductions + simplifications. *)
 
@@ -1229,11 +1227,11 @@ and simpl_case o typ br e =
         | None -> MLcase (typ, e, br)
         | _ -> MLcase (typ, e, br) *)
 
-(*S Local prop elimination. *)
+(** {1 Local prop elimination} *)
 (* We try to eliminate as many [prop] as possible inside an [ml_ast]. *)
 
-(*s In a list, it selects only the elements corresponding to a [Keep]
-   in the boolean list [l]. *)
+(** {2 In a list, it selects only the elements corresponding to a [Keep]
+   in the boolean list [l]} *)
 
 let rec select_via_bl l args = match l,args with
   | [],_ -> args
@@ -1241,13 +1239,13 @@ let rec select_via_bl l args = match l,args with
   | Kill _::l,a::args -> select_via_bl l args
   | _ -> assert false
 
-(*s [kill_some_lams] removes some head lambdas according to the signature [bl].
+(** {2 [kill_some_lams] removes some head lambdas according to the signature [bl].
    This list is built on the identifier list model: outermost lambda
    is on the right.
    [Rels] corresponding to removed lambdas are not supposed to occur
    (except maybe in the case of Kimplicit), and
    the other [Rels] are made correct via a [gen_subst].
-   Output is not directly a [ml_ast], compose with [named_lams] if needed. *)
+   Output is not directly a [ml_ast], compose with [named_lams] if needed} *)
 
 let is_impl_kill = function Kill (Kimplicit _) -> true | _ -> false
 
@@ -1289,10 +1287,10 @@ let kill_some_lams' bl tys (ids,c) =
   end
 *)
 
-(*s [kill_dummy_lams] uses the last function to kill the lambdas corresponding
+(** {2 [kill_dummy_lams] uses the last function to kill the lambdas corresponding
   to a [dummy_name]. It can raise [Impossible] if there is nothing to do, or
   if there is no lambda left at all. In addition, it now accepts a signature
-  that may mention some implicits. *)
+  that may mention some implicits} *)
 
 let rec merge_implicits ids s = match ids, s with
   | [],_ -> []
@@ -1317,8 +1315,8 @@ let kill_dummy_lams sign c =
   let ids',c = kill_some_lams bl (ids,c) in
   (ids,bl), named_lams ids' c
 
-(*s [eta_expansion_sign] takes a function [fun idn ... id1 -> c]
-   and a signature [s] and builds a eta-long version. *)
+(** {2 [eta_expansion_sign] takes a function [fun idn ... id1 -> c]
+   and a signature [s] and builds a eta-long version} *)
 
 (* For example, if [s = [Keep;Keep;Kill Prop;Keep]] then the output is :
    [fun idn ... id1 x x _ x -> (c' 4 3 __ 1)]  with [c' = lift 4 c] *)
@@ -1332,9 +1330,9 @@ let eta_expansion_sign s (ids,c) =
     | Kill k :: l -> abs ((Dummy, Tdummy k) :: ids) (MLdummy k :: rels) (i+1) l
   in abs ids [] 1 s
 
-(*s If [s = [b1; ... ; bn]] then [case_expunge] decomposes [e]
+(** {2 If [s = [b1; ... ; bn]] then [case_expunge] decomposes [e]
   in [n] lambdas (with eta-expansion if needed) and removes all dummy lambdas
-  corresponding to [Kill _] in [s]. *)
+  corresponding to [Kill _] in [s]} *)
 
 let case_expunge s e =
   let m = List.length s in
@@ -1343,10 +1341,10 @@ let case_expunge s e =
   else eta_expansion_sign (List.skipn n s) (collect_lams e) in
   kill_some_lams (List.rev s) p
 
-(*s [term_expunge] takes a function [fun idn ... id1 -> c]
+(** {2 [term_expunge] takes a function [fun idn ... id1 -> c]
   and a signature [s] and remove dummy lams. The difference
   with [case_expunge] is that we here leave one dummy lambda
-  if all lambdas are logical dummy and the target language is strict. *)
+  if all lambdas are logical dummy and the target language is strict} *)
 
 let term_expunge s (ids,c) =
   if List.is_empty s then c
@@ -1357,9 +1355,9 @@ let term_expunge s (ids,c) =
     then MLlam (Dummy, Tdummy Kprop, ast_lift 1 c)
     else named_lams ids c
 
-(*s [kill_dummy_args (ids,bl) r t] looks for occurrences of [MLrel r] in [t]
+(** {2 [kill_dummy_args (ids,bl) r t] looks for occurrences of [MLrel r] in [t]
   and purge the args of [MLrel r] corresponding to a [Kill] in [bl].
-  It makes eta-expansion if needed. *)
+  It makes eta-expansion if needed} *)
 
 let kill_dummy_args (ids,bl) r t =
   let m = List.length ids in
@@ -1382,7 +1380,7 @@ let kill_dummy_args (ids,bl) r t =
     | e -> ast_map_lift killrec n e
   in killrec 0 t
 
-(*s The main function for local [dummy] elimination. *)
+(** {2 The main function for local [dummy] elimination} *)
 
 let sign_of_args a =
  List.map (function MLdummy k -> Kill k | _ -> Keep) a
@@ -1441,7 +1439,7 @@ and kill_dummy_fix i c s =
   done;
   k,c
 
-(*s Putting things together. *)
+(** {2 Putting things together} *)
 
 let normalize a =
   let o = optims () in
@@ -1450,7 +1448,7 @@ let normalize a =
     if eq_ml_ast a a' then a else norm a'
   in norm a
 
-(*S Special treatment of fixpoint for pretty-printing purpose. *)
+(** {1 Special treatment of fixpoint for pretty-printing purpose} *)
 
 let general_optimize_fix f ids n args m c =
   let v = Array.init n (fun i -> i) in
@@ -1487,7 +1485,7 @@ let optimize_fix a =
              | _ -> a)
       | _ -> a
 
-(*S Inlining. *)
+(** {1 Inlining} *)
 
 (* Utility functions used in the decision of inlining. *)
 
@@ -1511,7 +1509,7 @@ and ml_size_array a = Array.fold_left (fun a t -> a + ml_size t) 0 a
 
 let is_fix = function MLfix _ -> true | _ -> false
 
-(*s Strictness *)
+(** {2 Strictness} *)
 
 (* A variable is strict if the evaluation of the whole term implies
    the evaluation of this variable. Non-strict variables can be found
@@ -1578,7 +1576,7 @@ let is_not_strict t =
   try let _ = non_stricts true [] t in false
   with Toplevel -> true
 
-(*s Inlining decision *)
+(** {2 Inlining decision} *)
 
 (* [inline_test] answers the following question:
    If we could inline [t] (the user said nothing special),

@@ -1,18 +1,19 @@
 (* Copyright 2025 Bloomberg Finance L.P. *)
 (* Distributed under the terms of the GNU LGPL v2.1 license. *)
 
-(* Pre-computed C++ name resolution cache.
-   See name_resolution.mli for documentation.
+(** Pre-computed C++ name resolution cache.
+    See name_resolution.mli for documentation.
 
-   IMPORTANT: This module must NOT call Common.pp_global or Common.pp_global_name
-   during [create], because those functions have side effects on the Common.ml
-   renaming tables. Calling them at cache-creation time (before normal rendering)
-   would trigger premature renaming entries and produce different output. *)
+    IMPORTANT: This module must NOT call Common.pp_global or Common.pp_global_name
+    during [create], because those functions have side effects on the Common.ml
+    renaming tables. Calling them at cache-creation time (before normal rendering)
+    would trigger premature renaming entries and produce different output. *)
 
 open Names
 open Minicpp
 open Table
 
+(** Resolved type name information. *)
 type resolved_type_name = {
   rtn_display : string;
   rtn_is_eponymous : bool;
@@ -23,11 +24,13 @@ type resolved_type_name = {
   rtn_is_global_scope_enum : bool;
 }
 
+(** Resolved term name information. *)
 type resolved_term_name = {
   rtm_display : string;
   rtm_wrapper_qualified : bool;
 }
 
+(** Name resolution cache. *)
 type t = {
   type_names : (GlobRef.t, resolved_type_name) Hashtbl.t;
   eponymous_set : (GlobRef.t, unit) Hashtbl.t;
@@ -35,18 +38,33 @@ type t = {
   ind_kinds : (GlobRef.t, cpp_ind_kind) Hashtbl.t;
 }
 
+(** Resolve a type name from the cache. *)
 let resolve_type t r = Hashtbl.find_opt t.type_names r
+
+(** Resolve a term name from the cache. *)
 let resolve_term _t _r = None  (* term names not pre-computed — see note above *)
+
+(** Register a type name in the cache. *)
 let register_type t r name = Hashtbl.replace t.type_names r name
+
+(** Register a term name in the cache. *)
 let register_term _t _r _name = ()
+
+(** Check if a type is eponymous. *)
 let is_eponymous t r = Hashtbl.mem t.eponymous_set r
+
+(** Check if a type is a global scope enum. *)
 let is_global_scope_enum t r = Hashtbl.mem t.global_scope_enum_set r
+
+(** Get the inductive kind for a type. *)
 let get_ind_kind t r = Hashtbl.find_opt t.ind_kinds r
+
+(** Register an inductive kind in the cache. *)
 let register_ind_kind t r kind = Hashtbl.replace t.ind_kinds r kind
 
-(* Classify an inductive type using only side-effect-free queries.
-   We use the raw ip_typename from the packet and the ind_kind from miniml
-   to compute classification flags without calling pp_global_name. *)
+(** Classify an inductive type using only side-effect-free queries.
+    We use the raw ip_typename from the packet and the ind_kind from miniml
+    to compute classification flags without calling pp_global_name. *)
 let classify_inductive
     ~eponymous_records ~global_scope_enums ~unmerged
     (kn : MutInd.t) (i : int) (ind : Miniml.ml_ind) : unit -> (GlobRef.t * resolved_type_name * cpp_ind_kind) =
@@ -82,6 +100,7 @@ let classify_inductive
   } in
   fun () -> (ind_ref, rtn, kind)
 
+(** Create a name resolution cache from a structure. *)
 let create ~structure_analysis:_ ~wrapper_modules:_ ~collision_wrappers:_
     ~global_scope_enums ~eponymous_records ~unmerged s =
   let type_names = Hashtbl.create 256 in

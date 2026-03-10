@@ -18,9 +18,6 @@ open Miniml
     Traversal, search, and optimization functions over the MiniML
     module structure ({!Miniml.ml_structure}). *)
 
-open Names
-open Miniml
-
 val struct_ast_search : (ml_ast -> bool) -> ml_structure -> bool
 (** Search for an AST node satisfying a predicate anywhere in the structure. *)
 

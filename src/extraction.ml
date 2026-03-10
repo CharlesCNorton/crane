@@ -46,7 +46,7 @@ let type_of env sg c =
 let sort_of env sg c =
   Retyping.get_sort_family_of ~polyprop:false env sg (Termops.strip_outer_cast sg c)
 
-(*S Generation of flags and signatures. *)
+(** {1 Generation of flags and signatures} *)
 
 (* The type [flag] gives us information about any Rocq term:
    \begin{itemize}
@@ -68,8 +68,8 @@ type scheme = TypeScheme | Default
 
 type flag = info * scheme
 
-(*s [flag_of_type] transforms a type [t] into a [flag].
-  Really important function. *)
+(** {2 [flag_of_type] transforms a type [t] into a [flag].
+  Really important function} *)
 
 let info_of_family = function
   | InSProp | InProp -> Logic
@@ -84,7 +84,7 @@ let rec flag_of_type env sg t : flag =
     | Sort s -> (info_of_sort (EConstr.ESorts.kind sg s),TypeScheme)
     | _ -> (info_of_family (sort_of env sg t),Default)
 
-(*s Two particular cases of [flag_of_type]. *)
+(** {2 Two particular cases of [flag_of_type]} *)
 
 let is_default env sg t = match flag_of_type env sg t with
 | (Info, Default) -> true
@@ -138,7 +138,7 @@ let decompose_lambda_n sg n =
   in
   lamdec_rec [] n
 
-(*s [type_sign] gernerates a signature aimed at treating a type application. *)
+(** {2 [type_sign] gernerates a signature aimed at treating a type application} *)
 
 let rec type_sign env sg c =
   match EConstr.kind sg (whd_all env sg c) with
@@ -159,7 +159,7 @@ let type_scheme_nb_args' env c =
 
 let _ = Hook.set type_scheme_nb_args_hook type_scheme_nb_args'
 
-(*s [type_sign_vl] does the same, plus a type var list. *)
+(** {2 [type_sign_vl] does the same, plus a type var list} *)
 
 (* When generating type variables, we avoid any ' in their names
    (otherwise this may cause a lexer conflict in ocaml with 'a').
@@ -204,12 +204,12 @@ let sign_with_implicits r s nb_params =
   in
   add_impl (1+nb_params) s
 
-(*S Management of type variable contexts. *)
+(** {1 Management of type variable contexts} *)
 
 (* A De Bruijn variable context (db) is a context for translating Rocq [Rel]
    into ML type [Tvar]. *)
 
-(*s From a type signature toward a type variable context (db). *)
+(** {2 From a type signature toward a type variable context (db)} *)
 
 let db_from_sign s =
   let rec make i acc = function
@@ -218,15 +218,15 @@ let db_from_sign s =
     | Kill _ :: l -> make i (0::acc) l
   in make 1 [] s
 
-(*s Create a type variable context from indications taken from
-  an inductive type (see just below). *)
+(** {2 Create a type variable context from indications taken from
+  an inductive type (see just below)} *)
 
 let rec db_from_ind dbmap i =
   if Int.equal i 0 then []
   else (try Int.Map.find i dbmap with Not_found -> 0)::(db_from_ind dbmap (i-1))
 
-(*s [parse_ind_args] builds a map: [i->j] iff the i-th Rocq argument
-  of a constructor corresponds to the j-th type var of the ML inductive. *)
+(** {2 [parse_ind_args] builds a map: [i->j] iff the i-th Rocq argument
+  of a constructor corresponds to the j-th type var of the ML inductive} *)
 
 (* \begin{itemize}
    \item [si] : signature of the inductive
@@ -324,7 +324,7 @@ let fake_match_projection env p =
   in
   fold 0 1 [] (List.rev ctx)
 
-(*S Extraction of a type. *)
+(** {1 Extraction of a type} *)
 
 (* [extract_type env db c args] is used to produce an ML type from the
    coq term [(c args)], which is supposed to be a Rocq type. *)
@@ -421,9 +421,9 @@ let rec extract_type env sg db j c args =
             | (Info, Default) -> Tunknown))
     | Cast _ | LetIn _ | Construct _ | Int _ | Float _ | String _ | Array _ -> assert false
 
-(*s Auxiliary function dealing with type application.
+(** {2 Auxiliary function dealing with type application.
   Precondition: [r] is a type scheme represented by the signature [s],
-  and is completely applied: [List.length args = List.length s]. *)
+  and is completely applied: [List.length args = List.length s]} *)
 
   (* TODO: I think type application isn't happening/reducing in instances where not needed for OCaml.
            Type variables that are semantically instantiated in Rocq are appearing in extracted code at the term level. *)
@@ -451,7 +451,7 @@ and extract_type_app env sg db (r,s) args =
       (List.combine s args) []
   in Tglob (r, ml_ty_args,ml_args)
 
-(*S Extraction of a type scheme. *)
+(** {1 Extraction of a type scheme} *)
 
 (* [extract_type_scheme env db c p] works on a Rocq term [c] which is
   an informative type scheme. It means that [c] is not a Rocq type, but will
@@ -474,7 +474,7 @@ and extract_type_scheme env sg db c p =
           extract_type env sg db 0 (EConstr.Vars.lift p c) eta_args
 
 
-(*S Extraction of an inductive type. *)
+(** {1 Extraction of an inductive type} *)
 
 (* First, a version with cache *)
 
@@ -695,13 +695,12 @@ and extract_really_ind env kn mib =
     add_inductive_kind kn i.ind_kind;
     i
 
-(*s [extract_type_cons] extracts the type of an inductive
+(** {2 [extract_type_cons] extracts the type of an inductive
   constructor toward the corresponding list of ML types.
 
    - [db] is a context for translating Rocq [Rel] into ML type [Tvar]
    - [dbmap] is a translation map (produced by a call to [parse_in_args])
-   - [i] is the rank of the current product (initially [params_nb+1])
-*)
+   - [i] is the rank of the current product (initially [params_nb+1])} *)
 
 and extract_type_cons env sg db dbmap c i =
   match EConstr.kind sg (whd_all env sg c) with
@@ -712,7 +711,7 @@ and extract_type_cons env sg db dbmap c i =
         (extract_type env sg db 0 t []) :: l
     | _ -> []
 
-(*s Recording the ML type abbreviation of a Rocq type scheme constant. *)
+(** {2 Recording the ML type abbreviation of a Rocq type scheme constant} *)
 
 and mlt_env env r = let open GlobRef in match r with
   | IndRef _ | ConstructRef _ | VarRef _ -> None
@@ -740,7 +739,7 @@ and expand env = type_expand (mlt_env env)
 and type2signature env = type_to_signature (mlt_env env)
 and type2sign env = type_to_sign (mlt_env env)
 
-(*s Extraction of the type of a constant. *)
+(** {2 Extraction of the type of a constant} *)
 
 and record_constant_type env sg kn opt_typ =
   let cb = lookup_constant kn env in
@@ -757,7 +756,7 @@ and record_constant_type env sg kn opt_typ =
      register_glob_def (GlobRef.ConstRef kn) mlt;
      schema
 
-(*S Extraction of a term. *)
+(** {1 Extraction of a term} *)
 
 (* Precondition: [(c args)] is not a type scheme, and is informative. *)
 
@@ -860,7 +859,7 @@ and extract_term env sg mle mlt c args =
       MLparray(ml_arr, def)
     | Ind _ | Prod _ | Sort _ -> assert false
 
-(*s [extract_maybe_term] is [extract_term] for usual terms, else [MLdummy] *)
+(** {2 [extract_maybe_term] is [extract_term] for usual terms, else [MLdummy]} *)
 
 and extract_maybe_term env sg mle mlt c =
   try check_default env sg (type_of env sg c);
@@ -868,7 +867,7 @@ and extract_maybe_term env sg mle mlt c =
   with NotDefault d ->
     put_magic (mlt, Tdummy d) (MLdummy d)
 
-(*s Generic way to deal with an application. *)
+(** {2 Generic way to deal with an application} *)
 
 (* We first type all arguments starting with unknown meta types.
    This gives us the expected type of the head. Then we use the
@@ -880,7 +879,7 @@ and extract_app env sg mle mlt mk_head args =
   let mlargs = List.map2 (extract_maybe_term env sg mle) metas args in
   mlapp (mk_head type_head) mlargs
 
-(*s Auxiliary function used to extract arguments of constant or constructor. *)
+(** {2 Auxiliary function used to extract arguments of constant or constructor} *)
 
 and make_mlargs env sg e s args typs =
   let rec f = function
@@ -918,7 +917,7 @@ and make_tyargs env sg _mle args typs ~orig_typs =
   in
   f (args, List.map type_simpl typs, orig_typs)
 
-(*s Extraction of a constant applied to arguments. *)
+(** {2 Extraction of a constant applied to arguments} *)
 
 and extract_cst_app env sg mle mlt kn args =
   (* First, the [ml_schema] of the constant, in expanded version. *)
@@ -981,7 +980,7 @@ and extract_cst_app env sg mle mlt kn args =
     let e = anonym_or_dummy_lams_typed (mlapp head mla) missing_types s' in
     put_magic_if magic2 (remove_n_lams (List.length optdummy) e)
 
-(*s Extraction of an inductive constructor applied to arguments. *)
+(** {2 Extraction of an inductive constructor applied to arguments} *)
 
 (* \begin{itemize}
    \item In ML, constructor arguments are uncurryfied.
@@ -1152,7 +1151,7 @@ and extract_cons_app env sg mle mlt (((kn,i) as ip,j) as cp) args =
         else
           put_magic_if magic2 (anonym_or_dummy_lams_typed (head mla) missing_types s')
 
-(*S Extraction of a case. *)
+(** {1 Extraction of a case} *)
 
 and extract_case env sg mle ((kn,i) as ip,c,br) mlt =  (* EDIT HERE: Add type information into branches *)
   (* [br]: bodies of each branch (in functional form) *)
@@ -1211,7 +1210,7 @@ and extract_case env sg mle ((kn,i) as ip,c,br) mlt =  (* EDIT HERE: Add type in
       let typ = Tglob (GlobRef.IndRef ip,typs,[]) in
       MLcase (typ, a, Array.init br_size extract_branch)
 
-(*s Extraction of a (co)-fixpoint. *)
+(** {2 Extraction of a (co)-fixpoint} *)
 
 and extract_fix env sg mle i (fi,ti,ci as recd) is_cofix mlt =
   let env = push_rec_types recd env in
@@ -1221,7 +1220,7 @@ and extract_fix env sg mle i (fi,ti,ci as recd) is_cofix mlt =
   let ei = Array.map2 (extract_maybe_term env sg mle) metas ci in
   MLfix (i, Array.mapi (fun i x -> id_of_name x.binder_name, metas.(i)) fi, ei, is_cofix)
 
-(*S ML declarations. *)
+(** {1 ML declarations} *)
 
 (* [decomp_lams_eta env c t] finds the number [n] of products in the type [t],
    and decompose the term [c] in [n] lambdas, with eta-expansion if needed. *)
@@ -1247,7 +1246,7 @@ let rec gentypvar_ok sg c = match EConstr.kind sg c with
   | Cast (c,_,_) -> gentypvar_ok sg c
   | _ -> false
 
-(*s From a constant to a ML declaration. *)
+(** {2 From a constant to a ML declaration} *)
 let add_tvars n t = t (*
   if n <= 1 then t
   else Tarr (Tvar (n-1), add_tvars (n-1) t) *)
@@ -1651,7 +1650,7 @@ let extract_inductive env kn =
       ind.ind_packets
   in { ind with ind_packets = packets }
 
-(*s Is a [ml_decl] logical ? *)
+(** {2 Is a [ml_decl] logical ?} *)
 
 let logical_decl = function
   | Dterm (_,MLdummy _,Tdummy _) -> true
@@ -1662,7 +1661,7 @@ let logical_decl = function
   | Dind (_,i) -> Array.for_all (fun ip -> ip.ip_logical) i.ind_packets
   | _ -> false
 
-(*s Is a [ml_spec] logical ? *)
+(** {2 Is a [ml_spec] logical ?} *)
 
 let logical_spec = function
   | Stype (_, _, Some (Tdummy _)) -> true

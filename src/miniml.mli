@@ -10,7 +10,7 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
-(*s Target language for extraction: a core ML called MiniML. *)
+(** {2 Target language for extraction: a core ML called MiniML} *)
 
 open Names
 
@@ -41,7 +41,7 @@ type ml_ident =
   | Id of Id.t
   | Tmp of Id.t
 
-(*s ML type expressions. *)
+(** {2 ML type expressions} *)
 
 type ml_type =
   | Tarr    of ml_type * ml_type
@@ -56,7 +56,7 @@ type ml_type =
 
 and ml_meta = { id : int; mutable contents : ml_type option }
 
-(*s ML inductive types. *)
+(** {2 ML inductive types} *)
 
 and inductive_kind =
   | Coinductive
@@ -95,7 +95,7 @@ and ml_ind = {
   ind_equiv : equiv
 }
 
-(*s ML terms. *)
+(** {2 ML terms} *)
 
 (** We now store some typing information on constructors
     and cases to avoid type-unsafe optimisations. This will be
@@ -141,7 +141,7 @@ and ml_pattern =
 
 type ml_schema = int * ml_type
 
-(*s ML declarations. *)
+(** {2 ML declarations} *)
 
 type ml_decl =
   | Dind  of MutInd.t * ml_ind

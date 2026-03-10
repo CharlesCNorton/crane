@@ -10,6 +10,8 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
+(** Pretty-printing utilities, name resolution, and renaming for extracted code. *)
+
 open Pp
 open Util
 open Names
@@ -20,9 +22,7 @@ open Table
 open Miniml
 open Mlutil
 
-(* ============================================================================
-   Generic utility functions (string, list)
-   ============================================================================ *)
+(** {2 Generic utility functions} *)
 
 (** [contains_substring haystack needle] checks if [haystack] contains [needle].
     Note: String.contains checks for a char; this checks for a substring. *)
@@ -71,6 +71,7 @@ and prepend_to_all sep = function
   | [] -> []
   | x :: xs -> sep :: x :: prepend_to_all sep xs
 
+(** Convert an identifier to ASCII, warning on double underscores. *)
 let ascii_of_id id =
   let s = Id.to_string id in
   for i = 0 to String.length s - 2 do
@@ -78,10 +79,12 @@ let ascii_of_id id =
   done;
   Unicode.ascii_of_ident s
 
+(** Test if a module path is a bound module parameter. *)
 let is_mp_bound = function MPbound _ -> true | _ -> false
 
-(*s Some pretty-print utility functions. *)
+(** {2 Pretty-print utility functions} *)
 
+(** Wrap in parentheses if [par] is true. *)
 let pp_par par st = if par then str "(" ++ st ++ str ")" else st
 
 (** [pp_apply] : a head part applied to arguments, possibly with parenthesis *)
@@ -90,6 +93,7 @@ let pp_apply st par args = match args with
   | [] -> st
   | _  -> hov 2 (pp_par par (st ++ spc () ++ prlist_with_sep spc identity args))
 
+(** Apply function to arguments with C++ syntax (commas, parens). *)
 let pp_apply_cpp st args = match args with
   | [] -> st
   | _  -> hov 2 (st ++ str "(" ++ prlist_with_sep (fun _ -> str ", ") identity args) ++ str ")"
@@ -100,41 +104,49 @@ let pp_apply2 st par args =
   let par' = not (List.is_empty args) || par in
   pp_apply (pp_par par' st) par args
 
+(** Print a list of identifiers as space-separated bindings. *)
 let pr_binding = function
   | [] -> mt ()
   | l  -> str " " ++ prlist_with_sep (fun () -> str " ") Id.print l
 
+(** Print elements as a tuple; single elements are not parenthesized. *)
 let pp_tuple_light f = function
   | [] -> mt ()
   | [x] -> f true x
   | l ->
       pp_par true (prlist_with_sep (fun () -> str "," ++ spc ()) (f false) l)
 
+(** Print elements as a comma-separated tuple with parens. *)
 let pp_tuple f = function
   | [] -> mt ()
   | [x] -> f x
   | l -> pp_par true (prlist_with_sep (fun () -> str "," ++ spc ()) f l)
 
+(** Print elements as comma-separated list without parens. *)
 let pp_list f = function
   | [] -> mt ()
   | [x] -> f x
   | l -> prlist_with_sep (fun () -> str "," ++ spc ()) f l
 
+(** Print elements as comma-separated list with newlines. *)
 let pp_list_newline f = function
   | [] -> mt ()
   | [x] -> f x
   | l -> prlist_with_sep (fun () -> str "," ++ fnl ()) f l
 
+(** Print elements as newline-separated statements. *)
 let pp_list_stmt f = function
   | [] -> mt ()
   | [x] -> f x
   | l -> prlist_with_sep fnl f l
 
+(** Print elements as a boxed tuple with line-break hints. *)
 let pp_boxed_tuple f = function
   | [] -> mt ()
   | [x] -> f x
   | l -> pp_par true (hov 0 (prlist_with_sep (fun () -> str "," ++ spc ()) f l))
 
+(** Print elements as semicolon-separated array. *)
 let pp_array f = function
   | [] -> mt ()
   | [x] -> f x
@@ -149,14 +161,18 @@ let pp_array f = function
 (* let fnl () = stras (1000000,"") ++ fnl () *)
 let fnl () = fnl ()
 
+(** Two consecutive newlines. *)
 let fnl2 () = fnl () ++ fnl ()
 
+(** Space or empty based on boolean. *)
 let space_if = function true -> str " " | false -> mt ()
 
+(** Test if string starts with prefix. *)
 let begins_with s prefix =
   let len = String.length prefix in
   String.length s >= len && String.equal (String.sub s 0 len) prefix
 
+(** Test if string matches the pattern "CoqNNN" (legacy naming). *)
 let begins_with_CoqXX s =
   let n = String.length s in
   n >= 4 && s.[0] == 'C' && s.[1] == 'o' && s.[2] == 'q' &&
@@ -169,34 +185,46 @@ let begins_with_CoqXX s =
   done; true
   with Not_found -> false
 
+(** Identity function (historically removed quotes). *)
 let unquote s = s
 
+(** Join non-empty strings with a delimiter. *)
 let rec qualify delim = function
   | [] -> assert false
   | [s] -> s
   | ""::l -> qualify delim l
   | s::l -> s^delim^(qualify delim l)
 
+(** Join strings with "::" for C++ namespace qualification. *)
 let dottify = qualify "::"
 
-(*s Uppercase/lowercase renamings. *)
+(** {2 Uppercase/lowercase renamings} *)
 
+(** Test if string starts with uppercase. *)
 let is_upper s = match s.[0] with 'A' .. 'Z' -> true | _ -> false
+
+(** Test if string starts with lowercase. *)
 let is_lower s = match s.[0] with 'a' .. 'z' | '_' -> true | _ -> false
 
+(** Convert identifier to lowercase. *)
 let lowercase_id id = Id.of_string (String.uncapitalize_ascii (ascii_of_id id))
+
+(** Convert identifier to uppercase. *)
 let uppercase_id id =
   let s = ascii_of_id id in
   assert (not (String.is_empty s));
   if s.[0] == '_' then Id.of_string ("Coq_"^s)
   else Id.of_string (String.capitalize_ascii s)
 
+(** Replace prime characters (') with underscores. *)
 let remove_prime_id id =
   let s = String.map (fun c -> if c = '\'' then '_' else c) (ascii_of_id id) in
   Id.of_string s
 
+(** Kind of global identifier: term, type, constructor, or module. *)
 type kind = Term | Type | Cons | Mod
 
+(** Ordered comparison for (kind, string) pairs. *)
 module KOrd =
 struct
   type t = kind * string
@@ -206,26 +234,32 @@ struct
     else c
 end
 
+(** Map keyed by (kind, string) pairs. *)
 module KMap = Map.Make(KOrd)
 
+(** Test if kind requires uppercase (constructors, modules). *)
 let upperkind = function
   | Type -> false
   | Term -> false
   | Cons | Mod -> true
 
+(** Apply case convention to identifier based on kind (currently identity). *)
 let kindcase_id k id = id (*
   if upperkind k then uppercase_id id else lowercase_id id *)
 
-(*s de Bruijn environments for programs *)
+(** {2 de Bruijn environments for programs} *)
 
+(** de Bruijn environment: names in scope and avoided names. *)
 type env = Id.t list * Id.Set.t
 
-(*s Generic renaming issues for local variable names. *)
+(** {2 Generic renaming for local variable names} *)
 
+(** Find a fresh name for [id] by incrementing subscript until no collision. *)
 let rec rename_id id avoid =
   let id = remove_prime_id id in
   if Id.Set.mem id avoid then rename_id (increment_subscript id) avoid else id
 
+(** Rename a list of variables to fresh lowercase names. *)
 let rec rename_vars avoid = function
   | [] ->
       [], avoid (*
@@ -238,6 +272,7 @@ let rec rename_vars avoid = function
       let id = rename_id (lowercase_id id) avoid in
       (id :: idl, Id.Set.add id avoid)
 
+(** Rename a list of (id, type) pairs to fresh lowercase names. *)
 let rec rename_vars' avoid = function
   | [] ->
       [], avoid (*
@@ -250,6 +285,7 @@ let rec rename_vars' avoid = function
       let id = rename_id (lowercase_id id) avoid in
       ((id, ty) :: idl, Id.Set.add id avoid)
 
+(** Rename type variables to fresh lowercase names. *)
 let rename_tvars avoid l =
   let rec rename avoid = function
     | [] -> [],avoid
@@ -259,33 +295,41 @@ let rename_tvars avoid l =
         (id :: idl, avoid) in
   fst (rename avoid l)
 
+(** Push new variable names into the de Bruijn environment. *)
 let push_vars ids (db,avoid) =
   let ids',avoid' = rename_vars avoid ids in
   ids', (ids' @ db, avoid')
 
+(** Push new (id, type) pairs into the de Bruijn environment. *)
 let push_vars' ids (db,avoid) =
   let ids',avoid' = rename_vars' avoid ids in
   ids', (List.map fst ids' @ db, avoid')
 
+(** Look up a de Bruijn index in the environment. *)
 let get_db_name n (db,_) = List.nth db (pred n)
 
-(*S Renamings of global objects. *)
+(** {1 Renamings of global objects} *)
 
-(*s Tables of global renamings *)
+(** {2 Tables of global renamings} *)
 
+(** Register/run cleanup functions for renaming tables. *)
 let register_cleanup, do_cleanup =
   let funs = ref [] in
   (fun f -> funs:=f::!funs), (fun () -> List.iter (fun f -> f ()) !funs)
 
+(** Extraction phase: pre-scan, implementation, or interface. *)
 type phase = Pre | Impl | Intf
 
+(** Get/set the current extraction phase. *)
 let set_phase, get_phase =
   let ph = ref Impl in ((:=) ph), (fun () -> !ph)
 
+(** Get/set the set of reserved keywords. *)
 let set_keywords, get_keywords =
   let k = ref Id.Set.empty in
   ((:=) k), (fun () -> !k)
 
+(** Track globally used identifiers to avoid collisions. *)
 let add_global_ids, get_global_ids =
   let ids = ref Id.Set.empty in
   register_cleanup (fun () -> ids := get_keywords ());
@@ -293,16 +337,20 @@ let add_global_ids, get_global_ids =
   and get () = !ids
   in (add,get)
 
-(* Per-inductive constructor name tracking: constructors of the same inductive
-   must have distinct C++ names (e.g. enum members must be unique). *)
+(** Map keyed by (MutInd.t, int) pairs for per-inductive tracking.
+    Per-inductive constructor name tracking: constructors of the same inductive
+    must have distinct C++ names (e.g. enum members must be unique). *)
 module IndKey = struct
   type t = Names.MutInd.t * int
   let compare (m1,i1) (m2,i2) =
     let c = Names.MutInd.CanOrd.compare m1 m2 in
     if c = 0 then Int.compare i1 i2 else c
 end
+
+(** Map keyed by IndKey. *)
 module IndMap = Map.Make(IndKey)
 
+(** Track constructor names per inductive to prevent duplicates. *)
 let add_ctor_sibling, get_ctor_siblings =
   let tbl = ref IndMap.empty in
   register_cleanup (fun () -> tbl := IndMap.empty);
@@ -313,9 +361,10 @@ let add_ctor_sibling, get_ctor_siblings =
     try IndMap.find ind !tbl with Not_found -> Id.Set.empty
   in (add, get)
 
-(* Per-module-path sibling name tracking for non-constructor globals.
-   Used to detect collisions caused by keyword/prime escaping
-   (e.g. double → double_ colliding with an existing double_). *)
+(** Track sibling names per module path to prevent duplicates from escaping.
+    Per-module-path sibling name tracking for non-constructor globals.
+    Used to detect collisions caused by keyword/prime escaping
+    (e.g. double → double_ colliding with an existing double_). *)
 let add_mp_sibling, get_mp_siblings =
   let tbl = ref MPmap.empty in
   register_cleanup (fun () -> tbl := MPmap.empty);
@@ -326,32 +375,35 @@ let add_mp_sibling, get_mp_siblings =
     try MPmap.find mp !tbl with Not_found -> Id.Set.empty
   in (add, get)
 
+(** Create a fresh de Bruijn environment with current global ids. *)
 let empty_env () = [], get_global_ids ()
 
-(* We might have built [global_reference] whose canonical part is
-   inaccurate. We must hence compare only the user part,
-   hence using a Hashtbl might be incorrect *)
+(** We might have built [global_reference] whose canonical part is
+    inaccurate. We must hence compare only the user part,
+    hence using a Hashtbl might be incorrect *)
 
+(** Create a mutable Id.Map with optional auto-cleanup. *)
 let mktable_id autoclean =
   let m = ref Id.Map.empty in
   let clear () = m := Id.Map.empty in
   if autoclean then register_cleanup clear;
   (fun r v -> m := Id.Map.add r v !m), (fun r -> Id.Map.find r !m), clear
 
+(** Create a mutable Refmap' with optional auto-cleanup. *)
 let mktable_ref autoclean =
   let m = ref Refmap'.empty in
   let clear () = m := Refmap'.empty in
   if autoclean then register_cleanup clear;
   (fun r v -> m := Refmap'.add r v !m), (fun r -> Refmap'.find r !m), clear
 
+(** Create a mutable MPmap with optional auto-cleanup. *)
 let mktable_modpath autoclean =
   let m = ref MPmap.empty in
   let clear () = m := MPmap.empty in
   if autoclean then register_cleanup clear;
   (fun r v -> m := MPmap.add r v !m), (fun r -> MPmap.find r !m), clear
 
-(* A table recording objects in the first level of all MPfile *)
-
+(** Table recording first-level content of each MPfile. *)
 let add_mpfiles_content,get_mpfiles_content,clear_mpfiles_content =
   mktable_modpath false
 
@@ -359,7 +411,7 @@ let get_mpfiles_content mp =
   try get_mpfiles_content mp
   with Not_found -> failwith "get_mpfiles_content"
 
-(*s The list of external modules that will be opened initially *)
+(** The list of external modules that will be opened initially *)
 
 let mpfiles_add, mpfiles_mem, mpfiles_list, mpfiles_clear =
   let m = ref MPset.empty in
@@ -371,7 +423,7 @@ let mpfiles_add, mpfiles_mem, mpfiles_list, mpfiles_clear =
   register_cleanup clear;
   (add,mem,list,clear)
 
-(*s List of module parameters that we should alpha-rename *)
+(** List of module parameters that we should alpha-rename *)
 
 let params_ren_add, params_ren_mem =
   let m = ref MPset.empty in
@@ -382,7 +434,7 @@ let params_ren_add, params_ren_mem =
   register_cleanup clear;
   (add,mem)
 
-(*s table indicating the visible horizon at a precise moment,
+(** Table indicating the visible horizon at a precise moment,
     i.e. the stack of structures we are inside.
 
   - The sequence of [mp] parts should have the following form:
@@ -397,6 +449,7 @@ let params_ren_add, params_ren_mem =
   seen at this level.
 *)
 
+(** A layer of the visibility stack, tracking names visible at one scope level. *)
 type visible_layer = { mp : ModPath.t;
                        params : ModPath.t list;
                        mutable content : Label.t KMap.t; }
@@ -417,14 +470,22 @@ let pop_visible, push_visible, get_visible =
   and get () = !vis
   in (pop,push,get)
 
+(** Get module paths of all visible layers. *)
 let get_visible_mps () = List.map (function v -> v.mp) (get_visible ())
+
+(** Get the innermost visible layer. *)
 let top_visible () = match get_visible () with [] -> assert false | v::_ -> v
+
+(** Get the module path of the innermost visible layer. *)
 let top_visible_mp () = (top_visible ()).mp
+
+(** Register a name in the current visible layer. *)
 let add_visible ks l =
   let visible = top_visible () in
   visible.content <- KMap.add ks l visible.content
 
-(* table of local module wrappers used to provide non-ambiguous names *)
+(** Ordered comparison for (ModPath.t, Label.t) pairs.
+    Table of local module wrappers used to provide non-ambiguous names *)
 
 module DupOrd =
 struct
@@ -434,8 +495,10 @@ struct
     if Int.equal c 0 then ModPath.compare mp1 mp2 else c
 end
 
+(** Map keyed by DupOrd. *)
 module DupMap = Map.Make(DupOrd)
 
+(** Table of local module wrappers for non-ambiguous names. *)
 let add_duplicate, get_duplicate =
   let index = ref 0 and dups = ref DupMap.empty in
   register_cleanup (fun () -> index := 0; dups := DupMap.empty);
@@ -448,21 +511,23 @@ let add_duplicate, get_duplicate =
     try Some (DupMap.find (mp, l) !dups) with Not_found -> None
   in (add,get)
 
+(** What to reset: all renaming tables, or also external file content. *)
 type reset_kind = AllButExternal | Everything
 
+(** Reset all renaming tables. *)
 let reset_renaming_tables flag =
   do_cleanup ();
   if flag == Everything then clear_mpfiles_content ()
 
-(*S Renaming functions *)
+(** {1 Renaming functions} *)
 
-(* This function creates from [id] a correct uppercase/lowercase identifier.
-   This is done by adding a [Coq_] or [coq_] prefix. To avoid potential clashes
-   with previous [Coq_id] variable, these prefixes are duplicated if already
-   existing. *)
+(** This function creates from [id] a correct uppercase/lowercase identifier.
+    This is done by adding a [Coq_] or [coq_] prefix. To avoid potential clashes
+    with previous [Coq_id] variable, these prefixes are duplicated if already
+    existing. *)
 
-(* Returns (escaped_name, was_changed) where was_changed indicates whether
-   keyword escaping or prime replacement modified the identifier. *)
+(** Returns (escaped_name, was_changed) where was_changed indicates whether
+    keyword escaping or prime replacement modified the identifier. *)
 let modular_rename_ex _k id =
   let s = ascii_of_id id in
   let is_kw = Id.Set.mem id (get_keywords ()) in
@@ -471,9 +536,10 @@ let modular_rename_ex _k id =
   let s = String.map (fun c -> if c = '\'' then '_' else c) s in
   (s, is_kw || has_prime)
 
+(** Rename an identifier for modular extraction (keyword escaping, prime replacement). *)
 let modular_rename k id = fst (modular_rename_ex k id)
 
-(*s For monolithic extraction, first-level modules might have to be renamed
+(** For monolithic extraction, first-level modules might have to be renamed
     with unique numbers *)
 
 let modfstlev_rename =
@@ -492,8 +558,9 @@ let modfstlev_rename =
       else *)
         (add_index id 0; s)
 
-(*s Creating renaming for a [module_path] : first, the real function ... *)
+(** {2 Creating renaming for a module_path} *)
 
+(** First, the real function ... *)
 let rec mp_renaming_fun mp = match mp with
   | _ when not (modular ()) && at_toplevel mp -> [""]
   | MPdot (mp,l) ->
@@ -514,7 +581,7 @@ let rec mp_renaming_fun mp = match mp with
       if not (ModPath.equal mp current_mpfile) then mpfiles_add mp;
       [string_of_modfile mp]
 
-(* ... and its version using a cache *)
+(** ... and its version using a cache *)
 
 and mp_renaming =
   let add,get,_ = mktable_modpath true in
@@ -522,9 +589,9 @@ and mp_renaming =
     try if is_mp_bound (base_mp x) then raise Not_found; get x
     with Not_found -> let y = mp_renaming_fun x in add x y; y
 
-(*s Renamings creation for a [global_reference]: we build its fully-qualified
-    name in a [string list] form (head is the short name). *)
+(** {2 Renamings creation for a global_reference} *)
 
+(** We build its fully-qualified name in a [string list] form (head is the short name). *)
 let ref_renaming_fun (k,r) =
   let mp = modpath_of_r r in
   let l = mp_renaming mp in
@@ -591,19 +658,20 @@ let ref_renaming_fun (k,r) =
   add_global_ids (Id.of_string s);
   s::l
 
-(* Cached version of the last function *)
-
+(** Cached version of ref_renaming_fun. *)
 let ref_renaming =
   let add,get,_ = mktable_ref true in
   fun ((k,r) as x) ->
     try if is_mp_bound (base_mp (modpath_of_r r)) then raise Not_found; get r
     with Not_found -> let y = ref_renaming_fun x in add r y; y
 
-(* [visible_clash mp0 (k,s)] checks if [mp0-s] of kind [k]
-   can be printed as [s] in the current context of visible
-   modules. More precisely, we check if there exists a
-   visible [mp] that contains [s].
-   The verification stops if we encounter [mp=mp0]. *)
+(** {2 On-the-fly qualification} *)
+
+(** [visible_clash mp0 (k,s)] checks if [mp0-s] of kind [k]
+    can be printed as [s] in the current context of visible
+    modules. More precisely, we check if there exists a
+    visible [mp] that contains [s].
+    The verification stops if we encounter [mp=mp0]. *)
 
 let rec clash mem mp0 ks = function
   | [] -> false
@@ -611,10 +679,12 @@ let rec clash mem mp0 ks = function
   | mp :: _ when mem mp ks -> true
   | _ :: mpl -> clash mem mp0 ks mpl
 
+(** Check if a name clashes with content from opened files. *)
 let mpfiles_clash mp0 ks =
   clash (fun mp k -> KMap.mem k (get_mpfiles_content mp)) mp0 ks
     (List.rev (mpfiles_list ()))
 
+(** Check if a module path matches a functor parameter. *)
 let rec params_lookup mp0 ks = function
   | [] -> false
   | param :: _ when ModPath.equal mp0 param -> true
@@ -625,6 +695,7 @@ let rec params_lookup mp0 ks = function
       in
       params_lookup mp0 ks params
 
+(** Check if a name clashes with a visible module's content. *)
 let visible_clash mp0 ks =
   let rec clash = function
     | [] -> false
@@ -639,8 +710,7 @@ let visible_clash mp0 ks =
         end
   in clash (get_visible ())
 
-(* Same, but with verbose output (and mp0 shouldn't be a MPbound) *)
-
+(** Like visible_clash but returns the conflicting module path (and mp0 shouldn't be a MPbound). *)
 let visible_clash_dbg mp0 ks =
   let rec clash = function
     | [] -> None
@@ -652,8 +722,8 @@ let visible_clash_dbg mp0 ks =
           else clash vis
   in clash (get_visible ())
 
-(* After the 1st pass, we can decide which modules will be opened initially *)
-
+(** Compute which libraries should be opened initially.
+    After the 1st pass, we can decide which modules will be opened initially *)
 let opened_libraries () =
   if not (modular ()) then []
   else
@@ -673,18 +743,19 @@ let opened_libraries () =
     List.iter mpfiles_add to_open;
     mpfiles_list ()
 
-(*s On-the-fly qualification issues for both monolithic or modular extraction. *)
+(** On-the-fly qualification issues for both monolithic or modular extraction.
 
-(* [pp_ocaml_gen] below is a function that factorize the printing of both
-   [global_reference] and module names for ocaml. When [k=Mod] then [olab=None],
-   otherwise it contains the label of the reference to print.
-   [rls] is the string list giving the qualified name, short name at the end. *)
+    [pp_ocaml_gen] below is a function that factorize the printing of both
+    [global_reference] and module names for ocaml. When [k=Mod] then [olab=None],
+    otherwise it contains the label of the reference to print.
+    [rls] is the string list giving the qualified name, short name at the end.
 
-(* In Rocq, we can qualify [M.t] even if we are inside [M], but in Ocaml we
-   cannot do that. So, if [t] gets hidden and we need a long name for it,
-   we duplicate the _definition_ of t in a Coq__XXX module, and similarly
-   for a sub-module [M.N] *)
+    In Rocq, we can qualify [M.t] even if we are inside [M], but in Ocaml we
+    cannot do that. So, if [t] gets hidden and we need a long name for it,
+    we duplicate the _definition_ of t in a Coq__XXX module, and similarly
+    for a sub-module [M.N] *)
 
+(** Print a reference using a duplicate wrapper module. *)
 let pp_duplicate k' prefix mp rls olab =
   let rls', lbl =
     if k' != Mod then
@@ -700,14 +771,15 @@ let pp_duplicate k' prefix mp rls olab =
      assert (get_phase () == Pre); (* otherwise it's too late *)
      add_duplicate prefix lbl; dottify rls
 
+(** Extract the kind and name for first-level clash detection. *)
 let fstlev_ks k = function
   | [] -> assert false
   | [s] -> k,s
   | s::_ -> Mod,s
 
-(* [pp_ocaml_local] : [mp] has something in common with [top_visible ()]
-   but isn't equal to it *)
-
+(** Print a locally-visible reference.
+    [pp_ocaml_local] : [mp] has something in common with [top_visible ()]
+    but isn't equal to it *)
 let pp_ocaml_local k prefix mp rls olab =
   (* what is the largest prefix of [mp] that belongs to [visible]? *)
   assert (k != Mod || not (ModPath.equal mp prefix)); (* mp as whole module isn't in itself *)
@@ -717,16 +789,16 @@ let pp_ocaml_local k prefix mp rls olab =
   if not (visible_clash prefix k's) then dottify rls'
   else pp_duplicate (fst k's) prefix mp rls' olab
 
-(* [pp_ocaml_bound] : [mp] starts with a [MPbound], and we are not inside
-   (i.e. we are not printing the type of the module parameter) *)
-
+(** Print a reference from a bound module parameter.
+    [pp_ocaml_bound] : [mp] starts with a [MPbound], and we are not inside
+    (i.e. we are not printing the type of the module parameter) *)
 let pp_ocaml_bound base rls =
   (* clash with a MPbound will be detected and fixed by renaming this MPbound *)
   if get_phase () == Pre then ignore (visible_clash base (Mod,List.hd rls));
   dottify rls
 
-(* [pp_ocaml_extern] : [mp] isn't local, it is defined in another [MPfile]. *)
-
+(** Print an externally-defined reference.
+    [pp_ocaml_extern] : [mp] isn't local, it is defined in another [MPfile]. *)
 let pp_ocaml_extern k base rls = match rls with
   | [] -> assert false
   | base_s :: rls' ->
@@ -744,8 +816,8 @@ let pp_ocaml_extern k base rls = match rls with
         (* Standard situation : object in an opened file *)
         dottify rls'
 
-(* [pp_ocaml_gen] : choosing between [pp_ocaml_local] or [pp_ocaml_extern] *)
-
+(** Main name printer: dispatch between local, bound, and external.
+    [pp_ocaml_gen] : choosing between [pp_ocaml_local] or [pp_ocaml_extern] *)
 let pp_ocaml_gen k mp rls olab =
   match common_prefix_from_list mp (get_visible_mps ()) with
     | Some prefix -> pp_ocaml_local k prefix mp rls olab
@@ -754,6 +826,7 @@ let pp_ocaml_gen k mp rls olab =
         if is_mp_bound base then pp_ocaml_bound base rls
         else pp_ocaml_extern k base rls
 
+(** C++ variant of pp_ocaml_gen. *)
 let pp_cpp_gen k mp rls olab =
   match common_prefix_from_list mp (get_visible_mps ()) with
     | Some prefix -> pp_ocaml_local k prefix mp rls olab
@@ -762,8 +835,7 @@ let pp_cpp_gen k mp rls olab =
         if is_mp_bound base then pp_ocaml_bound base rls
         else pp_ocaml_extern k base rls
 
-(* Main name printing function for a reference *)
-
+(** Main name printing function for a reference, using a kernel name key. *)
 let pp_global_with_key k key r =
   let ls = ref_renaming (k,r) in
   assert (List.length ls > 1);
@@ -778,18 +850,19 @@ let pp_global_with_key k key r =
     match lang () with
       | Cpp -> pp_cpp_gen k mp rls (Some l)
 
+(** Print a reference using its canonical kernel name. *)
 let pp_global k r =
   pp_global_with_key k (repr_of_r r) r
 
-(* Main name printing function for declaring a reference *)
-
+(** Print just the short name of a reference (for declarations).
+    Main name printing function for declaring a reference *)
 let pp_global_name k r =
   let ls = ref_renaming (k,r) in
   assert (List.length ls > 1);
   List.hd ls
 
-(* The next function is used only in Ocaml extraction...*)
-
+(** Print a module path.
+    The next function is used only in Ocaml extraction... *)
 let pp_module mp =
   let ls = mp_renaming mp in
   match mp with
@@ -866,10 +939,9 @@ let check_extract_string () =
     String.equal (find_custom @@ string_type_ref ()) string_type
   with Not_found -> false
 
-(* The argument is known to be of type Strings.String.string.
-   Check that it is built from constructors EmptyString and String
-   with constant ascii arguments. *)
-
+(** The argument is known to be of type Strings.String.string.
+    Check that it is built from constructors EmptyString and String
+    with constant ascii arguments. *)
 let rec is_native_string_rec empty_string_ref string_constructor_ref = function
   (* "EmptyString" constructor *)
   | MLcons(_, gr, []) -> Rocqlib.check_ref empty_string_ref gr
@@ -881,11 +953,10 @@ let rec is_native_string_rec empty_string_ref string_constructor_ref = function
   (* others *)
   | _ -> false
 
-(* Here we first check that the argument is the type registered as
-   core.string.type and that extraction to native strings was
-   requested.  Then we check every character via
-   [is_native_string_rec]. *)
-
+(** Here we first check that the argument is the type registered as
+    core.string.type and that extraction to native strings was
+    requested.  Then we check every character via
+    [is_native_string_rec]. *)
 let is_native_string c =
   match c with
   | MLcons(_, GlobRef.ConstructRef(ind, j), l) ->
@@ -895,8 +966,7 @@ let is_native_string c =
       && is_native_string_rec empty_string_name string_constructor_name c
   | _ -> false
 
-(* Extract the underlying string. *)
-
+(** Extract the underlying string. *)
 let get_native_string c =
   let buf = Buffer.create 64 in
   let rec get = function
@@ -911,19 +981,17 @@ let get_native_string c =
     | _ -> assert false
   in get c
 
-(* Printing the underlying string. *)
-
+(** Printing the underlying string. *)
 let pp_native_string c =
   str ("\"" ^ String.escaped (get_native_string c) ^ "\"")
 
-(* Registered sig type *)
-
+(** Registered sig type *)
 let sig_type_name = "core.sig.type"
 
-(* ============================================================================
-   Synthetic name generators.
-   Centralized here so that naming conventions are defined in one place.
-   ============================================================================ *)
+(** {2 Synthetic name generators} *)
+
+(** Synthetic name generators.
+    Centralized here so that naming conventions are defined in one place. *)
 
 let tvar_name i = "T" ^ string_of_int i
 let tvar_id i = Id.of_string (tvar_name i)
