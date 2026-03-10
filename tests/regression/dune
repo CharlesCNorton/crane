@@ -1532,3 +1532,14 @@
   (alias runtest)
   (deps todo_with_type_constraint.t.exe)
   (action (run ./todo_with_type_constraint.t.exe))))
+
+(subdir todo_polymorphic_erased_helper
+ (rule
+  (targets todo_polymorphic_erased_helper.t.exe)
+  (deps TodoPolymorphicErasedHelper.vo todo_polymorphic_erased_helper.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_polymorphic_erased_helper.t.exe todo_polymorphic_erased_helper.cpp todo_polymorphic_erased_helper.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_polymorphic_erased_helper.t.exe)
+  (action (run ./todo_polymorphic_erased_helper.t.exe))))

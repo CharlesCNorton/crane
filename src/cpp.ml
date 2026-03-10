@@ -3916,6 +3916,36 @@ let do_struct_with_decl_tracking ~is_header f s =
       mt ()
   in
   Hashtbl.clear pending_wrapper_decls;
+  (* Collect lifted template helpers from main module code gen.
+     These are accumulated during ppl rendering above.
+     Partition into:
+     - pre_struct: helpers that DON'T reference the main module struct
+       (must go BEFORE the struct — called from static inline initializers)
+     - post_struct: helpers that DO reference the main module struct
+       (must go AFTER the struct — they use struct-defined types) *)
+  let pass2_lifted = Translation.take_lifted_decls () in
+  let (pass2_pre_pp, pass2_post_pp) = if is_header then
+    (* Get the main module name to check if lifted decls reference it.
+       Use string_of_modfile (safe lookup) + capitalize to match struct name. *)
+    let main_module_name = match List.rev wrapper_names with
+      | (((mp, _sel), None)) :: _ ->
+          Some (String.capitalize_ascii (string_of_modfile mp))
+      | _ -> None
+    in
+    (* Render each lifted decl once, then partition by whether it references
+       the main module struct.  Rendering must happen exactly once per decl
+       to avoid duplicate side-effects in pp_cpp_decl. *)
+    let rendered_lifted = List.map (fun d -> pp_cpp_decl (empty_env ()) d) pass2_lifted in
+    let (pre, post) = List.partition (fun pp ->
+      match main_module_name with
+      | Some name ->
+          not (Common.contains_substring (Pp.string_of_ppcmds pp) (name ^ "::"))
+      | None -> false  (* Can't determine — keep after struct to be safe *)
+    ) rendered_lifted in
+    let join lst = prlist_sep_nonempty cut2 (fun x -> x) lst in
+    (join pre, join post)
+  else (mt (), mt ()) in
+
   (* Find insertion point: before the LAST non-wrapper entry (the main module).
      All other entries (wrapper and non-wrapper alike) go before remaining_wrappers. *)
   let rev_rendered = List.rev rendered in
@@ -3926,7 +3956,11 @@ let do_struct_with_decl_tracking ~is_header f s =
   let p_pre = prlist_sep_nonempty cut2 snd pre_entries in
   let p = match main_entry with
     | Some main_p ->
-      prlist_sep_nonempty cut2 (fun x -> x) (List.filter (fun x -> not (Pp.ismt x)) [p_pre; remaining_wrappers; main_p])
+      (* Insert pass2_pre_pp (struct-independent template helpers) before main_p.
+         These helpers may be called from static inline initializers inside the
+         main module struct, so they must be defined before the struct.
+         pass2_post_pp (struct-dependent helpers) goes after — see final assembly. *)
+      prlist_sep_nonempty cut2 (fun x -> x) (List.filter (fun x -> not (Pp.ismt x)) [p_pre; remaining_wrappers; pass2_pre_pp; main_p])
     | None ->
       if Pp.ismt remaining_wrappers then p_pre
       else if Pp.ismt p_pre then remaining_wrappers
@@ -3937,53 +3971,46 @@ let do_struct_with_decl_tracking ~is_header f s =
      ============================================================================
 
      OUTPUT ORDER:
-     1. p                : Type declarations (inductives) + remaining_wrappers + main module
-     2. deferred_lifted  : Template helpers from COMBINED PASS (wrapper module code gen)
-     3. pass2_lifted_pp  : Template helpers from PASS 2 (main module code gen)
+     1. p                : Type/wrapper declarations + pre-struct lifted helpers + main module
+     2. pass2_post_pp    : Struct-dependent template helpers from main module
+     3. deferred_lifted  : Template helpers from COMBINED PASS (wrapper module code gen)
      4. deferred_defs    : Out-of-line function definitions from COMBINED PASS
 
      ORDERING RATIONALE:
 
-     (1) Type declarations FIRST:
+     (1) Type declarations and wrapper structs FIRST, then pre-struct helpers:
          All struct definitions (List, ListDef, etc.) must be complete before
-         function definitions reference them.
+         function definitions reference them.  Pre-struct lifted helpers (those
+         not referencing the main struct, e.g., _anon_aux) are placed before
+         the main module struct so they're visible to static inline initializers.
 
-     (2) deferred_lifted BEFORE pass2_lifted_pp:
-         Lifted decls from wrapper modules (deferred_lifted) may be referenced by
-         main module functions. They must be defined before pass2_lifted_pp which
-         may call them.
+     (2) pass2_post_pp AFTER main module struct:
+         Struct-dependent lifted helpers (e.g., _flatten_tree_go) reference types
+         defined inside the main module struct, so they must come after it.
 
-     (3) pass2_lifted_pp BEFORE deferred_defs:
-         Some wrapper module functions (deferred_defs) may call lifted helpers
-         from the main module (pass2_lifted_pp). The helpers must be defined first.
+     (3) deferred_lifted AFTER post_pp:
+         Lifted decls from wrapper modules may be referenced by wrapper
+         module out-of-line definitions. They must appear before deferred_defs.
 
      (4) deferred_defs LAST:
          Out-of-line definitions like "WrapperName::func(...)" reference both
-         types (from p) and helpers (from deferred_lifted + pass2_lifted_pp).
+         types (from p) and helpers (from deferred_lifted + pass2_post_pp).
 
      LIFTED DECLARATIONS EXPLAINED:
      When gen_dfun encounters a local fixpoint (nested recursive function),
      it extracts it as a separate template function (e.g., _foo_aux) via
-     add_lifted_decl. These lifted functions are collected and must appear
-     before the function that uses them.
+     add_lifted_decl. These lifted functions are collected and partitioned:
 
-     - deferred_lifted: Lifted from wrapper module functions during COMBINED PASS
-     - pass2_lifted: Lifted from main module functions during PASS 2
-       Example: If main module function "foo" has a local fixpoint, gen_dfun
-       creates "_foo_aux" and stores it via add_lifted_decl. We collect it
-       here via take_lifted_decls() and emit it before deferred_defs. *)
-
-  let pass2_lifted = Translation.take_lifted_decls () in
-  let pass2_lifted_pp = if is_header then
-    prlist_sep_nonempty cut2 (fun d -> pp_cpp_decl (empty_env ()) d) pass2_lifted
-  else mt () in
+     - pass2_pre_pp:  Struct-independent helpers → before main struct (in p)
+     - pass2_post_pp: Struct-dependent helpers → after main struct
+     - deferred_lifted: From wrapper module functions during COMBINED PASS *)
 
   (* For non-modular mode, pop remaining visible entries. *)
   (if not (modular ()) then
     repeat (List.length wrapper_names) pop_visible ());
 
   (* Emit everything in the correct order (see ordering rationale above) *)
-  v 0 (p ++ deferred_lifted ++ pass2_lifted_pp ++ deferred_defs) ++ fnl ()
+  v 0 (p ++ pass2_post_pp ++ deferred_lifted ++ deferred_defs) ++ fnl ()
 
 let do_struct f s =
   let ppl (mp,sel) =

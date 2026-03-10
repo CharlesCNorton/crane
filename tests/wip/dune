@@ -364,17 +364,6 @@
   (deps todo_monadic_global_alias.t.exe)
   (action (run ./todo_monadic_global_alias.t.exe))))
 
-(subdir todo_polymorphic_erased_helper
- (rule
-  (targets todo_polymorphic_erased_helper.t.exe)
-  (deps TodoPolymorphicErasedHelper.vo todo_polymorphic_erased_helper.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_polymorphic_erased_helper.t.exe todo_polymorphic_erased_helper.cpp todo_polymorphic_erased_helper.t.cpp)))
- (rule
-  (alias runtest)
-  (deps todo_polymorphic_erased_helper.t.exe)
-  (action (run ./todo_polymorphic_erased_helper.t.exe))))
-
 (subdir update_nth_length_edge_0009
  (rule
   (targets update_nth_length_edge_0009.t.exe)
