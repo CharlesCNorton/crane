@@ -174,22 +174,6 @@ struct Tree {
     template <typename T1, MapsTo<T1, std::shared_ptr<tree<A>>, T1, A,
                                   std::shared_ptr<tree<A>>, T1>
                                F1>
-    T1 tree_rect(const T1 f, F1 &&f0) const {
-      return std::visit(
-          Overloaded{
-              [&](const typename tree<A>::leaf _args) -> T1 { return f; },
-              [&](const typename tree<A>::node _args) -> T1 {
-                std::shared_ptr<tree<A>> t0 = _args._a0;
-                A y = _args._a1;
-                std::shared_ptr<tree<A>> t1 = _args._a2;
-                return f0(t0, t0->template tree_rect<T1>(f, f0), y, t1,
-                          t1->template tree_rect<T1>(f, f0));
-              }},
-          this->v());
-    }
-    template <typename T1, MapsTo<T1, std::shared_ptr<tree<A>>, T1, A,
-                                  std::shared_ptr<tree<A>>, T1>
-                               F1>
     T1 tree_rec(const T1 f, F1 &&f0) const {
       return std::visit(
           Overloaded{
@@ -200,6 +184,22 @@ struct Tree {
                 std::shared_ptr<tree<A>> t1 = _args._a2;
                 return f0(t0, t0->template tree_rec<T1>(f, f0), y, t1,
                           t1->template tree_rec<T1>(f, f0));
+              }},
+          this->v());
+    }
+    template <typename T1, MapsTo<T1, std::shared_ptr<tree<A>>, T1, A,
+                                  std::shared_ptr<tree<A>>, T1>
+                               F1>
+    T1 tree_rect(const T1 f, F1 &&f0) const {
+      return std::visit(
+          Overloaded{
+              [&](const typename tree<A>::leaf _args) -> T1 { return f; },
+              [&](const typename tree<A>::node _args) -> T1 {
+                std::shared_ptr<tree<A>> t0 = _args._a0;
+                A y = _args._a1;
+                std::shared_ptr<tree<A>> t1 = _args._a2;
+                return f0(t0, t0->template tree_rect<T1>(f, f0), y, t1,
+                          t1->template tree_rect<T1>(f, f0));
               }},
           this->v());
     }

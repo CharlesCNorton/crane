@@ -270,6 +270,32 @@ let register_methods_for_epon tbl cands ?(cross_module=false) ?(wrapper_module_n
       | _ -> false
   in
   let same_module r = cross_module || from_wrapper_module r || ModPath.equal (modpath_of_r r) epon_modpath in
+  (* Collect inductives defined AFTER the eponymous type.
+     Methods referencing these would cause forward reference errors in C++. *)
+  let forward_inductives = ref [] in
+  let seen_epon = ref false in
+  List.iter (fun (_l, se) ->
+    match se with
+    | SEdecl (Dind (fwd_kn, fwd_ind)) ->
+      Array.iteri (fun j _p ->
+        let fwd_ref = GlobRef.IndRef (fwd_kn, j) in
+        if Environ.QGlobRef.equal Environ.empty_env fwd_ref epon_ref then
+          seen_epon := true
+        else if !seen_epon then
+          forward_inductives := fwd_ref :: !forward_inductives
+      ) fwd_ind.ind_packets
+    | _ -> ()
+  ) decls;
+  let fwd_refs = !forward_inductives in
+  let rec refs_forward ty =
+    match ty with
+    | Miniml.Tglob (r, args, _) ->
+        List.exists (Environ.QGlobRef.equal Environ.empty_env r) fwd_refs ||
+        List.exists refs_forward args
+    | Miniml.Tarr (t1, t2) -> refs_forward t1 || refs_forward t2
+    | Miniml.Tmeta {contents = Some t} -> refs_forward t
+    | _ -> false
+  in
   (* Helper to add a candidate to both the method table and candidates table *)
   let add_candidate r body ty pos ind_tvar_positions =
     register_into tbl r epon_ref pos ~ind_tvar_positions;
@@ -281,7 +307,7 @@ let register_methods_for_epon tbl cands ?(cross_module=false) ?(wrapper_module_n
   List.iter (fun (_l, se) ->
     match se with
     | SEdecl (Dterm (r, body, ty)) ->
-      if same_module r then
+      if same_module r && not (refs_forward ty) then
         (match find_epon_arg_pos epon_ref ty with
          | Some (pos, ind_tvar_positions) ->
            add_candidate r body ty pos ind_tvar_positions
@@ -289,7 +315,7 @@ let register_methods_for_epon tbl cands ?(cross_module=false) ?(wrapper_module_n
     | SEdecl (Dfix (rv, defs, typs)) ->
       (* Mutual fixpoints: check each function in the fixpoint block. *)
       Array.iteri (fun i r ->
-        if same_module r then
+        if same_module r && not (refs_forward typs.(i)) then
           match find_epon_arg_pos epon_ref typs.(i) with
           | Some (pos, ind_tvar_positions) ->
             add_candidate r defs.(i) typs.(i) pos ind_tvar_positions

@@ -88,7 +88,7 @@ struct MutualCoind {
         return std::shared_ptr<streamA<A>>(
             new streamA<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<streamA<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
@@ -125,7 +125,7 @@ struct MutualCoind {
         return std::shared_ptr<streamB<A>>(
             new streamB<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<streamB<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };

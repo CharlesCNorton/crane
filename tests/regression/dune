@@ -1554,3 +1554,25 @@
   (alias runtest)
   (deps todo_extract_constant_noninline.t.exe)
   (action (run ./todo_extract_constant_noninline.t.exe))))
+
+(subdir coind_guard
+ (rule
+  (targets coind_guard.t.exe)
+  (deps CoindGuard.vo coind_guard.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} coind_guard.t.exe coind_guard.cpp coind_guard.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps coind_guard.t.exe)
+  (action (run ./coind_guard.t.exe))))
+
+(subdir mutual_coind
+ (rule
+  (targets mutual_coind.t.exe)
+  (deps MutualCoind.vo mutual_coind.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_coind.t.exe mutual_coind.cpp mutual_coind.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_coind.t.exe)
+  (action (run ./mutual_coind.t.exe))))

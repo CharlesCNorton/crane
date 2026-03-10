@@ -128,7 +128,7 @@ struct Colist {
         return std::shared_ptr<colist<A>>(
             new colist<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<colist<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
@@ -160,7 +160,8 @@ struct Colist {
     }
     template <typename T1, MapsTo<T1, A> F0>
     std::shared_ptr<colist<T1>> comap(F0 &&f) const {
-      return colist<T1>::ctor::lazy_([=](void) -> std::shared_ptr<colist<T1>> {
+      return colist<T1>::ctor::lazy_([=, this](
+                                         void) -> std::shared_ptr<colist<T1>> {
         return std::visit(Overloaded{[](const typename colist<A>::conil _args)
                                          -> std::shared_ptr<colist<T1>> {
                                        return colist<T1>::ctor::conil_();

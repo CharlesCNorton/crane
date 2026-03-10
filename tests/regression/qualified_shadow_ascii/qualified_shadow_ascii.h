@@ -20,6 +20,26 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct QualifiedShadowAscii {
   struct Shadow {
     enum class shadow { Mk };
+
+    template <typename T1> static T1 shadow_rect(const T1 f, const shadow s) {
+      return [&](void) {
+        switch (s) {
+        case shadow::Mk: {
+          return f;
+        }
+        }
+      }();
+    }
+
+    template <typename T1> static T1 shadow_rec(const T1 f, const shadow s) {
+      return [&](void) {
+        switch (s) {
+        case shadow::Mk: {
+          return f;
+        }
+        }
+      }();
+    }
   };
 
   static Shadow::shadow id_shadow(const Shadow::shadow x);

@@ -111,7 +111,7 @@ struct Cotree {
         return std::shared_ptr<colist<A>>(
             new colist<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<colist<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
@@ -150,7 +150,7 @@ struct Cotree {
         return std::shared_ptr<cotree<A>>(
             new cotree<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<cotree<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
@@ -165,7 +165,8 @@ struct Cotree {
     }
     std::shared_ptr<colist<std::shared_ptr<cotree<A>>>> children() const {
       return colist<std::shared_ptr<cotree<A>>>::ctor::lazy_(
-          [=](void) -> std::shared_ptr<colist<std::shared_ptr<cotree<A>>>> {
+          [=,
+           this](void) -> std::shared_ptr<colist<std::shared_ptr<cotree<A>>>> {
             return std::visit(
                 Overloaded{
                     [](const typename cotree<A>::conode _args)
@@ -179,7 +180,8 @@ struct Cotree {
     }
     template <typename T1, MapsTo<T1, A> F0>
     std::shared_ptr<cotree<T1>> comap_cotree(F0 &&g) const {
-      return cotree<T1>::ctor::lazy_([=](void) -> std::shared_ptr<cotree<T1>> {
+      return cotree<T1>::ctor::lazy_([=, this](
+                                         void) -> std::shared_ptr<cotree<T1>> {
         return std::visit(
             Overloaded{[&](const typename cotree<A>::conode _args)
                            -> std::shared_ptr<cotree<T1>> {
@@ -196,28 +198,6 @@ struct Cotree {
             }},
             this->v());
       });
-    }
-    std::shared_ptr<tree<A>> tree_of_cotree(const unsigned int fuel) const {
-      return std::visit(
-          Overloaded{[&](const typename cotree<A>::conode _args)
-                         -> std::shared_ptr<tree<A>> {
-            A a = _args._a0;
-            std::shared_ptr<colist<std::shared_ptr<cotree<A>>>> f = _args._a1;
-            if (fuel <= 0) {
-              return tree<A>::ctor::node_(
-                  a, List<std::shared_ptr<tree<A>>>::ctor::nil_());
-            } else {
-              unsigned int fuel_ = fuel - 1;
-              return tree<A>::ctor::node_(
-                  a, list_of_colist<std::shared_ptr<cotree<A>>>(fuel, f)
-                         ->template map<std::shared_ptr<tree<A>>>(
-                             [&](const std::shared_ptr<cotree<A>> _x0)
-                                 -> std::shared_ptr<tree<A>> {
-                               return _x0->tree_of_cotree(fuel_);
-                             }));
-            }
-          }},
-          this->v());
     }
   };
 
@@ -346,6 +326,32 @@ struct Cotree {
   }
 
   template <typename T1>
+  static std::shared_ptr<tree<T1>>
+  tree_of_cotree(const unsigned int fuel,
+                 const std::shared_ptr<cotree<T1>> &t) {
+    return std::visit(
+        Overloaded{[&](const typename cotree<T1>::conode _args)
+                       -> std::shared_ptr<tree<T1>> {
+          T1 a = _args._a0;
+          std::shared_ptr<colist<std::shared_ptr<cotree<T1>>>> f = _args._a1;
+          if (fuel <= 0) {
+            return tree<T1>::ctor::node_(
+                a, List<std::shared_ptr<tree<T1>>>::ctor::nil_());
+          } else {
+            unsigned int fuel_ = fuel - 1;
+            return tree<T1>::ctor::node_(
+                a, list_of_colist<std::shared_ptr<cotree<T1>>>(fuel, f)
+                       ->template map<std::shared_ptr<tree<T1>>>(
+                           [&](const std::shared_ptr<cotree<T1>> _x0)
+                               -> std::shared_ptr<tree<T1>> {
+                             return tree_of_cotree<T1>(fuel_, _x0);
+                           }));
+          }
+        }},
+        t->v());
+  }
+
+  template <typename T1>
   static unsigned int tree_size(const std::shared_ptr<tree<T1>> &t) {
     return std::visit(
         Overloaded{[](const typename tree<T1>::node _args) -> unsigned int {
@@ -408,7 +414,7 @@ struct Cotree {
   static inline const unsigned int test_binary_root = binary_tree->root();
 
   static inline const std::shared_ptr<tree<unsigned int>> test_approx =
-      binary_tree->tree_of_cotree(2u);
+      tree_of_cotree<unsigned int>(2u, binary_tree);
 
   static inline const unsigned int test_approx_root =
       tree_root<unsigned int>(test_approx);

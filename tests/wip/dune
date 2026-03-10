@@ -23,28 +23,6 @@
   (deps addr_page_decomp_edge_0007.t.exe)
   (action (run ./addr_page_decomp_edge_0007.t.exe))))
 
-(subdir coind_guard
- (rule
-  (targets coind_guard.t.exe)
-  (deps CoindGuard.vo coind_guard.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} coind_guard.t.exe coind_guard.cpp coind_guard.t.cpp)))
- (rule
-  (alias runtest)
-  (deps coind_guard.t.exe)
-  (action (run ./coind_guard.t.exe))))
-
-(subdir cotree
- (rule
-  (targets cotree.t.exe)
-  (deps Cotree.vo cotree.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} cotree.t.exe cotree.cpp cotree.t.cpp)))
- (rule
-  (alias runtest)
-  (deps cotree.t.exe)
-  (action (run ./cotree.t.exe))))
-
 (subdir decode_addr12_helper_edge_0027
  (rule
   (targets decode_addr12_helper_edge_0027.t.exe)
@@ -275,17 +253,6 @@
   (alias runtest)
   (deps monadic.t.exe)
   (action (run ./monadic.t.exe))))
-
-(subdir mutual_coind
- (rule
-  (targets mutual_coind.t.exe)
-  (deps MutualCoind.vo mutual_coind.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_coind.t.exe mutual_coind.cpp mutual_coind.t.cpp)))
- (rule
-  (alias runtest)
-  (deps mutual_coind.t.exe)
-  (action (run ./mutual_coind.t.exe))))
 
 (subdir program_targets_region_scan
  (rule

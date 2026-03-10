@@ -119,7 +119,7 @@ struct Stream {
         return std::shared_ptr<stream<A>>(
             new stream<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<stream<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
@@ -144,7 +144,8 @@ struct Stream {
           n->v());
     }
     std::shared_ptr<stream<A>> interleave(std::shared_ptr<stream<A>> sb) const {
-      return stream<A>::ctor::lazy_([=](void) -> std::shared_ptr<stream<A>> {
+      return stream<A>::ctor::lazy_([=,
+                                     this](void) -> std::shared_ptr<stream<A>> {
         return std::visit(Overloaded{[&](const typename stream<A>::scons _args)
                                          -> std::shared_ptr<stream<A>> {
                             A a = _args._a0;

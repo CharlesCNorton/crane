@@ -64,13 +64,13 @@ int main() {
 
     // Test 3: list_of_colist on infinite nats stream
     {
-        auto v = to_vector(test_first_five);
-        ASSERT(Cotree::v.size() == 5);
-        ASSERT(Cotree::v[0] == 0);
-        ASSERT(Cotree::v[1] == 1);
-        ASSERT(Cotree::v[2] == 2);
-        ASSERT(Cotree::v[3] == 3);
-        ASSERT(Cotree::v[4] == 4);
+        auto vec = to_vector(Cotree::test_first_five);
+        ASSERT(vec.size() == 5);
+        ASSERT(vec[0] == 0);
+        ASSERT(vec[1] == 1);
+        ASSERT(vec[2] == 2);
+        ASSERT(vec[3] == 3);
+        ASSERT(vec[4] == 4);
         std::cout << "Test 3 (first 5 nats): PASSED" << std::endl;
     }
 

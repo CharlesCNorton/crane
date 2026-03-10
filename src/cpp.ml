@@ -815,7 +815,7 @@ module IdSet = Set.Make(Names.Id)
    Also checks recursively: if a nested lambda captures from the outer lambda's scope,
    that counts as the outer lambda needing capture. *)
 let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) list)
-                              (body : Minicpp.cpp_stmt list) : bool =
+                              (body : Minicpp.cpp_stmt list) : (bool * bool) =
   let open Minicpp in
 
   (* Collect parameter names *)
@@ -923,8 +923,10 @@ let rec lambda_needs_capture (params : (Minicpp.cpp_type * Names.Id.t option) li
   let (all_refs, local_decls) = List.fold_left collect_from_stmt (IdSet.empty, IdSet.empty) body in
   let bound_vars = IdSet.union param_names local_decls in
   let free_vars = IdSet.diff all_refs bound_vars in
-  (* Lambda needs capture if it has free variables OR uses 'this' *)
-  not (IdSet.is_empty free_vars) || !uses_this
+  (* Lambda needs capture if it has free variables OR uses 'this'.
+     Return (needs_capture, uses_this) so callers can generate [=, this]
+     instead of [=] to avoid -Wdeprecated-this-capture in C++20+. *)
+  (not (IdSet.is_empty free_vars) || !uses_this, !uses_this)
 
 (** Check if a cpp_expr contains any lambdas that need capture (have free variables).
    Used to determine if IIFE wrapping is needed for static inline initializers.
@@ -934,7 +936,7 @@ and expr_contains_capturing_lambda (e : Minicpp.cpp_expr) : bool =
   match e with
   | CPPlambda (params, _, body, _) ->
       (* Check if this lambda needs capture, OR if any nested lambdas need capture *)
-      lambda_needs_capture params body ||
+      fst (lambda_needs_capture params body) ||
       List.exists stmt_contains_capturing_lambda body
   | CPPfun_call (f, args) -> expr_contains_capturing_lambda f || List.exists expr_contains_capturing_lambda args
   | CPPnamespace (_, e') -> expr_contains_capturing_lambda e'
@@ -1455,9 +1457,14 @@ and pp_cpp_expr env args t =
   | CPPforward (ty, e) ->
       str (sn ()).forward ++ str "<" ++ pp_cpp_type false [] ty ++ str ">(" ++ (pp_cpp_expr env args e) ++ str ")"
   | CPPlambda (params, ret_ty, body, capture_by_value) ->
-      (* Use [] for closed lambdas (no captured variables), [&] for ref capture, [=] for value capture *)
-      let needs_capture = lambda_needs_capture params body in
-      let capture_str = if not needs_capture then str "[](" else if capture_by_value then str "[=](" else str "[&](" in
+      (* Use [] for closed lambdas (no captured variables), [&] for ref capture, [=] for value capture.
+         In C++20+, [=] implicitly capturing 'this' is deprecated; use [=, this] instead. *)
+      let (needs_capture, uses_this) = lambda_needs_capture params body in
+      let capture_str =
+        if not needs_capture then str "[]("
+        else if capture_by_value then
+          if uses_this then str "[=, this](" else str "[=]("
+        else str "[&](" in
       let (params_s, capture) =
         (match params with
         | [] -> str "void", capture_str
@@ -2366,14 +2373,45 @@ let pp_cpp_ind_header kn ind =
           in
           (* Also include method candidates from the registry (e.g., Nat::add from
              Corelib.Init.Nat for nat defined in Corelib.Init.Datatypes).
-             Deduplicate: skip any that are already in the methods list. *)
+             Deduplicate: skip any that are already in the methods list.
+             Filter out methods whose type references forward inductives to
+             avoid forward reference errors in C++. *)
           let methods =
             let reg_candidates = Method_registry.get_candidates (get_method_registry ()) ind_ref in
             if reg_candidates = [] then methods
             else
+              (* Compute forward inductives relative to this inductive.
+                 Use the current structure decls to find inductives defined
+                 after this one. *)
+              let fwd_inds = ref [] in
+              let seen_self = ref false in
+              let decl_source = !current_structure_decls in
+              List.iter (fun (_l, se) ->
+                match se with
+                | SEdecl (Dind (fwd_kn, fwd_ind)) ->
+                  Array.iteri (fun j _p ->
+                    let fwd_ref = GlobRef.IndRef (fwd_kn, j) in
+                    if Environ.QGlobRef.equal Environ.empty_env fwd_ref ind_ref then
+                      seen_self := true
+                    else if !seen_self then
+                      fwd_inds := fwd_ref :: !fwd_inds
+                  ) fwd_ind.ind_packets
+                | _ -> ()
+              ) decl_source;
+              let fwd_refs = !fwd_inds in
+              let rec candidate_refs_fwd ty =
+                match ty with
+                | Miniml.Tglob (r, args, _) ->
+                    List.exists (Environ.QGlobRef.equal Environ.empty_env r) fwd_refs ||
+                    List.exists candidate_refs_fwd args
+                | Miniml.Tarr (t1, t2) -> candidate_refs_fwd t1 || candidate_refs_fwd t2
+                | Miniml.Tmeta {contents = Some t} -> candidate_refs_fwd t
+                | _ -> false
+              in
               let existing = List.map (fun (r, _, _, _) -> r) methods in
-              let new_methods = List.filter (fun (r, _, _, _) ->
-                not (List.exists (Environ.QGlobRef.equal Environ.empty_env r) existing)
+              let new_methods = List.filter (fun (r, _, ty, _) ->
+                not (List.exists (Environ.QGlobRef.equal Environ.empty_env r) existing) &&
+                not (candidate_refs_fwd ty)
               ) reg_candidates in
               methods @ new_methods
           in
@@ -3008,12 +3046,47 @@ let rec pp_structure_elem ~is_header f = function
                let epon_modpath = modpath_of_r epon_ref in
                (* Check if function comes from the same Rocq module as eponymous type/record *)
                let same_module r = ModPath.equal (modpath_of_r r) epon_modpath in
+               (* Collect type aliases and forward inductives to exclude from methods.
+                  Methods referencing types defined after the eponymous inductive
+                  would cause forward reference errors in C++. *)
+               let module_type_aliases = ref [] in
+               List.iter (fun (_l, se) ->
+                 match se with
+                 | SEdecl (Dtype (r, _, _)) when ModPath.equal (modpath_of_r r) epon_modpath ->
+                     module_type_aliases := r :: !module_type_aliases
+                 | _ -> ()
+               ) sel;
+               let forward_inductives = ref [] in
+               let seen_epon = ref false in
+               List.iter (fun (_l, se) ->
+                 match se with
+                 | SEdecl (Dind (fwd_kn, fwd_ind)) ->
+                   Array.iteri (fun j _p ->
+                     let fwd_ref = GlobRef.IndRef (fwd_kn, j) in
+                     if Environ.QGlobRef.equal Environ.empty_env fwd_ref epon_ref then
+                       seen_epon := true
+                     else if !seen_epon then
+                       forward_inductives := fwd_ref :: !forward_inductives
+                   ) fwd_ind.ind_packets
+                 | _ -> ()
+               ) sel;
+               let excluded_refs = !module_type_aliases @ !forward_inductives in
+               let rec refs_excluded ty =
+                 match ty with
+                 | Miniml.Tglob (r, args, _) ->
+                     List.exists (Environ.QGlobRef.equal Environ.empty_env r) excluded_refs ||
+                     List.exists refs_excluded args
+                 | Miniml.Tarr (t1, t2) -> refs_excluded t1 || refs_excluded t2
+                 | Miniml.Tmeta {contents = Some t} -> refs_excluded t
+                 | _ -> false
+               in
                (* Helper to process a single declaration *)
                let process_decl (_l, se) =
                  match se with
                  | SEdecl (Dterm (r, body, ty)) ->
-                   (* Only consider functions from the same Rocq module as the eponymous type/record *)
-                   if same_module r then
+                   (* Only consider functions from the same Rocq module as the eponymous type/record.
+                      Skip functions whose type references forward inductives or type aliases. *)
+                   if same_module r && not (refs_excluded ty) && Method_registry.body_safe_for_method body then
                      (match Method_registry.find_epon_arg_pos epon_ref ty with
                      | Some (pos, ind_tvar_positions) ->
                        method_candidates := (r, body, ty, pos) :: !method_candidates;
@@ -3023,7 +3096,7 @@ let rec pp_structure_elem ~is_header f = function
                  | SEdecl (Dfix (rv, defs, typs)) ->
                    (* Handle fixpoints similarly - only from same module *)
                    Array.iteri (fun i r ->
-                     if same_module r then begin
+                     if same_module r && not (refs_excluded typs.(i)) && Method_registry.body_safe_for_method defs.(i) then begin
                        let ty = typs.(i) in
                        let body = defs.(i) in
                        match Method_registry.find_epon_arg_pos epon_ref ty with

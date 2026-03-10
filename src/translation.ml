@@ -4569,9 +4569,7 @@ let gen_ind_header_v2 ?(is_mutual=false) vars name cnames tys method_candidates 
       [],
       Some variant_t_ty,
       [Sasgn (Id.of_string "_tmp", Some self_ty, CPPfun_call (CPPvar (Id.of_string "thunk"), []));
-       Sreturn (Some (CPPfun_call (CPPvar (Id.of_string_soft "std::move"),
-         [CPPfun_call (CPPvar (Id.of_string_soft "const_cast<variant_t&>"),
-           [CPPmethod_call (CPPvar (Id.of_string "_tmp"), Id.of_string "v", [])])])))]
+       Sreturn (Some (CPPmethod_call (CPPvar (Id.of_string "_tmp"), Id.of_string "v", [])))]
       , true) in
     let new_expr = CPPnew (Tglob (name, ty_vars, []),
       [CPPfun_call (CPPvar (Id.of_string_soft "std::function<variant_t()>"),

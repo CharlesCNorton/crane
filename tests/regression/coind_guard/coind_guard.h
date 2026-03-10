@@ -87,7 +87,7 @@ struct CoindGuard {
         return std::shared_ptr<Stream<A>>(
             new Stream<A>(std::function<variant_t()>([=](void) -> variant_t {
               std::shared_ptr<Stream<A>> _tmp = thunk();
-              return std::move(const_cast<variant_t &>(_tmp->v()));
+              return _tmp->v();
             })));
       }
     };
