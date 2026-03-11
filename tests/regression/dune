@@ -1587,3 +1587,36 @@
   (alias runtest)
   (deps todo_monadic_global_alias.t.exe)
   (action (run ./todo_monadic_global_alias.t.exe))))
+
+(subdir get_pair_bound_prop
+ (rule
+  (targets get_pair_bound_prop.t.exe)
+  (deps GetPairBoundProp.vo get_pair_bound_prop.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} get_pair_bound_prop.t.exe get_pair_bound_prop.cpp get_pair_bound_prop.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps get_pair_bound_prop.t.exe)
+  (action (run ./get_pair_bound_prop.t.exe))))
+
+(subdir program_wf_prop
+ (rule
+  (targets program_wf_prop.t.exe)
+  (deps ProgramWfProp.vo program_wf_prop.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} program_wf_prop.t.exe program_wf_prop.cpp program_wf_prop.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps program_wf_prop.t.exe)
+  (action (run ./program_wf_prop.t.exe))))
+
+(subdir ram_state_ops
+ (rule
+  (targets ram_state_ops.t.exe)
+  (deps RamStateOps.vo ram_state_ops.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} ram_state_ops.t.exe ram_state_ops.cpp ram_state_ops.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps ram_state_ops.t.exe)
+  (action (run ./ram_state_ops.t.exe))))
