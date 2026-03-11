@@ -1631,3 +1631,25 @@
   (alias runtest)
   (deps decode_list.t.exe)
   (action (run ./decode_list.t.exe))))
+
+(subdir load_program_head_write
+ (rule
+  (targets load_program_head_write.t.exe)
+  (deps LoadProgramHeadWrite.vo load_program_head_write.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} load_program_head_write.t.exe load_program_head_write.cpp load_program_head_write.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps load_program_head_write.t.exe)
+  (action (run ./load_program_head_write.t.exe))))
+
+(subdir program_targets_region_scan
+ (rule
+  (targets program_targets_region_scan.t.exe)
+  (deps ProgramTargetsRegionScan.vo program_targets_region_scan.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} program_targets_region_scan.t.exe program_targets_region_scan.cpp program_targets_region_scan.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps program_targets_region_scan.t.exe)
+  (action (run ./program_targets_region_scan.t.exe))))

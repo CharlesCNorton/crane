@@ -20,15 +20,12 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct TodoInlineCustomPolyId {
   static inline const unsigned int test_value = [](void) {
-    unsigned int kept_nat = _anon_alias(4u);
-    bool kept_bool = _anon_alias(true);
-    if (kept_bool) {
+    unsigned int kept_nat = inline_id_impl;
+    bool kept_bool = inline_id_impl;
+    if (std::move(kept_bool)) {
       return (std::move(kept_nat) + 1);
     } else {
       return 0u;
     }
   }();
 };
-template <typename T1> T1 _anon_alias() {
-  return [](const T1 _x0) { return inline_id_impl; };
-}

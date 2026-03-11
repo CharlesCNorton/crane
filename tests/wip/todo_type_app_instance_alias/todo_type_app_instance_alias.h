@@ -33,9 +33,6 @@ struct TodoTypeAppInstanceAlias {
   }
 
   static inline const unsigned int test_value = [](void) {
-    return (_anon_alias(natBoxed) + _anon_alias(natBoxed));
+    return (pick<natBoxed>() + pick<natBoxed>());
   }();
 };
-template <typename T1> T1 _anon_alias() {
-  return TodoTypeAppInstanceAlias::pick;
-}
