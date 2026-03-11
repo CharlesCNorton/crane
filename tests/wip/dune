@@ -243,17 +243,6 @@
   (deps load_program_head_write.t.exe)
   (action (run ./load_program_head_write.t.exe))))
 
-(subdir monadic
- (rule
-  (targets monadic.t.exe)
-  (deps Monadic.vo monadic.t.cpp (source_tree .))
-  (action
-   (run %{project_root}/scripts/compile-std.sh %{project_root} monadic.t.exe monadic.cpp monadic.t.cpp)))
- (rule
-  (alias runtest)
-  (deps monadic.t.exe)
-  (action (run ./monadic.t.exe))))
-
 (subdir program_targets_region_scan
  (rule
   (targets program_targets_region_scan.t.exe)

@@ -91,7 +91,7 @@ struct FreeMonad {
                      std::function<std::shared_ptr<IO>(std::any)> i1 =
                          _args._a1;
                      return f0(i0, IO_rect<T1>(f, f0, f1, f2, i0), i1,
-                               [&](std::any a) {
+                               [=](std::any a) {
                                  return IO_rect<T1>(f, f0, f1, f2, i1(a));
                                });
                    },
@@ -116,7 +116,7 @@ struct FreeMonad {
                      std::function<std::shared_ptr<IO>(std::any)> i1 =
                          _args._a1;
                      return f0(i0, IO_rec<T1>(f, f0, f1, f2, i0), i1,
-                               [&](std::any a) {
+                               [=](std::any a) {
                                  return IO_rec<T1>(f, f0, f1, f2, i1(a));
                                });
                    },

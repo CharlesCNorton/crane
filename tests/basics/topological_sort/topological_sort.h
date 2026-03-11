@@ -277,9 +277,9 @@ struct TopologicalSort {
                        T1 e1 = p.first;
                        T1 e2 = p.second;
                        std::optional<T1> f1 =
-                           h->find([&](T1 x) { return eqb_node(e1, x); });
+                           h->find([=](T1 x) { return eqb_node(e1, x); });
                        std::optional<T1> f2 =
-                           h->find([&](T1 x) { return eqb_node(e2, x); });
+                           h->find([=](T1 x) { return eqb_node(e2, x); });
                        if (f1.has_value()) {
                          T1 _x = *f1;
                          if (f2.has_value()) {
@@ -320,7 +320,7 @@ struct TopologicalSort {
                               const T1 e) {
     return std::make_pair(
         e, std::move(l)->template fold_right<std::shared_ptr<List<T1>>>(
-               [&](std::pair<T1, T1> x, std::shared_ptr<List<T1>> ret) {
+               [=](std::pair<T1, T1> x, std::shared_ptr<List<T1>> ret) {
                  if (eqb_node(e, x.first)) {
                    return List<T1>::ctor::cons_(x.second, ret);
                  } else {
@@ -336,7 +336,7 @@ struct TopologicalSort {
     std::shared_ptr<List<T1>> elems = get_elems<T1>(eqb_node, std::move(l));
     return std::move(elems)
         ->template fold_right<std::shared_ptr<List<entry<T1>>>>(
-            [&](T1 e,
+            [=](T1 e,
                 std::shared_ptr<List<std::pair<T1, std::shared_ptr<List<T1>>>>>
                     ret) {
               return List<std::pair<T1, std::shared_ptr<List<T1>>>>::ctor::
@@ -351,12 +351,12 @@ struct TopologicalSort {
       const std::shared_ptr<List<std::pair<T1, std::shared_ptr<List<T1>>>>>
           &graph0) {
     if (graph0
-            ->find([&](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
+            ->find([=](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
               return eqb_node(elem, entry0.first);
             })
             .has_value()) {
       std::pair<T1, std::shared_ptr<List<T1>>> p =
-          *graph0->find([&](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
+          *graph0->find([=](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
             return eqb_node(elem, entry0.first);
           });
       T1 _x = p.first;
@@ -370,8 +370,8 @@ struct TopologicalSort {
   template <typename T1, MapsTo<bool, T1, T1> F0>
   static bool contains(F0 &&eqb_node, const T1 elem,
                        const std::shared_ptr<List<T1>> &es) {
-    if (es->find([&](T1 x) { return eqb_node(elem, x); }).has_value()) {
-      T1 _x = *es->find([&](T1 x) { return eqb_node(elem, x); });
+    if (es->find([=](T1 x) { return eqb_node(elem, x); }).has_value()) {
+      T1 _x = *es->find([=](T1 x) { return eqb_node(elem, x); });
       return true;
     } else {
       return false;
@@ -508,15 +508,15 @@ struct TopologicalSort {
         }
         std::shared_ptr<List<std::pair<T1, std::shared_ptr<List<T1>>>>> rest =
             graph0->filter(
-                [&](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
+                [=](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
                   return !(contains<T1>(eqb_node, entry0.first, mins_));
                 });
         std::shared_ptr<List<std::pair<T1, std::shared_ptr<List<T1>>>>> rest_ =
             std::move(rest)
                 ->template map<std::pair<T1, std::shared_ptr<List<T1>>>>(
-                    [&](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
+                    [=](std::pair<T1, std::shared_ptr<List<T1>>> entry0) {
                       return std::make_pair(
-                          entry0.first, entry0.second->filter([&](T1 e) {
+                          entry0.first, entry0.second->filter([=](T1 e) {
                             return !(contains<T1>(eqb_node, e, mins_));
                           }));
                     });
@@ -559,7 +559,7 @@ struct TopologicalSort {
               std::shared_ptr<List<T1>> fs = x.first;
               unsigned int rk = x.second;
               return fs->template map<std::pair<T1, unsigned int>>(
-                  [&](T1 f) { return std::make_pair(f, rk); });
+                  [=](T1 f) { return std::make_pair(f, rk); });
             })
         ->template concat<std::pair<T1, unsigned int>>();
   }

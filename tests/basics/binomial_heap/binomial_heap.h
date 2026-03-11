@@ -160,7 +160,7 @@ struct BinomialHeap {
               std::shared_ptr<tree> t2 = _args._a2;
               std::function<std::shared_ptr<List<std::shared_ptr<tree>>>(
                   std::shared_ptr<List<std::shared_ptr<tree>>>)>
-                  f = [&](std::shared_ptr<List<std::shared_ptr<tree>>> q) {
+                  f = [=](std::shared_ptr<List<std::shared_ptr<tree>>> q) {
                     return List<std::shared_ptr<tree>>::ctor::cons_(
                         tree::ctor::Node_(x, t1, tree::ctor::Leaf_()), cont(q));
                   };

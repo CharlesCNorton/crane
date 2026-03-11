@@ -15,7 +15,7 @@ std::shared_ptr<List<unsigned int>> ClosuresInData::apply_all(
     const std::shared_ptr<List<std::function<unsigned int(unsigned int)>>> &fns,
     const unsigned int x) {
   return fns->template map<unsigned int>(
-      [&](std::function<unsigned int(unsigned int)> f) { return f(x); });
+      [=](std::function<unsigned int(unsigned int)> f) { return f(x); });
 }
 
 unsigned int ClosuresInData::apply_forward(

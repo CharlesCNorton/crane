@@ -226,10 +226,10 @@ struct Equations {
                 unsigned int n0 = _args._a1;
                 std::shared_ptr<gcd_clause_3_graph> hind = _args._a2;
                 return f1(n, n0, hind,
-                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)),
-                             gcd_unfold_clause_3(
-                                 n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
-                             hind));
+                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)))(
+                              gcd_unfold_clause_3(
+                                  n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
+                              hind));
               }},
           g->v());
     };
@@ -305,10 +305,10 @@ struct Equations {
                 unsigned int n0 = _args._a1;
                 std::shared_ptr<gcd_clause_3_graph> hind = _args._a2;
                 return f1(n, n0, hind,
-                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)),
-                             gcd_unfold_clause_3(
-                                 n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
-                             hind));
+                          f5(n, n0, PeanoNat::ltb((n + 1), (n0 + 1)))(
+                              gcd_unfold_clause_3(
+                                  n, n0, PeanoNat::ltb((n + 1), (n0 + 1))),
+                              hind));
               }},
           g->v());
     };
@@ -373,18 +373,18 @@ struct Equations {
                      const std::pair<unsigned int, unsigned int> p) {
     return gcd_graph_mut<T1>(
         f, f0,
-        [&](unsigned int _x, unsigned int _x0,
+        [=](unsigned int _x, unsigned int _x0,
             std::shared_ptr<gcd_clause_3_graph> _x1, T1 x) {
           unsigned int _x2 = p.first;
           unsigned int _x3 = p.second;
           return x();
         },
-        [&](unsigned int n1, unsigned int n2, std::shared_ptr<gcd_graph> _x) {
+        [=](unsigned int n1, unsigned int n2, std::shared_ptr<gcd_graph> _x) {
           unsigned int _x0 = p.first;
           unsigned int _x1 = p.second;
           return f2(n1, n2);
         },
-        [&](unsigned int n1, unsigned int n2, std::shared_ptr<gcd_graph> _x) {
+        [=](unsigned int n1, unsigned int n2, std::shared_ptr<gcd_graph> _x) {
           unsigned int _x0 = p.first;
           unsigned int _x1 = p.second;
           return f3(n1, n2);
@@ -597,8 +597,7 @@ struct Equations {
                 return f1(n, hind,
                           f5(n, PeanoNat::even(((n + 1) + 1)),
                              collatz_steps_unfold_clause_3(
-                                 n, PeanoNat::even(((n + 1) + 1))),
-                             hind));
+                                 n, PeanoNat::even(((n + 1) + 1))))(hind));
               }},
           c->v());
     };
@@ -661,8 +660,7 @@ struct Equations {
                 return f1(n, hind,
                           f5(n, PeanoNat::even(((n + 1) + 1)),
                              collatz_steps_unfold_clause_3(
-                                 n, PeanoNat::even(((n + 1) + 1))),
-                             hind));
+                                 n, PeanoNat::even(((n + 1) + 1))))(hind));
               }},
           c->v());
     };
@@ -711,10 +709,10 @@ struct Equations {
         f, f0,
         [](unsigned int _x, std::shared_ptr<collatz_steps_clause_3_graph> _x0,
            T1 x) { return x(); },
-        [&](unsigned int n0, std::shared_ptr<collatz_steps_graph> _x) {
+        [=](unsigned int n0, std::shared_ptr<collatz_steps_graph> _x) {
           return f2(n0);
         },
-        [&](unsigned int n0, std::shared_ptr<collatz_steps_graph> _x) {
+        [=](unsigned int n0, std::shared_ptr<collatz_steps_graph> _x) {
           return f3(n0);
         },
         n, collatz_steps(n), collatz_steps_graph_correct(n));

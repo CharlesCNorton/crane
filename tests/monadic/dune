@@ -176,3 +176,14 @@
   (alias runtest)
   (deps thread.t.exe)
   (action (run ./thread.t.exe))))
+
+(subdir monadic
+ (rule
+  (targets monadic.t.exe)
+  (deps Monadic.vo monadic.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} monadic.t.exe monadic.cpp monadic.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps monadic.t.exe)
+  (action (run ./monadic.t.exe))))

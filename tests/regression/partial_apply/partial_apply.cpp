@@ -43,7 +43,7 @@ std::shared_ptr<List<std::shared_ptr<PartialApply::tagged<bool>>>>
 PartialApply::tag_with(const unsigned int n,
                        const std::shared_ptr<List<bool>> &l) {
   return l->template map<std::shared_ptr<PartialApply::tagged<bool>>>(
-      [&](bool x) { return tagged<bool>::ctor::Tag_(n, x); });
+      [=](bool x) { return tagged<bool>::ctor::Tag_(n, x); });
 }
 
 std::shared_ptr<

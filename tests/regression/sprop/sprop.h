@@ -28,13 +28,15 @@ struct Nat {
 };
 
 struct SPropTest {
-  template <typename T1>
-  static inline const T1 sFalse_rect =
-      [](void) { throw std::logic_error("absurd case"); }();
+  template <typename T1> static const T1 &sFalse_rect() {
+    static const T1 v = [](void) { throw std::logic_error("absurd case"); }();
+    return v;
+  }
 
-  template <typename T1>
-  static inline const T1 sFalse_rec =
-      [](void) { throw std::logic_error("absurd case"); }();
+  template <typename T1> static const T1 &sFalse_rec() {
+    static const T1 v = [](void) { throw std::logic_error("absurd case"); }();
+    return v;
+  }
 
   template <typename A> struct Box {
     A box_value;

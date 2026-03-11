@@ -76,7 +76,7 @@ struct CPS {
       return k(1u);
     } else {
       unsigned int n_ = n - 1;
-      return fact_cps(n_, [&](unsigned int r) { return k(((n_ + 1) * r)); });
+      return fact_cps(n_, [=](unsigned int r) { return k(((n_ + 1) * r)); });
     }
   }
 
@@ -93,8 +93,8 @@ struct CPS {
         return k(1u);
       } else {
         unsigned int n_ = n1 - 1;
-        return fib_cps(n_, [&](unsigned int a) {
-          return fib_cps(n1, [&](unsigned int b) { return k((a + b)); });
+        return fib_cps(n_, [=](unsigned int a) {
+          return fib_cps(n1, [=](unsigned int b) { return k((a + b)); });
         });
       }
     }
@@ -183,9 +183,9 @@ struct CPS {
                    [&](const typename tree::Node _args) -> unsigned int {
                      std::shared_ptr<tree> l = _args._a0;
                      std::shared_ptr<tree> r = _args._a1;
-                     return tree_sum_cps(std::move(l), [&](unsigned int sl) {
+                     return tree_sum_cps(std::move(l), [=](unsigned int sl) {
                        return tree_sum_cps(
-                           r, [&](unsigned int sr) { return k((sl + sr)); });
+                           r, [=](unsigned int sr) { return k((sl + sr)); });
                      });
                    }},
         t->v());
@@ -205,7 +205,7 @@ struct CPS {
               unsigned int x = _args._a0;
               std::shared_ptr<List<unsigned int>> rest = _args._a1;
               return sum_cps(std::move(rest),
-                             [&](unsigned int r) { return k((x + r)); });
+                             [=](unsigned int r) { return k((x + r)); });
             }},
         l->v());
   }
@@ -229,7 +229,7 @@ struct CPS {
               std::shared_ptr<List<unsigned int>> rest = _args._a1;
               return partition_cps(
                   p, std::move(rest),
-                  [&](std::shared_ptr<List<unsigned int>> yes,
+                  [=](std::shared_ptr<List<unsigned int>> yes,
                       std::shared_ptr<List<unsigned int>> no) {
                     if (p(x)) {
                       return k(List<unsigned int>::ctor::cons_(x, yes), no);

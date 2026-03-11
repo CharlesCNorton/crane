@@ -1354,12 +1354,10 @@ and pp_cpp_expr env args t =
            else
              pp_global Term x)
     in
-    (* If this globref was rendered as a function accessor (Meyers singleton
-       for template static data members), append () to call the accessor. *)
-    (* If this globref was rendered as a function accessor (Meyers singleton
-       for template static data members), append () to call the accessor.
-       Uses modpath+label matching because functor application creates new
-       constants with distinct canonical names. *)
+    (* Check if this globref was rendered as a Meyers singleton accessor
+       for a template static data member.  Uses modpath+label matching
+       because functor application creates new constants with distinct
+       canonical names that cannot be compared by GlobRef equality. *)
     let is_accessor =
       let x_mp = modpath_of_r x in
       let x_lbl = label_of_r x in
@@ -1371,16 +1369,18 @@ and pp_cpp_expr env args t =
          | None -> false)
       ) !template_static_accessors
     in
-    let base_name = if is_accessor
-      then base_name ++ str "()"
-      else base_name
-    in
-    (match tys, get_containing_eponymous_struct x with
-    | [], _ -> apply base_name
-    | _, Some _ -> apply base_name  (* Type args already handled in base_name *)
+    let full_name = match tys, get_containing_eponymous_struct x with
+    | [], _ -> base_name
+    | _, Some _ -> base_name  (* Type args already handled in base_name *)
     | _ ->
       let ty_args = pp_list (pp_cpp_type false []) tys in
-      apply base_name ++ str "<" ++ ty_args ++ str ">")
+      base_name ++ str "<" ++ ty_args ++ str ">"
+    in
+    let full_name = if is_accessor
+      then full_name ++ str "()"
+      else full_name
+    in
+    apply full_name
   | CPPnamespace (r, t) ->
       (* Use inductive_name_info to get proper namespace name *)
       let (name, _) = inductive_name_info_cached r in
@@ -1843,8 +1843,41 @@ and pp_cpp_fields_with_vis ?(struct_name : Pp.t option) env fields =
   in
   prlist_with_sep fnl pp_group groups
 
+(** Generate a Meyers' singleton accessor for a static data member.
+    Wraps the initializer in a function with a local [static const] variable,
+    guaranteeing initialization on first use.  This avoids the static
+    initialization order fiasco for template static inline members whose
+    initialization order relative to other inline variables is unspecified.
+
+    Registers the accessor in {!template_static_accessors} so that call
+    sites append [()] after the template arguments (see {!pp_cpp_expr}). *)
+let pp_meyers_singleton env id ty expr_pp =
+  (let mp = modpath_of_r id in
+   let lbl = label_of_r id in
+   template_static_accessors := (mp, lbl) :: !template_static_accessors);
+  (* Strip outer [TMconst] since we add our own [const] qualifier. *)
+  let bare_ty = match ty with Tmod (TMconst, inner) -> inner | _ -> ty in
+  h (str "static const " ++ (pp_cpp_type false [] bare_ty) ++ str "& "
+     ++ pp_global Type id ++ str "() {") ++ fnl ()
+  ++ str "  static const " ++ (pp_cpp_type false [] bare_ty)
+     ++ str " v = " ++ expr_pp ++ str ";" ++ fnl ()
+  ++ str "  return v;" ++ fnl ()
+  ++ str "}"
+
 let rec pp_cpp_decl env =
 function
+| Dtemplate (temps, cstr, Dasgn (id, ty, e)) when render_ctx.rc_in_struct ->
+    (* Template variable inside a struct: use Meyers' singleton to avoid
+       static initialization order fiasco.  Without this, other static
+       members that reference this variable may read an uninitialized
+       [std::function] during dynamic initialization. *)
+    let args = pp_list pp_template_param temps in
+    let expr_pp = pp_cpp_expr env [] e in
+    h (str "template <" ++ args ++ str ">")
+    ++ (match cstr with
+        | None -> fnl ()
+        | Some c -> pp_cpp_expr env [] c ++ fnl ())
+    ++ pp_meyers_singleton env id ty expr_pp
 | Dtemplate (temps, cstr, decl) ->
     let args = pp_list pp_template_param temps in
     h (str "template <" ++ args ++ str ">")
@@ -2025,18 +2058,7 @@ function
        - But by wrapping in []() { return expr; }(), inner lambdas are now "local" *)
     let expr_pp = pp_cpp_expr env [] e in
     if render_ctx.rc_in_template then begin
-      (* DESIGN: Static data members in template structs use lazy initialization.
-         Template static inline members have unordered dynamic initialization relative
-         to other inline variables, causing static init order issues when accessed from
-         outside the template. Use a function with a local static (Meyers' singleton)
-         to guarantee initialization on first use. *)
-      (let mp = modpath_of_r id in
-       let lbl = label_of_r id in
-       template_static_accessors := (mp, lbl) :: !template_static_accessors);
-      h (str "static const " ++ (pp_cpp_type false [] ty) ++ str "& " ++ pp_global Type id ++ str "() {") ++ fnl () ++
-      str "  static const " ++ (pp_cpp_type false [] ty) ++ str " v = " ++ expr_pp ++ str ";" ++ fnl () ++
-      str "  return v;" ++ fnl () ++
-      str "}"
+      pp_meyers_singleton env id ty expr_pp
     end
     else begin
       let static_kw = if render_ctx.rc_in_struct then str "static inline " else mt () in

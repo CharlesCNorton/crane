@@ -105,26 +105,26 @@ struct Monadic {
   using State = std::function<std::pair<a, s>(s)>;
 
   template <typename T1, typename T2>
-  static State<T1, T2> state_return(const T2 x, const T1 s) {
-    return std::make_pair(x, s);
+  static State<T1, T2> state_return(const T2 x) {
+    return [=](T1 s) { return std::make_pair(x, s); };
   }
 
-  template <typename T1, typename T2, typename T3,
-            MapsTo<std::pair<T2, T1>, T1> F0,
-            MapsTo<std::pair<T3, T1>, T2, T1> F1>
-  static State<T1, T3> state_bind(F0 &&ma, F1 &&f, const T1 s) {
-    T2 a = ma(s).first;
-    T1 s_ = ma(s).second;
-    return f(a, s_);
+  template <typename T1, typename T2, typename T3, MapsTo<State<T1, T3>, T2> F1>
+  static State<T1, T3> state_bind(const State<T1, T2> ma, F1 &&f) {
+    return [=](T1 s) {
+      T2 a = ma(s).first;
+      T1 s_ = ma(s).second;
+      return f(a)(s_);
+    };
   }
 
-  template <typename T1>
-  static inline const State<T1, T1> state_get =
-      [](T1 s) { return std::make_pair(s, s); };
+  template <typename T1> static const State<T1, T1> &state_get() {
+    static const State<T1, T1> v = [](T1 s) { return std::make_pair(s, s); };
+    return v;
+  }
 
-  template <typename T1>
-  static State<T1, unit> state_put(const T1 s, const T1 _x) {
-    return std::make_pair(unit::tt, s);
+  template <typename T1> static State<T1, unit> state_put(const T1 s) {
+    return [=](T1 _x) { return std::make_pair(unit::tt, s); };
   }
 
   template <typename T1>
@@ -137,9 +137,9 @@ struct Monadic {
           return state_bind<unsigned int, unsigned int, unsigned int>(
               acc, [](unsigned int _x0) {
                 return state_bind<unsigned int, unsigned int, unsigned int>(
-                    state_get<unsigned int>, [](unsigned int n) {
+                    state_get<unsigned int>(), [](unsigned int n) {
                       return state_bind<unsigned int, unit, unsigned int>(
-                          state_put<unsigned int>((n + 1)), [&](unit _x1) {
+                          state_put<unsigned int>((n + 1)), [=](unit _x1) {
                             return state_return<unsigned int, unsigned int>(n);
                           });
                     });
@@ -175,7 +175,13 @@ struct Monadic {
       div_then_sub(20u, 0u, 2u);
 
   static inline const std::pair<unsigned int, unsigned int> test_state =
-      ([&]() -> auto {
-        throw std::logic_error("untranslatable curried proof term");
-      })();
+      count_elements<unsigned int>(List<unsigned int>::ctor::cons_(
+          1u,
+          List<unsigned int>::ctor::cons_(
+              2u,
+              List<unsigned int>::ctor::cons_(
+                  3u, List<unsigned int>::ctor::cons_(
+                          4u, List<unsigned int>::ctor::cons_(
+                                  5u, List<unsigned int>::ctor::nil_()))))))(
+          0u);
 };

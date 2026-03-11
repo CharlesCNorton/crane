@@ -109,6 +109,43 @@ let push_env_types (ids : (Id.t * ml_type) list) =
 let get_env_type (i : int) : ml_type = snd (List.nth tctx.env_types (pred i))
 let reset_env_types () = tctx.env_types <- []
 
+(** Resolve a chain of [Tmeta] indirections to the underlying type. *)
+let rec resolve_tmeta = function
+  | Miniml.Tmeta {contents = Some t} -> resolve_tmeta t
+  | t -> t
+
+(** Return the codomain of an ML type, chasing through arrows and meta
+    indirections.  For [A -> B -> C] this returns [C]. *)
+let rec ml_codomain = function
+  | Miniml.Tarr (_, t2) -> ml_codomain t2
+  | Miniml.Tmeta {contents = Some t} -> ml_codomain t
+  | t -> t
+
+(** Count the number of non-erased (non-[Tdummy]) arrow levels in an ML type.
+    For example [Tdummy -> A -> B -> C] counts as 2 (the dummy is skipped). *)
+let rec count_ml_value_arrows = function
+  | Miniml.Tarr (t1, t2) when not (Mlutil.isTdummy t1) ->
+      1 + count_ml_value_arrows t2
+  | Miniml.Tarr (_, t2) -> count_ml_value_arrows t2
+  | Miniml.Tmeta {contents = Some t} -> count_ml_value_arrows t
+  | _ -> 0
+
+(** Count the total number of arrow levels in an ML type (including erased). *)
+let rec count_ml_arrows = function
+  | Miniml.Tarr (_, t2) -> 1 + count_ml_arrows t2
+  | _ -> 0
+
+(** Convert returned lambdas to capture by value.
+    Lambdas returned from functions outlive the function's stack frame, so
+    capturing by reference ([&]) would create dangling references.  This
+    rewrites [Sreturn (Some (CPPlambda (_, _, _, false)))] to capture by
+    value ([true]). *)
+let return_captures_by_value stmts =
+  List.map (fun s -> match s with
+    | Sreturn (Some (CPPlambda (args, ret, body, false))) ->
+        Sreturn (Some (CPPlambda (args, ret, body, true)))
+    | s -> s) stmts
+
 let ml_type_is_void : ml_type -> bool = function
 | Tglob (r, _, _) -> is_void r
 | _ -> false
@@ -788,11 +825,8 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
            convert the returned lambda to capture by value to avoid
            dangling references to the outer lambda's parameters. *)
         let body_stmts = gen_stmts env (fun x -> Sreturn (Some x)) a in
-        let body_stmts = List.map (fun s -> match s with
-          | Sreturn (Some (CPPlambda (args, ret, body, false))) ->
-              Sreturn (Some (CPPlambda (args, ret, body, true)))
-          | s -> s) body_stmts in
-        CPPlambda (cpp_args, None, body_stmts, false)) in
+        let body_stmts = return_captures_by_value body_stmts in
+        CPPlambda (cpp_args, None, body_stmts, true)) in
       tctx.env_types <- saved_env_types;
       (match filtered_args with
       | [] ->
@@ -1254,10 +1288,6 @@ and eta_fun env f args =
        Only activates when n_args > n_value_dom; otherwise unchanged. *)
     let args, excess_args =
       let is_value_arg = function MLdummy _ -> false | _ -> true in
-      let rec resolve_tmeta = function
-        | Miniml.Tmeta {contents = Some t} -> resolve_tmeta t
-        | t -> t
-      in
       let rec collect_tarr_dom acc = function
         | Miniml.Tarr (t1, t2) -> collect_tarr_dom (resolve_tmeta t1 :: acc) t2
         | _ -> List.rev acc
@@ -1417,17 +1447,36 @@ and eta_fun env f args =
        generating numOption<numNat, unsigned int>() instead of
        numOption<numNat, unsigned int> for qualified access like ::to_nat. *)
     let id_is_typeclass_instance = ref_returns_typeclass id in
-    (* Curried excess args (see split above) indicate a call pattern like
-       div2_rect(f,f0,f1,n)(_res) from Rocq's Function vernacular _correct
-       proof terms.  The intermediate return type would need to be a
-       std::function, and the lambda arguments would need restructuring to
-       match — neither of which the current translation supports.  Since
-       these proof-certificate functions are never called at runtime,
-       generate an abort placeholder. *)
-    if excess_args <> [] then
-      CPPabort "untranslatable curried proof term"
-    else
-    (match ty with
+    (* Curried excess args (see split above) occur when a function returns
+       a function-typed alias (e.g. State S A = S -> A * S) and the call
+       site applies the result immediately.  Generate a chained call:
+       f(primary_args)(excess_args).
+
+       Only generate the chained call when the callee's return type is a
+       concrete function type (indicating a type alias like State).  When
+       the return type is a type variable (e.g. T1 in div2_rect), the
+       excess args likely arise from proof-certificate functions (Function
+       vernac _correct terms) that are never called at runtime.  For those,
+       generate an abort placeholder since inner lambdas would have wrong
+       arities. *)
+    let wrap_excess base =
+      if excess_args = [] then base
+      else
+        (* A [Tglob] codomain indicates a type alias (e.g. [State S A]) that
+           may expand to a function type — chained calls are valid.
+           A [Tvar] codomain (e.g. [T1] in [div2_rect]) signals a polymorphic
+           return where excess args come from proof-certificate terms; these
+           are never called at runtime so we emit an abort placeholder. *)
+        let ret_is_alias = match find_type_opt id with
+          | Some ml_ty -> (match ml_codomain ml_ty with Miniml.Tglob _ -> true | _ -> false)
+          | None -> false
+        in
+        if ret_is_alias then
+          CPPfun_call (base, List.rev (List.map (gen_expr env) excess_args))
+        else
+          CPPabort "untranslatable curried proof term"
+    in
+    let primary_result = match ty with
     | Tfun (dom, cod) ->
       (* Filter domain to exclude type class types (they're now template params)
          and erased types.  Use has_hkt_erasure for deep checking: proof params
@@ -1484,7 +1533,9 @@ and eta_fun env f args =
       if id_is_typeclass_instance && args = [] then
         cglob
       else
-        CPPfun_call (cglob, args))
+        CPPfun_call (cglob, args)
+    in
+    wrap_excess primary_result
   | _ ->
     (* Non-global callee (e.g., a local variable from MLrel).  Filter out
        MLdummy args — these are erased type/prop parameters that have no
@@ -1492,7 +1543,23 @@ and eta_fun env f args =
        type-arg list to filter here; we only need to drop value-level dummies. *)
     let args = List.filter (fun x -> match x with MLdummy _ -> false | _ -> true) args in
     let args = List.map (fun x -> (gen_expr env x)) args in
-    CPPfun_call (gen_expr env f, List.rev args)
+    (* Detect over-application: when a local variable's C++ type has fewer
+       value-domain arrows than the number of ML args, the call must be split
+       into a primary call and a chained application of excess args.
+       Example: [f : A -> State S B] applied as [f(a, s')] becomes [f(a)(s')]. *)
+    let n_value_dom = match f with
+      | MLrel i ->
+        (try count_ml_value_arrows (get_env_type i)
+         with _ -> List.length args)
+      | _ -> List.length args
+    in
+    let n_args = List.length args in
+    if n_args > n_value_dom && n_value_dom > 0 then
+      let primary = List.rev (List.firstn n_value_dom args) in
+      let excess = List.rev (List.skipn n_value_dom args) in
+      CPPfun_call (CPPfun_call (gen_expr env f, primary), excess)
+    else
+      CPPfun_call (gen_expr env f, List.rev args)
 
 and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
   (* Get type variables in scope from enclosing function's template parameters *)
@@ -3253,11 +3320,27 @@ let detect_cps_params (self_ref : GlobRef.t) (n_params : int) (body : ml_ast) : 
 
 (** TODO: CLEANUP: dom and cod are redundant with ty *)
 let gen_dfun n b dom cod ty temps =
-  let ids,b = collect_lams b in
   let rec get_dom l ty = match ty with
     | Tarr (t1, t2) -> get_dom (t1 :: l) t2
     | _ -> l in
   let mldom = get_dom [] ty in
+  (* Limit lambda collection to the number of type arrows.
+     When a type alias like [State S A = S -> A * S] is used as a return type,
+     the extraction may fully uncurry the body (producing more lambdas than
+     the type has arrows), but the type [ty] preserves the alias.  We must
+     only collect as many lambdas as the type has domain arrows, leaving the
+     rest in the body as returned closures (C++ lambdas). *)
+  let n_type_dom = List.length mldom in
+  let all_ids, inner_b = collect_lams b in
+  let ids, b =
+    if List.length all_ids > n_type_dom then
+      let n_excess = List.length all_ids - n_type_dom in
+      let kept_ids = List.skipn n_excess all_ids in
+      let excess_ids = List.firstn n_excess all_ids in
+      (kept_ids, named_lams excess_ids inner_b)
+    else
+      (all_ids, inner_b)
+  in
   (* get_missing computes the types for eta-expansion parameters.
      mldom contains domain types in reversed order (innermost type first).
      ids contains explicit lambdas in reversed order (innermost lambda first).
@@ -3330,6 +3413,21 @@ let gen_dfun n b dom cod ty temps =
   let ids = if List.length ids = List.length sig_types_for_ids then
     List.map2 (fun (id, body_ty) sig_ty ->
       (id, merge_unknown body_ty sig_ty)
+    ) ids sig_types_for_ids
+  else ids in
+  (* Replace body lambda types with signature types for env_types tracking,
+     but ONLY when the signature type has fewer arrows than the body type.
+     This handles type aliases like [State S A = S -> A * S] where expansion
+     adds extra arrows.  Using signature types in env_types ensures that inner
+     call sites can detect over-application and generate chained calls
+     (e.g. f(a)(s') instead of f(a, s')).
+     We must NOT replace unconditionally, because that would make parameter
+     types in the .cpp definition differ from the .h declaration (which uses
+     gen_sfun with expanded types). *)
+  let ids = if List.length ids = List.length sig_types_for_ids then
+    List.map2 (fun (id, body_ty) sig_ty ->
+      if count_ml_arrows body_ty > count_ml_arrows sig_ty then (id, sig_ty)
+      else (id, body_ty)
     ) ids sig_types_for_ids
   else ids in
   (* Detect which function-typed parameters are CPS parameters (see
@@ -3612,8 +3710,7 @@ let gen_dfun n b dom cod ty temps =
         | Some stmts -> stmts
         | None ->
           let b = List.map (glob_subst_stmt n rec_call) (gen_stmts env cofix_wrap b) in
-          (* let b = List.map forward_fun_args b in *)
-          b
+          return_captures_by_value b
       in
       clear_current_type_vars ();
       clear_current_param_types ();
