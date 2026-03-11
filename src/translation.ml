@@ -1453,7 +1453,50 @@ and eta_fun env f args =
       end
       else filtered
     in
-    let all_type_args = typeclass_type_args @ regular_type_args in
+    (* When regular_type_args is empty but the callee's C++ type contains
+       promoted type vars (Tvar(1000, Some name) — from record field types
+       like Pack.carrier), resolve them via the typeclass instances' promoted
+       type bindings.  Without this, calls like run_twice<nat_pack>() miss
+       the carrier template argument. *)
+    let promoted_type_args =
+      if regular_type_args = [] && typeclass_ml_args <> [] then
+        (* Collect promoted type var names from the C++ function type *)
+        let rec collect_promoted_names acc = function
+          | Tvar (1000, Some name) ->
+            if List.exists (fun n -> Id.equal n name) acc then acc
+            else acc @ [name]
+          | Tfun (dom, cod) ->
+            let acc = List.fold_left collect_promoted_names acc dom in
+            collect_promoted_names acc cod
+          | Tmod (_, t) | Tshared_ptr t | Tunique_ptr t | Tref t ->
+            collect_promoted_names acc t
+          | Tglob (_, ts, _) | Tvariant ts ->
+            List.fold_left collect_promoted_names acc ts
+          | _ -> acc
+        in
+        let promoted_names = collect_promoted_names [] ty in
+        if promoted_names <> [] then
+          (* Build substitution map from typeclass instances *)
+          let subst_map = List.concat_map (fun tc_arg ->
+            match tc_arg with
+            | MLglob (r, _) ->
+              let bindings = Table.get_instance_promoted_types r in
+              List.map (fun (var_name, ml_ty) ->
+                let cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty tvars ml_ty in
+                (var_name, cpp_ty)
+              ) bindings
+            | _ -> []
+          ) typeclass_ml_args in
+          (* Resolve each promoted name to its concrete type *)
+          List.filter_map (fun name ->
+            match List.find_opt (fun (vid, _) -> Id.equal vid name) subst_map with
+            | Some (_, concrete) -> Some concrete
+            | None -> None
+          ) promoted_names
+        else []
+      else []
+    in
+    let all_type_args = typeclass_type_args @ regular_type_args @ promoted_type_args in
     let cglob = mk_cppglob id all_type_args in
     (* Check if this is a typeclass instance used as a type (for :: access).
        When all args are consumed (domain and args both empty after filtering),
@@ -3971,7 +4014,10 @@ let gen_decl n b ty =
   match cty with
   | Tfun (dom, cod) -> let (f, env) = gen_dfun n b dom cod ty temps in f , env , tvars
   | _ ->
+    let saved_return_type = tctx.current_cpp_return_type in
+    tctx.current_cpp_return_type <- Some cty;
     let inner = Dasgn (n, cty,  gen_expr (empty_env ()) b) in
+    tctx.current_cpp_return_type <- saved_return_type;
     (match temps with
       | [] -> inner, empty_env () , tvars
       | l -> Dtemplate (l, None, inner), empty_env () , tvars)
@@ -4100,7 +4146,14 @@ let gen_spec n b ty =
   match ty with
   | Tfun (dom, cod) -> gen_sfun n b dom cod temps
   | _ ->
+    (* Expose the constant's C++ type so that inner call sites can recover
+       erased template type args (see try_recover_erased_return_type).
+       Without this, calls like pick<natBoxed>() inside a constant body
+       cannot deduce the missing type parameter. *)
+    let saved_return_type = tctx.current_cpp_return_type in
+    tctx.current_cpp_return_type <- Some ty;
     let b = gen_expr (empty_env ()) b in
+    tctx.current_cpp_return_type <- saved_return_type;
     let inner = Dasgn (n, Tmod (TMconst, ty), b) in
     (match temps with
       | [] -> inner, empty_env ()

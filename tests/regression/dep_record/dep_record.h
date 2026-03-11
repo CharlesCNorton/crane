@@ -121,14 +121,14 @@ struct DepRecord {
   }
 
   static inline const unsigned int test_fold_add =
-      mfold<nat_monoid>(List<unsigned int>::ctor::cons_(
+      mfold<nat_monoid, unsigned int>(List<unsigned int>::ctor::cons_(
           1u, List<unsigned int>::ctor::cons_(
                   2u, List<unsigned int>::ctor::cons_(
                           3u, List<unsigned int>::ctor::cons_(
                                   4u, List<unsigned int>::ctor::nil_())))));
 
   static inline const unsigned int test_fold_mul =
-      mfold<nat_mul_monoid>(List<unsigned int>::ctor::cons_(
+      mfold<nat_mul_monoid, unsigned int>(List<unsigned int>::ctor::cons_(
           2u, List<unsigned int>::ctor::cons_(
                   3u, List<unsigned int>::ctor::cons_(
                           4u, List<unsigned int>::ctor::nil_()))));

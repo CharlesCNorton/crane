@@ -1675,3 +1675,25 @@
   (alias runtest)
   (deps todo_inline_custom_symbol.t.exe)
   (action (run ./todo_inline_custom_symbol.t.exe))))
+
+(subdir todo_type_app_instance_alias
+ (rule
+  (targets todo_type_app_instance_alias.t.exe)
+  (deps TodoTypeAppInstanceAlias.vo todo_type_app_instance_alias.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_type_app_instance_alias.t.exe todo_type_app_instance_alias.cpp todo_type_app_instance_alias.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_type_app_instance_alias.t.exe)
+  (action (run ./todo_type_app_instance_alias.t.exe))))
+
+(subdir todo_type_subst_pack_alias
+ (rule
+  (targets todo_type_subst_pack_alias.t.exe)
+  (deps TodoTypeSubstPackAlias.vo todo_type_subst_pack_alias.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_type_subst_pack_alias.t.exe todo_type_subst_pack_alias.cpp todo_type_subst_pack_alias.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_type_subst_pack_alias.t.exe)
+  (action (run ./todo_type_subst_pack_alias.t.exe))))

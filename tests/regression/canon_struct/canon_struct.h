@@ -47,7 +47,7 @@ struct CanonStruct {
     return _tcI0::eqb(x, y);
   }
 
-  static inline const bool test_nat = same<nat_eqType>(3u, 5u);
+  static inline const bool test_nat = same<nat_eqType, unsigned int>(3u, 5u);
 
-  static inline const bool test_bool = same<bool_eqType>(true, false);
+  static inline const bool test_bool = same<bool_eqType, bool>(true, false);
 };

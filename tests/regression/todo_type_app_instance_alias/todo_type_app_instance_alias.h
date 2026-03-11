@@ -33,6 +33,6 @@ struct TodoTypeAppInstanceAlias {
   }
 
   static inline const unsigned int test_value = [](void) {
-    return (pick<natBoxed>() + pick<natBoxed>());
+    return (pick<natBoxed, unsigned int>() + pick<natBoxed, unsigned int>());
   }();
 };

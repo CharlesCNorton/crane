@@ -49,5 +49,6 @@ struct TodoTypeSubstPackAlias {
   };
   static_assert(Pack<nat_pack>);
 
-  static inline const unsigned int test_value = run_twice<nat_pack>();
+  static inline const unsigned int test_value =
+      run_twice<nat_pack, unsigned int>();
 };

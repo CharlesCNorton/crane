@@ -33,5 +33,5 @@ struct TodoErasedInstanceParam {
   }
 
   static inline const unsigned int test_value =
-      (pick<natDefault>() + pick<natDefault>());
+      (pick<natDefault, unsigned int>() + pick<natDefault, unsigned int>());
 };
