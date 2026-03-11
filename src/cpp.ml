@@ -1387,6 +1387,18 @@ and pp_cpp_expr env args t =
       h (name ++ str "::" ++ pp_cpp_expr env args t)
   | CPPfun_call (CPPglob (n,tys, Some ci), ts) when ci.ci_inline <> None ->
     let s = Option.get ci.ci_inline in
+    (* When the custom string has no % placeholders at all, it's a bare symbol
+       name (e.g. "inline_inc_impl").  Render it as a normal function call with
+       explicit type args and value args: symbol<tys>(args). *)
+    let has_placeholder = String.contains s '%' in
+    if not has_placeholder then
+      let ty_args_s = match tys with
+        | [] -> mt ()
+        | _ -> str "<" ++ pp_list (pp_cpp_type false []) tys ++ str ">"
+      in
+      let args_s = pp_list (pp_cpp_expr env args) (List.rev ts) in
+      str s ++ ty_args_s ++ str "(" ++ args_s ++ str ")"
+    else
     let cmds = parse_numbered_args "a" (fun i -> CCarg i) s in
     let cmds = List.fold_left
     (fun prev curr -> match curr with

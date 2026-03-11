@@ -1653,3 +1653,25 @@
   (alias runtest)
   (deps program_targets_region_scan.t.exe)
   (action (run ./program_targets_region_scan.t.exe))))
+
+(subdir todo_inline_custom_poly_id
+ (rule
+  (targets todo_inline_custom_poly_id.t.exe)
+  (deps TodoInlineCustomPolyId.vo todo_inline_custom_poly_id.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_inline_custom_poly_id.t.exe todo_inline_custom_poly_id.cpp todo_inline_custom_poly_id.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_inline_custom_poly_id.t.exe)
+  (action (run ./todo_inline_custom_poly_id.t.exe))))
+
+(subdir todo_inline_custom_symbol
+ (rule
+  (targets todo_inline_custom_symbol.t.exe)
+  (deps TodoInlineCustomSymbol.vo todo_inline_custom_symbol.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} todo_inline_custom_symbol.t.exe todo_inline_custom_symbol.cpp todo_inline_custom_symbol.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps todo_inline_custom_symbol.t.exe)
+  (action (run ./todo_inline_custom_symbol.t.exe))))

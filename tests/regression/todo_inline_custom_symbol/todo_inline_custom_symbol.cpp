@@ -12,7 +12,7 @@
 #include <variant>
 
 unsigned int TodoInlineCustomSymbol::alias(const unsigned int _x0) {
-  return inline_inc_impl;
+  return inline_inc_impl(_x0);
 }
 
 unsigned int TodoInlineCustomSymbol::twice(const unsigned int n) {
