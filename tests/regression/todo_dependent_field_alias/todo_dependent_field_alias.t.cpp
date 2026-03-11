@@ -4,8 +4,7 @@
 
 #include "todo_dependent_field_alias.h"
 
-int main()
-{
-    assert(TodoDependentFieldAlias::test_value == 5u);
-    return 0;
+int main() {
+  assert(TodoDependentFieldAlias::test_value == 5u);
+  return 0;
 }

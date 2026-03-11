@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <jump_targets.h>
 
-int main()
-{
-    (void)JumpTargets::t;
-    return 0;
+int main() {
+  (void)JumpTargets::t;
+  return 0;
 }

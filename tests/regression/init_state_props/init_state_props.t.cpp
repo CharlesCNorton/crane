@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <init_state_props.h>
 
-int main()
-{
-    (void)InitStateProps::t;
-    return 0;
+int main() {
+  (void)InitStateProps::t;
+  return 0;
 }

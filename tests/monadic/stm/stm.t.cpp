@@ -18,22 +18,20 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
   auto x = stmtest::io_inc(4);
@@ -43,4 +41,5 @@ int main() {
   return 0;
 }
 
-// clang++ -I. -I ../../theories/cpp -std=c++23 stm.cpp stm.t.cpp -o stm.t.exe; ./stm.t.exe
+// clang++ -I. -I ../../theories/cpp -std=c++23 stm.cpp stm.t.cpp -o stm.t.exe;
+// ./stm.t.exe

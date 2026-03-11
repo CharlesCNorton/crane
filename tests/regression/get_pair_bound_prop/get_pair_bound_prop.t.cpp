@@ -4,9 +4,8 @@
 
 #include <cassert>
 
-int main()
-{
-    auto val = GetPairBoundProp::get_pair(GetPairBoundProp::sample, 10u);
-    assert(val < 256u);
-    return 0;
+int main() {
+  auto val = GetPairBoundProp::get_pair(GetPairBoundProp::sample, 10u);
+  assert(val < 256u);
+  return 0;
 }

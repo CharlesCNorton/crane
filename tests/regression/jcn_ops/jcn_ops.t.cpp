@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <jcn_ops.h>
 
-int main()
-{
-    (void)JcnOps::t;
-    return 0;
+int main() {
+  (void)JcnOps::t;
+  return 0;
 }

@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <valid_layout_window.h>
 
-int main()
-{
-    (void)ValidLayoutWindow::t;
-    return 0;
+int main() {
+  (void)ValidLayoutWindow::t;
+  return 0;
 }

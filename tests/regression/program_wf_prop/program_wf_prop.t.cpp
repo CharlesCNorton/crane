@@ -4,10 +4,11 @@
 
 #include <cassert>
 
-int main()
-{
-    auto jt = ProgramWfProp::jump_target(ProgramWfProp::instruction::ctor::JUN_(100u));
-    assert(jt.has_value() && *jt == 100u);
-    assert(!ProgramWfProp::jump_target(ProgramWfProp::instruction::ctor::NOP_()).has_value());
-    return 0;
+int main() {
+  auto jt =
+      ProgramWfProp::jump_target(ProgramWfProp::instruction::ctor::JUN_(100u));
+  assert(jt.has_value() && *jt == 100u);
+  assert(!ProgramWfProp::jump_target(ProgramWfProp::instruction::ctor::NOP_())
+              .has_value());
+  return 0;
 }

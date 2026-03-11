@@ -8,59 +8,56 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
-
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
-    // Test 1: Pos.to_nat
-    {
-        ASSERT(BinaryNums::pos_to_nat == 7);
-        std::cout << "Test 1 (pos_to_nat 7): PASSED" << std::endl;
-    }
+  // Test 1: Pos.to_nat
+  {
+    ASSERT(BinaryNums::pos_to_nat == 7);
+    std::cout << "Test 1 (pos_to_nat 7): PASSED" << std::endl;
+  }
 
-    // Test 2: N.to_nat
-    {
-        ASSERT(BinaryNums::n_to_nat == 15);
-        std::cout << "Test 2 (n_to_nat 15): PASSED" << std::endl;
-    }
+  // Test 2: N.to_nat
+  {
+    ASSERT(BinaryNums::n_to_nat == 15);
+    std::cout << "Test 2 (n_to_nat 15): PASSED" << std::endl;
+  }
 
-    // Test 3: Z.to_nat
-    {
-        ASSERT(BinaryNums::z_to_nat == 10);
-        std::cout << "Test 3 (z_to_nat 10): PASSED" << std::endl;
-    }
+  // Test 3: Z.to_nat
+  {
+    ASSERT(BinaryNums::z_to_nat == 10);
+    std::cout << "Test 3 (z_to_nat 10): PASSED" << std::endl;
+  }
 
-    // Test 4: N.compare
-    {
-        ASSERT(BinaryNums::n_compare_result == comparison::Lt);
-        std::cout << "Test 4 (N.compare 3 5): PASSED" << std::endl;
-    }
+  // Test 4: N.compare
+  {
+    ASSERT(BinaryNums::n_compare_result == comparison::Lt);
+    std::cout << "Test 4 (N.compare 3 5): PASSED" << std::endl;
+  }
 
-    // Test 5: Z.compare
-    {
-        ASSERT(BinaryNums::z_compare_result == comparison::Lt);
-        std::cout << "Test 5 (Z.compare -3 5): PASSED" << std::endl;
-    }
+  // Test 5: Z.compare
+  {
+    ASSERT(BinaryNums::z_compare_result == comparison::Lt);
+    std::cout << "Test 5 (Z.compare -3 5): PASSED" << std::endl;
+  }
 
-    if (testStatus == 0) {
-        std::cout << "\nAll binary_nums tests passed!" << std::endl;
-    } else {
-        std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
-    }
-    return testStatus;
+  if (testStatus == 0) {
+    std::cout << "\nAll binary_nums tests passed!" << std::endl;
+  } else {
+    std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
+  }
+  return testStatus;
 }

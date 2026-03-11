@@ -9,6 +9,4 @@
 #include <bsl_variant.h>
 #include <nat_bde.h>
 
-namespace BloombergLP {
-
-}
+namespace BloombergLP {}

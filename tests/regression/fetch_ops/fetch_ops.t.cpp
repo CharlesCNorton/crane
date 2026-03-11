@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <fetch_ops.h>
 
-int main()
-{
-    (void)FetchOps::t;
-    return 0;
+int main() {
+  (void)FetchOps::t;
+  return 0;
 }

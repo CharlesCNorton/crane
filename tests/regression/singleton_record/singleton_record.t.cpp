@@ -12,42 +12,40 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
-    // Test field access
-    ASSERT(SingletonRecord::test_get == 5u);
-    ASSERT(SingletonRecord::test_get2 == 5u);
+  // Test field access
+  ASSERT(SingletonRecord::test_get == 5u);
+  ASSERT(SingletonRecord::test_get2 == 5u);
 
-    // Test pattern match unwrap
-    ASSERT(SingletonRecord::test_unwrap == 5u);
+  // Test pattern match unwrap
+  ASSERT(SingletonRecord::test_unwrap == 5u);
 
-    // Test double: 5 * 2 = 10
-    ASSERT(SingletonRecord::test_double == 10u);
+  // Test double: 5 * 2 = 10
+  ASSERT(SingletonRecord::test_double == 10u);
 
-    // Test polymorphic unbox
-    ASSERT(SingletonRecord::test_unbox == 3u);
+  // Test polymorphic unbox
+  ASSERT(SingletonRecord::test_unbox == 3u);
 
-    // Test double unbox
-    ASSERT(SingletonRecord::test_double_unbox == 3u);
+  // Test double unbox
+  ASSERT(SingletonRecord::test_double_unbox == 3u);
 
-    // Test function wrapper: 1 + 7 = 8
-    ASSERT(SingletonRecord::test_fn == 8u);
+  // Test function wrapper: 1 + 7 = 8
+  ASSERT(SingletonRecord::test_fn == 8u);
 
-    return testStatus;
+  return testStatus;
 }

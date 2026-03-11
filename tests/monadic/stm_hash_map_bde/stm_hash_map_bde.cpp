@@ -14,6 +14,4 @@
 #include <mini_stm.h>
 #include <stm_hash_map_bde.h>
 
-namespace BloombergLP {
-
-}
+namespace BloombergLP {}

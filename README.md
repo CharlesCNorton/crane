@@ -1,6 +1,6 @@
 # Crane
 
-<img src="./doc/logo.png" width="120px" height="120px">
+<img src="./website/assets/logo.png" width="120px" height="120px">
 
 ## Menu
 

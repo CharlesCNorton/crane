@@ -20,12 +20,14 @@ open Table
 exception TODO
 
 (** {2 Local Inductive Context}
-    Tracks inductives defined in the current module scope.
-    When set, references to these inductives won't be wrapped in Tnamespace,
-    so they appear as sibling types rather than outer-namespace-qualified types. *)
+    Tracks inductives defined in the current module scope. When set, references
+    to these inductives won't be wrapped in Tnamespace, so they appear as
+    sibling types rather than outer-namespace-qualified types. *)
 
 val add_local_inductive : GlobRef.t -> unit
+
 val clear_local_inductives : unit -> unit
+
 val get_local_inductives : unit -> GlobRef.t list
 
 (** {2 Type Conversion}
@@ -33,10 +35,13 @@ val get_local_inductives : unit -> GlobRef.t list
 
 (** Convert an ML type to C++ type representation.
     @param env The current variable environment
-    @param ns Set of inductive references that should be treated as local (no namespace wrapper)
+    @param ns
+      Set of inductive references that should be treated as local (no namespace
+      wrapper)
     @param tvars Type variable names for substitution
     @param ml_type The ML type to convert *)
-val convert_ml_type_to_cpp_type : env -> Refset'.t -> Id.t list -> ml_type -> cpp_type
+val convert_ml_type_to_cpp_type :
+  env -> Refset'.t -> Id.t list -> ml_type -> cpp_type
 
 (** Check if a C++ type is erased to std::any (for indexed inductive methods).
     Returns true if the type is Tany or contains an unnamed Tvar. *)
@@ -52,88 +57,132 @@ val gen_cpp_case : ml_type -> ml_ast -> env -> ml_branch array -> cpp_expr
 
 (** {2 Declaration Generation} *)
 
-(** Generate C++ declaration for a term definition.
-    Returns (decl, env, type_variables). *)
+(** Generate C++ declaration for a term definition. Returns (decl, env,
+    type_variables). *)
 val gen_decl : GlobRef.t -> ml_ast -> ml_type -> cpp_decl * env * variable list
 
-(** Similar to gen_decl but returns None for non-function types (used by pp_hdecl). *)
-val gen_decl_for_pp : GlobRef.t -> ml_ast -> ml_type -> cpp_decl option * env * variable list
+(** Similar to gen_decl but returns None for non-function types (used by
+    pp_hdecl). *)
+val gen_decl_for_pp :
+  GlobRef.t -> ml_ast -> ml_type -> cpp_decl option * env * variable list
 
 (** Generate C++ function specification (declaration without body). *)
 val gen_spec : GlobRef.t -> ml_ast -> ml_type -> cpp_decl * env
 
 (** Generate C++ definitions for a group of mutually recursive functions. *)
-val gen_dfuns : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env * variable list) list
+val gen_dfuns :
+  GlobRef.t array * ml_ast array * ml_type array ->
+  (cpp_decl * env * variable list) list
 
-(** Generate C++ headers (declarations) for a group of mutually recursive functions. *)
-val gen_dfuns_header : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
+(** Generate C++ headers (declarations) for a group of mutually recursive
+    functions. *)
+val gen_dfuns_header :
+  GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
 
 (** Generate forward declarations matching the full definition signatures.
-    Unlike gen_dfuns_header which may simplify signatures for non-template functions,
-    this always derives specs from gen_decl_for_dfuns for signature consistency. *)
-val gen_dfuns_spec : GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
+    Unlike gen_dfuns_header which may simplify signatures for non-template
+    functions, this always derives specs from gen_decl_for_dfuns for signature
+    consistency. *)
+val gen_dfuns_spec :
+  GlobRef.t array * ml_ast array * ml_type array -> (cpp_decl * env) list
 
-(** Generate both spec and def for a group of mutually recursive functions in one pass.
-    Calls gen_decl_for_dfuns ONCE per function, then derives both spec and def.
-    Returns list of (spec, def_option, lifted_decls). *)
-val gen_dfuns_dual : is_header:bool ->
+(** Generate both spec and def for a group of mutually recursive functions in
+    one pass. Calls gen_decl_for_dfuns ONCE per function, then derives both spec
+    and def. Returns list of (spec, def_option, lifted_decls). *)
+val gen_dfuns_dual :
+  is_header:bool ->
   GlobRef.t array * ml_ast array * ml_type array ->
   ((cpp_decl * env) * (cpp_decl * env) option * cpp_decl list) list
 
-(** Generate both spec and def for a single Dterm function in one pass.
-    Calls gen_decl_for_pp ONCE, then derives both spec and def.
-    Returns (spec_opt, def_opt, tvars). *)
-val gen_decl_for_pp_dual : is_header:bool ->
-  GlobRef.t -> ml_ast -> ml_type ->
+(** Generate both spec and def for a single Dterm function in one pass. Calls
+    gen_decl_for_pp ONCE, then derives both spec and def. Returns (spec_opt,
+    def_opt, tvars). *)
+val gen_decl_for_pp_dual :
+  is_header:bool ->
+  GlobRef.t ->
+  ml_ast ->
+  ml_type ->
   (cpp_decl * env) option * (cpp_decl * env) option * variable list
 
-(** Convert a definition (Dfundef) to a declaration (Dfundecl) by stripping the body. *)
+(** Convert a definition (Dfundef) to a declaration (Dfundecl) by stripping the
+    body. *)
 val decl_to_spec : cpp_decl -> cpp_decl
 
-(** Clear and return any pending lifted declarations.
-    Used to prevent stale lifted decls from leaking between extraction passes. *)
+(** Clear and return any pending lifted declarations. Used to prevent stale
+    lifted decls from leaking between extraction passes. *)
 val take_lifted_decls : unit -> cpp_decl list
 
 (** {2 Inductive Type Generation} *)
 
-(** Generate C++ code for an inductive type (older style with make functions). *)
-val gen_ind_cpp : variable list -> GlobRef.t -> GlobRef.t array -> ml_type list array -> cpp_decl
+(** Generate C++ code for an inductive type (older style with make functions).
+*)
+val gen_ind_cpp :
+  variable list ->
+  GlobRef.t ->
+  GlobRef.t array ->
+  ml_type list array ->
+  cpp_decl
 
 (** Generate C++ code for a record type. *)
-val gen_record_cpp : GlobRef.t -> GlobRef.t option list -> ml_ind_packet -> cpp_decl
+val gen_record_cpp :
+  GlobRef.t -> GlobRef.t option list -> ml_ind_packet -> cpp_decl
 
 (** Generate C++ concept for a type class. *)
-val gen_typeclass_cpp : GlobRef.t -> GlobRef.t option list -> ml_ind_packet -> cpp_decl
+val gen_typeclass_cpp :
+  GlobRef.t -> GlobRef.t option list -> ml_ind_packet -> cpp_decl
 
 (** Generate C++ header for an inductive type (older style). *)
-val gen_ind_header : variable list -> GlobRef.t -> GlobRef.t array -> ml_type list array -> cpp_decl
+val gen_ind_header :
+  variable list ->
+  GlobRef.t ->
+  GlobRef.t array ->
+  ml_type list array ->
+  cpp_decl
 
-(** Generate C++ header for an inductive type (v2 style: encapsulated struct with methods).
+(** Generate C++ header for an inductive type (v2 style: encapsulated struct
+    with methods).
     @param vars Template type parameter names
     @param name The inductive type reference
     @param cnames Constructor references
     @param tys Constructor argument types
-    @param method_candidates Functions to generate as methods: (func_ref, body, type, this_position) *)
-val gen_ind_header_v2 : ?is_mutual:bool -> variable list -> GlobRef.t -> GlobRef.t array -> ml_type list array -> (GlobRef.t * ml_ast * ml_type * int) list -> inductive_kind -> cpp_decl
+    @param method_candidates
+      Functions to generate as methods: (func_ref, body, type, this_position) *)
+val gen_ind_header_v2 :
+  ?is_mutual:bool ->
+  variable list ->
+  GlobRef.t ->
+  GlobRef.t array ->
+  ml_type list array ->
+  (GlobRef.t * ml_ast * ml_type * int) list ->
+  inductive_kind ->
+  cpp_decl
 
-(** Generate methods for eponymous records.
-    For records merged into module structs, this generates instance methods from functions
-    that take the record as first argument.
+(** Generate methods for eponymous records. For records merged into module
+    structs, this generates instance methods from functions that take the record
+    as first argument.
     @param name The record type reference
     @param vars Template type parameter names
-    @param method_candidates Functions to generate as methods: (func_ref, body, type, this_position)
+    @param method_candidates
+      Functions to generate as methods: (func_ref, body, type, this_position)
     @return List of method fields with visibility *)
-val gen_record_methods : GlobRef.t -> variable list -> (GlobRef.t * ml_ast * ml_type * int) list -> (cpp_field * cpp_visibility) list
+val gen_record_methods :
+  GlobRef.t ->
+  variable list ->
+  (GlobRef.t * ml_ast * ml_type * int) list ->
+  (cpp_field * cpp_visibility) list
 
 (** {2 Type Class Instance Generation} *)
 
-(** Generate a C++ struct for a type class instance.
-    Type class instances become structs with static methods.
-    Returns (struct_decl option, class_ref option, type_args).
-    The class_ref and type_args are used by cpp.ml to generate static_assert
-    verifying the instance satisfies the concept. *)
-val gen_instance_struct : GlobRef.t -> ml_ast -> ml_type
-    -> cpp_decl option * GlobRef.t option * ml_type list
+(** Generate a C++ struct for a type class instance. Type class instances become
+    structs with static methods. Returns (struct_decl option, class_ref option,
+    type_args). The class_ref and type_args are used by cpp.ml to generate
+    static_assert verifying the instance satisfies the concept. *)
+val gen_instance_struct :
+  GlobRef.t ->
+  ml_ast ->
+  ml_type ->
+  cpp_decl option * GlobRef.t option * ml_type list
 
-(** Check if a term is a type class instance (constructs a type class record). *)
+(** Check if a term is a type class instance (constructs a type class record).
+*)
 val is_typeclass_instance : ml_ast -> ml_type -> bool

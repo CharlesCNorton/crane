@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <nested_record_update_qual.h>
 
-int main()
-{
-    (void)NestedRecordUpdateQual::t;
-    return 0;
+int main() {
+  (void)NestedRecordUpdateQual::t;
+  return 0;
 }

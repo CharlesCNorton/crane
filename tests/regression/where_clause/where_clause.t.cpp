@@ -8,64 +8,63 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
 #define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
-
 int main() {
-    // Test 1: eval Plus
-    {
-        ASSERT(WhereClause::test_eval_plus == 7);  // 3 + 4
-        std::cout << "Test 1 (eval Plus): PASSED" << std::endl;
-    }
+  // Test 1: eval Plus
+  {
+    ASSERT(WhereClause::test_eval_plus == 7); // 3 + 4
+    std::cout << "Test 1 (eval Plus): PASSED" << std::endl;
+  }
 
-    // Test 2: eval Times
-    {
-        ASSERT(WhereClause::test_eval_times == 30);  // 5 * 6
-        std::cout << "Test 2 (eval Times): PASSED" << std::endl;
-    }
+  // Test 2: eval Times
+  {
+    ASSERT(WhereClause::test_eval_times == 30); // 5 * 6
+    std::cout << "Test 2 (eval Times): PASSED" << std::endl;
+  }
 
-    // Test 3: eval nested
-    {
-        ASSERT(WhereClause::test_eval_nested == 7);  // (2*3) + 1
-        std::cout << "Test 3 (eval nested): PASSED" << std::endl;
-    }
+  // Test 3: eval nested
+  {
+    ASSERT(WhereClause::test_eval_nested == 7); // (2*3) + 1
+    std::cout << "Test 3 (eval nested): PASSED" << std::endl;
+  }
 
-    // Test 4: expr_size
-    {
-        ASSERT(WhereClause::test_size == 5);  // Plus(Times(Num,Num), Num) = 1+1+1+1+1
-        std::cout << "Test 4 (expr_size): PASSED" << std::endl;
-    }
+  // Test 4: expr_size
+  {
+    ASSERT(WhereClause::test_size ==
+           5); // Plus(Times(Num,Num), Num) = 1+1+1+1+1
+    std::cout << "Test 4 (expr_size): PASSED" << std::endl;
+  }
 
-    // Test 5: beval
-    {
-        ASSERT(WhereClause::test_beval == true);  // BAnd BTrue (BNot BFalse)
-        std::cout << "Test 5 (beval): PASSED" << std::endl;
-    }
+  // Test 5: beval
+  {
+    ASSERT(WhereClause::test_beval == true); // BAnd BTrue (BNot BFalse)
+    std::cout << "Test 5 (beval): PASSED" << std::endl;
+  }
 
-    // Test 6: aeval
-    {
-        ASSERT(WhereClause::test_aeval == 10);  // AIf (BAnd T T) 10 20 => 10
-        std::cout << "Test 6 (aeval): PASSED" << std::endl;
-    }
+  // Test 6: aeval
+  {
+    ASSERT(WhereClause::test_aeval == 10); // AIf (BAnd T T) 10 20 => 10
+    std::cout << "Test 6 (aeval): PASSED" << std::endl;
+  }
 
-    if (testStatus == 0) {
-        std::cout << "\nAll where_clause tests passed!" << std::endl;
-    } else {
-        std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
-    }
-    return testStatus;
+  if (testStatus == 0) {
+    std::cout << "\nAll where_clause tests passed!" << std::endl;
+  } else {
+    std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
+  }
+  return testStatus;
 }

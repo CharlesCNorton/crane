@@ -1,5 +1,4 @@
 # Bloomberg-style settings
-align-pattern-matching-bar = paren
 assignment-operator = end-line
 break-before-in = fit-or-vertical
 break-cases = fit-or-vertical
@@ -11,7 +10,7 @@ break-fun-sig = fit-or-vertical
 break-separators = after
 break-sequences = true
 break-string-literals = auto
-break-struct = true
+break-struct = force
 cases-exp-indent = 2
 cases-matching-exp-indent = normal
 disambiguate-non-breaking-match = false

@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <modulo_wrap.h>
 
-int main()
-{
-    (void)ModuloWrap::t;
-    return 0;
+int main() {
+  (void)ModuloWrap::t;
+  return 0;
 }

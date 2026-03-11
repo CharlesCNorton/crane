@@ -17,55 +17,51 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 // Helper to convert list to vector for testing
-std::vector<unsigned int> list_to_vector(const std::shared_ptr<List<unsigned int>>& l) {
+std::vector<unsigned int>
+list_to_vector(const std::shared_ptr<List<unsigned int>> &l) {
   std::vector<unsigned int> result;
   auto current = l;
   while (true) {
     bool done = false;
-    std::visit(
-      Overloaded{
-        [&](const typename List<unsigned int>::nil&) {
-          done = true;
-        },
-        [&](const typename List<unsigned int>::cons& c) {
-          result.push_back(c._a0);
-          current = c._a1;
-        }
-      },
-      current->v()
-    );
-    if (done) break;
+    std::visit(Overloaded{[&](const typename List<unsigned int>::nil &) {
+                            done = true;
+                          },
+                          [&](const typename List<unsigned int>::cons &c) {
+                            result.push_back(c._a0);
+                            current = c._a1;
+                          }},
+               current->v());
+    if (done)
+      break;
   }
   return result;
 }
 
 // Helper to create a list from a vector
-std::shared_ptr<List<unsigned int>> vector_to_list(const std::vector<unsigned int>& vec) {
+std::shared_ptr<List<unsigned int>>
+vector_to_list(const std::vector<unsigned int> &vec) {
   auto result = List<unsigned int>::ctor::nil_();
   for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
     result = List<unsigned int>::ctor::cons_(*it, result);
   }
   return result;
 }
-
 
 int main() {
   // Test 1: Sort empty list
@@ -79,7 +75,8 @@ int main() {
 
   // Test 2: Sort single element
   {
-    auto single = List<unsigned int>::ctor::cons_(5, List<unsigned int>::ctor::nil_());
+    auto single =
+        List<unsigned int>::ctor::cons_(5, List<unsigned int>::ctor::nil_());
     auto sorted_list = MergesortFuel::msort(single);
     auto vec = list_to_vector(sorted_list);
     ASSERT(vec.size() == 1);
@@ -119,7 +116,7 @@ int main() {
     ASSERT(vec.size() == 10);
     // Check sorted
     for (size_t i = 1; i < vec.size(); ++i) {
-      ASSERT(vec[i-1] <= vec[i]);
+      ASSERT(vec[i - 1] <= vec[i]);
     }
     std::cout << "Test 5 (unsorted list): PASSED" << std::endl;
   }

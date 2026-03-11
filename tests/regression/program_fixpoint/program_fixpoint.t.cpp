@@ -11,53 +11,49 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
-std::vector<unsigned int> list_to_vector(const std::shared_ptr<List<unsigned int>>& l) {
+std::vector<unsigned int>
+list_to_vector(const std::shared_ptr<List<unsigned int>> &l) {
   std::vector<unsigned int> result;
   auto current = l;
   while (true) {
     bool done = false;
-    std::visit(
-      Overloaded{
-        [&](const typename List<unsigned int>::nil&) {
-          done = true;
-        },
-        [&](const typename List<unsigned int>::cons& c) {
-          result.push_back(c._a0);
-          current = c._a1;
-        }
-      },
-      current->v()
-    );
-    if (done) break;
+    std::visit(Overloaded{[&](const typename List<unsigned int>::nil &) {
+                            done = true;
+                          },
+                          [&](const typename List<unsigned int>::cons &c) {
+                            result.push_back(c._a0);
+                            current = c._a1;
+                          }},
+               current->v());
+    if (done)
+      break;
   }
   return result;
 }
 
-std::shared_ptr<List<unsigned int>> vector_to_list(const std::vector<unsigned int>& vec) {
+std::shared_ptr<List<unsigned int>>
+vector_to_list(const std::vector<unsigned int> &vec) {
   auto result = List<unsigned int>::ctor::nil_();
   for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
     result = List<unsigned int>::ctor::cons_(*it, result);
   }
   return result;
 }
-
 
 int main() {
   // Test 1: interleave two lists

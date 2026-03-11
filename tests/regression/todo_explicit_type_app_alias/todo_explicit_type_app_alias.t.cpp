@@ -4,8 +4,7 @@
 
 #include "todo_explicit_type_app_alias.h"
 
-int main()
-{
-    assert(TodoExplicitTypeAppAlias::test_value == 10u);
-    return 0;
+int main() {
+  assert(TodoExplicitTypeAppAlias::test_value == 10u);
+  return 0;
 }

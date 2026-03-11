@@ -4,8 +4,7 @@
 
 #include "todo_nested_module_type.h"
 
-int main()
-{
-    assert(TodoNestedModuleType::test_twice == 2u);
-    return 0;
+int main() {
+  assert(TodoNestedModuleType::test_twice == 2u);
+  return 0;
 }

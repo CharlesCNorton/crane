@@ -4,9 +4,8 @@
 
 #include "todo_extract_constant_noninline.h"
 
-int main()
-{
-    assert(TodoExtractConstantNoninline::test_value == 5u);
-    assert(TodoExtractConstantNoninline::twice_value == 4u);
-    return 0;
+int main() {
+  assert(TodoExtractConstantNoninline::test_value == 5u);
+  assert(TodoExtractConstantNoninline::twice_value == 4u);
+  return 0;
 }

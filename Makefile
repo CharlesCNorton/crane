@@ -1,4 +1,4 @@
-.PHONY: build install clean test test-verbose test-sequential test-raw test-one test-list theories plugin all extract
+.PHONY: build install clean test test-verbose test-sequential test-raw test-one test-list theories plugin all extract format
 
 # Default target: build plugin and theories only (not tests)
 build: plugin theories
@@ -105,6 +105,22 @@ test-list:
 		fi; \
 	done | sort
 
+# Format source code
+format:
+	@echo "Formatting C++ test files..."
+	@find tests -name '*.t.cpp' -exec clang-format -i {} +
+	@echo "Formatting OCaml files..."
+	@failed=""; \
+	for f in $$(find src bin -name '*.ml' -o -name '*.mli'); do \
+		if ! ocamlformat -i "$$f" 2>/dev/null; then \
+			failed="$$failed $$f"; \
+		fi; \
+	done; \
+	if [ -n "$$failed" ]; then \
+		echo "Warning: ocamlformat could not process:$$failed"; \
+	fi
+	@echo "Done."
+
 # Clean build artifacts and generated test files
 clean:
 	@dune clean
@@ -135,6 +151,7 @@ help:
 	@echo "  make test-list          - List all available tests"
 	@echo "  make all                - Build everything including test executables"
 	@echo "  make install            - Install the plugin"
+	@echo "  make format             - Format C++ test files and OCaml source"
 	@echo "  make clean              - Clean build artifacts and generated test files"
 	@echo ""
 	@echo "Examples:"

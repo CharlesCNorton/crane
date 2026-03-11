@@ -10,7 +10,8 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
-(** Extraction environment tables, custom extraction mappings, and configuration parameters. *)
+(** Extraction environment tables, custom extraction mappings, and configuration
+    parameters. *)
 
 open Names
 open Libnames
@@ -18,6 +19,7 @@ open Miniml
 open Declarations
 
 module Refset' : CSig.USetS with type elt = GlobRef.t
+
 module Refmap' : CSig.UMapS with type key = GlobRef.t
 
 (** Get a safe basename identifier from a global reference. *)
@@ -32,7 +34,8 @@ val warning_axioms : unit -> unit
 val warning_opaques : bool -> unit
 
 (** Issue warning about ambiguous name. *)
-val warning_ambiguous_name : ?loc:Loc.t -> qualid * ModPath.t * GlobRef.t -> unit
+val warning_ambiguous_name :
+  ?loc:Loc.t -> qualid * ModPath.t * GlobRef.t -> unit
 
 (** Issue warning about identifier. *)
 val warning_id : string -> unit
@@ -124,8 +127,7 @@ val mp_length : ModPath.t -> int
 val prefixes_mp : ModPath.t -> MPset.t
 
 (** Find common prefix from list of module paths. *)
-val common_prefix_from_list :
-  ModPath.t -> ModPath.t list -> ModPath.t option
+val common_prefix_from_list : ModPath.t -> ModPath.t list -> ModPath.t option
 
 (** Get nth label from module path. *)
 val get_nth_label_mp : int -> ModPath.t -> Label.t
@@ -135,13 +137,12 @@ val labels_of_ref : GlobRef.t -> ModPath.t * Label.t list
 
 (** {2 Table-related operations} *)
 
-(** For avoiding repeated extraction of the same constant or inductive,
-    we use cache functions below. Indexing by constant name isn't enough,
-    due to modules we could have a same constant name but different
-    content. So we check that the [constant_body] hasn't changed from
-    recording time to retrieving time. Same for inductive: we store
-    [mutual_inductive_body] as checksum. In both case, we should ideally
-    also check the env *)
+(** For avoiding repeated extraction of the same constant or inductive, we use
+    cache functions below. Indexing by constant name isn't enough, due to
+    modules we could have a same constant name but different content. So we
+    check that the [constant_body] hasn't changed from recording time to
+    retrieving time. Same for inductive: we store [mutual_inductive_body] as
+    checksum. In both case, we should ideally also check the env *)
 
 (** Add type definition to cache. *)
 val add_typedef : Constant.t -> constant_body -> ml_type -> unit
@@ -189,8 +190,7 @@ val needs_string_literals : unit -> bool
 val reset_needs_string_literals : unit -> unit
 
 (** Get record fields for a reference (empty for non-record). *)
-val get_record_fields :
-  GlobRef.t -> GlobRef.t option list
+val get_record_fields : GlobRef.t -> GlobRef.t option list
 
 (** Get record fields from ML type. *)
 val record_fields_of_type : ml_type -> GlobRef.t option list
@@ -267,10 +267,12 @@ val is_promoted_type_var : GlobRef.t -> bool
 val promoted_type_var_name : GlobRef.t -> Names.Id.t option
 
 (** Add instance promoted types. *)
-val add_instance_promoted_types : GlobRef.t -> (Names.Id.t * Miniml.ml_type) list -> unit
+val add_instance_promoted_types :
+  GlobRef.t -> (Names.Id.t * Miniml.ml_type) list -> unit
 
 (** Get instance promoted types. *)
-val get_instance_promoted_types : GlobRef.t -> (Names.Id.t * Miniml.ml_type) list
+val get_instance_promoted_types :
+  GlobRef.t -> (Names.Id.t * Miniml.ml_type) list
 
 (** Add info axiom. *)
 val add_info_axiom : GlobRef.t -> unit
@@ -325,21 +327,23 @@ val type_expand : unit -> bool
 (** {2 Optimize parameter} *)
 
 (** Optimization flags. *)
-type opt_flag =
-    { opt_kill_dum : bool; (** 1: Kill dummy arguments *)
-      opt_fix_fun : bool;   (** 2: Optimize fixpoint functions *)
-      opt_case_iot : bool;  (** 4: Case optimization - iota *)
-      opt_case_idr : bool;  (** 8: Case optimization - identity *)
-      opt_case_idg : bool;  (** 16: Case optimization - general identity *)
-      opt_case_cst : bool;  (** 32: Case optimization - constant *)
-      opt_case_fun : bool;  (** 64: Case optimization - function *)
-      opt_case_app : bool;  (** 128: Case optimization - application *)
-      opt_let_app : bool;   (** 256: Let-application optimization *)
-      opt_lin_let : bool;   (** 512: Linear let optimization *)
-      opt_lin_beta : bool } (** 1024: Linear beta reduction *)
+type opt_flag = {
+  opt_kill_dum : bool;  (** 1: Kill dummy arguments *)
+  opt_fix_fun : bool;  (** 2: Optimize fixpoint functions *)
+  opt_case_iot : bool;  (** 4: Case optimization - iota *)
+  opt_case_idr : bool;  (** 8: Case optimization - identity *)
+  opt_case_idg : bool;  (** 16: Case optimization - general identity *)
+  opt_case_cst : bool;  (** 32: Case optimization - constant *)
+  opt_case_fun : bool;  (** 64: Case optimization - function *)
+  opt_case_app : bool;  (** 128: Case optimization - application *)
+  opt_let_app : bool;  (** 256: Let-application optimization *)
+  opt_lin_let : bool;  (** 512: Linear let optimization *)
+  opt_lin_beta : bool;
+}
+(** 1024: Linear beta reduction *)
 
 (** Get current optimization flags. *)
-val optims :  unit -> opt_flag
+val optims : unit -> opt_flag
 
 (** Get code formatting style. *)
 val format_style : unit -> string
@@ -366,7 +370,9 @@ val file_comment : unit -> string
 type lang = Cpp
 
 (** Benchmark language variant. *)
-type benchmark_lang = BenchmarkOCaml | BenchmarkCpp
+type benchmark_lang =
+  | BenchmarkOCaml
+  | BenchmarkCpp
 
 (** Get current target language. *)
 val lang : unit -> lang
@@ -376,9 +382,9 @@ val lang : unit -> lang
     Extraction modes: modular or monolithic, library or minimal.
 
     Nota:
-     - Recursive Extraction: monolithic, minimal
-     - Separate Extraction: modular, minimal
-     - Extraction Library: modular, library *)
+    - Recursive Extraction: monolithic, minimal
+    - Separate Extraction: modular, minimal
+    - Extraction Library: modular, library *)
 
 (** Set modular extraction mode. *)
 val set_modular : bool -> unit
@@ -509,49 +515,42 @@ val mark_custom_used : GlobRef.t -> unit
 val reset_used_custom_imports : unit -> unit
 
 (** Extract constant with inline custom code. *)
-val extract_constant_inline :
-  bool -> qualid -> string list -> string -> unit
+val extract_constant_inline : bool -> qualid -> string list -> string -> unit
 
 (** Extract constant with import custom code. *)
 val extract_constant_import :
   bool -> qualid -> string list -> string -> string list -> unit
 
 (** Extract constant with foreign code. *)
-val extract_constant_foreign :
-  qualid -> string -> unit
+val extract_constant_foreign : qualid -> string -> unit
 
 (** Extract inductive with custom representation. *)
 val extract_inductive :
   qualid -> string -> string list -> string option -> string list -> unit
 
 (** Extract monad with bind and return operations. *)
-val extract_monad :
-  qualid -> qualid -> qualid -> string -> string list -> unit
+val extract_monad : qualid -> qualid -> qualid -> string -> string list -> unit
 
 (** Extract void type. *)
-val extract_void :
-  qualid -> qualid -> unit
+val extract_void : qualid -> qualid -> unit
 
 (** Skip extraction for qualified identifier. *)
-val extract_skip :
-  qualid -> unit
+val extract_skip : qualid -> unit
 
 (** Check if module should be skipped. *)
 val is_skip_module : ModPath.t -> bool
 
 (** Skip entire module extraction. *)
-val extract_skip_module :
-  qualid -> unit
+val extract_skip_module : qualid -> unit
 
 (** Skip extraction or module (OR combinator). *)
-val extract_skip_or_module :
-  qualid -> unit
+val extract_skip_or_module : qualid -> unit
 
 (** Numeral information for numeric inductives. *)
 type numeral_info = {
   num_zero_ctor : int;  (** Index of zero constructor *)
   num_succ_ctor : int;  (** Index of successor constructor *)
-  num_fmt : string;     (** Format string for numeral *)
+  num_fmt : string;  (** Format string for numeral *)
 }
 
 (** Check if inductive is numeric. *)
@@ -567,7 +566,9 @@ val extract_numeral : qualid -> string -> unit
 val register_glob_def : GlobRef.t -> ml_type -> unit
 
 (** Argument specifier for implicit extraction. *)
-type int_or_id = ArgInt of int | ArgId of Id.t
+type int_or_id =
+  | ArgInt of int
+  | ArgId of Id.t
 
 (** Configure implicit arguments for extraction. *)
 val extraction_implicit : qualid -> int_or_id list -> unit
