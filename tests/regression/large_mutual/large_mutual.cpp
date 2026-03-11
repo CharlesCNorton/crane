@@ -40,6 +40,7 @@ LargeMutual::expr_size(const std::shared_ptr<LargeMutual::expr> &e) {
           }},
       e->v());
 }
+
 unsigned int
 LargeMutual::bexpr_size(const std::shared_ptr<LargeMutual::bexpr> &b) {
   return std::visit(

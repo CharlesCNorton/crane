@@ -23,8 +23,6 @@ struct Bool {
 
 struct BoolDecStd {
   static bool eqb_dec(const bool a, const bool b);
-
   static inline const bool t1 = eqb_dec(true, true);
-
   static inline const bool t2 = eqb_dec(true, false);
 };

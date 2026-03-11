@@ -58,6 +58,7 @@ mpz_class Pos::add(const mpz_class x, const mpz_class y) {
     }
   }
 }
+
 mpz_class Pos::add_carry(const mpz_class x, const mpz_class y) {
   if (x == 1) {
     if (y == 1) {

@@ -18,7 +18,8 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 template <typename I>
-concept Pack = (requires (typename I::carrier a0) {
+concept Pack = (requires (typename I::carrier
+a0) {
   typename I::carrier;
   { I::step(a0) } -> std::convertible_to<typename I::carrier>;
 } && (requires {
@@ -44,11 +45,13 @@ struct TodoTypeSubstPackAlias {
 
   struct nat_pack {
     using carrier = unsigned int;
+
     static unsigned int seed() { return 3u; }
+
     static unsigned int step(unsigned int x) { return (x + 1); }
   };
-  static_assert(Pack<nat_pack>);
 
+  static_assert(Pack<nat_pack>);
   static inline const unsigned int test_value =
       run_twice<nat_pack, unsigned int>();
 };

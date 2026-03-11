@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -122,7 +133,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state1> execute_wpm1(std::shared_ptr<state1> s);
-
   static inline const std::shared_ptr<state1> sample1 =
       std::make_shared<state1>(state1{
           List<unsigned int>::ctor::cons_(
@@ -132,9 +142,7 @@ struct WpmOps {
                            12u, List<unsigned int>::ctor::cons_(
                                     13u, List<unsigned int>::ctor::nil_())))),
           2u, 99u, false});
-
   static inline const std::shared_ptr<state1> after1 = execute_wpm1(sample1);
-
   static inline const bool test_wpm_disabled_is_nop =
       ((after1->rom1->nth(0u, 0u) == 10u) &&
        ((after1->rom1->nth(1u, 0u) == 11u) &&
@@ -150,7 +158,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state2> execute_wpm2(std::shared_ptr<state2> s);
-
   static inline const std::shared_ptr<state2> sample2 =
       std::make_shared<state2>(
           state2{List<unsigned int>::ctor::cons_(
@@ -162,7 +169,6 @@ struct WpmOps {
                               11u, List<unsigned int>::ctor::cons_(
                                        12u, List<unsigned int>::ctor::nil_()))),
                  1u, 99u, true});
-
   static inline const bool test_wpm_enabled_preserves_ram =
       nat_list_eqb(execute_wpm2(sample2)->ram_sys2, sample2->ram_sys2);
 
@@ -175,7 +181,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state3> execute_wpm3(std::shared_ptr<state3> s);
-
   static inline const std::shared_ptr<state3> sample3 =
       std::make_shared<state3>(
           state3{List<unsigned int>::ctor::cons_(
@@ -187,7 +192,6 @@ struct WpmOps {
                               11u, List<unsigned int>::ctor::cons_(
                                        12u, List<unsigned int>::ctor::nil_()))),
                  1u, 99u, true});
-
   static inline const bool test_wpm_enabled_preserves_regs =
       nat_list_eqb(execute_wpm3(sample3)->regs3, sample3->regs3);
 
@@ -199,7 +203,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state4> execute_wpm4(std::shared_ptr<state4> s);
-
   static inline const unsigned int test_wpm_update_gate = [](void) {
     std::unique_ptr<state4> s = std::make_unique<state4>(
         state4{List<unsigned int>::ctor::cons_(
@@ -219,7 +222,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state5> execute_wpm5(std::shared_ptr<state5> s);
-
   static inline const std::shared_ptr<state5> sample5 =
       std::make_shared<state5>(state5{
           List<unsigned int>::ctor::cons_(
@@ -229,7 +231,6 @@ struct WpmOps {
                            12u, List<unsigned int>::ctor::cons_(
                                     13u, List<unsigned int>::ctor::nil_())))),
           2u, 99u, true});
-
   static inline const bool test_wpm_updates_rom_at_addr =
       (execute_wpm5(sample5)->rom5->nth(2u, 0u) == 99u);
 
@@ -241,7 +242,6 @@ struct WpmOps {
   };
 
   static std::shared_ptr<state6> execute_wpm6(std::shared_ptr<state6> s);
-
   static inline const std::shared_ptr<state6> sample6 =
       std::make_shared<state6>(state6{
           List<unsigned int>::ctor::cons_(
@@ -251,15 +251,12 @@ struct WpmOps {
                            12u, List<unsigned int>::ctor::cons_(
                                     13u, List<unsigned int>::ctor::nil_())))),
           2u, 99u, true});
-
   static inline const std::shared_ptr<state6> after6 = execute_wpm6(sample6);
-
   static inline const bool test_wpm_writes_exactly_once =
       ((after6->rom6->nth(2u, 0u) == 99u) &&
        ((after6->rom6->nth(0u, 0u) == 10u) &&
         ((after6->rom6->nth(1u, 0u) == 11u) &&
          (after6->rom6->nth(3u, 0u) == 13u))));
-
   static inline const std::pair<
       std::pair<std::pair<std::pair<std::pair<bool, bool>, bool>, unsigned int>,
                 bool>,

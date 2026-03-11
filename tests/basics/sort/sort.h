@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -70,31 +81,35 @@ public:
   struct exist {
     A _a0;
   };
+
   using variant_t = std::variant<exist>;
 
 private:
   variant_t v_;
+
   explicit Sig(exist _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<Sig<A>> exist_(A a0) {
       return std::shared_ptr<Sig<A>>(new Sig<A>(exist{a0}));
     }
+
     static std::unique_ptr<Sig<A>> exist_uptr(A a0) {
       return std::unique_ptr<Sig<A>>(new Sig<A>(exist{a0}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
 struct Compare_dec {
   static bool le_lt_dec(const unsigned int n, const unsigned int m);
-
   static bool le_gt_dec(const unsigned int _x0, const unsigned int _x1);
-
   static bool le_dec(const unsigned int n, const unsigned int m);
 };
 
@@ -252,31 +267,24 @@ struct Sort {
   sort_cons_prog(const unsigned int a,
                  const std::shared_ptr<List<unsigned int>> &_x,
                  const std::shared_ptr<List<unsigned int>> &l_);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   isort(const std::shared_ptr<List<unsigned int>> &l);
-
   static std::shared_ptr<List<unsigned int>>
   merge(std::shared_ptr<List<unsigned int>> l1,
         const std::shared_ptr<List<unsigned int>> &l2);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   merge_prog(const std::shared_ptr<List<unsigned int>> &_x,
              std::shared_ptr<List<unsigned int>> l1,
              std::shared_ptr<List<unsigned int>> l2);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   msort(const std::shared_ptr<List<unsigned int>> &);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   pair_merge_prog(const unsigned int _x, const unsigned int _x0,
                   const std::shared_ptr<List<unsigned int>> &_x1,
                   std::shared_ptr<List<unsigned int>> l_,
                   std::shared_ptr<List<unsigned int>> l_0);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   psort(const std::shared_ptr<List<unsigned int>> &);
-
   static std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>>
   qsort(const std::shared_ptr<List<unsigned int>> &);
 };

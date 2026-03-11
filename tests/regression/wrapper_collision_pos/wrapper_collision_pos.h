@@ -31,6 +31,5 @@ struct WrapperCollisionPos {
   };
 
   static inline const unsigned int t1 = Left::Pos::id_left(1u);
-
   static inline const unsigned int t2 = Right::Pos::inc_right(1u);
 };

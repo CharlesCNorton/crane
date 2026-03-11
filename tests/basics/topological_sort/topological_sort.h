@@ -22,37 +22,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <typename T1>
   std::shared_ptr<List<std::pair<A, T1>>>
   combine(const std::shared_ptr<List<T1>> &l_) const {
@@ -84,6 +95,7 @@ public:
                    }},
         this->v());
   }
+
   template <MapsTo<bool, A> F0> std::optional<A> find(F0 &&f) const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> std::optional<A> {
@@ -100,6 +112,7 @@ public:
                    }},
         this->v());
   }
+
   template <MapsTo<bool, A> F0> std::shared_ptr<List<A>> filter(F0 &&f) const {
     return std::visit(
         Overloaded{
@@ -118,6 +131,7 @@ public:
             }},
         this->v());
   }
+
   template <typename T1, MapsTo<T1, A, T1> F0>
   T1 fold_right(F0 &&f, const T1 a0) const {
     return std::visit(
@@ -129,6 +143,7 @@ public:
                    }},
         this->v());
   }
+
   template <typename T1> std::shared_ptr<List<T1>> concat() const {
     return std::visit(
         Overloaded{
@@ -142,6 +157,7 @@ public:
             }},
         this->v());
   }
+
   template <typename T1, MapsTo<T1, A> F0>
   std::shared_ptr<List<T1>> map(F0 &&f) const {
     return std::visit(
@@ -158,6 +174,7 @@ public:
             }},
         this->v());
   }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -169,6 +186,7 @@ public:
                    }},
         this->v());
   }
+
   std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
     return std::visit(Overloaded{[&](const typename List<A>::nil _args)
                                      -> std::shared_ptr<List<A>> { return m; },
@@ -252,9 +270,7 @@ struct ToString {
 struct TopologicalSort {
   template <typename node>
   using entry = std::pair<node, std::shared_ptr<List<node>>>;
-
   template <typename node> using graph = std::shared_ptr<List<entry<node>>>;
-
   template <typename node>
   using order = std::shared_ptr<List<std::shared_ptr<List<node>>>>;
 

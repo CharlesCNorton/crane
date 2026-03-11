@@ -24,33 +24,43 @@ struct CountLoopTestTarget {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct NOP {};
+
     using variant_t = std::variant<ISZ, NOP>;
 
   private:
     variant_t v_;
+
     explicit instruction(ISZ _v) : v_(std::move(_v)) {}
+
     explicit instruction(NOP _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction> ISZ_(unsigned int a0,
                                                unsigned int a1) {
         return std::shared_ptr<instruction>(new instruction(ISZ{a0, a1}));
       }
+
       static std::shared_ptr<instruction> NOP_() {
         return std::shared_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::unique_ptr<instruction> ISZ_uptr(unsigned int a0,
                                                    unsigned int a1) {
         return std::unique_ptr<instruction>(new instruction(ISZ{a0, a1}));
       }
+
       static std::unique_ptr<instruction> NOP_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -84,8 +94,6 @@ struct CountLoopTestTarget {
 
   static std::shared_ptr<instruction>
   count_loop_test(const unsigned int loop_addr);
-
   static unsigned int target_of(const std::shared_ptr<instruction> &i);
-
   static inline const unsigned int t = target_of(count_loop_test(37u));
 };

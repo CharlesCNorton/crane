@@ -33,33 +33,43 @@ template <Elem E> struct Container {
   struct maybe {
   public:
     struct Nothing {};
+
     struct Just {
       unsigned int _a0;
     };
+
     using variant_t = std::variant<Nothing, Just>;
 
   private:
     variant_t v_;
+
     explicit maybe(Nothing _v) : v_(std::move(_v)) {}
+
     explicit maybe(Just _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<maybe> Nothing_() {
         return std::shared_ptr<maybe>(new maybe(Nothing{}));
       }
+
       static std::shared_ptr<maybe> Just_(unsigned int a0) {
         return std::shared_ptr<maybe>(new maybe(Just{a0}));
       }
+
       static std::unique_ptr<maybe> Nothing_uptr() {
         return std::unique_ptr<maybe>(new maybe(Nothing{}));
       }
+
       static std::unique_ptr<maybe> Just_uptr(unsigned int a0) {
         return std::unique_ptr<maybe>(new maybe(Just{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -88,37 +98,47 @@ template <Elem E> struct Container {
   struct mlist {
   public:
     struct MNil {};
+
     struct MCons {
       std::shared_ptr<maybe> _a0;
       std::shared_ptr<mlist> _a1;
     };
+
     using variant_t = std::variant<MNil, MCons>;
 
   private:
     variant_t v_;
+
     explicit mlist(MNil _v) : v_(std::move(_v)) {}
+
     explicit mlist(MCons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<mlist> MNil_() {
         return std::shared_ptr<mlist>(new mlist(MNil{}));
       }
+
       static std::shared_ptr<mlist> MCons_(const std::shared_ptr<maybe> &a0,
                                            const std::shared_ptr<mlist> &a1) {
         return std::shared_ptr<mlist>(new mlist(MCons{a0, a1}));
       }
+
       static std::unique_ptr<mlist> MNil_uptr() {
         return std::unique_ptr<mlist>(new mlist(MNil{}));
       }
+
       static std::unique_ptr<mlist>
       MCons_uptr(const std::shared_ptr<maybe> &a0,
                  const std::shared_ptr<mlist> &a1) {
         return std::unique_ptr<mlist>(new mlist(MCons{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -153,35 +173,45 @@ template <Elem E> struct Container {
     struct Leaf {
       std::shared_ptr<maybe> _a0;
     };
+
     struct Node {
       std::shared_ptr<mlist> _a0;
     };
+
     using variant_t = std::variant<Leaf, Node>;
 
   private:
     variant_t v_;
+
     explicit mtree(Leaf _v) : v_(std::move(_v)) {}
+
     explicit mtree(Node _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<mtree> Leaf_(const std::shared_ptr<maybe> &a0) {
         return std::shared_ptr<mtree>(new mtree(Leaf{a0}));
       }
+
       static std::shared_ptr<mtree> Node_(const std::shared_ptr<mlist> &a0) {
         return std::shared_ptr<mtree>(new mtree(Node{a0}));
       }
+
       static std::unique_ptr<mtree>
       Leaf_uptr(const std::shared_ptr<maybe> &a0) {
         return std::unique_ptr<mtree>(new mtree(Leaf{a0}));
       }
+
       static std::unique_ptr<mtree>
       Node_uptr(const std::shared_ptr<mlist> &a0) {
         return std::unique_ptr<mtree>(new mtree(Node{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -274,18 +304,14 @@ template <Elem E> struct Container {
 
 struct NatElem {
   using t = unsigned int;
-
   static inline const unsigned int dflt = 42u;
 };
+
 static_assert(Elem<NatElem>);
-
 using NatContainer = Container<NatElem>;
-
 const bool test_is_nothing =
     NatContainer::is_nothing(NatContainer::empty_maybe());
-
 const unsigned int test_list_len =
     NatContainer::mlist_length(NatContainer::sample_list());
-
 const unsigned int test_tree_size =
     NatContainer::tree_size(NatContainer::sample_tree());

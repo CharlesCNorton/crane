@@ -50,7 +50,6 @@ struct EnumSwitchQualified {
     }
 
     static color flip(const color c);
-
     static unsigned int code(const color c);
   };
 

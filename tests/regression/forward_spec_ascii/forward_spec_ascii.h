@@ -23,33 +23,43 @@ struct ForwardSpecAscii {
     struct ANode {
       unsigned int _a0;
     };
+
     struct BNode {
       unsigned int _a0;
     };
+
     using variant_t = std::variant<ANode, BNode>;
 
   private:
     variant_t v_;
+
     explicit node(ANode _v) : v_(std::move(_v)) {}
+
     explicit node(BNode _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<node> ANode_(unsigned int a0) {
         return std::shared_ptr<node>(new node(ANode{a0}));
       }
+
       static std::shared_ptr<node> BNode_(unsigned int a0) {
         return std::shared_ptr<node>(new node(BNode{a0}));
       }
+
       static std::unique_ptr<node> ANode_uptr(unsigned int a0) {
         return std::unique_ptr<node>(new node(ANode{a0}));
       }
+
       static std::unique_ptr<node> BNode_uptr(unsigned int a0) {
         return std::unique_ptr<node>(new node(BNode{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -82,8 +92,6 @@ struct ForwardSpecAscii {
   }
 
   static unsigned int helper_nat(const unsigned int n);
-
   static unsigned int bump_node(const std::shared_ptr<node> &x);
-
   static inline const unsigned int t = bump_node(node::ctor::ANode_(2u));
 };

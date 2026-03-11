@@ -76,15 +76,11 @@ struct TimingPreservesWfSimple {
   };
 
   static bool wf(const std::shared_ptr<state> &s);
-
   static unsigned int cycles(const instr i);
-
   static std::shared_ptr<state> execute(std::shared_ptr<state> s,
                                         const instr i);
-
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{4u, 4u, 100u, 2u});
-
   static inline const bool t =
       (wf(sample) &&
        ((cycles(instr::JMS) == 24u) &&

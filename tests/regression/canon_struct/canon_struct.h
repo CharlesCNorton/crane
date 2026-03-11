@@ -32,14 +32,18 @@ struct CanonStruct {
 
   struct nat_eqType {
     using carrier = unsigned int;
+
     static bool eqb(unsigned int a0, unsigned int a1) { return (a0 == a1); }
   };
+
   static_assert(EqType<nat_eqType>);
 
   struct bool_eqType {
     using carrier = bool;
+
     static bool eqb(bool a0, bool a1) { return Bool::eqb(a0, a1); }
   };
+
   static_assert(EqType<bool_eqType>);
 
   template <typename _tcI0, typename carrier>
@@ -48,6 +52,5 @@ struct CanonStruct {
   }
 
   static inline const bool test_nat = same<nat_eqType, unsigned int>(3u, 5u);
-
   static inline const bool test_bool = same<bool_eqType, bool>(true, false);
 };

@@ -32,77 +32,99 @@ concept Elem = requires {
 template <Elem E> struct MutualTree {
   struct tree;
   struct forest;
+
   struct tree {
   public:
     struct Leaf {
       unsigned int _a0;
     };
+
     struct Node {
       unsigned int _a0;
       std::shared_ptr<forest> _a1;
     };
+
     using variant_t = std::variant<Leaf, Node>;
 
   private:
     variant_t v_;
+
     explicit tree(Leaf _v) : v_(std::move(_v)) {}
+
     explicit tree(Node _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<tree> Leaf_(unsigned int a0) {
         return std::shared_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::shared_ptr<tree> Node_(unsigned int a0,
                                          const std::shared_ptr<forest> &a1) {
         return std::shared_ptr<tree>(new tree(Node{a0, a1}));
       }
+
       static std::unique_ptr<tree> Leaf_uptr(unsigned int a0) {
         return std::unique_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::unique_ptr<tree>
       Node_uptr(unsigned int a0, const std::shared_ptr<forest> &a1) {
         return std::unique_ptr<tree>(new tree(Node{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
+
   struct forest {
   public:
     struct FNil {};
+
     struct FCons {
       std::shared_ptr<tree> _a0;
       std::shared_ptr<forest> _a1;
     };
+
     using variant_t = std::variant<FNil, FCons>;
 
   private:
     variant_t v_;
+
     explicit forest(FNil _v) : v_(std::move(_v)) {}
+
     explicit forest(FCons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<forest> FNil_() {
         return std::shared_ptr<forest>(new forest(FNil{}));
       }
+
       static std::shared_ptr<forest> FCons_(const std::shared_ptr<tree> &a0,
                                             const std::shared_ptr<forest> &a1) {
         return std::shared_ptr<forest>(new forest(FCons{a0, a1}));
       }
+
       static std::unique_ptr<forest> FNil_uptr() {
         return std::unique_ptr<forest>(new forest(FNil{}));
       }
+
       static std::unique_ptr<forest>
       FCons_uptr(const std::shared_ptr<tree> &a0,
                  const std::shared_ptr<forest> &a1) {
         return std::unique_ptr<forest>(new forest(FCons{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -173,6 +195,7 @@ template <Elem E> struct MutualTree {
             }},
         t0->v());
   }
+
   static unsigned int forest_size(const std::shared_ptr<forest> &f) {
     return std::visit(
         Overloaded{[](const typename forest::FNil _args) -> unsigned int {
@@ -200,6 +223,7 @@ template <Elem E> struct MutualTree {
                    }},
         t0->v());
   }
+
   static unsigned int forest_sum(const std::shared_ptr<forest> &f) {
     return std::visit(
         Overloaded{[](const typename forest::FNil _args) -> unsigned int {
@@ -239,16 +263,12 @@ template <Elem E> struct MutualTree {
 
 struct NatElem {
   using t = unsigned int;
-
   static inline const unsigned int dflt = 0u;
 };
+
 static_assert(Elem<NatElem>);
-
 using NatTree = MutualTree<NatElem>;
-
 const unsigned int test_tree_size = NatTree::tree_size(NatTree::sample_tree());
-
 const unsigned int test_forest_size =
     NatTree::forest_size(NatTree::small_forest());
-
 const unsigned int test_tree_sum = NatTree::tree_sum(NatTree::sample_tree());

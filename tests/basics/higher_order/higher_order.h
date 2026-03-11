@@ -21,36 +21,46 @@ struct HigherOrder {
   template <typename A> struct list {
   public:
     struct nil {};
+
     struct cons {
       A _a0;
       std::shared_ptr<list<A>> _a1;
     };
+
     using variant_t = std::variant<nil, cons>;
 
   private:
     variant_t v_;
+
     explicit list(nil _v) : v_(std::move(_v)) {}
+
     explicit list(cons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<list<A>> nil_() {
         return std::shared_ptr<list<A>>(new list<A>(nil{}));
       }
+
       static std::shared_ptr<list<A>>
       cons_(A a0, const std::shared_ptr<list<A>> &a1) {
         return std::shared_ptr<list<A>>(new list<A>(cons{a0, a1}));
       }
+
       static std::unique_ptr<list<A>> nil_uptr() {
         return std::unique_ptr<list<A>>(new list<A>(nil{}));
       }
+
       static std::unique_ptr<list<A>>
       cons_uptr(A a0, const std::shared_ptr<list<A>> &a1) {
         return std::unique_ptr<list<A>>(new list<A>(cons{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -155,7 +165,6 @@ struct HigherOrder {
                       3u, list<unsigned int>::ctor::cons_(
                               4u, list<unsigned int>::ctor::cons_(
                                       5u, list<unsigned int>::ctor::nil_())))));
-
   static inline const unsigned int test_map = foldr<unsigned int, unsigned int>(
       [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
         return (_x0 + _x1);
@@ -164,36 +173,29 @@ struct HigherOrder {
       map<unsigned int, unsigned int>(
           [](const unsigned int _x0) -> unsigned int { return (1u + _x0); },
           test_list));
-
   static inline const unsigned int test_foldr =
       foldr<unsigned int, unsigned int>(
           [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
             return (_x0 + _x1);
           },
           0u, test_list);
-
   static inline const unsigned int test_foldl =
       foldl<unsigned int, unsigned int>(
           [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
             return (_x0 + _x1);
           },
           0u, test_list);
-
   static inline const unsigned int test_compose =
       compose<unsigned int, unsigned int, unsigned int>(
           [](const unsigned int _x0) -> unsigned int { return (2u * _x0); },
           [](const unsigned int _x0) -> unsigned int { return (1u + _x0); },
           3u);
-
   static inline const unsigned int test_iterate = iterate<unsigned int>(
       3u, [](const unsigned int _x0) -> unsigned int { return (2u + _x0); },
       0u);
-
   static inline const unsigned int test_adder = adder(5u, 3u);
-
   static inline const unsigned int test_twice = twice<unsigned int>(
       [](const unsigned int _x0) -> unsigned int { return (1u + _x0); }, 5u);
-
   static inline const unsigned int test_pipe = pipe<unsigned int, unsigned int>(
       5u,
       [](const unsigned int _x0) -> unsigned int { return adder(3u, _x0); });

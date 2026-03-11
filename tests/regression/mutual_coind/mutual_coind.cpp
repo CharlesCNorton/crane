@@ -17,6 +17,7 @@ MutualCoind::countA(const unsigned int n) {
         return streamA<unsigned int>::ctor::consA_(n, countB((n + 1)));
       });
 }
+
 std::shared_ptr<MutualCoind::streamB<unsigned int>>
 MutualCoind::countB(const unsigned int n) {
   return streamB<unsigned int>::ctor::lazy_(

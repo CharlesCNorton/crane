@@ -40,31 +40,41 @@ struct ConstrainedPoly {
     struct USome {
       A _a0;
     };
+
     struct UNone {};
+
     using variant_t = std::variant<USome, UNone>;
 
   private:
     variant_t v_;
+
     explicit UOption(USome _v) : v_(std::move(_v)) {}
+
     explicit UOption(UNone _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<UOption<A>> USome_(A a0) {
         return std::shared_ptr<UOption<A>>(new UOption<A>(USome{a0}));
       }
+
       static std::shared_ptr<UOption<A>> UNone_() {
         return std::shared_ptr<UOption<A>>(new UOption<A>(UNone{}));
       }
+
       static std::unique_ptr<UOption<A>> USome_uptr(A a0) {
         return std::unique_ptr<UOption<A>>(new UOption<A>(USome{a0}));
       }
+
       static std::unique_ptr<UOption<A>> UNone_uptr() {
         return std::unique_ptr<UOption<A>>(new UOption<A>(UNone{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -110,19 +120,13 @@ struct ConstrainedPoly {
   }
 
   static inline const unsigned int test_id_nat = poly_id<unsigned int>(42u);
-
   static inline const bool test_id_bool = poly_id<bool>(true);
-
   static inline const std::shared_ptr<UPair<unsigned int, bool>> test_pair =
       wrap_pair<unsigned int, bool>(5u, false);
-
   static inline const std::shared_ptr<UPair<bool, unsigned int>> test_swap =
       swap<unsigned int, bool>(test_pair);
-
   static inline const unsigned int test_fst = test_pair->ufst;
-
   static inline const bool test_snd = test_pair->usnd;
-
   static inline const std::shared_ptr<UOption<unsigned int>> test_umap =
       uoption_map<unsigned int, unsigned int>(
           [](unsigned int n) { return (n + 1u); },

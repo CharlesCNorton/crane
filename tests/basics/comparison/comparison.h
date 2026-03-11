@@ -55,39 +55,22 @@ struct Comparison {
   }
 
   static unsigned int cmp_to_nat(const cmp c);
-
   static cmp compare_nats(const unsigned int a, const unsigned int b);
-
   static unsigned int max_nat(const unsigned int a, const unsigned int b);
-
   static unsigned int min_nat(const unsigned int a, const unsigned int b);
-
   static unsigned int clamp(const unsigned int val, const unsigned int lo,
                             const unsigned int hi);
-
   static cmp flip_cmp(const cmp c);
-
   static inline const unsigned int test_lt_nat = cmp_to_nat(cmp::CmpLt);
-
   static inline const unsigned int test_eq_nat = cmp_to_nat(cmp::CmpEq);
-
   static inline const unsigned int test_gt_nat = cmp_to_nat(cmp::CmpGt);
-
   static inline const cmp test_compare_lt = compare_nats(3u, 5u);
-
   static inline const cmp test_compare_eq = compare_nats(5u, 5u);
-
   static inline const cmp test_compare_gt = compare_nats(7u, 5u);
-
   static inline const unsigned int test_max = max_nat(3u, 7u);
-
   static inline const unsigned int test_min = min_nat(3u, 7u);
-
   static inline const unsigned int test_clamp_lo = clamp(1u, 3u, 7u);
-
   static inline const unsigned int test_clamp_mid = clamp(5u, 3u, 7u);
-
   static inline const unsigned int test_clamp_hi = clamp(9u, 3u, 7u);
-
   static inline const cmp test_flip = flip_cmp(cmp::CmpLt);
 };

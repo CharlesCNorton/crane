@@ -212,6 +212,102 @@ let ind_ty_ptr id vars = Tshared_ptr (Tglob (id, vars, []))
 (** Construct a unique_ptr type wrapping an inductive type. *)
 let ind_ty_uptr id vars = Tunique_ptr (Tglob (id, vars, []))
 
+(** {2 Generic AST traversal combinators}
+
+    These enable writing AST transformations without manually matching
+    every constructor.  Pass custom cases for the constructors you care
+    about; the combinator handles structural recursion for the rest. *)
+
+(** [map_cpp_type f ty] applies [f] to every sub-type in [ty].
+    Use this to build type transformations: pass a function that
+    handles your custom case and delegates to [map_cpp_type f] for
+    the recursive case. *)
+let rec map_cpp_type (f : cpp_type -> cpp_type) (ty : cpp_type) : cpp_type =
+  let ty = f ty in
+  match ty with
+  | Tglob (r, tys, args) -> Tglob (r, List.map (map_cpp_type f) tys, args)
+  | Tid (id, tys) -> Tid (id, List.map (map_cpp_type f) tys)
+  | Tfun (dom, cod) -> Tfun (List.map (map_cpp_type f) dom, map_cpp_type f cod)
+  | Tmod (m, t) -> Tmod (m, map_cpp_type f t)
+  | Tshared_ptr t -> Tshared_ptr (map_cpp_type f t)
+  | Tunique_ptr t -> Tunique_ptr (map_cpp_type f t)
+  | Tref t -> Tref (map_cpp_type f t)
+  | Tvariant ts -> Tvariant (List.map (map_cpp_type f) ts)
+  | Tnamespace (r, t) -> Tnamespace (r, map_cpp_type f t)
+  | Tqualified (t, id) -> Tqualified (map_cpp_type f t, id)
+  | Tvar _ | Tvoid | Ttodo | Tunknown | Tany -> ty
+
+(** [map_expr fe fs ft e] applies [fe] to sub-expressions, [fs] to sub-statements,
+    [ft] to sub-types, performing one level of structural descent. *)
+let map_expr (fe : cpp_expr -> cpp_expr) (fs : cpp_stmt -> cpp_stmt) (ft : cpp_type -> cpp_type) (e : cpp_expr) : cpp_expr =
+  match e with
+  | CPPvar _ -> e
+  | CPPglob (r, tys, ci) -> CPPglob (r, List.map ft tys, ci)
+  | CPPnamespace (r, e') -> CPPnamespace (r, fe e')
+  | CPPfun_call (f, args) -> CPPfun_call (fe f, List.map fe args)
+  | CPPderef e' -> CPPderef (fe e')
+  | CPPmove e' -> CPPmove (fe e')
+  | CPPforward (ty, e') -> CPPforward (ft ty, fe e')
+  | CPPlambda (params, ret_ty, stmts, capture) ->
+      CPPlambda (List.map (fun (ty, id) -> (ft ty, id)) params,
+                 Option.map ft ret_ty,
+                 List.map fs stmts,
+                 capture)
+  | CPPvisit -> e
+  | CPPmk_shared ty -> CPPmk_shared (ft ty)
+  | CPPoverloaded exprs -> CPPoverloaded (List.map fe exprs)
+  | CPPstructmk (r, tys, args) -> CPPstructmk (r, List.map ft tys, List.map fe args)
+  | CPPstruct (r, tys, args) -> CPPstruct (r, List.map ft tys, List.map fe args)
+  | CPPstruct_id (id, tys, args) -> CPPstruct_id (id, List.map ft tys, List.map fe args)
+  | CPPget (e', id) -> CPPget (fe e', id)
+  | CPPget' (e', r) -> CPPget' (fe e', r)
+  | CPPstring _ | CPPuint _ | CPPfloat _ -> e
+  | CPPparray (arr, def) -> CPPparray (Array.map fe arr, fe def)
+  | CPPrequires (params, constrs, tyreqs) ->
+      CPPrequires (List.map (fun (ty, id) -> (ft ty, id)) params,
+                   List.map (fun (e', c) -> (fe e', fe c)) constrs,
+                   List.map ft tyreqs)
+  | CPPnew (ty, args) -> CPPnew (ft ty, List.map fe args)
+  | CPPshared_ptr_ctor (ty, e') -> CPPshared_ptr_ctor (ft ty, fe e')
+  | CPPunique_ptr_ctor (ty, e') -> CPPunique_ptr_ctor (ft ty, fe e')
+  | CPPmk_unique ty -> CPPmk_unique (ft ty)
+  | CPPthis -> e
+  | CPPshared_from_this ty -> CPPshared_from_this (ft ty)
+  | CPPmember (e', id) -> CPPmember (fe e', id)
+  | CPParrow (e', id) -> CPParrow (fe e', id)
+  | CPPmethod_call (obj, id, args) -> CPPmethod_call (fe obj, id, List.map fe args)
+  | CPPqualified (e', id) -> CPPqualified (fe e', id)
+  | CPPconvertible_to ty -> CPPconvertible_to (ft ty)
+  | CPPabort _ -> e
+  | CPPenum_val _ -> e
+  | CPPraw _ -> e
+  | CPPbinop (op, e1, e2) -> CPPbinop (op, fe e1, fe e2)
+
+(** [map_stmt fe fs ft s] applies [fe] to sub-expressions, [fs] to sub-statements,
+    [ft] to sub-types, performing one level of structural descent. *)
+let map_stmt (fe : cpp_expr -> cpp_expr) (fs : cpp_stmt -> cpp_stmt) (ft : cpp_type -> cpp_type) (s : cpp_stmt) : cpp_stmt =
+  match s with
+  | Sreturn None -> s
+  | Sreturn (Some e) -> Sreturn (Some (fe e))
+  | Sdecl (id, ty) -> Sdecl (id, ft ty)
+  | Sasgn (id, ty_opt, e) -> Sasgn (id, Option.map ft ty_opt, fe e)
+  | Sexpr e -> Sexpr (fe e)
+  | Scustom_case (ty, scrut, tyargs, branches, err) ->
+      Scustom_case (ft ty, fe scrut, List.map ft tyargs,
+                    List.map (fun (params, ret_ty, body) ->
+                      (List.map (fun (id, ty) -> (id, ft ty)) params,
+                       ft ret_ty,
+                       List.map fs body)) branches,
+                    err)
+  | Sthrow _ -> s
+  | Sswitch (scrut, r, branches) ->
+      Sswitch (fe scrut, r, List.map (fun (id, body) -> (id, List.map fs body)) branches)
+  | Sassert _ -> s
+  | Sif (cond, then_br, else_br) ->
+      Sif (fe cond, List.map fs then_br, List.map fs else_br)
+  | Sraw _ -> s
+  | Sassign_field (obj, field, e) -> Sassign_field (fe obj, field, fe e)
+
 (** C++ top-level declarations. *)
 type cpp_decl =
   | Dtemplate of (template_type * Id.t) list  * cpp_constraint option * cpp_decl

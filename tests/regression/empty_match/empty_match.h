@@ -42,33 +42,43 @@ struct EmptyMatch {
     struct Left {
       A _a0;
     };
+
     struct Right {
       B _a0;
     };
+
     using variant_t = std::variant<Left, Right>;
 
   private:
     variant_t v_;
+
     explicit either(Left _v) : v_(std::move(_v)) {}
+
     explicit either(Right _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<either<A, B>> Left_(A a0) {
         return std::shared_ptr<either<A, B>>(new either<A, B>(Left{a0}));
       }
+
       static std::shared_ptr<either<A, B>> Right_(B a0) {
         return std::shared_ptr<either<A, B>>(new either<A, B>(Right{a0}));
       }
+
       static std::unique_ptr<either<A, B>> Left_uptr(A a0) {
         return std::unique_ptr<either<A, B>>(new either<A, B>(Left{a0}));
       }
+
       static std::unique_ptr<either<A, B>> Right_uptr(B a0) {
         return std::unique_ptr<either<A, B>>(new either<A, B>(Right{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -126,7 +136,6 @@ struct EmptyMatch {
       either<unsigned int, std::shared_ptr<empty>>>
       test_either =
           either<unsigned int, std::shared_ptr<empty>>::ctor::Left_(5u);
-
   static inline const unsigned int test_handle =
       handle_left<unsigned int>(test_either);
 

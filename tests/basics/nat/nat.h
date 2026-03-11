@@ -21,34 +21,45 @@ struct Nat {
   struct nat {
   public:
     struct O {};
+
     struct S {
       std::shared_ptr<nat> _a0;
     };
+
     using variant_t = std::variant<O, S>;
 
   private:
     variant_t v_;
+
     explicit nat(O _v) : v_(std::move(_v)) {}
+
     explicit nat(S _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<nat> O_() {
         return std::shared_ptr<nat>(new nat(O{}));
       }
+
       static std::shared_ptr<nat> S_(const std::shared_ptr<nat> &a0) {
         return std::shared_ptr<nat>(new nat(S{a0}));
       }
+
       static std::unique_ptr<nat> O_uptr() {
         return std::unique_ptr<nat>(new nat(O{}));
       }
+
       static std::unique_ptr<nat> S_uptr(const std::shared_ptr<nat> &a0) {
         return std::unique_ptr<nat>(new nat(S{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
+
     int nat_to_int() const {
       return std::visit(
           Overloaded{[](const typename nat::O _args) -> int { return 0; },
@@ -58,6 +69,7 @@ struct Nat {
                      }},
           this->v());
     }
+
     template <typename T1, MapsTo<T1, std::shared_ptr<nat>, T1> F1>
     T1 nat_rec(const T1 f, F1 &&f0) const {
       return std::visit(
@@ -68,6 +80,7 @@ struct Nat {
                      }},
           this->v());
     }
+
     template <typename T1, MapsTo<T1, std::shared_ptr<nat>, T1> F1>
     T1 nat_rect(const T1 f, F1 &&f0) const {
       return std::visit(
@@ -78,6 +91,7 @@ struct Nat {
                      }},
           this->v());
     }
+
     std::shared_ptr<nat> add(std::shared_ptr<nat> n) const {
       return std::visit(
           Overloaded{[&](const typename nat::O _args) -> std::shared_ptr<nat> {

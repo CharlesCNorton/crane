@@ -22,36 +22,46 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -62,26 +72,32 @@ struct CoindGuard {
       A _a0;
       std::shared_ptr<Stream<A>> _a1;
     };
+
     using variant_t = std::variant<Cons>;
 
   private:
     crane::lazy<variant_t> lazy_v_;
+
     explicit Stream(Cons _v)
         : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+
     explicit Stream(std::function<variant_t()> _thunk)
         : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<Stream<A>>
       Cons_(A a0, const std::shared_ptr<Stream<A>> &a1) {
         return std::shared_ptr<Stream<A>>(new Stream<A>(Cons{a0, a1}));
       }
+
       static std::unique_ptr<Stream<A>>
       Cons_uptr(A a0, const std::shared_ptr<Stream<A>> &a1) {
         return std::unique_ptr<Stream<A>>(new Stream<A>(Cons{a0, a1}));
       }
+
       static std::shared_ptr<Stream<A>>
       lazy_(std::function<std::shared_ptr<Stream<A>>()> thunk) {
         return std::shared_ptr<Stream<A>>(
@@ -91,6 +107,7 @@ struct CoindGuard {
             })));
       }
     };
+
     const variant_t &v() const { return lazy_v_.force(); }
   };
 
@@ -163,11 +180,9 @@ struct CoindGuard {
 
   static inline const std::shared_ptr<Stream<unsigned int>> nats =
       iterate<unsigned int>([](unsigned int x) { return (x + 1); }, 0u);
-
   static inline const std::shared_ptr<Stream<unsigned int>> evens =
       smap<unsigned int, unsigned int>([](unsigned int n) { return (n * 2u); },
                                        nats);
-
   static inline const std::shared_ptr<Stream<unsigned int>> fibs =
       unfold<unsigned int, std::pair<unsigned int, unsigned int>>(
           [](std::pair<unsigned int, unsigned int> pat) {
@@ -176,25 +191,19 @@ struct CoindGuard {
             return std::make_pair(a, std::make_pair(b, (a + b)));
           },
           std::make_pair(0u, 1u));
-
   static inline const std::shared_ptr<Stream<unsigned int>> sum_stream =
       zipWith<unsigned int, unsigned int, unsigned int>(
           [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
             return (_x0 + _x1);
           },
           nats, evens);
-
   static inline const std::shared_ptr<List<unsigned int>> test_nats_5 =
       take<unsigned int>(5u, nats);
-
   static inline const std::shared_ptr<List<unsigned int>> test_evens_5 =
       take<unsigned int>(5u, evens);
-
   static inline const std::shared_ptr<List<unsigned int>> test_fibs_8 =
       take<unsigned int>(8u, fibs);
-
   static inline const std::shared_ptr<List<unsigned int>> test_sum_5 =
       take<unsigned int>(5u, sum_stream);
-
   static inline const unsigned int test_iterate_hd = hd<unsigned int>(nats);
 };

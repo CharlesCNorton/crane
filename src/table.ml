@@ -788,7 +788,7 @@ let () = declare_int_option
 let { Goptions.get = format_style } =
   declare_string_option_and_ref
     ~key:["Crane"; "Format"; "Style"]
-    ~value:"LLVM"
+    ~value:"{BasedOnStyle: LLVM, SeparateDefinitionBlocks: Always}"
     ()
 
 let { Goptions.get = std_lib } =

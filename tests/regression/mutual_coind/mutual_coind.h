@@ -21,68 +21,85 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
 struct MutualCoind {
   template <typename A> struct streamA;
   template <typename A> struct streamB;
+
   template <typename A> struct streamA {
   public:
     struct consA {
       A _a0;
       std::shared_ptr<streamB<A>> _a1;
     };
+
     using variant_t = std::variant<consA>;
 
   private:
     crane::lazy<variant_t> lazy_v_;
+
     explicit streamA(consA _v)
         : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+
     explicit streamA(std::function<variant_t()> _thunk)
         : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<streamA<A>>
       consA_(A a0, const std::shared_ptr<streamB<A>> &a1) {
         return std::shared_ptr<streamA<A>>(new streamA<A>(consA{a0, a1}));
       }
+
       static std::unique_ptr<streamA<A>>
       consA_uptr(A a0, const std::shared_ptr<streamB<A>> &a1) {
         return std::unique_ptr<streamA<A>>(new streamA<A>(consA{a0, a1}));
       }
+
       static std::shared_ptr<streamA<A>>
       lazy_(std::function<std::shared_ptr<streamA<A>>()> thunk) {
         return std::shared_ptr<streamA<A>>(
@@ -92,34 +109,42 @@ struct MutualCoind {
             })));
       }
     };
+
     const variant_t &v() const { return lazy_v_.force(); }
   };
+
   template <typename A> struct streamB {
   public:
     struct consB {
       A _a0;
       std::shared_ptr<streamA<A>> _a1;
     };
+
     using variant_t = std::variant<consB>;
 
   private:
     crane::lazy<variant_t> lazy_v_;
+
     explicit streamB(consB _v)
         : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+
     explicit streamB(std::function<variant_t()> _thunk)
         : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<streamB<A>>
       consB_(A a0, const std::shared_ptr<streamA<A>> &a1) {
         return std::shared_ptr<streamB<A>>(new streamB<A>(consB{a0, a1}));
       }
+
       static std::unique_ptr<streamB<A>>
       consB_uptr(A a0, const std::shared_ptr<streamA<A>> &a1) {
         return std::unique_ptr<streamB<A>>(new streamB<A>(consB{a0, a1}));
       }
+
       static std::shared_ptr<streamB<A>>
       lazy_(std::function<std::shared_ptr<streamB<A>>()> thunk) {
         return std::shared_ptr<streamB<A>>(
@@ -129,6 +154,7 @@ struct MutualCoind {
             })));
       }
     };
+
     const variant_t &v() const { return lazy_v_.force(); }
   };
 
@@ -197,6 +223,7 @@ struct MutualCoind {
                         s->v());
     }
   }
+
   template <typename T1>
   static std::shared_ptr<List<T1>>
   takeB(const unsigned int fuel, const std::shared_ptr<streamB<T1>> &s) {
@@ -215,10 +242,8 @@ struct MutualCoind {
   }
 
   static inline const unsigned int test_headA = headA<unsigned int>(countA(0u));
-
   static inline const unsigned int test_headB =
       headB<unsigned int>(countB(10u));
-
   static inline const std::shared_ptr<List<unsigned int>> test_take5 =
       takeA<unsigned int>(5u, countA(0u));
 };

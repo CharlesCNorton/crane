@@ -24,23 +24,29 @@ struct BenchLetIn {
       A _a0;
       B _a1;
     };
+
     using variant_t = std::variant<Pair0>;
 
   private:
     variant_t v_;
+
     explicit pair(Pair0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<pair<A, B>> Pair0_(A a0, B a1) {
         return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
+
       static std::unique_ptr<pair<A, B>> Pair0_uptr(A a0, B a1) {
         return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -67,12 +73,9 @@ struct BenchLetIn {
   }
 
   static unsigned int swap_snd(const unsigned int a, const unsigned int b);
-
   static unsigned int add_via_pair(const unsigned int a, const unsigned int b);
-
   static unsigned int nested_swap(const unsigned int a, const unsigned int b,
                                   const unsigned int c, const unsigned int d);
-
   static unsigned int sum_via_pairs(const unsigned int n);
 
   template <typename A, typename B, typename C> struct triple {
@@ -82,25 +85,31 @@ struct BenchLetIn {
       B _a1;
       C _a2;
     };
+
     using variant_t = std::variant<Triple0>;
 
   private:
     variant_t v_;
+
     explicit triple(Triple0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<triple<A, B, C>> Triple0_(A a0, B a1, C a2) {
         return std::shared_ptr<triple<A, B, C>>(
             new triple<A, B, C>(Triple0{a0, a1, a2}));
       }
+
       static std::unique_ptr<triple<A, B, C>> Triple0_uptr(A a0, B a1, C a2) {
         return std::unique_ptr<triple<A, B, C>>(
             new triple<A, B, C>(Triple0{a0, a1, a2}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -132,24 +141,15 @@ struct BenchLetIn {
 
   static unsigned int mid3(const unsigned int a, const unsigned int b,
                            const unsigned int c);
-
   static unsigned int sum3(const unsigned int a, const unsigned int b,
                            const unsigned int c);
-
   static unsigned int chain_pairs(const unsigned int a, const unsigned int b,
                                   const unsigned int c);
-
   static inline const unsigned int test_swap = swap_snd(3u, 4u);
-
   static inline const unsigned int test_add = add_via_pair(3u, 4u);
-
   static inline const unsigned int test_nested = nested_swap(1u, 2u, 3u, 4u);
-
   static inline const unsigned int test_sum_pairs = sum_via_pairs(5u);
-
   static inline const unsigned int test_mid3 = mid3(1u, 2u, 3u);
-
   static inline const unsigned int test_sum3 = sum3(1u, 2u, 3u);
-
   static inline const unsigned int test_chain = chain_pairs(1u, 2u, 3u);
 };

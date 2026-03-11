@@ -24,7 +24,6 @@ struct ValidLayoutWindow {
   };
 
   static bool valid_layoutb(const std::shared_ptr<layout> &l);
-
   static inline const unsigned int t =
       ([](void) {
         if (valid_layoutb(std::make_shared<layout>(layout{128u, 256u}))) {

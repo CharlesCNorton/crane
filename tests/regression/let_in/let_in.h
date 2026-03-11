@@ -19,19 +19,14 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct LetIn {
   static inline const unsigned int simple_let = 5u;
-
   static inline const unsigned int nested_let = 3u;
-
   static inline const unsigned int let_with_add = [](void) {
     unsigned int x = 3u;
     unsigned int y = 4u;
     return (std::move(x) + std::move(y));
   }();
-
   static inline const unsigned int shadowed_let = 3u;
-
   static unsigned int let_in_fun(const unsigned int n);
-
   static inline const unsigned int let_fun = [](void) {
     unsigned int x = 5u;
     return (std::move(x) + 1u);
@@ -43,23 +38,29 @@ struct LetIn {
       A _a0;
       B _a1;
     };
+
     using variant_t = std::variant<Pair0>;
 
   private:
     variant_t v_;
+
     explicit pair(Pair0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<pair<A, B>> Pair0_(A a0, B a1) {
         return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
+
       static std::unique_ptr<pair<A, B>> Pair0_uptr(A a0, B a1) {
         return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -97,27 +98,18 @@ struct LetIn {
             }},
         std::move(p)->v());
   }();
-
   static inline const unsigned int multi_let = [](void) {
     unsigned int a = 1u;
     unsigned int b = 2u;
     unsigned int c = 3u;
     return (std::move(a) + (std::move(b) + std::move(c)));
   }();
-
   static inline const unsigned int test_simple = simple_let;
-
   static inline const unsigned int test_nested = nested_let;
-
   static inline const unsigned int test_add = let_with_add;
-
   static inline const unsigned int test_shadow = shadowed_let;
-
   static inline const unsigned int test_fun_call = let_in_fun(3u);
-
   static inline const unsigned int test_let_fun = let_fun;
-
   static inline const unsigned int test_destruct = let_destruct;
-
   static inline const unsigned int test_multi = multi_let;
 };

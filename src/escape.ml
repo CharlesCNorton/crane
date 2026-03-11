@@ -54,6 +54,31 @@ let nb_occur_match =
     | MLuint _ | MLfloat _ | MLstring _ -> 0
   in nb
 
+(** Simple occurrence check: does [MLrel k] appear anywhere in [t]?
+   Used by both escape analysis and the combined analysis below. *)
+let rec occurs k = function
+  | MLrel i -> i = k
+  | MLcase (_, scrut, branches) ->
+      occurs k scrut ||
+      Array.exists (fun (ids, _, _, body) ->
+        occurs (k + List.length ids) body
+      ) branches
+  | MLletin (_, _, rhs, cont) ->
+      occurs k rhs || occurs (k + 1) cont
+  | MLlam (_, _, body) -> occurs (k + 1) body
+  | MLapp (head, args) ->
+      occurs k head || List.exists (occurs k) args
+  | MLfix (_, ids, bodies, _) ->
+      let k' = k + Array.length ids in
+      Array.exists (occurs k') bodies
+  | MLcons (_, _, args) | MLtuple args ->
+      List.exists (occurs k) args
+  | MLmagic a -> occurs k a
+  | MLparray (elts, def) ->
+      Array.exists (occurs k) elts || occurs k def
+  | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
+  | MLuint _ | MLfloat _ | MLstring _ -> false
+
 (** {2 Phase 1: Escape analysis for unique_ptr promotion} *)
 
 (** Check if de Bruijn index [k] escapes in [t].
@@ -90,8 +115,6 @@ let escapes k t =
         occurs (k + 1) body  (* Lambda capture → escape *)
 
     | MLapp (head, args) ->
-        (* Arguments don't escape (callee borrows or copies).
-           Only escape if variable appears within argument expression. *)
         check k false head || List.exists (check k false) args
 
     | MLfix (_, ids, bodies, _) ->
@@ -109,30 +132,6 @@ let escapes k t =
     | MLparray (elts, def) ->
         Array.exists (occurs k) elts || occurs k def
 
-    | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
-    | MLuint _ | MLfloat _ | MLstring _ -> false
-
-  (* Simple occurrence check: does [MLrel k] appear anywhere in [t]? *)
-  and occurs k = function
-    | MLrel i -> i = k
-    | MLcase (_, scrut, branches) ->
-        occurs k scrut ||
-        Array.exists (fun (ids, _, _, body) ->
-          occurs (k + List.length ids) body
-        ) branches
-    | MLletin (_, _, rhs, cont) ->
-        occurs k rhs || occurs (k + 1) cont
-    | MLlam (_, _, body) -> occurs (k + 1) body
-    | MLapp (head, args) ->
-        occurs k head || List.exists (occurs k) args
-    | MLfix (_, ids, bodies, _) ->
-        let k' = k + Array.length ids in
-        Array.exists (occurs k') bodies
-    | MLcons (_, _, args) | MLtuple args ->
-        List.exists (occurs k) args
-    | MLmagic a -> occurs k a
-    | MLparray (elts, def) ->
-        Array.exists (occurs k) elts || occurs k def
     | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
     | MLuint _ | MLfloat _ | MLstring _ -> false
 
@@ -225,31 +224,6 @@ let analyze_occur_escape k t =
 
     | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
     | MLuint _ | MLfloat _ | MLstring _ -> ()
-
-  (* Simple occurrence check: does [MLrel k] appear anywhere in [t]?
-     This is used for escape detection in constructors, lambdas, etc. *)
-  and occurs k = function
-    | MLrel i -> i = k
-    | MLcase (_, scrut, branches) ->
-        occurs k scrut ||
-        Array.exists (fun (ids, _, _, body) ->
-          occurs (k + List.length ids) body
-        ) branches
-    | MLletin (_, _, rhs, cont) ->
-        occurs k rhs || occurs (k + 1) cont
-    | MLlam (_, _, body) -> occurs (k + 1) body
-    | MLapp (head, args) ->
-        occurs k head || List.exists (occurs k) args
-    | MLfix (_, ids, bodies, _) ->
-        let k' = k + Array.length ids in
-        Array.exists (occurs k') bodies
-    | MLcons (_, _, args) | MLtuple args ->
-        List.exists (occurs k) args
-    | MLmagic a -> occurs k a
-    | MLparray (elts, def) ->
-        Array.exists (occurs k) elts || occurs k def
-    | MLglob _ | MLexn _ | MLdummy _ | MLaxiom _
-    | MLuint _ | MLfloat _ | MLstring _ -> false
 
   in
   check k true t;

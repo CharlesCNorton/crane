@@ -190,7 +190,7 @@ let unquote s = s
 
 (** Join non-empty strings with a delimiter. *)
 let rec qualify delim = function
-  | [] -> assert false
+  | [] -> CErrors.anomaly (Pp.str "qualify: empty list")
   | [s] -> s
   | ""::l -> qualify delim l
   | s::l -> s^delim^(qualify delim l)
@@ -459,7 +459,7 @@ let pop_visible, push_visible, get_visible =
   register_cleanup (fun () -> vis := []);
   let pop () =
     match !vis with
-      | [] -> assert false
+      | [] -> CErrors.anomaly (Pp.str "pop_visible: empty visibility stack")
       | v :: vl ->
           vis := vl;
           (* we save the 1st-level-content of MPfile for later use *)
@@ -474,7 +474,7 @@ let pop_visible, push_visible, get_visible =
 let get_visible_mps () = List.map (function v -> v.mp) (get_visible ())
 
 (** Get the innermost visible layer. *)
-let top_visible () = match get_visible () with [] -> assert false | v::_ -> v
+let top_visible () = match get_visible () with [] -> CErrors.anomaly (Pp.str "top_visible: empty visibility stack") | v::_ -> v
 
 (** Get the module path of the innermost visible layer. *)
 let top_visible_mp () = (top_visible ()).mp
@@ -773,7 +773,7 @@ let pp_duplicate k' prefix mp rls olab =
 
 (** Extract the kind and name for first-level clash detection. *)
 let fstlev_ks k = function
-  | [] -> assert false
+  | [] -> CErrors.anomaly (Pp.str "fstlev_ks: empty renaming list")
   | [s] -> k,s
   | s::_ -> Mod,s
 
@@ -800,7 +800,7 @@ let pp_ocaml_bound base rls =
 (** Print an externally-defined reference.
     [pp_ocaml_extern] : [mp] isn't local, it is defined in another [MPfile]. *)
 let pp_ocaml_extern k base rls = match rls with
-  | [] -> assert false
+  | [] -> CErrors.anomaly (Pp.str "pp_ocaml_extern: empty renaming list")
   | base_s :: rls' ->
       if (not (modular ())) (* Pseudo qualification with "" *)
         || (List.is_empty rls')  (* Case of a file A.v used as a module later *)
@@ -909,9 +909,9 @@ let get_native_char c =
   let rec cumul = function
     | [] -> 0
     | MLcons(_,GlobRef.ConstructRef(_,j),[])::l -> (2-j) + 2 * (cumul l)
-    | _ -> assert false
+    | _ -> CErrors.anomaly (Pp.str "get_native_char: malformed ascii constructor list")
   in
-  let l = match c with MLcons(_,_,l) -> l | _ -> assert false in
+  let l = match c with MLcons(_,_,l) -> l | _ -> CErrors.anomaly (Pp.str "get_native_char: expected MLcons") in
   Char.chr (cumul l)
 
 let pp_native_char c = str ("'"^Char.escaped (get_native_char c)^"'")
@@ -978,7 +978,7 @@ let get_native_string c =
         Buffer.add_char buf (get_native_char hd);
         get tl
     (* others *)
-    | _ -> assert false
+    | _ -> CErrors.anomaly (Pp.str "get_native_string: malformed string constructor")
   in get c
 
 (** Printing the underlying string. *)

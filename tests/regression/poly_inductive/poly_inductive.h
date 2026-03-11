@@ -23,23 +23,29 @@ struct PolyInductive {
     struct PBox {
       A _a0;
     };
+
     using variant_t = std::variant<PBox>;
 
   private:
     variant_t v_;
+
     explicit pbox(PBox _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<pbox<A>> PBox_(A a0) {
         return std::shared_ptr<pbox<A>>(new pbox<A>(PBox{a0}));
       }
+
       static std::unique_ptr<pbox<A>> PBox_uptr(A a0) {
         return std::unique_ptr<pbox<A>>(new pbox<A>(PBox{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -77,23 +83,29 @@ struct PolyInductive {
       A _a0;
       B _a1;
     };
+
     using variant_t = std::variant<PPair>;
 
   private:
     variant_t v_;
+
     explicit ppair(PPair _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<ppair<A, B>> PPair_(A a0, B a1) {
         return std::shared_ptr<ppair<A, B>>(new ppair<A, B>(PPair{a0, a1}));
       }
+
       static std::unique_ptr<ppair<A, B>> PPair_uptr(A a0, B a1) {
         return std::unique_ptr<ppair<A, B>>(new ppair<A, B>(PPair{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -142,33 +154,43 @@ struct PolyInductive {
   template <typename A> struct pmaybe {
   public:
     struct PNothing {};
+
     struct PJust {
       A _a0;
     };
+
     using variant_t = std::variant<PNothing, PJust>;
 
   private:
     variant_t v_;
+
     explicit pmaybe(PNothing _v) : v_(std::move(_v)) {}
+
     explicit pmaybe(PJust _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<pmaybe<A>> PNothing_() {
         return std::shared_ptr<pmaybe<A>>(new pmaybe<A>(PNothing{}));
       }
+
       static std::shared_ptr<pmaybe<A>> PJust_(A a0) {
         return std::shared_ptr<pmaybe<A>>(new pmaybe<A>(PJust{a0}));
       }
+
       static std::unique_ptr<pmaybe<A>> PNothing_uptr() {
         return std::unique_ptr<pmaybe<A>>(new pmaybe<A>(PNothing{}));
       }
+
       static std::unique_ptr<pmaybe<A>> PJust_uptr(A a0) {
         return std::unique_ptr<pmaybe<A>>(new pmaybe<A>(PJust{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -230,38 +252,48 @@ struct PolyInductive {
     struct PLeaf {
       A _a0;
     };
+
     struct PNode {
       std::shared_ptr<ptree<A>> _a0;
       std::shared_ptr<ptree<A>> _a1;
     };
+
     using variant_t = std::variant<PLeaf, PNode>;
 
   private:
     variant_t v_;
+
     explicit ptree(PLeaf _v) : v_(std::move(_v)) {}
+
     explicit ptree(PNode _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<ptree<A>> PLeaf_(A a0) {
         return std::shared_ptr<ptree<A>>(new ptree<A>(PLeaf{a0}));
       }
+
       static std::shared_ptr<ptree<A>>
       PNode_(const std::shared_ptr<ptree<A>> &a0,
              const std::shared_ptr<ptree<A>> &a1) {
         return std::shared_ptr<ptree<A>>(new ptree<A>(PNode{a0, a1}));
       }
+
       static std::unique_ptr<ptree<A>> PLeaf_uptr(A a0) {
         return std::unique_ptr<ptree<A>>(new ptree<A>(PLeaf{a0}));
       }
+
       static std::unique_ptr<ptree<A>>
       PNode_uptr(const std::shared_ptr<ptree<A>> &a0,
                  const std::shared_ptr<ptree<A>> &a1) {
         return std::unique_ptr<ptree<A>>(new ptree<A>(PNode{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -321,24 +353,18 @@ struct PolyInductive {
 
   static inline const unsigned int test_pbox =
       punbox<unsigned int>(pbox<unsigned int>::ctor::PBox_(42u));
-
   static inline const unsigned int test_ppair_fst = pfst<unsigned int, bool>(
       ppair<unsigned int, bool>::ctor::PPair_(7u, true));
-
   static inline const bool test_ppair_snd = psnd<unsigned int, bool>(
       ppair<unsigned int, bool>::ctor::PPair_(7u, true));
-
   static inline const unsigned int test_pjust =
       pmaybe_default<unsigned int>(0u, pmaybe<unsigned int>::ctor::PJust_(99u));
-
   static inline const unsigned int test_pnothing =
       pmaybe_default<unsigned int>(0u, pmaybe<unsigned int>::ctor::PNothing_());
-
   static inline const unsigned int test_pmap = pmaybe_default<unsigned int>(
       0u, pmaybe_map<unsigned int, unsigned int>(
               [](unsigned int x) { return (x + 1); },
               pmaybe<unsigned int>::ctor::PJust_(5u)));
-
   static inline const unsigned int test_ptree =
       ptree_size<unsigned int>(ptree<unsigned int>::ctor::PNode_(
           ptree<unsigned int>::ctor::PLeaf_(1u),

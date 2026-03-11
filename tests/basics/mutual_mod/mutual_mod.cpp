@@ -23,6 +23,7 @@ EvenOdd::even_length(const std::shared_ptr<EvenOdd::even_list> &e) {
           }},
       e->v());
 }
+
 unsigned int EvenOdd::odd_length(const std::shared_ptr<EvenOdd::odd_list> &o) {
   return std::visit(
       Overloaded{

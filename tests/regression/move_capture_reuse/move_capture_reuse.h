@@ -20,37 +20,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <typename T1, MapsTo<T1, A> F0>
   std::shared_ptr<List<T1>> map(F0 &&f) const {
     return std::visit(
@@ -67,6 +78,7 @@ public:
             }},
         this->v());
   }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -78,6 +90,7 @@ public:
                    }},
         this->v());
   }
+
   std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
     return std::visit(Overloaded{[&](const typename List<A>::nil _args)
                                      -> std::shared_ptr<List<A>> { return m; },
@@ -96,7 +109,6 @@ struct MoveCaptureReuse {
   static std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> prefix_each(
       std::shared_ptr<List<unsigned int>> prefix,
       const std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> &xss);
-
   static inline const std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>
       sample = prefix_each(
           List<unsigned int>::ctor::cons_(1u, List<unsigned int>::ctor::nil_()),
@@ -107,7 +119,6 @@ struct MoveCaptureReuse {
                   List<unsigned int>::ctor::cons_(
                       20u, List<unsigned int>::ctor::nil_()),
                   List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())));
-
   static inline const unsigned int len_sum = []() {
     return std::visit(
         Overloaded{

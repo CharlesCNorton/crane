@@ -75,7 +75,6 @@ struct CtorEscapeCollision {
   }
 
   static unsigned int tag(const item x);
-
   static inline const unsigned int t =
       (((((tag(item::D_) + tag(item::D_0)) + tag(item::D__)) +
          tag(item::D__0)) +

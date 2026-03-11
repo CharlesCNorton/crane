@@ -25,7 +25,6 @@ struct SetTestPinUpdate {
 
   static std::shared_ptr<state> set_test_pin(std::shared_ptr<state> s,
                                              const bool v);
-
   static inline const unsigned int t = []() {
     return [](void) {
       std::shared_ptr<state> s_ =

@@ -20,70 +20,91 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct Nat {
 public:
   struct O {};
+
   struct S {
     std::shared_ptr<Nat> _a0;
   };
+
   using variant_t = std::variant<O, S>;
 
 private:
   variant_t v_;
+
   explicit Nat(O _v) : v_(std::move(_v)) {}
+
   explicit Nat(S _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<Nat> O_() {
       return std::shared_ptr<Nat>(new Nat(O{}));
     }
+
     static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
       return std::shared_ptr<Nat>(new Nat(S{a0}));
     }
+
     static std::unique_ptr<Nat> O_uptr() {
       return std::unique_ptr<Nat>(new Nat(O{}));
     }
+
     static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
       return std::unique_ptr<Nat>(new Nat(S{a0}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <MapsTo<bool, A> F0> std::shared_ptr<List<A>> filter(F0 &&f) const {
     return std::visit(
         Overloaded{
@@ -140,16 +161,19 @@ template <typename A> struct Directed {
 
 template <typename _tcI0, typename T1> struct DirectedGraph {
   using edge = std::shared_ptr<DirectedEdge<T1>>;
+
   static std::shared_ptr<Directed<std::any>> empty() {
     return std::make_shared<Directed<std::any>>(Directed<std::any>{
         List<std::any>::ctor::nil_(),
         List<std::shared_ptr<DirectedEdge<std::any>>>::ctor::nil_()});
   }
+
   static std::shared_ptr<Directed<std::any>>
   add_node(std::shared_ptr<Directed<std::any>> g, T1 n) {
     return std::make_shared<Directed<std::any>>(Directed<std::any>{
         List<std::any>::ctor::cons_(n, g->directed_nodes), g->directed_edges});
   }
+
   static std::shared_ptr<Directed<std::any>>
   add_edge(std::shared_ptr<Directed<std::any>> g,
            std::shared_ptr<DirectedEdge<T1>> e) {
@@ -158,10 +182,12 @@ template <typename _tcI0, typename T1> struct DirectedGraph {
         List<std::shared_ptr<DirectedEdge<std::any>>>::ctor::cons_(
             e, g->directed_edges)});
   }
+
   static std::shared_ptr<List<T1>>
   nodes(std::shared_ptr<Directed<std::any>> g) {
     return g->directed_nodes;
   }
+
   static std::shared_ptr<List<std::shared_ptr<DirectedEdge<T1>>>>
   edges(std::shared_ptr<Directed<std::any>> g, T1 n) {
     return g->directed_edges->filter(
@@ -189,17 +215,20 @@ template <typename A> struct Undirected {
 
 template <typename _tcI0, typename T1> struct UndirectedGraph {
   using edge = std::shared_ptr<UndirectedEdge<T1>>;
+
   static std::shared_ptr<Undirected<std::any>> empty() {
     return std::make_shared<Undirected<std::any>>(Undirected<std::any>{
         List<std::any>::ctor::nil_(),
         List<std::shared_ptr<UndirectedEdge<std::any>>>::ctor::nil_()});
   }
+
   static std::shared_ptr<Undirected<std::any>>
   add_node(std::shared_ptr<Undirected<std::any>> g, T1 n) {
     return std::make_shared<Undirected<std::any>>(Undirected<std::any>{
         List<std::any>::ctor::cons_(n, g->undirected_nodes),
         g->undirected_edges});
   }
+
   static std::shared_ptr<Undirected<std::any>>
   add_edge(std::shared_ptr<Undirected<std::any>> g,
            std::shared_ptr<UndirectedEdge<T1>> e) {
@@ -208,10 +237,12 @@ template <typename _tcI0, typename T1> struct UndirectedGraph {
         List<std::shared_ptr<UndirectedEdge<std::any>>>::ctor::cons_(
             e, g->undirected_edges)});
   }
+
   static std::shared_ptr<List<T1>>
   nodes(std::shared_ptr<Undirected<std::any>> g) {
     return g->undirected_nodes;
   }
+
   static std::shared_ptr<List<std::shared_ptr<UndirectedEdge<T1>>>>
   edges(std::shared_ptr<Undirected<std::any>> g, T1 n) {
     return g->undirected_edges->filter(
@@ -228,6 +259,7 @@ struct NatEq {
     return nat_eqb(a0, a1);
   }
 };
+
 static_assert(Eq<NatEq, std::shared_ptr<Nat>>);
 
 template <typename _tcI0, typename T1> bool test_eq(const T1 x, const T1 y) {

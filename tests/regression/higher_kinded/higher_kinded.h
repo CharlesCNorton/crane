@@ -28,38 +28,48 @@ struct HigherKinded {
     struct Leaf {
       A _a0;
     };
+
     struct Branch {
       std::shared_ptr<Tree<A>> _a0;
       std::shared_ptr<Tree<A>> _a1;
     };
+
     using variant_t = std::variant<Leaf, Branch>;
 
   private:
     variant_t v_;
+
     explicit Tree(Leaf _v) : v_(std::move(_v)) {}
+
     explicit Tree(Branch _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<Tree<A>> Leaf_(A a0) {
         return std::shared_ptr<Tree<A>>(new Tree<A>(Leaf{a0}));
       }
+
       static std::shared_ptr<Tree<A>>
       Branch_(const std::shared_ptr<Tree<A>> &a0,
               const std::shared_ptr<Tree<A>> &a1) {
         return std::shared_ptr<Tree<A>>(new Tree<A>(Branch{a0, a1}));
       }
+
       static std::unique_ptr<Tree<A>> Leaf_uptr(A a0) {
         return std::unique_ptr<Tree<A>>(new Tree<A>(Leaf{a0}));
       }
+
       static std::unique_ptr<Tree<A>>
       Branch_uptr(const std::shared_ptr<Tree<A>> &a0,
                   const std::shared_ptr<Tree<A>> &a1) {
         return std::unique_ptr<Tree<A>>(new Tree<A>(Branch{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -166,16 +176,12 @@ struct HigherKinded {
           Tree<unsigned int>::ctor::Branch_(
               Tree<unsigned int>::ctor::Leaf_(2u),
               Tree<unsigned int>::ctor::Leaf_(3u)));
-
   static inline const unsigned int test_tree_sum = tree_sum(test_tree);
-
   static inline const unsigned int test_tree_size =
       tree_size<unsigned int>(test_tree);
-
   static inline const std::shared_ptr<Tree<unsigned int>> test_tree_map =
       tree_map<unsigned int, unsigned int>(
           [](unsigned int n) { return (n * 2u); }, test_tree);
-
   static inline const std::optional<unsigned int> test_hk_option = hk_map(
       []<typename _T1>(auto &&_a0,
                        const std::optional<_T1> &_a1) -> decltype(auto) {
@@ -184,7 +190,6 @@ struct HigherKinded {
       },
       [](unsigned int n) { return (n + 1u); },
       std::make_optional<unsigned int>(5u));
-
   static inline const std::shared_ptr<Tree<unsigned int>> test_hk_tree = hk_map(
       []<typename _T1>(
           auto &&_a0, const std::shared_ptr<Tree<_T1>> &_a1) -> decltype(auto) {

@@ -21,36 +21,46 @@ struct RecRecord {
   template <typename A> struct rlist {
   public:
     struct rnil {};
+
     struct rcons {
       A _a0;
       std::shared_ptr<rlist<A>> _a1;
     };
+
     using variant_t = std::variant<rnil, rcons>;
 
   private:
     variant_t v_;
+
     explicit rlist(rnil _v) : v_(std::move(_v)) {}
+
     explicit rlist(rcons _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<rlist<A>> rnil_() {
         return std::shared_ptr<rlist<A>>(new rlist<A>(rnil{}));
       }
+
       static std::shared_ptr<rlist<A>>
       rcons_(A a0, const std::shared_ptr<rlist<A>> &a1) {
         return std::shared_ptr<rlist<A>>(new rlist<A>(rcons{a0, a1}));
       }
+
       static std::unique_ptr<rlist<A>> rnil_uptr() {
         return std::unique_ptr<rlist<A>>(new rlist<A>(rnil{}));
       }
+
       static std::unique_ptr<rlist<A>>
       rcons_uptr(A a0, const std::shared_ptr<rlist<A>> &a1) {
         return std::unique_ptr<rlist<A>>(new rlist<A>(rcons{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -134,20 +144,15 @@ struct RecRecord {
   }
 
   static unsigned int rlist_sum(const std::shared_ptr<rlist<unsigned int>> &l);
-
   static unsigned int rnode_depth(const std::shared_ptr<RNode> &r);
-
   static inline const std::shared_ptr<rlist<unsigned int>> test_rlist =
       rlist<unsigned int>::ctor::rcons_(
           1u, rlist<unsigned int>::ctor::rcons_(
                   2u, rlist<unsigned int>::ctor::rcons_(
                           3u, rlist<unsigned int>::ctor::rnil_())));
-
   static inline const unsigned int test_rlist_len =
       rlist_length<unsigned int>(test_rlist);
-
   static inline const unsigned int test_rlist_sum = rlist_sum(test_rlist);
-
   static inline const std::shared_ptr<RNode> test_rnode =
       std::make_shared<RNode>(RNode{
           1u,
@@ -155,15 +160,11 @@ struct RecRecord {
               RNode{2u,
                     std::make_optional<std::shared_ptr<RNode>>(
                         std::make_shared<RNode>(RNode{3u, std::nullopt}))}))});
-
   static inline const unsigned int test_rnode_depth = rnode_depth(test_rnode);
-
   static inline const std::shared_ptr<Employee> test_emp =
       std::make_shared<Employee>(Employee{42u, 7u});
-
   static inline const std::shared_ptr<Department> test_dept =
       std::make_shared<Department>(Department{7u, test_emp, 50u});
-
   static inline const unsigned int test_dept_head_name =
       test_dept->dept_head->emp_name;
 };

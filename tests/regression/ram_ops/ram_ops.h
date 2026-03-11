@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -133,34 +144,26 @@ struct RamOps {
 
   static std::shared_ptr<ram_bank_main>
   get_bank_main(const std::shared_ptr<state_main> &s, const unsigned int b);
-
   static std::shared_ptr<ram_chip_main>
   get_chip_main(const std::shared_ptr<ram_bank_main> &bk, const unsigned int c);
-
   static std::shared_ptr<ram_reg_main>
   get_reg_main(const std::shared_ptr<ram_chip_main> &ch, const unsigned int r);
-
   static std::shared_ptr<ram_reg_main>
   upd_main_in_reg(std::shared_ptr<ram_reg_main> rg, const unsigned int i,
                   const unsigned int v);
-
   static std::shared_ptr<ram_chip_main>
   upd_reg_in_chip_main(std::shared_ptr<ram_chip_main> ch, const unsigned int r,
                        std::shared_ptr<ram_reg_main> rg);
-
   static std::shared_ptr<ram_bank_main>
   upd_chip_in_bank_main(std::shared_ptr<ram_bank_main> bk, const unsigned int c,
                         std::shared_ptr<ram_chip_main> ch);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank_main>>>
   upd_bank_in_sys_main(const std::shared_ptr<state_main> &s,
                        const unsigned int b,
                        const std::shared_ptr<ram_bank_main> &bk);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank_main>>>
   ram_write_main_sys(const std::shared_ptr<state_main> &s,
                      const unsigned int v);
-
   static inline const unsigned int test_main_write_chain = [](void) {
     std::shared_ptr<ram_reg_main> rg0 = std::make_shared<ram_reg_main>(
         ram_reg_main{List<unsigned int>::ctor::cons_(
@@ -243,26 +246,20 @@ struct RamOps {
 
   static std::shared_ptr<bank_port>
   get_bank_port(const std::shared_ptr<state_port> &s, const unsigned int b);
-
   static std::shared_ptr<chip_port>
   get_chip_port(const std::shared_ptr<bank_port> &bk, const unsigned int c);
-
   static std::shared_ptr<chip_port>
   upd_port_in_chip(const std::shared_ptr<chip_port> &_x, const unsigned int v);
-
   static std::shared_ptr<bank_port>
   upd_chip_in_bank_port(std::shared_ptr<bank_port> bk, const unsigned int c,
                         std::shared_ptr<chip_port> ch);
-
   static std::shared_ptr<List<std::shared_ptr<bank_port>>>
   upd_bank_in_sys_port(const std::shared_ptr<state_port> &s,
                        const unsigned int b,
                        const std::shared_ptr<bank_port> &bk);
-
   static std::shared_ptr<List<std::shared_ptr<bank_port>>>
   ram_write_port_sys(const std::shared_ptr<state_port> &s,
                      const unsigned int v);
-
   static inline const unsigned int test_port_write_chain = [](void) {
     std::shared_ptr<chip_port> ch0 = std::make_shared<chip_port>(chip_port{0u});
     std::shared_ptr<bank_port> bk0 = std::make_shared<bank_port>(
@@ -337,38 +334,30 @@ struct RamOps {
 
   static std::shared_ptr<ram_bank_status>
   get_bank_status(const std::shared_ptr<state_status> &s, const unsigned int b);
-
   static std::shared_ptr<ram_chip_status>
   get_chip_status(const std::shared_ptr<ram_bank_status> &bk,
                   const unsigned int c);
-
   static std::shared_ptr<ram_reg_status>
   get_reg_status(const std::shared_ptr<ram_chip_status> &ch,
                  const unsigned int r);
-
   static std::shared_ptr<ram_reg_status>
   upd_status_in_reg(std::shared_ptr<ram_reg_status> rg, const unsigned int i,
                     const unsigned int v);
-
   static std::shared_ptr<ram_chip_status>
   upd_reg_in_chip_status(std::shared_ptr<ram_chip_status> ch,
                          const unsigned int r,
                          std::shared_ptr<ram_reg_status> rg);
-
   static std::shared_ptr<ram_bank_status>
   upd_chip_in_bank_status(std::shared_ptr<ram_bank_status> bk,
                           const unsigned int c,
                           std::shared_ptr<ram_chip_status> ch);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank_status>>>
   upd_bank_in_sys_status(const std::shared_ptr<state_status> &s,
                          const unsigned int b,
                          const std::shared_ptr<ram_bank_status> &bk);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank_status>>>
   ram_write_status_sys(const std::shared_ptr<state_status> &s,
                        const unsigned int idx, const unsigned int v);
-
   static inline const unsigned int test_status_write_chain = [](void) {
     std::shared_ptr<ram_reg_status> rg0 = std::make_shared<ram_reg_status>(
         ram_reg_status{List<unsigned int>::ctor::cons_(
@@ -433,29 +422,21 @@ struct RamOps {
   static inline const std::shared_ptr<ram_reg_sel> empty_reg_sel =
       std::make_shared<ram_reg_sel>(ram_reg_sel{
           List<unsigned int>::ctor::nil_(), List<unsigned int>::ctor::nil_()});
-
   static inline const std::shared_ptr<ram_chip_sel> empty_chip_sel =
       std::make_shared<ram_chip_sel>(
           ram_chip_sel{List<std::shared_ptr<ram_reg_sel>>::ctor::nil_(), 0u});
-
   static inline const std::shared_ptr<ram_bank_sel> empty_bank_sel =
       std::make_shared<ram_bank_sel>(
           ram_bank_sel{List<std::shared_ptr<ram_chip_sel>>::ctor::nil_()});
-
   static std::shared_ptr<ram_bank_sel>
   get_bank_sel(const std::shared_ptr<state_sel> &s, const unsigned int b);
-
   static std::shared_ptr<ram_chip_sel>
   get_chip_sel(const std::shared_ptr<ram_bank_sel> &bk, const unsigned int c);
-
   static std::shared_ptr<ram_reg_sel>
   get_regRAM(const std::shared_ptr<ram_chip_sel> &ch, const unsigned int r);
-
   static unsigned int get_main_sel(const std::shared_ptr<ram_reg_sel> &rg,
                                    const unsigned int i);
-
   static unsigned int ram_read_main(const std::shared_ptr<state_sel> &s);
-
   static inline const std::shared_ptr<ram_reg_sel> sample_reg_sel =
       std::make_shared<ram_reg_sel>(ram_reg_sel{
           List<unsigned int>::ctor::cons_(
@@ -469,29 +450,24 @@ struct RamOps {
                   0u, List<unsigned int>::ctor::cons_(
                           0u, List<unsigned int>::ctor::cons_(
                                   0u, List<unsigned int>::ctor::nil_()))))});
-
   static inline const std::shared_ptr<ram_chip_sel> sample_chip_sel =
       std::make_shared<ram_chip_sel>(ram_chip_sel{
           List<std::shared_ptr<ram_reg_sel>>::ctor::cons_(
               sample_reg_sel, List<std::shared_ptr<ram_reg_sel>>::ctor::nil_()),
           3u});
-
   static inline const std::shared_ptr<ram_bank_sel> sample_bank_sel =
       std::make_shared<ram_bank_sel>(
           ram_bank_sel{List<std::shared_ptr<ram_chip_sel>>::ctor::cons_(
               sample_chip_sel,
               List<std::shared_ptr<ram_chip_sel>>::ctor::nil_())});
-
   static inline const std::shared_ptr<ram_sel> sample_sel =
       std::make_shared<ram_sel>(ram_sel{0u, 0u, 2u});
-
   static inline const std::shared_ptr<state_sel> sample_state_sel =
       std::make_shared<state_sel>(
           state_sel{List<std::shared_ptr<ram_bank_sel>>::ctor::cons_(
                         sample_bank_sel,
                         List<std::shared_ptr<ram_bank_sel>>::ctor::nil_()),
                     0u, sample_sel});
-
   static inline const unsigned int test_read_main_selector =
       ram_read_main(sample_state_sel);
 
@@ -524,32 +500,24 @@ struct RamOps {
   static inline const std::shared_ptr<ram_reg_nested> empty_reg_nested =
       std::make_shared<ram_reg_nested>(ram_reg_nested{
           List<unsigned int>::ctor::nil_(), List<unsigned int>::ctor::nil_()});
-
   static inline const std::shared_ptr<ram_chip_nested> empty_chip_nested =
       std::make_shared<ram_chip_nested>(ram_chip_nested{
           List<std::shared_ptr<ram_reg_nested>>::ctor::nil_(), 0u});
-
   static inline const std::shared_ptr<ram_bank_nested> empty_bank_nested =
       std::make_shared<ram_bank_nested>(ram_bank_nested{
           List<std::shared_ptr<ram_chip_nested>>::ctor::nil_()});
-
   static std::shared_ptr<ram_bank_nested>
   get_bank_nested(const std::shared_ptr<state_nested> &s, const unsigned int b);
-
   static std::shared_ptr<ram_chip_nested>
   get_chip_nested(const std::shared_ptr<ram_bank_nested> &bk,
                   const unsigned int c);
-
   static std::shared_ptr<ram_reg_nested>
   get_regRAM_nested(const std::shared_ptr<ram_chip_nested> &ch,
                     const unsigned int r);
-
   static unsigned int get_main_nested(const std::shared_ptr<ram_reg_nested> &rg,
                                       const unsigned int i);
-
   static unsigned int
   ram_read_main_nested(const std::shared_ptr<state_nested> &s);
-
   static inline const std::shared_ptr<ram_reg_nested> sample_reg_nested =
       std::make_shared<ram_reg_nested>(ram_reg_nested{
           List<unsigned int>::ctor::cons_(
@@ -563,30 +531,25 @@ struct RamOps {
                   0u, List<unsigned int>::ctor::cons_(
                           0u, List<unsigned int>::ctor::cons_(
                                   0u, List<unsigned int>::ctor::nil_()))))});
-
   static inline const std::shared_ptr<ram_chip_nested> sample_chip_nested =
       std::make_shared<ram_chip_nested>(ram_chip_nested{
           List<std::shared_ptr<ram_reg_nested>>::ctor::cons_(
               sample_reg_nested,
               List<std::shared_ptr<ram_reg_nested>>::ctor::nil_()),
           3u});
-
   static inline const std::shared_ptr<ram_bank_nested> sample_bank_nested =
       std::make_shared<ram_bank_nested>(
           ram_bank_nested{List<std::shared_ptr<ram_chip_nested>>::ctor::cons_(
               sample_chip_nested,
               List<std::shared_ptr<ram_chip_nested>>::ctor::nil_())});
-
   static inline const std::shared_ptr<ram_sel_nested> sample_sel_nested =
       std::make_shared<ram_sel_nested>(ram_sel_nested{0u, 0u, 2u});
-
   static inline const std::shared_ptr<state_nested> sample_state_nested =
       std::make_shared<state_nested>(state_nested{
           List<std::shared_ptr<ram_bank_nested>>::ctor::cons_(
               sample_bank_nested,
               List<std::shared_ptr<ram_bank_nested>>::ctor::nil_()),
           0u, sample_sel_nested});
-
   static inline const unsigned int test_read_nested =
       ram_read_main_nested(sample_state_nested);
 
@@ -625,25 +588,19 @@ struct RamOps {
   }
 
   using reg_frame = std::shared_ptr<List<unsigned int>>;
-
   using chip_frame = std::shared_ptr<List<reg_frame>>;
-
   using bank_frame = std::shared_ptr<List<chip_frame>>;
-
   static reg_frame
   upd_main_in_reg_frame(const std::shared_ptr<List<unsigned int>> &rg,
                         const unsigned int i, const unsigned int v);
-
   static chip_frame upd_reg_in_chip_frame(
       const std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> &ch,
       const unsigned int r, const std::shared_ptr<List<unsigned int>> &rg);
-
   static bank_frame upd_chip_in_bank_frame(
       const std::shared_ptr<
           List<std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>>> &bk,
       const unsigned int c,
       const std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> &ch);
-
   static inline const bank_frame sample_bank_frame = List<
       std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>>>::ctor::
       cons_(List<std::shared_ptr<List<unsigned int>>>::ctor::cons_(
@@ -677,7 +634,6 @@ struct RamOps {
                                 nil_())),
                     List<std::shared_ptr<List<
                         std::shared_ptr<List<unsigned int>>>>>::ctor::nil_()));
-
   static inline const bank_frame updated_bank_frame = [](void) {
     std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> ch =
         sample_bank_frame->nth(
@@ -690,7 +646,6 @@ struct RamOps {
         upd_reg_in_chip_frame(std::move(ch), 1u, std::move(rg_));
     return upd_chip_in_bank_frame(sample_bank_frame, 0u, std::move(ch_));
   }();
-
   static inline const bool test_write_frame_different_chip =
       (updated_bank_frame
            ->nth(1u, List<std::shared_ptr<List<unsigned int>>>::ctor::nil_())
@@ -739,10 +694,8 @@ struct RamOps {
   static std::shared_ptr<List<unsigned int>>
   ram_write_main_sys_preserve(const std::shared_ptr<state_preserve> &s,
                               const unsigned int v);
-
   static std::shared_ptr<state_preserve>
   execute_write(std::shared_ptr<state_preserve> s, const unsigned int v);
-
   static inline const std::shared_ptr<state_preserve> sample_preserve =
       std::make_shared<state_preserve>(state_preserve{
           List<unsigned int>::ctor::cons_(
@@ -752,16 +705,13 @@ struct RamOps {
                            30u, List<unsigned int>::ctor::cons_(
                                     40u, List<unsigned int>::ctor::nil_())))),
           1u});
-
   static inline const bool test_write_main_preserves_other_bank =
       (execute_write(sample_preserve, 99u)->ram_sys_preserve->nth(3u, 0u) ==
        40u);
-
   static bool ram_addr_disjointb(const unsigned int b1, const unsigned int c1,
                                  const unsigned int r1, const unsigned int i1,
                                  const unsigned int b2, const unsigned int c2,
                                  const unsigned int r2, const unsigned int i2);
-
   static inline const unsigned int test_addr_disjoint_bool =
       ([](void) {
         if (ram_addr_disjointb(0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u)) {
@@ -830,18 +780,13 @@ struct RamOps {
 
   static std::shared_ptr<bank_nested_bank>
   get_bank0(const std::shared_ptr<state_nested_bank> &s);
-
   static std::shared_ptr<chip_nested_bank>
   get_chip0(const std::shared_ptr<bank_nested_bank> &b);
-
   static std::shared_ptr<reg_nested_bank>
   get_reg0(const std::shared_ptr<chip_nested_bank> &c);
-
   static std::shared_ptr<state_nested_bank>
   write_status0(std::shared_ptr<state_nested_bank> s, const unsigned int v);
-
   static unsigned int read_status0(const std::shared_ptr<state_nested_bank> &s);
-
   static inline const std::shared_ptr<state_nested_bank> sample_nested_bank =
       std::make_shared<state_nested_bank>(state_nested_bank{
           List<std::shared_ptr<bank_nested_bank>>::ctor::cons_(
@@ -859,10 +804,8 @@ struct RamOps {
                                   nil_())}),
                       List<std::shared_ptr<chip_nested_bank>>::ctor::nil_())}),
               List<std::shared_ptr<bank_nested_bank>>::ctor::nil_())});
-
   static inline const unsigned int test_nested_bank_status_write =
       read_status0(write_status0(sample_nested_bank, 7u));
-
   enum class item { S_, S_0 };
 
   template <typename T1>
@@ -894,7 +837,6 @@ struct RamOps {
   }
 
   static unsigned int score(const item x);
-
   static inline const unsigned int test_accessor_namespace =
       (score(item::S_) + score(item::S_0));
 

@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -83,17 +94,14 @@ struct FetchOps {
 
   static unsigned int fetch_byte(const std::shared_ptr<state> &s,
                                  const unsigned int addr);
-
   static inline const unsigned int fetch_default_test =
       fetch_byte(std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
                      1u, List<unsigned int>::ctor::cons_(
                              2u, List<unsigned int>::ctor::nil_()))}),
                  5u);
-
   static unsigned int
   fetch_byte_direct(const std::shared_ptr<List<unsigned int>> &rom_data,
                     const unsigned int addr);
-
   static inline const unsigned int fetch_in_range_test = fetch_byte_direct(
       List<unsigned int>::ctor::cons_(
           11u, List<unsigned int>::ctor::cons_(
@@ -125,7 +133,6 @@ struct FetchOps {
   static std::pair<unsigned int, unsigned int>
   fetch_pair(const std::shared_ptr<List<unsigned int>> &rom_data,
              const unsigned int addr);
-
   static inline const unsigned int fetch_pair_test = [](void) {
     std::pair<unsigned int, unsigned int> p =
         fetch_pair(List<unsigned int>::ctor::cons_(
@@ -135,11 +142,9 @@ struct FetchOps {
                    0u);
     return (p.first + p.second);
   }();
-
   static std::optional<std::pair<unsigned int, unsigned int>>
   fetch_window(const std::shared_ptr<List<unsigned int>> &rom_data,
                const unsigned int addr);
-
   static inline const unsigned int fetch_window_test = [](void) {
     if (fetch_window(
             List<unsigned int>::ctor::cons_(
@@ -161,7 +166,6 @@ struct FetchOps {
       return 0u;
     }
   }();
-
   static inline const std::pair<
       std::pair<std::pair<unsigned int, unsigned int>, unsigned int>,
       unsigned int>

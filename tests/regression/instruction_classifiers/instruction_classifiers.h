@@ -21,36 +21,46 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -60,237 +70,343 @@ struct InstructionClassifiers {
     struct LDM {
       unsigned int _a0;
     };
+
     struct LD {
       unsigned int _a0;
     };
+
     struct ADD {
       unsigned int _a0;
     };
+
     struct SUB {
       unsigned int _a0;
     };
+
     struct INC {
       unsigned int _a0;
     };
+
     struct XCH {
       unsigned int _a0;
     };
+
     struct BBL {
       unsigned int _a0;
     };
+
     struct SBM {};
+
     struct RDM {};
+
     struct RDR {};
+
     struct ADM {};
+
     struct RD0 {};
+
     struct RD1 {};
+
     struct RD2 {};
+
     struct RD3 {};
+
     struct CLB {};
+
     struct CMA {};
+
     struct IAC {};
+
     struct DAC {};
+
     struct RAL {};
+
     struct RAR {};
+
     struct TCC {};
+
     struct TCS {};
+
     struct DAA {};
+
     struct KBP {};
+
     struct NOP_acc {};
+
     using variant_t = std::variant<LDM, LD, ADD, SUB, INC, XCH, BBL, SBM, RDM,
                                    RDR, ADM, RD0, RD1, RD2, RD3, CLB, CMA, IAC,
                                    DAC, RAL, RAR, TCC, TCS, DAA, KBP, NOP_acc>;
 
   private:
     variant_t v_;
+
     explicit instr_acc(LDM _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(LD _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(ADD _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(SUB _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(INC _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(XCH _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(BBL _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(SBM _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RDM _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RDR _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(ADM _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RD0 _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RD1 _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RD2 _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RD3 _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(CLB _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(CMA _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(IAC _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(DAC _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RAL _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(RAR _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(TCC _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(TCS _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(DAA _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(KBP _v) : v_(std::move(_v)) {}
+
     explicit instr_acc(NOP_acc _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instr_acc> LDM_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(LDM{a0}));
       }
+
       static std::shared_ptr<instr_acc> LD_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(LD{a0}));
       }
+
       static std::shared_ptr<instr_acc> ADD_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(ADD{a0}));
       }
+
       static std::shared_ptr<instr_acc> SUB_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(SUB{a0}));
       }
+
       static std::shared_ptr<instr_acc> INC_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(INC{a0}));
       }
+
       static std::shared_ptr<instr_acc> XCH_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(XCH{a0}));
       }
+
       static std::shared_ptr<instr_acc> BBL_(unsigned int a0) {
         return std::shared_ptr<instr_acc>(new instr_acc(BBL{a0}));
       }
+
       static std::shared_ptr<instr_acc> SBM_() {
         return std::shared_ptr<instr_acc>(new instr_acc(SBM{}));
       }
+
       static std::shared_ptr<instr_acc> RDM_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RDM{}));
       }
+
       static std::shared_ptr<instr_acc> RDR_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RDR{}));
       }
+
       static std::shared_ptr<instr_acc> ADM_() {
         return std::shared_ptr<instr_acc>(new instr_acc(ADM{}));
       }
+
       static std::shared_ptr<instr_acc> RD0_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RD0{}));
       }
+
       static std::shared_ptr<instr_acc> RD1_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RD1{}));
       }
+
       static std::shared_ptr<instr_acc> RD2_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RD2{}));
       }
+
       static std::shared_ptr<instr_acc> RD3_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RD3{}));
       }
+
       static std::shared_ptr<instr_acc> CLB_() {
         return std::shared_ptr<instr_acc>(new instr_acc(CLB{}));
       }
+
       static std::shared_ptr<instr_acc> CMA_() {
         return std::shared_ptr<instr_acc>(new instr_acc(CMA{}));
       }
+
       static std::shared_ptr<instr_acc> IAC_() {
         return std::shared_ptr<instr_acc>(new instr_acc(IAC{}));
       }
+
       static std::shared_ptr<instr_acc> DAC_() {
         return std::shared_ptr<instr_acc>(new instr_acc(DAC{}));
       }
+
       static std::shared_ptr<instr_acc> RAL_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RAL{}));
       }
+
       static std::shared_ptr<instr_acc> RAR_() {
         return std::shared_ptr<instr_acc>(new instr_acc(RAR{}));
       }
+
       static std::shared_ptr<instr_acc> TCC_() {
         return std::shared_ptr<instr_acc>(new instr_acc(TCC{}));
       }
+
       static std::shared_ptr<instr_acc> TCS_() {
         return std::shared_ptr<instr_acc>(new instr_acc(TCS{}));
       }
+
       static std::shared_ptr<instr_acc> DAA_() {
         return std::shared_ptr<instr_acc>(new instr_acc(DAA{}));
       }
+
       static std::shared_ptr<instr_acc> KBP_() {
         return std::shared_ptr<instr_acc>(new instr_acc(KBP{}));
       }
+
       static std::shared_ptr<instr_acc> NOP_acc_() {
         return std::shared_ptr<instr_acc>(new instr_acc(NOP_acc{}));
       }
+
       static std::unique_ptr<instr_acc> LDM_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(LDM{a0}));
       }
+
       static std::unique_ptr<instr_acc> LD_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(LD{a0}));
       }
+
       static std::unique_ptr<instr_acc> ADD_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(ADD{a0}));
       }
+
       static std::unique_ptr<instr_acc> SUB_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(SUB{a0}));
       }
+
       static std::unique_ptr<instr_acc> INC_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(INC{a0}));
       }
+
       static std::unique_ptr<instr_acc> XCH_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(XCH{a0}));
       }
+
       static std::unique_ptr<instr_acc> BBL_uptr(unsigned int a0) {
         return std::unique_ptr<instr_acc>(new instr_acc(BBL{a0}));
       }
+
       static std::unique_ptr<instr_acc> SBM_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(SBM{}));
       }
+
       static std::unique_ptr<instr_acc> RDM_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RDM{}));
       }
+
       static std::unique_ptr<instr_acc> RDR_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RDR{}));
       }
+
       static std::unique_ptr<instr_acc> ADM_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(ADM{}));
       }
+
       static std::unique_ptr<instr_acc> RD0_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RD0{}));
       }
+
       static std::unique_ptr<instr_acc> RD1_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RD1{}));
       }
+
       static std::unique_ptr<instr_acc> RD2_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RD2{}));
       }
+
       static std::unique_ptr<instr_acc> RD3_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RD3{}));
       }
+
       static std::unique_ptr<instr_acc> CLB_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(CLB{}));
       }
+
       static std::unique_ptr<instr_acc> CMA_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(CMA{}));
       }
+
       static std::unique_ptr<instr_acc> IAC_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(IAC{}));
       }
+
       static std::unique_ptr<instr_acc> DAC_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(DAC{}));
       }
+
       static std::unique_ptr<instr_acc> RAL_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RAL{}));
       }
+
       static std::unique_ptr<instr_acc> RAR_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(RAR{}));
       }
+
       static std::unique_ptr<instr_acc> TCC_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(TCC{}));
       }
+
       static std::unique_ptr<instr_acc> TCS_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(TCS{}));
       }
+
       static std::unique_ptr<instr_acc> DAA_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(DAA{}));
       }
+
       static std::unique_ptr<instr_acc> KBP_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(KBP{}));
       }
+
       static std::unique_ptr<instr_acc> NOP_acc_uptr() {
         return std::unique_ptr<instr_acc>(new instr_acc(NOP_acc{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -423,10 +539,8 @@ struct InstructionClassifiers {
   }
 
   static bool writes_acc(const std::shared_ptr<instr_acc> &i);
-
   static unsigned int count_writes_acc(
       const std::shared_ptr<List<std::shared_ptr<instr_acc>>> &prog);
-
   static inline const unsigned int test_writes_acc =
       count_writes_acc(List<std::shared_ptr<instr_acc>>::ctor::cons_(
           instr_acc::ctor::NOP_acc_(),
@@ -446,82 +560,116 @@ struct InstructionClassifiers {
   struct instr_ram {
   public:
     struct WRM {};
+
     struct WMP {};
+
     struct WR0 {};
+
     struct WR1 {};
+
     struct WR2 {};
+
     struct WR3 {};
+
     struct NOP_ram {};
+
     struct ADD_ram {
       unsigned int _a0;
     };
+
     using variant_t =
         std::variant<WRM, WMP, WR0, WR1, WR2, WR3, NOP_ram, ADD_ram>;
 
   private:
     variant_t v_;
+
     explicit instr_ram(WRM _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(WMP _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(WR0 _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(WR1 _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(WR2 _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(WR3 _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(NOP_ram _v) : v_(std::move(_v)) {}
+
     explicit instr_ram(ADD_ram _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instr_ram> WRM_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WRM{}));
       }
+
       static std::shared_ptr<instr_ram> WMP_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WMP{}));
       }
+
       static std::shared_ptr<instr_ram> WR0_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WR0{}));
       }
+
       static std::shared_ptr<instr_ram> WR1_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WR1{}));
       }
+
       static std::shared_ptr<instr_ram> WR2_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WR2{}));
       }
+
       static std::shared_ptr<instr_ram> WR3_() {
         return std::shared_ptr<instr_ram>(new instr_ram(WR3{}));
       }
+
       static std::shared_ptr<instr_ram> NOP_ram_() {
         return std::shared_ptr<instr_ram>(new instr_ram(NOP_ram{}));
       }
+
       static std::shared_ptr<instr_ram> ADD_ram_(unsigned int a0) {
         return std::shared_ptr<instr_ram>(new instr_ram(ADD_ram{a0}));
       }
+
       static std::unique_ptr<instr_ram> WRM_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WRM{}));
       }
+
       static std::unique_ptr<instr_ram> WMP_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WMP{}));
       }
+
       static std::unique_ptr<instr_ram> WR0_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WR0{}));
       }
+
       static std::unique_ptr<instr_ram> WR1_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WR1{}));
       }
+
       static std::unique_ptr<instr_ram> WR2_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WR2{}));
       }
+
       static std::unique_ptr<instr_ram> WR3_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(WR3{}));
       }
+
       static std::unique_ptr<instr_ram> NOP_ram_uptr() {
         return std::unique_ptr<instr_ram>(new instr_ram(NOP_ram{}));
       }
+
       static std::unique_ptr<instr_ram> ADD_ram_uptr(unsigned int a0) {
         return std::unique_ptr<instr_ram>(new instr_ram(ADD_ram{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -566,10 +714,8 @@ struct InstructionClassifiers {
   }
 
   static bool writes_ram(const std::shared_ptr<instr_ram> &i);
-
   static unsigned int count_writes_ram(
       const std::shared_ptr<List<std::shared_ptr<instr_ram>>> &prog);
-
   static inline const unsigned int test_writes_ram =
       count_writes_ram(List<std::shared_ptr<instr_ram>>::ctor::cons_(
           instr_ram::ctor::NOP_ram_(),
@@ -591,88 +737,118 @@ struct InstructionClassifiers {
     struct XCH_regs {
       unsigned int _a0;
     };
+
     struct INC_regs {
       unsigned int _a0;
     };
+
     struct FIM {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct FIN {
       unsigned int _a0;
     };
+
     struct ISZ {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct NOP_regs {};
+
     struct ADD_regs {
       unsigned int _a0;
     };
+
     using variant_t =
         std::variant<XCH_regs, INC_regs, FIM, FIN, ISZ, NOP_regs, ADD_regs>;
 
   private:
     variant_t v_;
+
     explicit instr_regs(XCH_regs _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(INC_regs _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(FIM _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(FIN _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(ISZ _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(NOP_regs _v) : v_(std::move(_v)) {}
+
     explicit instr_regs(ADD_regs _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instr_regs> XCH_regs_(unsigned int a0) {
         return std::shared_ptr<instr_regs>(new instr_regs(XCH_regs{a0}));
       }
+
       static std::shared_ptr<instr_regs> INC_regs_(unsigned int a0) {
         return std::shared_ptr<instr_regs>(new instr_regs(INC_regs{a0}));
       }
+
       static std::shared_ptr<instr_regs> FIM_(unsigned int a0,
                                               unsigned int a1) {
         return std::shared_ptr<instr_regs>(new instr_regs(FIM{a0, a1}));
       }
+
       static std::shared_ptr<instr_regs> FIN_(unsigned int a0) {
         return std::shared_ptr<instr_regs>(new instr_regs(FIN{a0}));
       }
+
       static std::shared_ptr<instr_regs> ISZ_(unsigned int a0,
                                               unsigned int a1) {
         return std::shared_ptr<instr_regs>(new instr_regs(ISZ{a0, a1}));
       }
+
       static std::shared_ptr<instr_regs> NOP_regs_() {
         return std::shared_ptr<instr_regs>(new instr_regs(NOP_regs{}));
       }
+
       static std::shared_ptr<instr_regs> ADD_regs_(unsigned int a0) {
         return std::shared_ptr<instr_regs>(new instr_regs(ADD_regs{a0}));
       }
+
       static std::unique_ptr<instr_regs> XCH_regs_uptr(unsigned int a0) {
         return std::unique_ptr<instr_regs>(new instr_regs(XCH_regs{a0}));
       }
+
       static std::unique_ptr<instr_regs> INC_regs_uptr(unsigned int a0) {
         return std::unique_ptr<instr_regs>(new instr_regs(INC_regs{a0}));
       }
+
       static std::unique_ptr<instr_regs> FIM_uptr(unsigned int a0,
                                                   unsigned int a1) {
         return std::unique_ptr<instr_regs>(new instr_regs(FIM{a0, a1}));
       }
+
       static std::unique_ptr<instr_regs> FIN_uptr(unsigned int a0) {
         return std::unique_ptr<instr_regs>(new instr_regs(FIN{a0}));
       }
+
       static std::unique_ptr<instr_regs> ISZ_uptr(unsigned int a0,
                                                   unsigned int a1) {
         return std::unique_ptr<instr_regs>(new instr_regs(ISZ{a0, a1}));
       }
+
       static std::unique_ptr<instr_regs> NOP_regs_uptr() {
         return std::unique_ptr<instr_regs>(new instr_regs(NOP_regs{}));
       }
+
       static std::unique_ptr<instr_regs> ADD_regs_uptr(unsigned int a0) {
         return std::unique_ptr<instr_regs>(new instr_regs(ADD_regs{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -755,10 +931,8 @@ struct InstructionClassifiers {
   }
 
   static bool writes_regs(const std::shared_ptr<instr_regs> &i);
-
   static unsigned int count_writes_regs(
       const std::shared_ptr<List<std::shared_ptr<instr_regs>>> &prog);
-
   static inline const unsigned int test_writes_regs =
       count_writes_regs(List<std::shared_ptr<instr_regs>>::ctor::cons_(
           instr_regs::ctor::NOP_regs_(),
@@ -778,97 +952,131 @@ struct InstructionClassifiers {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct JUN {
       unsigned int _a0;
     };
+
     struct JMS {
       unsigned int _a0;
     };
+
     struct JIN {
       unsigned int _a0;
     };
+
     struct BBL_jump {
       unsigned int _a0;
     };
+
     struct ISZ_jump {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct ADD_jump {
       unsigned int _a0;
     };
+
     struct NOP_jump {};
+
     using variant_t = std::variant<JCN, JUN, JMS, JIN, BBL_jump, ISZ_jump,
                                    ADD_jump, NOP_jump>;
 
   private:
     variant_t v_;
+
     explicit instr_jump(JCN _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(JUN _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(JMS _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(JIN _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(BBL_jump _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(ISZ_jump _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(ADD_jump _v) : v_(std::move(_v)) {}
+
     explicit instr_jump(NOP_jump _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instr_jump> JCN_(unsigned int a0,
                                               unsigned int a1) {
         return std::shared_ptr<instr_jump>(new instr_jump(JCN{a0, a1}));
       }
+
       static std::shared_ptr<instr_jump> JUN_(unsigned int a0) {
         return std::shared_ptr<instr_jump>(new instr_jump(JUN{a0}));
       }
+
       static std::shared_ptr<instr_jump> JMS_(unsigned int a0) {
         return std::shared_ptr<instr_jump>(new instr_jump(JMS{a0}));
       }
+
       static std::shared_ptr<instr_jump> JIN_(unsigned int a0) {
         return std::shared_ptr<instr_jump>(new instr_jump(JIN{a0}));
       }
+
       static std::shared_ptr<instr_jump> BBL_jump_(unsigned int a0) {
         return std::shared_ptr<instr_jump>(new instr_jump(BBL_jump{a0}));
       }
+
       static std::shared_ptr<instr_jump> ISZ_jump_(unsigned int a0,
                                                    unsigned int a1) {
         return std::shared_ptr<instr_jump>(new instr_jump(ISZ_jump{a0, a1}));
       }
+
       static std::shared_ptr<instr_jump> ADD_jump_(unsigned int a0) {
         return std::shared_ptr<instr_jump>(new instr_jump(ADD_jump{a0}));
       }
+
       static std::shared_ptr<instr_jump> NOP_jump_() {
         return std::shared_ptr<instr_jump>(new instr_jump(NOP_jump{}));
       }
+
       static std::unique_ptr<instr_jump> JCN_uptr(unsigned int a0,
                                                   unsigned int a1) {
         return std::unique_ptr<instr_jump>(new instr_jump(JCN{a0, a1}));
       }
+
       static std::unique_ptr<instr_jump> JUN_uptr(unsigned int a0) {
         return std::unique_ptr<instr_jump>(new instr_jump(JUN{a0}));
       }
+
       static std::unique_ptr<instr_jump> JMS_uptr(unsigned int a0) {
         return std::unique_ptr<instr_jump>(new instr_jump(JMS{a0}));
       }
+
       static std::unique_ptr<instr_jump> JIN_uptr(unsigned int a0) {
         return std::unique_ptr<instr_jump>(new instr_jump(JIN{a0}));
       }
+
       static std::unique_ptr<instr_jump> BBL_jump_uptr(unsigned int a0) {
         return std::unique_ptr<instr_jump>(new instr_jump(BBL_jump{a0}));
       }
+
       static std::unique_ptr<instr_jump> ISZ_jump_uptr(unsigned int a0,
                                                        unsigned int a1) {
         return std::unique_ptr<instr_jump>(new instr_jump(ISZ_jump{a0, a1}));
       }
+
       static std::unique_ptr<instr_jump> ADD_jump_uptr(unsigned int a0) {
         return std::unique_ptr<instr_jump>(new instr_jump(ADD_jump{a0}));
       }
+
       static std::unique_ptr<instr_jump> NOP_jump_uptr() {
         return std::unique_ptr<instr_jump>(new instr_jump(NOP_jump{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -963,10 +1171,8 @@ struct InstructionClassifiers {
   }
 
   static bool is_jump(const std::shared_ptr<instr_jump> &i);
-
   static unsigned int
   count_jumps(const std::shared_ptr<List<std::shared_ptr<instr_jump>>> &prog);
-
   static inline const unsigned int test_jump_classifier =
       count_jumps(List<std::shared_ptr<instr_jump>>::ctor::cons_(
           instr_jump::ctor::ADD_jump_(0u),
@@ -979,7 +1185,6 @@ struct InstructionClassifiers {
                       List<std::shared_ptr<instr_jump>>::ctor::cons_(
                           instr_jump::ctor::ISZ_jump_(1u, 2u),
                           List<std::shared_ptr<instr_jump>>::ctor::nil_()))))));
-
   static inline const std::pair<
       std::pair<std::pair<unsigned int, unsigned int>, unsigned int>,
       unsigned int>

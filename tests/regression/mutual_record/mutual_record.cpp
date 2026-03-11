@@ -70,6 +70,7 @@ unsigned int MutualRecord::dept_total_salary(
       }},
       d->v());
 }
+
 unsigned int MutualRecord::emp_list_salary(
     const std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> &l) {
   return std::visit(
@@ -98,6 +99,7 @@ MutualRecord::dept_count(const std::shared_ptr<MutualRecord::department> &d) {
       }},
       d->v());
 }
+
 unsigned int MutualRecord::emp_list_count(
     const std::shared_ptr<List<std::shared_ptr<MutualRecord::employee>>> &l) {
   return std::visit(

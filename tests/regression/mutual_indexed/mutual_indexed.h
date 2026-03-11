@@ -20,44 +20,56 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct MutualIndexed {
   struct EvenTree;
   struct OddTree;
+
   struct EvenTree {
   public:
     struct ELeaf {};
+
     struct ENode {
       unsigned int _a0;
       unsigned int _a1;
       std::shared_ptr<OddTree> _a2;
     };
+
     using variant_t = std::variant<ELeaf, ENode>;
 
   private:
     variant_t v_;
+
     explicit EvenTree(ELeaf _v) : v_(std::move(_v)) {}
+
     explicit EvenTree(ENode _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<EvenTree> ELeaf_() {
         return std::shared_ptr<EvenTree>(new EvenTree(ELeaf{}));
       }
+
       static std::shared_ptr<EvenTree>
       ENode_(unsigned int a0, unsigned int a1,
              const std::shared_ptr<OddTree> &a2) {
         return std::shared_ptr<EvenTree>(new EvenTree(ENode{a0, a1, a2}));
       }
+
       static std::unique_ptr<EvenTree> ELeaf_uptr() {
         return std::unique_ptr<EvenTree>(new EvenTree(ELeaf{}));
       }
+
       static std::unique_ptr<EvenTree>
       ENode_uptr(unsigned int a0, unsigned int a1,
                  const std::shared_ptr<OddTree> &a2) {
         return std::unique_ptr<EvenTree>(new EvenTree(ENode{a0, a1, a2}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
+
   struct OddTree {
   public:
     struct ONode {
@@ -65,27 +77,33 @@ struct MutualIndexed {
       unsigned int _a1;
       std::shared_ptr<EvenTree> _a2;
     };
+
     using variant_t = std::variant<ONode>;
 
   private:
     variant_t v_;
+
     explicit OddTree(ONode _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<OddTree>
       ONode_(unsigned int a0, unsigned int a1,
              const std::shared_ptr<EvenTree> &a2) {
         return std::shared_ptr<OddTree>(new OddTree(ONode{a0, a1, a2}));
       }
+
       static std::unique_ptr<OddTree>
       ONode_uptr(unsigned int a0, unsigned int a1,
                  const std::shared_ptr<EvenTree> &a2) {
         return std::unique_ptr<OddTree>(new OddTree(ONode{a0, a1, a2}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -153,21 +171,14 @@ struct MutualIndexed {
 
   static unsigned int even_val(const unsigned int _x,
                                const std::shared_ptr<EvenTree> &t);
-
   static unsigned int odd_val(const unsigned int _x,
                               const std::shared_ptr<OddTree> &t);
-
   static inline const std::shared_ptr<EvenTree> leaf = EvenTree::ctor::ELeaf_();
-
   static inline const std::shared_ptr<OddTree> tree1 =
       OddTree::ctor::ONode_(0u, 10u, EvenTree::ctor::ELeaf_());
-
   static inline const std::shared_ptr<EvenTree> tree2 = EvenTree::ctor::ENode_(
       1u, 20u, OddTree::ctor::ONode_(0u, 10u, EvenTree::ctor::ELeaf_()));
-
   static inline const unsigned int test_leaf_val = even_val(0u, leaf);
-
   static inline const unsigned int test_tree1_val = odd_val(1u, tree1);
-
   static inline const unsigned int test_tree2_val = even_val(2u, tree2);
 };

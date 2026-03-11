@@ -26,6 +26,7 @@ struct TodoErasedInstanceParam {
   struct natDefault {
     static unsigned int def() { return 4u; }
   };
+
   static_assert(Default<natDefault, unsigned int>);
 
   template <typename _tcI0, typename T1> static T1 pick() {

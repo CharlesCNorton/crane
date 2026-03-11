@@ -25,7 +25,6 @@ struct Nat {
 
 template <typename M>
 concept BaseType = requires { typename M::t; };
-
 template <typename M>
 concept OrderedType = requires {
   typename M::t;
@@ -33,7 +32,6 @@ concept OrderedType = requires {
     M::compare(std::declval<typename M::t>(), std::declval<typename M::t>())
   } -> std::same_as<comparison>;
 };
-
 template <typename M>
 concept Map = requires {
   typename M::key;
@@ -57,46 +55,55 @@ concept Map = requires {
 
 template <OrderedType K, BaseType V> struct MakeMap {
   using key = typename K::t;
-
   using value = typename V::t;
 
   struct tree {
   public:
     struct Empty {};
+
     struct Node {
       std::shared_ptr<tree> _a0;
       key _a1;
       value _a2;
       std::shared_ptr<tree> _a3;
     };
+
     using variant_t = std::variant<Empty, Node>;
 
   private:
     variant_t v_;
+
     explicit tree(Empty _v) : v_(std::move(_v)) {}
+
     explicit tree(Node _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<tree> Empty_() {
         return std::shared_ptr<tree>(new tree(Empty{}));
       }
+
       static std::shared_ptr<tree> Node_(const std::shared_ptr<tree> &a0,
                                          key a1, value a2,
                                          const std::shared_ptr<tree> &a3) {
         return std::shared_ptr<tree>(new tree(Node{a0, a1, a2, a3}));
       }
+
       static std::unique_ptr<tree> Empty_uptr() {
         return std::unique_ptr<tree>(new tree(Empty{}));
       }
+
       static std::unique_ptr<tree> Node_uptr(const std::shared_ptr<tree> &a0,
                                              key a1, value a2,
                                              const std::shared_ptr<tree> &a3) {
         return std::unique_ptr<tree>(new tree(Node{a0, a1, a2, a3}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -171,17 +178,16 @@ template <OrderedType K, BaseType V> struct MakeMap {
 struct NatBase {
   using t = unsigned int;
 };
+
 static_assert(BaseType<NatBase>);
 
 struct NatOrdered {
   using t = unsigned int;
-
   static comparison compare(const unsigned int, const unsigned int);
 };
-static_assert(OrderedType<NatOrdered>);
 
+static_assert(OrderedType<NatOrdered>);
 using NatMap = MakeMap<NatOrdered, NatBase>;
 static_assert(Map<NatMap>);
-
 const NatMap::t mymap = NatMap::add(
     1u, 10u, NatMap::add(2u, 20u, NatMap::add(3u, 30u, NatMap::empty())));

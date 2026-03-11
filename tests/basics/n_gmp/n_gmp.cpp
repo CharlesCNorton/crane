@@ -129,6 +129,7 @@ std::shared_ptr<Pos::mask> Pos::sub_mask(const mpz_class x, const mpz_class y) {
     }
   }
 }
+
 std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const mpz_class x,
                                                const mpz_class y) {
   if (x == 1) {

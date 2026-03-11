@@ -21,36 +21,46 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -71,6 +81,7 @@ struct Typeclasses {
   struct numNat {
     static unsigned int to_nat(unsigned int n) { return n; }
   };
+
   static_assert(Numeric<numNat, unsigned int>);
 
   struct numBool {
@@ -82,6 +93,7 @@ struct Typeclasses {
       }
     }
   };
+
   static_assert(Numeric<numBool, bool>);
 
   template <typename _tcI0, typename T1> struct numOption {
@@ -128,11 +140,13 @@ struct Typeclasses {
   struct eqNat {
     static bool eqb(unsigned int a0, unsigned int a1) { return (a0 == a1); }
   };
+
   static_assert(Eq<eqNat, unsigned int>);
 
   struct ordNat {
     static bool leb(unsigned int a0, unsigned int a1) { return (a0 <= a1); }
   };
+
   static_assert(Ord<ordNat, unsigned int>);
 
   template <typename _tcI0, typename _tcI1, typename T1>
@@ -172,46 +186,34 @@ struct Typeclasses {
   }
 
   static inline const unsigned int test_nat = numNat::to_nat(42u);
-
   static inline const unsigned int test_bool_true = numBool::to_nat(true);
-
   static inline const unsigned int test_bool_false = numBool::to_nat(false);
-
   static inline const unsigned int test_option_some =
       numOption<numNat, unsigned int>::to_nat(
           std::make_optional<unsigned int>(5u));
-
   static inline const unsigned int test_option_none =
       numOption<numNat, unsigned int>::to_nat(std::nullopt);
-
   static inline const unsigned int test_list =
       numList<numNat, unsigned int>::to_nat(List<unsigned int>::ctor::cons_(
           1u, List<unsigned int>::ctor::cons_(
                   2u, List<unsigned int>::ctor::cons_(
                           3u, List<unsigned int>::ctor::cons_(
                                   4u, List<unsigned int>::ctor::nil_())))));
-
   static inline const unsigned int test_sum =
       numeric_sum<numNat, unsigned int>(List<unsigned int>::ctor::cons_(
           10u, List<unsigned int>::ctor::cons_(
                    20u, List<unsigned int>::ctor::cons_(
                             30u, List<unsigned int>::ctor::nil_()))));
-
   static inline const unsigned int test_double =
       numeric_double<numNat, unsigned int>(7u);
-
   static inline const std::pair<unsigned int, unsigned int> test_sort_pair =
       sort_pair<ordNat, eqNat, unsigned int>(5u, 3u);
-
   static inline const unsigned int test_min =
       min_of<ordNat, eqNat, unsigned int>(8u, 3u);
-
   static inline const unsigned int test_max =
       max_of<ordNat, eqNat, unsigned int>(8u, 3u);
-
   static inline const unsigned int test_describe_eq =
       describe<eqNat, numNat, unsigned int>(5u, 5u);
-
   static inline const unsigned int test_describe_ne =
       describe<eqNat, numNat, unsigned int>(3u, 7u);
 };

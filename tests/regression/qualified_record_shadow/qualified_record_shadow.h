@@ -23,7 +23,6 @@ struct QualifiedRecordShadow {
   };
 
   static std::shared_ptr<Shadow> bump(const std::shared_ptr<Shadow> &x);
-
   static inline const std::shared_ptr<Shadow> t =
       bump(std::make_shared<Shadow>(Shadow{1u}));
 };

@@ -20,37 +20,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
     return std::visit(
         Overloaded{
@@ -70,41 +81,55 @@ struct ProgramTargetsRegionScan {
     struct JUN {
       unsigned int _a0;
     };
+
     struct JMS {
       unsigned int _a0;
     };
+
     struct NOP {};
+
     using variant_t = std::variant<JUN, JMS, NOP>;
 
   private:
     variant_t v_;
+
     explicit instruction(JUN _v) : v_(std::move(_v)) {}
+
     explicit instruction(JMS _v) : v_(std::move(_v)) {}
+
     explicit instruction(NOP _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction> JUN_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(JUN{a0}));
       }
+
       static std::shared_ptr<instruction> JMS_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(JMS{a0}));
       }
+
       static std::shared_ptr<instruction> NOP_() {
         return std::shared_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::unique_ptr<instruction> JUN_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(JUN{a0}));
       }
+
       static std::unique_ptr<instruction> JMS_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(JMS{a0}));
       }
+
       static std::unique_ptr<instruction> NOP_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -151,17 +176,13 @@ struct ProgramTargetsRegionScan {
 
   static std::optional<unsigned int>
   jump_target(const std::shared_ptr<instruction> &i);
-
   static bool addr_in_regionb(const unsigned int addr,
                               const std::shared_ptr<layout> &l);
-
   static bool target_in_layoutb(const std::shared_ptr<layout> &l,
                                 const std::shared_ptr<instruction> &i);
-
   static bool program_targets_okb(
       const std::shared_ptr<List<std::shared_ptr<instruction>>> &prog,
       const std::shared_ptr<layout> &l);
-
   static inline const unsigned int t = [](void) {
     std::unique_ptr<layout> l = std::make_unique<layout>(layout{200u, 20u});
     std::unique_ptr<List<std::shared_ptr<instruction>>> p =

@@ -23,10 +23,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct threadtest {
   static void fun1(const unsigned int n);
-
   static void fun2(const unsigned int n);
-
   static void test(const unsigned int m, const unsigned int n);
-
   static void test2(const unsigned int m, const unsigned int n);
 };

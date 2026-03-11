@@ -25,56 +25,74 @@ struct FreeMonad {
     struct pure {
       std::any _a0;
     };
+
     struct bind {
       std::shared_ptr<IO> _a0;
       std::function<std::shared_ptr<IO>(std::any)> _a1;
     };
+
     struct get_line {};
+
     struct print {
       std::string _a0;
     };
+
     using variant_t = std::variant<pure, bind, get_line, print>;
 
   private:
     variant_t v_;
+
     explicit IO(pure _v) : v_(std::move(_v)) {}
+
     explicit IO(bind _v) : v_(std::move(_v)) {}
+
     explicit IO(get_line _v) : v_(std::move(_v)) {}
+
     explicit IO(print _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<IO> pure_(std::any a0) {
         return std::shared_ptr<IO>(new IO(pure{a0}));
       }
+
       static std::shared_ptr<IO>
       bind_(const std::shared_ptr<IO> &a0,
             std::function<std::shared_ptr<IO>(std::any)> a1) {
         return std::shared_ptr<IO>(new IO(bind{a0, a1}));
       }
+
       static std::shared_ptr<IO> get_line_() {
         return std::shared_ptr<IO>(new IO(get_line{}));
       }
+
       static std::shared_ptr<IO> print_(std::string a0) {
         return std::shared_ptr<IO>(new IO(print{a0}));
       }
+
       static std::unique_ptr<IO> pure_uptr(std::any a0) {
         return std::unique_ptr<IO>(new IO(pure{a0}));
       }
+
       static std::unique_ptr<IO>
       bind_uptr(const std::shared_ptr<IO> &a0,
                 std::function<std::shared_ptr<IO>(std::any)> a1) {
         return std::unique_ptr<IO>(new IO(bind{a0, a1}));
       }
+
       static std::unique_ptr<IO> get_line_uptr() {
         return std::unique_ptr<IO>(new IO(get_line{}));
       }
+
       static std::unique_ptr<IO> print_uptr(std::string a0) {
         return std::unique_ptr<IO>(new IO(print{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 

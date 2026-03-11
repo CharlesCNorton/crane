@@ -20,37 +20,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -107,36 +118,46 @@ struct CPS {
     struct Leaf {
       unsigned int _a0;
     };
+
     struct Node {
       std::shared_ptr<tree> _a0;
       std::shared_ptr<tree> _a1;
     };
+
     using variant_t = std::variant<Leaf, Node>;
 
   private:
     variant_t v_;
+
     explicit tree(Leaf _v) : v_(std::move(_v)) {}
+
     explicit tree(Node _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<tree> Leaf_(unsigned int a0) {
         return std::shared_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::shared_ptr<tree> Node_(const std::shared_ptr<tree> &a0,
                                          const std::shared_ptr<tree> &a1) {
         return std::shared_ptr<tree>(new tree(Node{a0, a1}));
       }
+
       static std::unique_ptr<tree> Leaf_uptr(unsigned int a0) {
         return std::unique_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::unique_ptr<tree> Node_uptr(const std::shared_ptr<tree> &a0,
                                              const std::shared_ptr<tree> &a1) {
         return std::unique_ptr<tree>(new tree(Node{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -242,21 +263,16 @@ struct CPS {
   }
 
   static unsigned int count_evens(const std::shared_ptr<List<unsigned int>> &l);
-
   static inline const unsigned int test_fact_5 = factorial(5u);
-
   static inline const unsigned int test_fib_7 = fibonacci(7u);
-
   static inline const unsigned int test_tree = tree_sum(tree::ctor::Node_(
       tree::ctor::Node_(tree::ctor::Leaf_(1u), tree::ctor::Leaf_(2u)),
       tree::ctor::Leaf_(3u)));
-
   static inline const unsigned int test_list_sum =
       list_sum(List<unsigned int>::ctor::cons_(
           10u, List<unsigned int>::ctor::cons_(
                    20u, List<unsigned int>::ctor::cons_(
                             30u, List<unsigned int>::ctor::nil_()))));
-
   static inline const unsigned int test_evens =
       count_evens(List<unsigned int>::ctor::cons_(
           1u,

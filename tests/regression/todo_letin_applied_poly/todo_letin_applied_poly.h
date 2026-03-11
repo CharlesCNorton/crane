@@ -19,9 +19,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct TodoLetinAppliedPoly {
   static inline const unsigned int demo_nat = 7u;
-
   static inline const bool demo_bool = true;
-
   static inline const unsigned int test_value = [](void) {
     if (demo_bool) {
       return demo_nat;

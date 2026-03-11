@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -74,51 +85,69 @@ struct DisassembleOps {
   struct instruction {
   public:
     struct NOP {};
+
     struct NOP2 {};
+
     struct LDM {
       unsigned int _a0;
     };
+
     struct LDM2 {
       unsigned int _a0;
     };
+
     using variant_t = std::variant<NOP, NOP2, LDM, LDM2>;
 
   private:
     variant_t v_;
+
     explicit instruction(NOP _v) : v_(std::move(_v)) {}
+
     explicit instruction(NOP2 _v) : v_(std::move(_v)) {}
+
     explicit instruction(LDM _v) : v_(std::move(_v)) {}
+
     explicit instruction(LDM2 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction> NOP_() {
         return std::shared_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::shared_ptr<instruction> NOP2_() {
         return std::shared_ptr<instruction>(new instruction(NOP2{}));
       }
+
       static std::shared_ptr<instruction> LDM_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(LDM{a0}));
       }
+
       static std::shared_ptr<instruction> LDM2_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(LDM2{a0}));
       }
+
       static std::unique_ptr<instruction> NOP_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::unique_ptr<instruction> NOP2_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP2{}));
       }
+
       static std::unique_ptr<instruction> LDM_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(LDM{a0}));
       }
+
       static std::unique_ptr<instruction> LDM2_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(LDM2{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -162,14 +191,11 @@ struct DisassembleOps {
 
   static std::shared_ptr<instruction> decode1(const unsigned int b1,
                                               const unsigned int b2);
-
   static std::shared_ptr<List<unsigned int>>
   drop_(const unsigned int n, std::shared_ptr<List<unsigned int>> l);
-
   static std::optional<std::pair<std::shared_ptr<instruction>, unsigned int>>
   disassemble1(const std::shared_ptr<List<unsigned int>> &rom,
                const unsigned int addr);
-
   static inline const unsigned int test_disassemble_drop_window = [](void) {
     if (disassemble1(
             List<unsigned int>::ctor::cons_(
@@ -200,7 +226,6 @@ struct DisassembleOps {
       return 0u;
     }
   }();
-
   static std::shared_ptr<instruction> decode2(const unsigned int b1,
                                               const unsigned int b2);
 
@@ -228,7 +253,6 @@ struct DisassembleOps {
   static std::optional<std::pair<std::shared_ptr<instruction>, unsigned int>>
   disassemble2(const std::shared_ptr<List<unsigned int>> &rom,
                const unsigned int addr);
-
   static inline const unsigned int test_disassemble_next_address = [](void) {
     if (disassemble2(
             List<unsigned int>::ctor::cons_(
@@ -253,10 +277,8 @@ struct DisassembleOps {
       return 0u;
     }
   }();
-
   static std::shared_ptr<instruction> decode3(const unsigned int b1,
                                               const unsigned int b2);
-
   static std::optional<std::pair<std::shared_ptr<instruction>, unsigned int>>
   disassemble3(const std::shared_ptr<List<unsigned int>> &rom,
                const unsigned int addr);
@@ -275,10 +297,8 @@ struct DisassembleOps {
           disassemble3(List<unsigned int>::ctor::cons_(
                            9u, List<unsigned int>::ctor::nil_()),
                        0u));
-
   static std::shared_ptr<instruction> decode4(const unsigned int b1,
                                               const unsigned int b2);
-
   static std::optional<std::pair<std::shared_ptr<instruction>, unsigned int>>
   disassemble4(const std::shared_ptr<List<unsigned int>> &rom,
                const unsigned int addr);
@@ -291,7 +311,6 @@ struct DisassembleOps {
   static inline const std::shared_ptr<state> init_state =
       std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 16u),
                                     ListDef::repeat<unsigned int>(0u, 4096u)});
-
   static inline const unsigned int test_decode_disassemble_1 = [](void) {
     if (disassemble4(
             List<unsigned int>::ctor::cons_(
@@ -316,7 +335,6 @@ struct DisassembleOps {
       return 0u;
     }
   }();
-
   static inline const unsigned int test_decode_disassemble_2 = [](void) {
     if (disassemble4(
             List<unsigned int>::ctor::cons_(
@@ -341,13 +359,10 @@ struct DisassembleOps {
       return 0u;
     }
   }();
-
   static inline const unsigned int test_init_state_regs =
       init_state->regs->length();
-
   static inline const unsigned int test_init_state_rom =
       init_state->rom->length();
-
   static inline const std::pair<
       std::pair<
           std::pair<

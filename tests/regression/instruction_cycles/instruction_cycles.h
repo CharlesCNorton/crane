@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
     return std::visit(
         Overloaded{
@@ -70,7 +81,6 @@ struct Nat {
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -87,33 +97,43 @@ struct InstructionCycles {
       unsigned int _a0;
       unsigned int _a1;
     };
+
     struct NOP1 {};
+
     using variant_t = std::variant<JCN1, NOP1>;
 
   private:
     variant_t v_;
+
     explicit instruction1(JCN1 _v) : v_(std::move(_v)) {}
+
     explicit instruction1(NOP1 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction1> JCN1_(unsigned int a0,
                                                  unsigned int a1) {
         return std::shared_ptr<instruction1>(new instruction1(JCN1{a0, a1}));
       }
+
       static std::shared_ptr<instruction1> NOP1_() {
         return std::shared_ptr<instruction1>(new instruction1(NOP1{}));
       }
+
       static std::unique_ptr<instruction1> JCN1_uptr(unsigned int a0,
                                                      unsigned int a1) {
         return std::unique_ptr<instruction1>(new instruction1(JCN1{a0, a1}));
       }
+
       static std::unique_ptr<instruction1> NOP1_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(NOP1{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -147,7 +167,6 @@ struct InstructionCycles {
 
   static unsigned int cycles_jcn(const std::shared_ptr<state1> &s,
                                  const std::shared_ptr<instruction1> &i);
-
   static inline const unsigned int test_cycles_jcn_not_taken =
       cycles_jcn(std::make_shared<state1>(state1{1u, false, true}),
                  instruction1::ctor::JCN1_(4u, 7u));
@@ -157,31 +176,41 @@ struct InstructionCycles {
     struct JMS2 {
       unsigned int _a0;
     };
+
     struct NOP2 {};
+
     using variant_t = std::variant<JMS2, NOP2>;
 
   private:
     variant_t v_;
+
     explicit instruction2(JMS2 _v) : v_(std::move(_v)) {}
+
     explicit instruction2(NOP2 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction2> JMS2_(unsigned int a0) {
         return std::shared_ptr<instruction2>(new instruction2(JMS2{a0}));
       }
+
       static std::shared_ptr<instruction2> NOP2_() {
         return std::shared_ptr<instruction2>(new instruction2(NOP2{}));
       }
+
       static std::unique_ptr<instruction2> JMS2_uptr(unsigned int a0) {
         return std::unique_ptr<instruction2>(new instruction2(JMS2{a0}));
       }
+
       static std::unique_ptr<instruction2> NOP2_uptr() {
         return std::unique_ptr<instruction2>(new instruction2(NOP2{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -217,10 +246,8 @@ struct InstructionCycles {
 
   static unsigned int cycles_jms(const std::shared_ptr<state2> &_x,
                                  const std::shared_ptr<instruction2> &i);
-
   static inline const unsigned int test_cycles_jms_constant = cycles_jms(
       std::make_shared<state2>(state2{0u}), instruction2::ctor::JMS2_(77u));
-
   enum class instr3 {
     NOP3,
     ADD3,
@@ -308,7 +335,6 @@ struct InstructionCycles {
   }
 
   static unsigned int cycles_min(const instr3 i);
-
   static inline const std::shared_ptr<List<instr3>> all_instrs3 =
       List<instr3>::ctor::cons_(
           instr3::NOP3,
@@ -329,10 +355,8 @@ struct InstructionCycles {
                                       List<instr3>::ctor::cons_(
                                           instr3::ISZZero3,
                                           List<instr3>::ctor::nil_())))))))));
-
   static inline const bool test_min_cycles_per_instruction =
       all_instrs3->forallb([](instr3 i) { return (8u <= cycles_min(i)); });
-
   enum class instr4 {
     NOP4,
     ADD4,
@@ -420,7 +444,6 @@ struct InstructionCycles {
   }
 
   static unsigned int cycles_max(const instr4 i);
-
   static inline const std::shared_ptr<List<instr4>> all_instrs4 =
       List<instr4>::ctor::cons_(
           instr4::NOP4,
@@ -441,7 +464,6 @@ struct InstructionCycles {
                                       List<instr4>::ctor::cons_(
                                           instr4::ISZZero4,
                                           List<instr4>::ctor::nil_())))))))));
-
   static inline const bool test_max_cycles_per_instruction =
       all_instrs4->forallb([](instr4 i) { return (cycles_max(i) <= 24u); });
 
@@ -454,43 +476,57 @@ struct InstructionCycles {
   struct instruction5 {
   public:
     struct NOP5 {};
+
     struct JCN5 {
       unsigned int _a0;
     };
+
     struct INC5 {
       unsigned int _a0;
     };
+
     using variant_t = std::variant<NOP5, JCN5, INC5>;
 
   private:
     variant_t v_;
+
     explicit instruction5(NOP5 _v) : v_(std::move(_v)) {}
+
     explicit instruction5(JCN5 _v) : v_(std::move(_v)) {}
+
     explicit instruction5(INC5 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction5> NOP5_() {
         return std::shared_ptr<instruction5>(new instruction5(NOP5{}));
       }
+
       static std::shared_ptr<instruction5> JCN5_(unsigned int a0) {
         return std::shared_ptr<instruction5>(new instruction5(JCN5{a0}));
       }
+
       static std::shared_ptr<instruction5> INC5_(unsigned int a0) {
         return std::shared_ptr<instruction5>(new instruction5(INC5{a0}));
       }
+
       static std::unique_ptr<instruction5> NOP5_uptr() {
         return std::unique_ptr<instruction5>(new instruction5(NOP5{}));
       }
+
       static std::unique_ptr<instruction5> JCN5_uptr(unsigned int a0) {
         return std::unique_ptr<instruction5>(new instruction5(JCN5{a0}));
       }
+
       static std::unique_ptr<instruction5> INC5_uptr(unsigned int a0) {
         return std::unique_ptr<instruction5>(new instruction5(INC5{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -532,14 +568,11 @@ struct InstructionCycles {
 
   static unsigned int cycles_sum(const std::shared_ptr<state5> &s,
                                  const std::shared_ptr<instruction5> &i);
-
   static std::shared_ptr<state5>
   execute5(std::shared_ptr<state5> s, const std::shared_ptr<instruction5> &i);
-
   static unsigned int program_cycles5(
       const std::shared_ptr<state5> &s,
       const std::shared_ptr<List<std::shared_ptr<instruction5>>> &prog);
-
   static inline const unsigned int test_instruction_cycle_sum = program_cycles5(
       std::make_shared<state5>(state5{0u, false, true}),
       List<std::shared_ptr<instruction5>>::ctor::cons_(
@@ -549,7 +582,6 @@ struct InstructionCycles {
               List<std::shared_ptr<instruction5>>::ctor::cons_(
                   instruction5::ctor::NOP5_(),
                   List<std::shared_ptr<instruction5>>::ctor::nil_()))));
-
   enum class instruction6 { NOP6 };
 
   template <typename T1>
@@ -580,16 +612,13 @@ struct InstructionCycles {
 
   static unsigned int cycles6(const std::shared_ptr<state6> &_x,
                               const instruction6 _x0);
-
   static unsigned int
   program_cycles6(const std::shared_ptr<state6> &s,
                   const std::shared_ptr<List<instruction6>> &prog);
-
   static inline const unsigned int singleton_cycles6 = program_cycles6(
       std::make_shared<state6>(state6{0u}),
       List<instruction6>::ctor::cons_(instruction6::NOP6,
                                       List<instruction6>::ctor::nil_()));
-
   static inline const unsigned int three_nop_cycles6 = program_cycles6(
       std::make_shared<state6>(state6{0u}),
       List<instruction6>::ctor::cons_(
@@ -598,11 +627,9 @@ struct InstructionCycles {
               instruction6::NOP6,
               List<instruction6>::ctor::cons_(
                   instruction6::NOP6, List<instruction6>::ctor::nil_()))));
-
   static inline const std::pair<unsigned int, unsigned int>
       test_program_cycles =
           std::make_pair(singleton_cycles6, three_nop_cycles6);
-
   enum class instruction7 { NOP7 };
 
   template <typename T1>
@@ -633,16 +660,13 @@ struct InstructionCycles {
 
   static unsigned int cycles7(const std::shared_ptr<state7> &_x,
                               const instruction7 _x0);
-
   static unsigned int
   program_cycles7(const std::shared_ptr<state7> &s,
                   const std::shared_ptr<List<instruction7>> &prog);
-
   static inline const unsigned int test_program_cycles_single = program_cycles7(
       std::make_shared<state7>(state7{16u}),
       List<instruction7>::ctor::cons_(instruction7::NOP7,
                                       List<instruction7>::ctor::nil_()));
-
   static inline const std::pair<
       std::pair<
           std::pair<

@@ -20,24 +20,14 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct NatGMPTest {
   static mpz_class add_test(const mpz_class, const mpz_class);
-
   static mpz_class mul_test(const mpz_class, const mpz_class);
-
   static mpz_class sub_test(const mpz_class, const mpz_class);
-
   static bool eqb_test(const mpz_class, const mpz_class);
-
   static bool ltb_test(const mpz_class, const mpz_class);
-
   static bool leb_test(const mpz_class, const mpz_class);
-
   static mpz_class pred_test(const mpz_class);
-
   static mpz_class match_test(const mpz_class n);
-
   static inline const mpz_class big_num = mpz_class(200);
-
   static inline const mpz_class another_big = mpz_class(1000);
-
   static mpz_class add_big(const mpz_class n);
 };

@@ -23,49 +23,63 @@ struct WhereClause {
     struct Num {
       unsigned int _a0;
     };
+
     struct Plus {
       std::shared_ptr<Expr> _a0;
       std::shared_ptr<Expr> _a1;
     };
+
     struct Times {
       std::shared_ptr<Expr> _a0;
       std::shared_ptr<Expr> _a1;
     };
+
     using variant_t = std::variant<Num, Plus, Times>;
 
   private:
     variant_t v_;
+
     explicit Expr(Num _v) : v_(std::move(_v)) {}
+
     explicit Expr(Plus _v) : v_(std::move(_v)) {}
+
     explicit Expr(Times _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<Expr> Num_(unsigned int a0) {
         return std::shared_ptr<Expr>(new Expr(Num{a0}));
       }
+
       static std::shared_ptr<Expr> Plus_(const std::shared_ptr<Expr> &a0,
                                          const std::shared_ptr<Expr> &a1) {
         return std::shared_ptr<Expr>(new Expr(Plus{a0, a1}));
       }
+
       static std::shared_ptr<Expr> Times_(const std::shared_ptr<Expr> &a0,
                                           const std::shared_ptr<Expr> &a1) {
         return std::shared_ptr<Expr>(new Expr(Times{a0, a1}));
       }
+
       static std::unique_ptr<Expr> Num_uptr(unsigned int a0) {
         return std::unique_ptr<Expr>(new Expr(Num{a0}));
       }
+
       static std::unique_ptr<Expr> Plus_uptr(const std::shared_ptr<Expr> &a0,
                                              const std::shared_ptr<Expr> &a1) {
         return std::unique_ptr<Expr>(new Expr(Plus{a0, a1}));
       }
+
       static std::unique_ptr<Expr> Times_uptr(const std::shared_ptr<Expr> &a0,
                                               const std::shared_ptr<Expr> &a1) {
         return std::unique_ptr<Expr>(new Expr(Times{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -117,75 +131,96 @@ struct WhereClause {
   }
 
   static unsigned int eval(const std::shared_ptr<Expr> &e);
-
   static unsigned int expr_size(const std::shared_ptr<Expr> &e);
 
   struct BExpr {
   public:
     struct BTrue {};
+
     struct BFalse {};
+
     struct BAnd {
       std::shared_ptr<BExpr> _a0;
       std::shared_ptr<BExpr> _a1;
     };
+
     struct BOr {
       std::shared_ptr<BExpr> _a0;
       std::shared_ptr<BExpr> _a1;
     };
+
     struct BNot {
       std::shared_ptr<BExpr> _a0;
     };
+
     using variant_t = std::variant<BTrue, BFalse, BAnd, BOr, BNot>;
 
   private:
     variant_t v_;
+
     explicit BExpr(BTrue _v) : v_(std::move(_v)) {}
+
     explicit BExpr(BFalse _v) : v_(std::move(_v)) {}
+
     explicit BExpr(BAnd _v) : v_(std::move(_v)) {}
+
     explicit BExpr(BOr _v) : v_(std::move(_v)) {}
+
     explicit BExpr(BNot _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<BExpr> BTrue_() {
         return std::shared_ptr<BExpr>(new BExpr(BTrue{}));
       }
+
       static std::shared_ptr<BExpr> BFalse_() {
         return std::shared_ptr<BExpr>(new BExpr(BFalse{}));
       }
+
       static std::shared_ptr<BExpr> BAnd_(const std::shared_ptr<BExpr> &a0,
                                           const std::shared_ptr<BExpr> &a1) {
         return std::shared_ptr<BExpr>(new BExpr(BAnd{a0, a1}));
       }
+
       static std::shared_ptr<BExpr> BOr_(const std::shared_ptr<BExpr> &a0,
                                          const std::shared_ptr<BExpr> &a1) {
         return std::shared_ptr<BExpr>(new BExpr(BOr{a0, a1}));
       }
+
       static std::shared_ptr<BExpr> BNot_(const std::shared_ptr<BExpr> &a0) {
         return std::shared_ptr<BExpr>(new BExpr(BNot{a0}));
       }
+
       static std::unique_ptr<BExpr> BTrue_uptr() {
         return std::unique_ptr<BExpr>(new BExpr(BTrue{}));
       }
+
       static std::unique_ptr<BExpr> BFalse_uptr() {
         return std::unique_ptr<BExpr>(new BExpr(BFalse{}));
       }
+
       static std::unique_ptr<BExpr>
       BAnd_uptr(const std::shared_ptr<BExpr> &a0,
                 const std::shared_ptr<BExpr> &a1) {
         return std::unique_ptr<BExpr>(new BExpr(BAnd{a0, a1}));
       }
+
       static std::unique_ptr<BExpr> BOr_uptr(const std::shared_ptr<BExpr> &a0,
                                              const std::shared_ptr<BExpr> &a1) {
         return std::unique_ptr<BExpr>(new BExpr(BOr{a0, a1}));
       }
+
       static std::unique_ptr<BExpr>
       BNot_uptr(const std::shared_ptr<BExpr> &a0) {
         return std::unique_ptr<BExpr>(new BExpr(BNot{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -254,53 +289,67 @@ struct WhereClause {
     struct ANum {
       unsigned int _a0;
     };
+
     struct APlus {
       std::shared_ptr<AExpr> _a0;
       std::shared_ptr<AExpr> _a1;
     };
+
     struct AIf {
       std::shared_ptr<BExpr> _a0;
       std::shared_ptr<AExpr> _a1;
       std::shared_ptr<AExpr> _a2;
     };
+
     using variant_t = std::variant<ANum, APlus, AIf>;
 
   private:
     variant_t v_;
+
     explicit AExpr(ANum _v) : v_(std::move(_v)) {}
+
     explicit AExpr(APlus _v) : v_(std::move(_v)) {}
+
     explicit AExpr(AIf _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<AExpr> ANum_(unsigned int a0) {
         return std::shared_ptr<AExpr>(new AExpr(ANum{a0}));
       }
+
       static std::shared_ptr<AExpr> APlus_(const std::shared_ptr<AExpr> &a0,
                                            const std::shared_ptr<AExpr> &a1) {
         return std::shared_ptr<AExpr>(new AExpr(APlus{a0, a1}));
       }
+
       static std::shared_ptr<AExpr> AIf_(const std::shared_ptr<BExpr> &a0,
                                          const std::shared_ptr<AExpr> &a1,
                                          const std::shared_ptr<AExpr> &a2) {
         return std::shared_ptr<AExpr>(new AExpr(AIf{a0, a1, a2}));
       }
+
       static std::unique_ptr<AExpr> ANum_uptr(unsigned int a0) {
         return std::unique_ptr<AExpr>(new AExpr(ANum{a0}));
       }
+
       static std::unique_ptr<AExpr>
       APlus_uptr(const std::shared_ptr<AExpr> &a0,
                  const std::shared_ptr<AExpr> &a1) {
         return std::unique_ptr<AExpr>(new AExpr(APlus{a0, a1}));
       }
+
       static std::unique_ptr<AExpr> AIf_uptr(const std::shared_ptr<BExpr> &a0,
                                              const std::shared_ptr<AExpr> &a1,
                                              const std::shared_ptr<AExpr> &a2) {
         return std::unique_ptr<AExpr>(new AExpr(AIf{a0, a1, a2}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -363,24 +412,18 @@ struct WhereClause {
   }
 
   static unsigned int aeval(const std::shared_ptr<AExpr> &e);
-
   static inline const unsigned int test_eval_plus =
       eval(Expr::ctor::Plus_(Expr::ctor::Num_(3u), Expr::ctor::Num_(4u)));
-
   static inline const unsigned int test_eval_times =
       eval(Expr::ctor::Times_(Expr::ctor::Num_(5u), Expr::ctor::Num_(6u)));
-
   static inline const unsigned int test_eval_nested = eval(Expr::ctor::Plus_(
       Expr::ctor::Times_(Expr::ctor::Num_(2u), Expr::ctor::Num_(3u)),
       Expr::ctor::Num_(1u)));
-
   static inline const unsigned int test_size = expr_size(Expr::ctor::Plus_(
       Expr::ctor::Times_(Expr::ctor::Num_(2u), Expr::ctor::Num_(3u)),
       Expr::ctor::Num_(1u)));
-
   static inline const bool test_beval = beval(BExpr::ctor::BAnd_(
       BExpr::ctor::BTrue_(), BExpr::ctor::BNot_(BExpr::ctor::BFalse_())));
-
   static inline const unsigned int test_aeval = aeval(AExpr::ctor::AIf_(
       BExpr::ctor::BAnd_(BExpr::ctor::BTrue_(), BExpr::ctor::BTrue_()),
       AExpr::ctor::ANum_(10u), AExpr::ctor::ANum_(20u)));

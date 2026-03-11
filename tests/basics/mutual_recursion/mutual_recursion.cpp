@@ -18,6 +18,7 @@ bool MutualRecursion::is_even(const unsigned int n) {
     return is_odd(m);
   }
 }
+
 bool MutualRecursion::is_odd(const unsigned int n) {
   if (n <= 0) {
     return false;
@@ -44,6 +45,7 @@ unsigned int MutualRecursion::tree_sum(
           }},
       t->v());
 }
+
 unsigned int MutualRecursion::forest_sum(
     const std::shared_ptr<MutualRecursion::forest<unsigned int>> &f) {
   return std::visit(

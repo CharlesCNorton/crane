@@ -425,53 +425,14 @@ let rec resolve_metas_in_ast resolve_metas = function
   | MLtuple args -> List.iter (resolve_metas_in_ast resolve_metas) args
   | MLrel _ | MLexn _ | MLdummy _ | MLaxiom _ | MLuint _ | MLfloat _ | MLstring _ -> ()
 
-(** Substitute a CPPvar with a replacement expression in C++ ASTs.
-   Used when lifting inner functions to top-level to rewrite references. *)
+(** Substitute [CPPvar target] with [repl] in expressions and statements.
+    Uses generic AST visitors for structural recursion. *)
 let rec local_var_subst_expr (target : Id.t) (repl : cpp_expr) (e : cpp_expr) =
-  let sub = local_var_subst_expr target repl in
   match e with
   | CPPvar id when Id.equal id target -> repl
-  | CPPfun_call (f, args) -> CPPfun_call (sub f, List.map sub args)
-  | CPPderef e' -> CPPderef (sub e')
-  | CPPmove e' -> CPPmove (sub e')
-  | CPPlambda (args, ty, b, cbv) -> CPPlambda (args, ty, List.map (local_var_subst_stmt target repl) b, cbv)
-  | CPPoverloaded cases -> CPPoverloaded (List.map sub cases)
-  | CPPstructmk (id', tys, args) -> CPPstructmk (id', tys, List.map sub args)
-  | CPPstruct (id', tys, args) -> CPPstruct (id', tys, List.map sub args)
-  | CPPget (e', id') -> CPPget (sub e', id')
-  | CPPget' (e', id') -> CPPget' (sub e', id')
-  | CPPnamespace (id', e') -> CPPnamespace (id', sub e')
-  | CPPparray (args, e') -> CPPparray (Array.map sub args, sub e')
-  | CPPmethod_call (obj, meth, args) -> CPPmethod_call (sub obj, meth, List.map sub args)
-  | CPPmember (e', mid) -> CPPmember (sub e', mid)
-  | CPParrow (e', mid) -> CPParrow (sub e', mid)
-  | CPPforward (ty, e') -> CPPforward (ty, sub e')
-  | CPPnew (ty, args) -> CPPnew (ty, List.map sub args)
-  | CPPshared_ptr_ctor (ty, e') -> CPPshared_ptr_ctor (ty, sub e')
-  | CPPstruct_id (sid, tys, args) -> CPPstruct_id (sid, tys, List.map sub args)
-  | CPPqualified (e', qid) -> CPPqualified (sub e', qid)
-  | CPPbinop (op, lhs, rhs) -> CPPbinop (op, sub lhs, sub rhs)
-  | _ -> e
+  | _ -> map_expr (local_var_subst_expr target repl) (local_var_subst_stmt target repl) Fun.id e
 and local_var_subst_stmt (target : Id.t) (repl : cpp_expr) (s : cpp_stmt) =
-  let sub_e = local_var_subst_expr target repl in
-  let sub_s = local_var_subst_stmt target repl in
-  match s with
-  | Sreturn (Some e) -> Sreturn (Some (sub_e e))
-  | Sreturn None -> Sreturn None
-  | Sasgn (id, ty, e) -> Sasgn (id, ty, sub_e e)
-  | Sexpr e -> Sexpr (sub_e e)
-  | Scustom_case (ty, e, tys, brs, str) ->
-      Scustom_case (ty, sub_e e, tys,
-        List.map (fun (args, ty, stmts) ->
-          (args, ty, List.map sub_s stmts)) brs, str)
-  | Sif (cond, then_stmts, else_stmts) ->
-      Sif (sub_e cond, List.map sub_s then_stmts, List.map sub_s else_stmts)
-  | Sassign_field (obj, field, e) ->
-      Sassign_field (sub_e obj, field, sub_e e)
-  | Sswitch (scrut, ind, brs) ->
-      Sswitch (sub_e scrut, ind,
-        List.map (fun (ctor, stmts) -> (ctor, List.map sub_s stmts)) brs)
-  | _ -> s
+  map_stmt (local_var_subst_expr target repl) (local_var_subst_stmt target repl) Fun.id s
 
 (** Build extended tvar names covering both signature and body Tvar indices.
    sig_indices: sorted list of Tvar indices from the function signature
@@ -738,7 +699,7 @@ let rec convert_ml_type_to_cpp_type env (ns : Refset'.t) (tvars : Id.t list) (ml
   | Tdummy Ktype -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_type")), [], [])
   | Tdummy Kprop -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_prop")), [], [])
   | Tdummy (Kimplicit _) -> Tglob (GlobRef.VarRef (Id.of_string ("dummy_implicit")), [], [])
-  | Tstring -> assert false (* Tstring is not used by the extraction pipeline *)
+  | Tstring -> CErrors.anomaly (Pp.str "Tstring should not appear in extraction pipeline")
   | Tunknown -> Tany
   | Taxiom -> Tglob (GlobRef.VarRef (Id.of_string ("axiom")), [], [])
   (*
@@ -1013,7 +974,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
     (* Try to fold Peano numeral chain into an integer literal *)
     let ind_ref = match r with
       | GlobRef.ConstructRef ((kn, i), _) -> GlobRef.IndRef (kn, i)
-      | _ -> assert false
+      | _ -> CErrors.anomaly (Pp.str "try_fold_numeral: expected ConstructRef")
     in
     (match Table.get_numeral_info ind_ref with
      | Some info ->
@@ -1031,7 +992,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
   | MLcons (ty, r, ts) when ts = [] && (match r with GlobRef.ConstructRef ((kn, _), _) -> is_enum_inductive (GlobRef.IndRef (kn, 0)) | _ -> false) ->
     (* Enum constructor: emit bare EnumType::Constructor value *)
     let ctor_name = Id.of_string (Common.pp_global_name Type r) in
-    let ind_ref = (match r with GlobRef.ConstructRef ((kn, i), _) -> GlobRef.IndRef (kn, i) | _ -> assert false) in
+    let ind_ref = (match r with GlobRef.ConstructRef ((kn, i), _) -> GlobRef.IndRef (kn, i) | _ -> CErrors.anomaly (Pp.str "gen_expr: enum constructor expected ConstructRef")) in
     CPPenum_val (ind_ref, ctor_name)
   | MLcons (ty, r, ts) ->
     let fds = record_fields_of_type ty in
@@ -1148,7 +1109,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
         in
         let temps = List.map (convert_ml_type_to_cpp_type env Refset'.empty []) tys in
         CPPfun_call (CPPmk_shared (Tglob (n, temps, [])), [CPPstruct (n, temps, args)])
-      | _ -> assert false) in
+      | _ -> CErrors.anomaly (Pp.str "gen_expr: non-record MLcons with matching type expected Tglob")) in
       nstempmod (List.map (gen_expr env) ts))
   | MLcase (typ, t, pv) when is_custom_match pv ->
     let cexp = gen_custom_cpp_case env (fun x -> Sreturn (Some x)) typ t pv in
@@ -1356,7 +1317,7 @@ and eta_fun env f args =
           ) inner_args in
           Tglob (r, List.map (convert_ml_type_to_cpp_type env Refset'.empty []) ts @ template_args, [])
       | MLdummy _ -> Tany  (* Should not happen at top level, but be safe *)
-      | _ -> assert false  (* Already filtered by is_typeclass_instance_arg *)
+      | _ -> CErrors.anomaly (Pp.str "ml_arg_to_template_type: unexpected ML term after is_typeclass_instance_arg filter")
     in
     let typeclass_type_args = List.map ml_arg_to_template_type typeclass_ml_args in
     (* Filter out MLdummy entries from regular args — these are erased proof
@@ -1771,7 +1732,7 @@ and gen_cpp_case (typ : ml_type) t env pv =
     (* Generate switch-based matching wrapped in IIFE *)
     let ind_ref = match typ with
       | Miniml.Tglob (r, _, _) -> r
-      | _ -> assert false
+      | _ -> CErrors.anomaly (Pp.str "gen_case_cpp: enum type expected to be Tglob")
     in
     let scrutinee = gen_expr env t in
     let rec gen_enum_branches = function
@@ -3172,157 +3133,42 @@ let primary_tvar_indices dom cod =
   ) IntSet.empty (cod :: non_fun_dom)
 
 
-let rec glob_subst_expr (id : GlobRef.t) (e1 : cpp_expr) (e2 : cpp_expr) =
-match e2 with
-  | CPPglob (id', _, _) ->
-    if Environ.QGlobRef.equal Environ.empty_env id id' then e1 else e2
-  | CPPnamespace (id', e') -> CPPnamespace (id', glob_subst_expr id e1 e')
-  | CPPfun_call (f, args) -> CPPfun_call (glob_subst_expr id e1 f, List.map (glob_subst_expr id e1) args)
-  | CPPderef e' -> CPPderef (glob_subst_expr id e1 e')
-  | CPPmove e' -> CPPmove (glob_subst_expr id e1 e')
-  | CPPlambda (args, ty, b, cbv) -> CPPlambda (args, ty, List.map (glob_subst_stmt id e1) b, cbv)
-  | CPPoverloaded cases -> CPPoverloaded (List.map (glob_subst_expr id e1) cases)
-  | CPPstructmk (id', tys, args) -> CPPstructmk (id', tys, List.map (glob_subst_expr id e1) args)
-  | CPPstruct (id', tys, args) -> CPPstruct (id', tys, List.map (glob_subst_expr id e1) args)
-  | CPPget (e', id') -> CPPget (glob_subst_expr id e1 e', id')
-  | CPPget' (e', id') -> CPPget' (glob_subst_expr id e1 e', id')
-  | CPPparray (args, e') -> CPPparray (Array.map (glob_subst_expr id e1) args, glob_subst_expr id e1 e')
-  | _ -> e2 (* lambda needs to be covered *)
+(** Substitute [CPPglob id] with [repl] in expressions and statements.
+    Uses generic AST visitors for structural recursion. *)
+let rec glob_subst_expr (id : GlobRef.t) (repl : cpp_expr) (e : cpp_expr) =
+  match e with
+  | CPPglob (id', _, _) when Environ.QGlobRef.equal Environ.empty_env id id' -> repl
+  | _ -> map_expr (glob_subst_expr id repl) (glob_subst_stmt id repl) Fun.id e
+and glob_subst_stmt (id : GlobRef.t) (repl : cpp_expr) (s : cpp_stmt) =
+  map_stmt (glob_subst_expr id repl) (glob_subst_stmt id repl) Fun.id s
 
-and glob_subst_stmt (id : GlobRef.t) (e : cpp_expr) (s : cpp_stmt) =
-match s with
-  | Sreturn (Some e') -> Sreturn (Some (glob_subst_expr id e e'))
-  | Sreturn None -> Sreturn None
-  | Sasgn (id', ty, e') -> Sasgn (id', ty, glob_subst_expr id e e')
-  | Sexpr e' -> Sexpr (glob_subst_expr id e e')
-  | Scustom_case (ty, e', tys, brs, str) -> Scustom_case (ty, glob_subst_expr id e e', tys,
-    List.map (fun (args, ty, stmts) -> (args, ty, List.map (glob_subst_stmt id e) stmts)) brs, str)
-  | Sswitch (scrut, ind, brs) -> Sswitch (glob_subst_expr id e scrut, ind,
-    List.map (fun (ctor, stmts) -> (ctor, List.map (glob_subst_stmt id e) stmts)) brs)
-  | _ -> s
-
-let rec var_subst_expr (id : Id.t) (e1 : cpp_expr) (e2 : cpp_expr) =
-match e2 with
-  | CPPvar id' -> if Id.equal id id' then e1 else e2
-  | CPPnamespace (id', e') -> CPPnamespace (id', var_subst_expr id e1 e')
-  | CPPfun_call (f, args) -> CPPfun_call (var_subst_expr id e1 f, List.map (var_subst_expr id e1) args)
-  | CPPderef e' -> CPPderef (var_subst_expr id e1 e')
-  | CPPmove e' -> CPPmove (var_subst_expr id e1 e')
-  | CPPlambda (args, ty, b, cbv) -> CPPlambda (args, ty, List.map (var_subst_stmt id e1) b, cbv)
-  | CPPoverloaded cases -> CPPoverloaded (List.map (var_subst_expr id e1) cases)
-  | CPPstructmk (id', tys, args) -> CPPstructmk (id', tys, List.map (var_subst_expr id e1) args)
-  | CPPstruct (id', tys, args) -> CPPstruct (id', tys, List.map (var_subst_expr id e1) args)
-  | CPPget (e', id') -> CPPget (var_subst_expr id e1 e', id')
-  | CPPget' (e', id') -> CPPget' (var_subst_expr id e1 e', id')
-  | CPPparray (args, e') -> CPPparray (Array.map (var_subst_expr id e1) args, var_subst_expr id e1 e')
-  | CPPmethod_call (obj, meth, args) -> CPPmethod_call (var_subst_expr id e1 obj, meth, List.map (var_subst_expr id e1) args)
-  | CPPmember (e', mid) -> CPPmember (var_subst_expr id e1 e', mid)
-  | CPParrow (e', mid) -> CPParrow (var_subst_expr id e1 e', mid)
-  | CPPforward (ty, e') -> CPPforward (ty, var_subst_expr id e1 e')
-  | CPPnew (ty, args) -> CPPnew (ty, List.map (var_subst_expr id e1) args)
-  | CPPshared_ptr_ctor (ty, e') -> CPPshared_ptr_ctor (ty, var_subst_expr id e1 e')
-  | CPPunique_ptr_ctor (ty, e) -> CPPunique_ptr_ctor (ty, var_subst_expr id e1 e)
-  | CPPstruct_id (sid, tys, args) -> CPPstruct_id (sid, tys, List.map (var_subst_expr id e1) args)
-  | CPPqualified (e', qid) -> CPPqualified (var_subst_expr id e1 e', qid)
-  | CPPbinop (op, lhs, rhs) -> CPPbinop (op, var_subst_expr id e1 lhs, var_subst_expr id e1 rhs)
-  | _ -> e2
-
-and var_subst_stmt (id : Id.t) (e : cpp_expr) (s : cpp_stmt) =
-  let sub_e = var_subst_expr id e in
-  let sub_s = var_subst_stmt id e in
-  match s with
-  | Sreturn (Some e') -> Sreturn (Some (sub_e e'))
-  | Sreturn None -> Sreturn None
-  | Sasgn (id', ty, e') -> Sasgn (id', ty, sub_e e')
-  | Sexpr e' -> Sexpr (sub_e e')
-  | Scustom_case (ty, e', tys, brs, str) -> Scustom_case (ty, sub_e e', tys,
-    List.map (fun (args, ty, stmts) -> (args, ty, List.map sub_s stmts)) brs, str)
-  | Sswitch (scrut, ind, brs) -> Sswitch (sub_e scrut, ind,
-    List.map (fun (ctor, stmts) -> (ctor, List.map sub_s stmts)) brs)
-  | Sif (cond, then_stmts, else_stmts) ->
-      Sif (sub_e cond, List.map sub_s then_stmts, List.map sub_s else_stmts)
-  | Sassign_field (obj, field, e') ->
-      Sassign_field (sub_e obj, field, sub_e e')
-  | _ -> s
+(** Substitute [CPPvar id] with [repl] in expressions and statements.
+    Uses generic AST visitors for structural recursion. *)
+let rec var_subst_expr (id : Id.t) (repl : cpp_expr) (e : cpp_expr) =
+  match e with
+  | CPPvar id' when Id.equal id id' -> repl
+  | _ -> map_expr (var_subst_expr id repl) (var_subst_stmt id repl) Fun.id e
+and var_subst_stmt (id : Id.t) (repl : cpp_expr) (s : cpp_stmt) =
+  map_stmt (var_subst_expr id repl) (var_subst_stmt id repl) Fun.id s
 
 (** Substitute unnamed type variables with named ones based on a variable list.
-   This is used when generating methods to replace T1, T2, etc. with the struct's
-   template parameter names like A, B, etc. *)
-let rec tvar_subst_type (tvars : Id.t list) (ty : cpp_type) : cpp_type =
-  match ty with
-  | Tvar (i, None) ->
-    (try Tvar (i, Some (List.nth tvars (pred i)))
-     with Failure _ -> ty)
-  | Tvar (_, Some _) -> ty  (* Already named *)
-  | Tglob (r, tys, args) -> Tglob (r, List.map (tvar_subst_type tvars) tys, args)
-  | Tfun (tys, ty) -> Tfun (List.map (tvar_subst_type tvars) tys, tvar_subst_type tvars ty)
-  | Tmod (m, ty) -> Tmod (m, tvar_subst_type tvars ty)
-  | Tnamespace (r, ty) -> Tnamespace (r, tvar_subst_type tvars ty)
-  | Tref ty -> Tref (tvar_subst_type tvars ty)
-  | Tvariant tys -> Tvariant (List.map (tvar_subst_type tvars) tys)
-  | Tshared_ptr ty -> Tshared_ptr (tvar_subst_type tvars ty)
-  | Tunique_ptr ty -> Tunique_ptr (tvar_subst_type tvars ty)
-  | Tid (id, tys) -> Tid (id, List.map (tvar_subst_type tvars) tys)
-  | Tqualified (ty, id) -> Tqualified (tvar_subst_type tvars ty, id)
-  | _ -> ty  (* Tvoid, Ttodo, Tunknown *)
+    This is used when generating methods to replace T1, T2, etc. with the struct's
+    template parameter names like A, B, etc.
+    Uses [map_cpp_type] for structural recursion on types. *)
+let tvar_subst_type (tvars : Id.t list) : cpp_type -> cpp_type =
+  map_cpp_type (fun ty ->
+    match ty with
+    | Tvar (i, None) ->
+      (try Tvar (i, Some (List.nth tvars (pred i)))
+       with Failure _ -> ty)
+    | _ -> ty)
 
+(** Substitute type variables in expressions and statements.
+    Uses generic AST visitors for structural recursion. *)
 let rec tvar_subst_expr (tvars : Id.t list) (e : cpp_expr) : cpp_expr =
-  let subst_ty = tvar_subst_type tvars in
-  let subst_e = tvar_subst_expr tvars in
-  match e with
-  | CPPglob (r, tys, ci) -> CPPglob (r, List.map subst_ty tys, ci)
-  | CPPnamespace (r, e') -> CPPnamespace (r, subst_e e')
-  | CPPfun_call (f, args) -> CPPfun_call (subst_e f, List.map subst_e args)
-  | CPPderef e' -> CPPderef (subst_e e')
-  | CPPmove e' -> CPPmove (subst_e e')
-  | CPPlambda (params, ret, body, cbv) ->
-      let params' = List.map (fun (ty, id) -> (subst_ty ty, id)) params in
-      let ret' = Option.map subst_ty ret in
-      CPPlambda (params', ret', List.map (tvar_subst_stmt tvars) body, cbv)
-  | CPPoverloaded cases -> CPPoverloaded (List.map subst_e cases)
-  | CPPstructmk (r, tys, args) -> CPPstructmk (r, List.map subst_ty tys, List.map subst_e args)
-  | CPPstruct (r, tys, args) -> CPPstruct (r, List.map subst_ty tys, List.map subst_e args)
-  | CPPget (e', id) -> CPPget (subst_e e', id)
-  | CPPget' (e', id) -> CPPget' (subst_e e', id)
-  | CPPparray (args, e') -> CPPparray (Array.map subst_e args, subst_e e')
-  | CPPmethod_call (obj, meth, args) -> CPPmethod_call (subst_e obj, meth, List.map subst_e args)
-  | CPPmember (e', mid) -> CPPmember (subst_e e', mid)
-  | CPParrow (e', mid) -> CPParrow (subst_e e', mid)
-  | CPPforward (ty, e') -> CPPforward (subst_ty ty, subst_e e')
-  | CPPnew (ty, args) -> CPPnew (subst_ty ty, List.map subst_e args)
-  | CPPshared_ptr_ctor (ty, e') -> CPPshared_ptr_ctor (subst_ty ty, subst_e e')
-  | CPPunique_ptr_ctor (ty, e) -> CPPunique_ptr_ctor (subst_ty ty, subst_e e)
-  | CPPstruct_id (sid, tys, args) -> CPPstruct_id (sid, List.map subst_ty tys, List.map subst_e args)
-  | CPPqualified (e', qid) -> CPPqualified (subst_e e', qid)
-  | CPPmk_shared ty -> CPPmk_shared (subst_ty ty)
-  | CPPmk_unique ty -> CPPmk_unique (subst_ty ty)
-  | CPPshared_from_this ty -> CPPshared_from_this (subst_ty ty)
-  | _ -> e  (* CPPvar, CPPvisit, CPPstring, CPPuint, CPPfloat, CPPthis, CPPrequires *)
-
+  map_expr (tvar_subst_expr tvars) (tvar_subst_stmt tvars) (tvar_subst_type tvars) e
 and tvar_subst_stmt (tvars : Id.t list) (s : cpp_stmt) : cpp_stmt =
-  let subst_ty = tvar_subst_type tvars in
-  let subst_e = tvar_subst_expr tvars in
-  let subst_s = tvar_subst_stmt tvars in
-  match s with
-  | Sreturn (Some e) -> Sreturn (Some (subst_e e))
-  | Sreturn None -> Sreturn None
-  | Sdecl (id, ty) -> Sdecl (id, subst_ty ty)
-  | Sasgn (id, ty_opt, e) -> Sasgn (id, Option.map subst_ty ty_opt, subst_e e)
-  | Sexpr e -> Sexpr (subst_e e)
-  | Scustom_case (ty, e, tys, brs, str) ->
-      Scustom_case (subst_ty ty, subst_e e, List.map subst_ty tys,
-        List.map (fun (args, ty, stmts) ->
-          (List.map (fun (id, ty) -> (id, subst_ty ty)) args, subst_ty ty, List.map subst_s stmts)) brs,
-        str)
-  | Sthrow msg -> Sthrow msg  (* throw statements don't need substitution *)
-  | Sswitch (scrut, ind, brs) -> Sswitch (subst_e scrut, ind,
-    List.map (fun (ctor, stmts) -> (ctor, List.map subst_s stmts)) brs)
-  | Sassert _ as s -> s  (* raw strings don't need type var substitution *)
-  | Sif (cond, then_stmts, else_stmts) ->
-      Sif (subst_e cond, List.map subst_s then_stmts, List.map subst_s else_stmts)
-  | Sraw _ as s -> s
-  | Sassign_field (obj, field, e) ->
-      Sassign_field (subst_e obj, field, subst_e e)
+  map_stmt (tvar_subst_expr tvars) (tvar_subst_stmt tvars) (tvar_subst_type tvars) s
 
 (* Detect function-typed parameter positions that receive a freshly
    constructed lambda in a self-recursive call.
@@ -3675,7 +3521,7 @@ let gen_dfun n b dom cod ty temps =
   (* let rec_fun_tys = List.map (fun (_,t, _) ->
     match t with
     | TTfun (dom, cod) -> Tref (Tmod (TMconst, Tfun (dom, cod)))
-    | _ -> assert false) fun_tys in
+    | _ -> CErrors.anomaly (Pp.str "gen_decl: recursive function type expected to be TTfun")) fun_tys in
   let rec_call = CPPglob (n, List.map (fun (_, id) -> Tvar (0, Some id)) temps @ rec_fun_tys) in *)
   (* Add type class instance template parameters - instance types come first *)
   let typeclass_temps_basic = List.map (fun (tt, id, _, _) -> (tt, id)) typeclass_temps in
@@ -3715,7 +3561,7 @@ let gen_dfun n b dom cod ty temps =
       let ret_cpp = cod in
       let coind_ref = match ml_ret with
         | Miniml.Tglob (r, _, _) -> r
-        | _ -> assert false in
+        | _ -> CErrors.anomaly (Pp.str "gen_decl: cofixpoint return type expected to be Tglob") in
       let type_args = match ml_ret with
         | Miniml.Tglob (_, args, _) ->
           List.map (fun t -> convert_ml_type_to_cpp_type env Refset'.empty type_var_ids t) args
@@ -4517,7 +4363,7 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
         | _ -> [] in
       let coind_ref = match ret_ty with
         | Miniml.Tglob (r, _, _) -> r
-        | _ -> assert false in
+        | _ -> CErrors.anomaly (Pp.str "gen_method_field: cofixpoint return type expected to be Tglob") in
       let lazy_factory = CPPqualified (
         CPPqualified (mk_cppglob coind_ref type_args, Id.of_string "ctor"),
         Id.of_string "lazy_") in

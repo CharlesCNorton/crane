@@ -21,47 +21,55 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
 struct Nat {
   static unsigned int pow(const unsigned int n, const unsigned int m);
-
   static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -71,23 +79,14 @@ struct PageOps {
   };
 
   static unsigned int addr12_of_nat(const unsigned int n);
-
   static unsigned int page_of(const unsigned int p);
-
   static unsigned int page_base(const unsigned int p);
-
   static unsigned int page_offset(const unsigned int p);
-
   static unsigned int pc_inc1(const std::shared_ptr<state> &s);
-
   static unsigned int pc_inc2(const std::shared_ptr<state> &s);
-
   static unsigned int base_for_next1(const std::shared_ptr<state> &s);
-
   static unsigned int base_for_next2(const std::shared_ptr<state> &s);
-
   static unsigned int recompose(const unsigned int p);
-
   static inline const unsigned int max_addr = ((
       (Nat::pow(2u, 12u) - 1u) > Nat::pow(2u, 12u) ? 0
                                                    : (Nat::pow(2u, 12u) - 1u)));
@@ -95,33 +94,43 @@ struct PageOps {
   struct instruction {
   public:
     struct NOP {};
+
     struct LDM {
       unsigned int _a0;
     };
+
     using variant_t = std::variant<NOP, LDM>;
 
   private:
     variant_t v_;
+
     explicit instruction(NOP _v) : v_(std::move(_v)) {}
+
     explicit instruction(LDM _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction> NOP_() {
         return std::shared_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::shared_ptr<instruction> LDM_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(LDM{a0}));
       }
+
       static std::unique_ptr<instruction> NOP_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::unique_ptr<instruction> LDM_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(LDM{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -178,42 +187,30 @@ struct PageOps {
   static std::optional<std::pair<std::shared_ptr<instruction>, unsigned int>>
   disassemble(const std::shared_ptr<List<unsigned int>> &rom,
               const unsigned int addr);
-
   static inline const unsigned int test_page_base_alignment =
       (page_base(777u) % 256u);
-
   static inline const unsigned int test_page_base_next_pc = [](void) {
     std::shared_ptr<state> s = std::make_shared<state>(state{511u});
     return (base_for_next1(s) + base_for_next2(s));
   }();
-
   static inline const unsigned int test_page_boundary_cross =
       base_for_next1(std::make_shared<state>(state{255u}));
-
   static inline const unsigned int test_base_for_next_page_cross_1 =
       base_for_next1(std::make_shared<state>(state{255u}));
-
   static inline const unsigned int test_base_for_next_page_cross_2 =
       base_for_next2(std::make_shared<state>(state{255u}));
-
   static inline const bool test_page_decomp_roundtrip =
       (((Nat::div(1027u, 256u) * 256u) + (1027u % 256u)) == 1027u);
-
   static inline const unsigned int test_page_offset_recompose =
       recompose(addr12_of_nat(1027u));
-
   static inline const unsigned int test_page_recompose =
       recompose(addr12_of_nat(1027u));
-
   static inline const unsigned int test_pc_inc2_wraparound =
       pc_inc2(std::make_shared<state>(state{max_addr}));
-
   static inline const unsigned int test_pc_inc1_wrap =
       pc_inc1(std::make_shared<state>(state{max_addr}));
-
   static inline const unsigned int test_pc_inc2_wrap =
       pc_inc2(std::make_shared<state>(state{max_addr}));
-
   static inline const unsigned int test_disassemble_edge = [](void) {
     if (disassemble(
             List<unsigned int>::ctor::cons_(
@@ -238,7 +235,6 @@ struct PageOps {
       return 0u;
     }
   }();
-
   static inline const std::pair<
       std::pair<
           std::pair<

@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -74,6 +85,7 @@ public:
           this->v());
     }
   }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -162,77 +174,56 @@ struct RamWrite {
   static inline const std::shared_ptr<ram_reg> empty_reg =
       std::make_shared<ram_reg>(ram_reg{ListDef::repeat<unsigned int>(0u, 16u),
                                         ListDef::repeat<unsigned int>(0u, 4u)});
-
   static inline const std::shared_ptr<ram_chip> empty_chip =
       std::make_shared<ram_chip>(ram_chip{
           ListDef::repeat<std::shared_ptr<ram_reg>>(empty_reg, 4u), 0u});
-
   static inline const std::shared_ptr<ram_bank> empty_bank =
       std::make_shared<ram_bank>(
           ram_bank{ListDef::repeat<std::shared_ptr<ram_chip>>(empty_chip, 4u)});
-
   static inline const std::shared_ptr<List<std::shared_ptr<ram_bank>>>
       empty_ram = ListDef::repeat<std::shared_ptr<ram_bank>>(empty_bank, 4u);
-
   static inline const std::shared_ptr<ram_sel> default_sel =
       std::make_shared<ram_sel>(ram_sel{0u, 0u, 0u, 0u});
-
   static inline const std::shared_ptr<state> init_state =
       std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 16u), 0u,
                                     false, 0u, List<unsigned int>::ctor::nil_(),
                                     empty_ram, default_sel,
                                     ListDef::repeat<unsigned int>(0u, 8u)});
-
   static unsigned int get_main(const std::shared_ptr<ram_reg> &rg,
                                const unsigned int i);
-
   static std::shared_ptr<ram_reg> upd_main_in_reg(std::shared_ptr<ram_reg> rg,
                                                   const unsigned int i,
                                                   const unsigned int v);
-
   static std::shared_ptr<ram_reg> upd_stat_in_reg(std::shared_ptr<ram_reg> rg,
                                                   const unsigned int i,
                                                   const unsigned int v);
-
   static std::shared_ptr<ram_reg>
   get_regRAM(const std::shared_ptr<ram_chip> &ch, const unsigned int r);
-
   static std::shared_ptr<ram_chip> upd_reg_in_chip(std::shared_ptr<ram_chip> ch,
                                                    const unsigned int r,
                                                    std::shared_ptr<ram_reg> rg);
-
   static std::shared_ptr<ram_chip> get_chip(const std::shared_ptr<ram_bank> &bk,
                                             const unsigned int c);
-
   static std::shared_ptr<ram_bank>
   upd_chip_in_bank(std::shared_ptr<ram_bank> bk, const unsigned int c,
                    std::shared_ptr<ram_chip> ch);
-
   static std::shared_ptr<ram_bank>
   get_bank_from_sys(const std::shared_ptr<List<std::shared_ptr<ram_bank>>> &sys,
                     const unsigned int b);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
   upd_bank_in_sys(const std::shared_ptr<state> &s, const unsigned int b,
                   const std::shared_ptr<ram_bank> &bk);
-
   static std::shared_ptr<ram_bank>
   current_bank(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<ram_chip>
   current_chip(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<ram_reg> current_reg(const std::shared_ptr<state> &s);
-
   static unsigned int ram_read_main(const std::shared_ptr<state> &s);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
   ram_write_main_sys(const std::shared_ptr<state> &s, const unsigned int v);
-
   static std::shared_ptr<List<std::shared_ptr<ram_bank>>>
   ram_write_status_sys(const std::shared_ptr<state> &s, const unsigned int idx,
                        const unsigned int v);
-
   static inline const unsigned int write_bank_count =
       ram_write_main_sys(init_state, 12u)->length();
 };

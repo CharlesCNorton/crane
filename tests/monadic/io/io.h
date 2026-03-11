@@ -23,12 +23,8 @@ enum class unit { tt };
 
 struct iotest {
   static void test1(const std::string _x);
-
   static unit test2(const std::string s);
-
   static void test3(const std::string s);
-
   static std::string test4();
-
   static void test5();
 };

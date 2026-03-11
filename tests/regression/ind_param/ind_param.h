@@ -35,35 +35,45 @@ struct IndParam {
       struct Ok {
         std::shared_ptr<typename C::t> _a0;
       };
+
       struct Err {
         unsigned int _a0;
       };
+
       using variant_t = std::variant<Ok, Err>;
 
     private:
       variant_t v_;
+
       explicit result(Ok _v) : v_(std::move(_v)) {}
+
       explicit result(Err _v) : v_(std::move(_v)) {}
 
     public:
       struct ctor {
         ctor() = delete;
+
         static std::shared_ptr<result>
         Ok_(const std::shared_ptr<typename C::t> &a0) {
           return std::shared_ptr<result>(new result(Ok{a0}));
         }
+
         static std::shared_ptr<result> Err_(unsigned int a0) {
           return std::shared_ptr<result>(new result(Err{a0}));
         }
+
         static std::unique_ptr<result>
         Ok_uptr(const std::shared_ptr<typename C::t> &a0) {
           return std::unique_ptr<result>(new result(Ok{a0}));
         }
+
         static std::unique_ptr<result> Err_uptr(unsigned int a0) {
           return std::unique_ptr<result>(new result(Err{a0}));
         }
       };
+
       const variant_t &v() const { return v_; }
+
       variant_t &v_mut() { return v_; }
     };
 
@@ -136,44 +146,58 @@ struct IndParam {
     struct t {
     public:
       struct Empty {};
+
       struct Single {
         elem _a0;
       };
+
       struct Pair {
         elem _a0;
         elem _a1;
       };
+
       using variant_t = std::variant<Empty, Single, Pair>;
 
     private:
       variant_t v_;
+
       explicit t(Empty _v) : v_(std::move(_v)) {}
+
       explicit t(Single _v) : v_(std::move(_v)) {}
+
       explicit t(Pair _v) : v_(std::move(_v)) {}
 
     public:
       struct ctor {
         ctor() = delete;
+
         static std::shared_ptr<t> Empty_() {
           return std::shared_ptr<t>(new t(Empty{}));
         }
+
         static std::shared_ptr<t> Single_(elem a0) {
           return std::shared_ptr<t>(new t(Single{a0}));
         }
+
         static std::shared_ptr<t> Pair_(elem a0, elem a1) {
           return std::shared_ptr<t>(new t(Pair{a0, a1}));
         }
+
         static std::unique_ptr<t> Empty_uptr() {
           return std::unique_ptr<t>(new t(Empty{}));
         }
+
         static std::unique_ptr<t> Single_uptr(elem a0) {
           return std::unique_ptr<t>(new t(Single{a0}));
         }
+
         static std::unique_ptr<t> Pair_uptr(elem a0, elem a1) {
           return std::unique_ptr<t>(new t(Pair{a0, a1}));
         }
       };
+
       const variant_t &v() const { return v_; }
+
       variant_t &v_mut() { return v_; }
     };
 
@@ -217,19 +241,14 @@ struct IndParam {
   };
 
   using NatWrapper = Wrapper<NatContainer>;
-
   static inline const std::shared_ptr<NatWrapper::result> test_single =
       NatWrapper::make_single(42u);
-
   static inline const std::shared_ptr<NatWrapper::result> test_pair =
       NatWrapper::make_pair(1u, 2u);
-
   static inline const unsigned int test_size_single =
       NatWrapper::get_size(test_single);
-
   static inline const unsigned int test_size_pair =
       NatWrapper::get_size(test_pair);
-
   static inline const unsigned int test_error =
       NatWrapper::get_size(NatWrapper::error_result());
 };

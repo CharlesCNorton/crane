@@ -28,10 +28,12 @@ struct TodoDependentFieldAlias {
 
   struct nat_magma {
     using carrier = unsigned int;
+
     static unsigned int op(unsigned int a0, unsigned int a1) {
       return (a0 + a1);
     }
   };
+
   static_assert(Magma<nat_magma>);
 
   template <typename _tcI0, typename carrier>

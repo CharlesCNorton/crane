@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -81,7 +92,6 @@ struct Nat {
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -93,15 +103,11 @@ struct JinUsesPairForJump {
 
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
-
   static unsigned int get_reg_pair(const std::shared_ptr<state> &s,
                                    const unsigned int r);
-
   static unsigned int page_of(const unsigned int addr);
-
   static std::shared_ptr<state> execute_jin(std::shared_ptr<state> s,
                                             const unsigned int r);
-
   static inline const std::shared_ptr<state> sample = std::make_shared<state>(
       state{List<unsigned int>::ctor::cons_(
                 0u,
@@ -116,6 +122,5 @@ struct JinUsesPairForJump {
                                 List<unsigned int>::ctor::cons_(
                                     0u, List<unsigned int>::ctor::nil_())))))),
             300u});
-
   static inline const bool t = (execute_jin(sample, 3u)->pc == 555u);
 };

@@ -23,37 +23,48 @@ enum class unit { tt };
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   template <typename T1, MapsTo<T1, T1, A> F0>
   T1 fold_left(F0 &&f, const T1 a0) const {
     return std::visit(
@@ -72,7 +83,6 @@ struct Nat {
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -93,14 +103,11 @@ struct Monadic {
 
   static std::optional<unsigned int> safe_div(const unsigned int n,
                                               const unsigned int m);
-
   static std::optional<unsigned int> safe_sub(const unsigned int n,
                                               const unsigned int m);
-
   static std::optional<unsigned int> div_then_sub(const unsigned int a,
                                                   const unsigned int b,
                                                   const unsigned int c);
-
   template <typename s, typename a>
   using State = std::function<std::pair<a, s>(s)>;
 
@@ -150,30 +157,23 @@ struct Monadic {
 
   static inline const std::optional<unsigned int> test_return =
       option_return<unsigned int>(42u);
-
   static inline const std::optional<unsigned int> test_bind_some =
       option_bind<unsigned int, unsigned int>(
           std::make_optional<unsigned int>(10u), [](unsigned int x) {
             return std::make_optional<unsigned int>((x + 1u));
           });
-
   static inline const std::optional<unsigned int> test_bind_none =
       option_bind<unsigned int, unsigned int>(std::nullopt, [](unsigned int x) {
         return std::make_optional<unsigned int>((x + 1u));
       });
-
   static inline const std::optional<unsigned int> test_safe_div_ok =
       safe_div(10u, 3u);
-
   static inline const std::optional<unsigned int> test_safe_div_zero =
       safe_div(10u, 0u);
-
   static inline const std::optional<unsigned int> test_chain_ok =
       div_then_sub(20u, 4u, 2u);
-
   static inline const std::optional<unsigned int> test_chain_fail =
       div_then_sub(20u, 0u, 2u);
-
   static inline const std::pair<unsigned int, unsigned int> test_state =
       count_elements<unsigned int>(List<unsigned int>::ctor::cons_(
           1u,

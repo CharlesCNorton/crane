@@ -20,36 +20,46 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -58,23 +68,29 @@ public:
   struct exist {
     A _a0;
   };
+
   using variant_t = std::variant<exist>;
 
 private:
   variant_t v_;
+
   explicit Sig(exist _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<Sig<A>> exist_(A a0) {
       return std::shared_ptr<Sig<A>>(new Sig<A>(exist{a0}));
     }
+
     static std::unique_ptr<Sig<A>> exist_uptr(A a0) {
       return std::unique_ptr<Sig<A>>(new Sig<A>(exist{a0}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -96,7 +112,6 @@ struct FunctionVernac {
 
   static std::shared_ptr<Sig<unsigned int>>
   div2_terminate(const unsigned int n);
-
   static unsigned int div2(const unsigned int n);
 
   struct R_div2 {
@@ -104,50 +119,64 @@ struct FunctionVernac {
     struct R_div2_0 {
       unsigned int _a0;
     };
+
     struct R_div2_1 {
       unsigned int _a0;
     };
+
     struct R_div2_2 {
       unsigned int _a0;
       unsigned int _a1;
       unsigned int _a2;
       std::shared_ptr<R_div2> _a3;
     };
+
     using variant_t = std::variant<R_div2_0, R_div2_1, R_div2_2>;
 
   private:
     variant_t v_;
+
     explicit R_div2(R_div2_0 _v) : v_(std::move(_v)) {}
+
     explicit R_div2(R_div2_1 _v) : v_(std::move(_v)) {}
+
     explicit R_div2(R_div2_2 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<R_div2> R_div2_0_(unsigned int a0) {
         return std::shared_ptr<R_div2>(new R_div2(R_div2_0{a0}));
       }
+
       static std::shared_ptr<R_div2> R_div2_1_(unsigned int a0) {
         return std::shared_ptr<R_div2>(new R_div2(R_div2_1{a0}));
       }
+
       static std::shared_ptr<R_div2>
       R_div2_2_(unsigned int a0, unsigned int a1, unsigned int a2,
                 const std::shared_ptr<R_div2> &a3) {
         return std::shared_ptr<R_div2>(new R_div2(R_div2_2{a0, a1, a2, a3}));
       }
+
       static std::unique_ptr<R_div2> R_div2_0_uptr(unsigned int a0) {
         return std::unique_ptr<R_div2>(new R_div2(R_div2_0{a0}));
       }
+
       static std::unique_ptr<R_div2> R_div2_1_uptr(unsigned int a0) {
         return std::unique_ptr<R_div2>(new R_div2(R_div2_1{a0}));
       }
+
       static std::unique_ptr<R_div2>
       R_div2_2_uptr(unsigned int a0, unsigned int a1, unsigned int a2,
                     const std::shared_ptr<R_div2> &a3) {
         return std::unique_ptr<R_div2>(new R_div2(R_div2_2{a0, a1, a2, a3}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -257,7 +286,6 @@ struct FunctionVernac {
 
   static std::shared_ptr<Sig<unsigned int>>
   list_sum_terminate(const std::shared_ptr<List<unsigned int>> &l);
-
   static unsigned int list_sum(const std::shared_ptr<List<unsigned int>> &l);
 
   struct R_list_sum {
@@ -265,6 +293,7 @@ struct FunctionVernac {
     struct R_list_sum_0 {
       std::shared_ptr<List<unsigned int>> _a0;
     };
+
     struct R_list_sum_1 {
       std::shared_ptr<List<unsigned int>> _a0;
       unsigned int _a1;
@@ -272,20 +301,25 @@ struct FunctionVernac {
       unsigned int _a3;
       std::shared_ptr<R_list_sum> _a4;
     };
+
     using variant_t = std::variant<R_list_sum_0, R_list_sum_1>;
 
   private:
     variant_t v_;
+
     explicit R_list_sum(R_list_sum_0 _v) : v_(std::move(_v)) {}
+
     explicit R_list_sum(R_list_sum_1 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<R_list_sum>
       R_list_sum_0_(const std::shared_ptr<List<unsigned int>> &a0) {
         return std::shared_ptr<R_list_sum>(new R_list_sum(R_list_sum_0{a0}));
       }
+
       static std::shared_ptr<R_list_sum>
       R_list_sum_1_(const std::shared_ptr<List<unsigned int>> &a0,
                     unsigned int a1,
@@ -294,10 +328,12 @@ struct FunctionVernac {
         return std::shared_ptr<R_list_sum>(
             new R_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
       }
+
       static std::unique_ptr<R_list_sum>
       R_list_sum_0_uptr(const std::shared_ptr<List<unsigned int>> &a0) {
         return std::unique_ptr<R_list_sum>(new R_list_sum(R_list_sum_0{a0}));
       }
+
       static std::unique_ptr<R_list_sum> R_list_sum_1_uptr(
           const std::shared_ptr<List<unsigned int>> &a0, unsigned int a1,
           const std::shared_ptr<List<unsigned int>> &a2, unsigned int a3,
@@ -306,7 +342,9 @@ struct FunctionVernac {
             new R_list_sum(R_list_sum_1{a0, a1, a2, a3, a4}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -396,9 +434,7 @@ struct FunctionVernac {
   static std::shared_ptr<R_list_sum>
   R_list_sum_correct(const std::shared_ptr<List<unsigned int>> &l,
                      const unsigned int _res);
-
   static inline const unsigned int test_div2 = div2(10u);
-
   static inline const unsigned int test_sum =
       list_sum(List<unsigned int>::ctor::cons_(
           1u,

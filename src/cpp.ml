@@ -10,7 +10,11 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
-(** C++ code generation: pretty-printing MiniCpp AST to C++ source code. *)
+(** C++ code generation: pretty-printing MiniCpp AST to C++ source code.
+
+    All generated output is post-processed by clang-format, so Pp's
+    box-based layout algorithm (h/v/hov) adds overhead without benefit.
+    We shadow those combinators with identity functions below. *)
 
 (** {2 Production of C++ syntax.} *)
 
@@ -26,6 +30,16 @@ open Modutil
 open Common
 open Minicpp
 open Translation
+
+(** {2 Pp box shadows}
+
+    Since all output is reformatted by clang-format, the Pp box-layout
+    algorithm is wasted work.  Shadow h/v/hov with identity to skip
+    box construction while keeping the same Pp.t type. *)
+
+let h x = x
+let v _ x = x
+let hov _ x = x
 
 
 (** The method registry is created once per extraction pass by scanning the full
@@ -435,7 +449,8 @@ let reset_cpp_state () =
   Hashtbl.clear global_inductive_names;
 
   template_static_accessors := [];
-  Hashtbl.clear functor_app_sources
+  Hashtbl.clear functor_app_sources;
+  hoisted_concept_defs := []
 
 (** Check if a function is a projection for the eponymous record.
    Such projections are redundant when the record fields are merged into the module struct. *)
@@ -551,11 +566,11 @@ let get_infix r =
 let get_ind = let open GlobRef in function
   | IndRef _ as r -> r
   | ConstructRef (ind,_) -> IndRef ind
-  | _ -> assert false
+  | _ -> CErrors.anomaly (Pp.str "get_ind: expected IndRef or ConstructRef")
 
 let kn_of_ind = let open GlobRef in function
   | IndRef (kn,_) -> MutInd.user kn
-  | _ -> assert false
+  | _ -> CErrors.anomaly (Pp.str "kn_of_ind: expected IndRef")
 
 let pp_one_field r i = function
   | Some r' -> pp_global_with_key Term (kn_of_ind (get_ind r)) r'
@@ -1716,10 +1731,10 @@ and pp_custom custom env typ t tyargs cases args arg_types vl cmds =
           (match typ with
            | Some expected_ty -> wrap_any_cast_if_needed t_expr t_printed expected_ty vl
            | None -> t_printed)
-        | None -> assert false)
+        | None -> CErrors.anomaly (Pp.str "Custom syntax: scrutinee token with no bound expression"))
     | CCty ->(match typ with
         | Some typ -> pp_cpp_type false vl typ
-        | None -> assert false)
+        | None -> CErrors.anomaly (Pp.str "Custom syntax: type token with no bound type"))
     | CCbody i -> (try
       let (_,_,ss) = List.nth cases i in
        pp_list_stmt (pp_cpp_stmt env []) ss

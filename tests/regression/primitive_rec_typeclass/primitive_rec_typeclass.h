@@ -33,6 +33,7 @@ struct PrimitiveRecTypeclass {
       return (p->px + p->py);
     }
   };
+
   static_assert(HasNorm<pointNorm, std::shared_ptr<point>>);
 
   struct vec3 {
@@ -46,6 +47,7 @@ struct PrimitiveRecTypeclass {
       return ((v->vx + v->vy) + v->vz);
     }
   };
+
   static_assert(HasNorm<vec3Norm, std::shared_ptr<vec3>>);
 
   template <typename _tcI0, typename T1>
@@ -59,38 +61,24 @@ struct PrimitiveRecTypeclass {
   };
 
   static unsigned int rect_width(const std::shared_ptr<rect> &r);
-
   static unsigned int rect_height(const std::shared_ptr<rect> &r);
-
   static unsigned int rect_perimeter(const std::shared_ptr<rect> &r);
-
   static inline const std::shared_ptr<point> p1 =
       std::make_shared<point>(point{3u, 4u});
-
   static inline const std::shared_ptr<point> p2 =
       std::make_shared<point>(point{10u, 20u});
-
   static inline const unsigned int test_px = p1->px;
-
   static inline const unsigned int test_py = p1->py;
-
   static inline const unsigned int test_norm_point = pointNorm::norm(p1);
-
   static inline const unsigned int test_double_norm =
       double_norm<pointNorm, std::shared_ptr<point>>(p1);
-
   static inline const std::shared_ptr<vec3> v1 =
       std::make_shared<vec3>(vec3{1u, 2u, 3u});
-
   static inline const unsigned int test_norm_vec3 = vec3Norm::norm(v1);
-
   static inline const std::shared_ptr<rect> r1 =
       std::make_shared<rect>(rect{std::make_shared<point>(point{2u, 3u}),
                                   std::make_shared<point>(point{12u, 8u})});
-
   static inline const unsigned int test_width = rect_width(r1);
-
   static inline const unsigned int test_height = rect_height(r1);
-
   static inline const unsigned int test_perimeter = rect_perimeter(r1);
 };

@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -74,6 +85,7 @@ public:
           this->v());
     }
   }
+
   unsigned int length() const {
     return std::visit(
         Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
@@ -108,7 +120,6 @@ struct ResetState {
 
   static std::shared_ptr<state_full>
   reset_state_full(std::shared_ptr<state_full> s);
-
   static inline const unsigned int memory_preserve_test = [](void) {
     std::unique_ptr<state_full> s = std::make_unique<state_full>(
         state_full{9u,
@@ -130,10 +141,8 @@ struct ResetState {
     return (((s_->acc + s_->ram_sys->nth(1u, 0u)) + s_->rom->nth(0u, 0u)) +
             s_->stack->length());
   }();
-
   static std::shared_ptr<state_minimal>
   reset_state_minimal(std::shared_ptr<state_minimal> s);
-
   static inline const unsigned int pc_clear_test =
       reset_state_minimal(
           std::make_shared<state_minimal>(state_minimal{
@@ -147,7 +156,6 @@ struct ResetState {
                   4u, List<unsigned int>::ctor::cons_(
                           5u, List<unsigned int>::ctor::nil_()))}))
           ->pc_minimal;
-
   static inline const std::pair<unsigned int, unsigned int> t =
       std::make_pair(memory_preserve_test, pc_clear_test);
 };

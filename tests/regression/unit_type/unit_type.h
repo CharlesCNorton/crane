@@ -21,11 +21,8 @@ enum class unit { tt };
 
 struct UnitType {
   static inline const unit unit_val = unit::tt;
-
   static unit return_unit(const unsigned int _x);
-
   static unsigned int take_unit(const unit _x);
-
   static unsigned int match_unit(const unit u);
 
   template <typename A, typename B> struct pair {
@@ -34,23 +31,29 @@ struct UnitType {
       A _a0;
       B _a1;
     };
+
     using variant_t = std::variant<Pair0>;
 
   private:
     variant_t v_;
+
     explicit pair(Pair0 _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<pair<A, B>> Pair0_(A a0, B a1) {
         return std::shared_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
+
       static std::unique_ptr<pair<A, B>> Pair0_uptr(A a0, B a1) {
         return std::unique_ptr<pair<A, B>>(new pair<A, B>(Pair0{a0, a1}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -78,10 +81,8 @@ struct UnitType {
 
   static inline const std::shared_ptr<pair<unsigned int, unit>> pair_with_unit =
       pair<unsigned int, unit>::ctor::Pair0_(3u, unit::tt);
-
   static inline const std::shared_ptr<pair<unit, unit>> unit_pair =
       pair<unit, unit>::ctor::Pair0_(unit::tt, unit::tt);
-
   static unit unit_to_unit(const unit u);
 
   template <typename T1, typename T2> static T2 seq(const T1 _x, const T2 b) {
@@ -90,10 +91,7 @@ struct UnitType {
 
   static inline const unsigned int sequenced =
       seq<unit, unsigned int>(unit::tt, seq<unit, unsigned int>(unit::tt, 5u));
-
   static inline const unsigned int test_take = take_unit(unit::tt);
-
   static inline const unsigned int test_match = match_unit(unit::tt);
-
   static inline const unsigned int test_seq = sequenced;
 };

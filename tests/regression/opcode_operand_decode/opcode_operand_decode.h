@@ -23,7 +23,6 @@ struct Nat {
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -79,7 +78,6 @@ struct OpcodeOperandDecode {
   }
 
   static instruction decode(const unsigned int b1, const unsigned int _x);
-
   static inline const unsigned int t = [](void) {
     switch (decode(224u, 0u)) {
     case instruction::NOP_: {

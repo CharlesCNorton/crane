@@ -22,9 +22,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct PeanoNat {
   static bool eqb(const unsigned int n, const unsigned int m);
-
   static bool leb(const unsigned int n, const unsigned int m);
-
   static bool ltb(const unsigned int n, const unsigned int m);
 };
 
@@ -37,6 +35,7 @@ template <typename K, typename V> struct SkipList {
   unsigned int slMaxLevel;
   std::shared_ptr<stm::TVar<unsigned int>> slLevel;
   std::shared_ptr<stm::TVar<unsigned int>> slLength;
+
   template <MapsTo<bool, K, K> F0>
   SkipPath<K, V> findPath(F0 &&ltK, const K target) const {
     unsigned int lvl = this->SkipList::slLevel->read();
@@ -44,6 +43,7 @@ template <typename K, typename V> struct SkipList {
     return SkipList<int, int>::template findPath_aux<K, V>(
         ltK, this->SkipList::slHead, target, lvl, path);
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   std::optional<V> lookup(F0 &&ltK, F1 &&eqK, const K k) const {
     SkipPath<K, V> path = this->findPath(ltK, k);
@@ -62,6 +62,7 @@ template <typename K, typename V> struct SkipList {
       return std::nullopt;
     }
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   void insert(F0 &&ltK, F1 &&eqK, const K k, const V v,
               const unsigned int newLevel) const {
@@ -107,6 +108,7 @@ template <typename K, typename V> struct SkipList {
       return this->SkipList::slLength->write((len + 1));
     }
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   void remove(F0 &&ltK, F1 &&eqK, const K k) const {
     SkipPath<K, V> path = this->findPath(ltK, k);
@@ -130,6 +132,7 @@ template <typename K, typename V> struct SkipList {
       return;
     }
   }
+
   std::optional<std::pair<K, V>> minimum() const {
     std::optional<std::shared_ptr<SkipNode<K, V>>> firstOpt =
         ptr_to_opt(stm::readTVar<std::shared_ptr<SkipNode<K, V>>>(
@@ -142,29 +145,35 @@ template <typename K, typename V> struct SkipList {
       return std::nullopt;
     }
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   bool memberFast(F0 &&ltK, F1 &&eqK, const K k) const {
     unsigned int lvl = this->SkipList::slLevel->read();
     return SkipList<int, int>::template findKey_aux<K, V>(
         ltK, eqK, this->SkipList::slHead, k, lvl);
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   bool member(F0 &&ltK, F1 &&eqK, const K k) const {
     unsigned int lvl = this->SkipList::slLevel->read();
     return SkipList<int, int>::template findKey_aux<K, V>(
         ltK, eqK, this->SkipList::slHead, k, lvl);
   }
+
   bool isEmpty() const {
     unsigned int len = this->SkipList::slLength->read();
     return PeanoNat::eqb(len, 0u);
   }
+
   unsigned int length() const { return this->SkipList::slLength->read(); }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   bool exists_(F0 &&ltK, F1 &&eqK, const K k) const {
     unsigned int lvl = this->SkipList::slLevel->read();
     return SkipList<int, int>::template findKey_aux<K, V>(
         ltK, eqK, this->SkipList::slHead, k, lvl);
   }
+
   std::optional<std::pair<K, V>> popFront() const {
     std::optional<std::shared_ptr<SkipNode<K, V>>> firstOpt =
         ptr_to_opt(stm::readTVar<std::shared_ptr<SkipNode<K, V>>>(
@@ -182,6 +191,7 @@ template <typename K, typename V> struct SkipList {
       return std::nullopt;
     }
   }
+
   unsigned int removeAll() const {
     unsigned int count = SkipList<int, int>::template removeAll_aux<K, V>(
         10000u, this->SkipList::slHead, (((16u - 1u) > 16u ? 0 : (16u - 1u))),
@@ -190,6 +200,7 @@ template <typename K, typename V> struct SkipList {
     this->SkipList::slLevel->write(0u);
     return count;
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   void add(F0 &&ltK, F1 &&eqK, const K k, const V v,
            const unsigned int newLevel) const {
@@ -235,6 +246,7 @@ template <typename K, typename V> struct SkipList {
       return this->SkipList::slLength->write((len + 1));
     }
   }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   bool addUnique(F0 &&ltK, F1 &&eqK, const K k, const V v,
                  const unsigned int newLevel) const {
@@ -282,15 +294,20 @@ template <typename K, typename V> struct SkipList {
       return true;
     }
   }
+
   unsigned int bde_removeAll() const { return this->removeAll(); }
+
   template <MapsTo<bool, K, K> F0, MapsTo<bool, K, K> F1>
   bool bde_exists(F0 &&ltK, F1 &&eqK, const K key0) const {
     unsigned int lvl = this->SkipList::slLevel->read();
     return SkipList<int, int>::template findKey_aux<K, V>(
         ltK, eqK, this->SkipList::slHead, key0, lvl);
   }
+
   bool bde_isEmpty() const { return this->isEmpty(); }
+
   unsigned int bde_length() const { return this->length(); }
+
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
   static std::shared_ptr<SkipNode<T1, T2>>
   findPred_go(F0 &&ltK, const unsigned int fuel,
@@ -620,11 +637,8 @@ template <typename K, typename V> struct SkipList {
   }
 
   static inline const unsigned int e_SUCCESS = 0u;
-
   static inline const unsigned int e_NOT_FOUND = 1u;
-
   static inline const unsigned int e_DUPLICATE = 2u;
-
   static inline const unsigned int e_INVALID = 3u;
 
   template <typename T1, typename T2>
@@ -667,60 +681,32 @@ template <typename K, typename V> struct SkipList {
 
 struct skiplist_test {
   static bool nat_lt(const unsigned int, const unsigned int);
-
   static bool nat_eq(const unsigned int, const unsigned int);
-
   static bool stm_test_insert_lookup();
-
   static bool stm_test_delete();
-
   static bool stm_test_update();
-
   static bool stm_test_minimum();
-
   static bool stm_test_length_isEmpty();
-
   static bool stm_test_front_back();
-
   static bool stm_test_popFront();
-
   static bool stm_test_addUnique();
-
   static bool stm_test_find();
-
   static bool stm_test_navigation();
-
   static bool stm_test_bounds();
-
   static bool stm_test_removeAll();
-
   static bool stm_test_bde_api();
-
   static bool test_insert_lookup();
-
   static bool test_delete();
-
   static bool test_update();
-
   static bool test_minimum();
-
   static bool test_length_isEmpty();
-
   static bool test_front_back();
-
   static bool test_popFront();
-
   static bool test_addUnique();
-
   static bool test_find();
-
   static bool test_navigation();
-
   static bool test_bounds();
-
   static bool test_removeAll();
-
   static bool test_bde_api();
-
   static unsigned int run_tests();
 };

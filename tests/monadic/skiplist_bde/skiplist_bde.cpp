@@ -38,7 +38,6 @@ bool PeanoNat::eqb(const unsigned int n, const unsigned int m)
         }
     }
 }
-
 bool PeanoNat::leb(const unsigned int n, const unsigned int m)
 {
     if (n <= 0) {
@@ -55,7 +54,6 @@ bool PeanoNat::leb(const unsigned int n, const unsigned int m)
         }
     }
 }
-
 bool PeanoNat::ltb(const unsigned int n, const unsigned int m)
 {
     return PeanoNat::leb((bsl::move(n) + 1), m);

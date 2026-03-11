@@ -23,31 +23,41 @@ struct MatchFallbackNat {
     struct SomeNat {
       unsigned int _a0;
     };
+
     struct NoneNat {};
+
     using variant_t = std::variant<SomeNat, NoneNat>;
 
   private:
     variant_t v_;
+
     explicit maybe_nat(SomeNat _v) : v_(std::move(_v)) {}
+
     explicit maybe_nat(NoneNat _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<maybe_nat> SomeNat_(unsigned int a0) {
         return std::shared_ptr<maybe_nat>(new maybe_nat(SomeNat{a0}));
       }
+
       static std::shared_ptr<maybe_nat> NoneNat_() {
         return std::shared_ptr<maybe_nat>(new maybe_nat(NoneNat{}));
       }
+
       static std::unique_ptr<maybe_nat> SomeNat_uptr(unsigned int a0) {
         return std::unique_ptr<maybe_nat>(new maybe_nat(SomeNat{a0}));
       }
+
       static std::unique_ptr<maybe_nat> NoneNat_uptr() {
         return std::unique_ptr<maybe_nat>(new maybe_nat(NoneNat{}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -78,7 +88,6 @@ struct MatchFallbackNat {
   }
 
   static unsigned int fallback(const std::shared_ptr<maybe_nat> &x);
-
   static inline const unsigned int t =
       (fallback(maybe_nat::ctor::NoneNat_()) +
        fallback(maybe_nat::ctor::SomeNat_(7u)));

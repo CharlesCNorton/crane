@@ -230,12 +230,10 @@ struct List {
                  this->v());
     }
 };
-
 struct ListDef {
     static bsl::shared_ptr<List<unsigned int> > seq(const unsigned int start,
                                                     const unsigned int len);
 };
-
 struct ToString {
     template <typename T1,
               typename T2,
@@ -248,7 +246,6 @@ struct ToString {
         T2 b = x.second;
         return "("_s + p1(a) + ", "_s + p2(b) + ")"_s;
     }
-
     template <typename T1, MapsTo<std::string, T1> F0>
     static std::string intersperse(F0&&                              p,
                                    const std::string                 sep,
@@ -277,7 +274,6 @@ struct ToString {
                  }},
              l->v());
     }
-
     template <typename T1, MapsTo<std::string, T1> F0>
     static std::string list_to_string(F0&&                              p,
                                       const bsl::shared_ptr<List<T1> >& l)
@@ -309,17 +305,13 @@ struct ToString {
                   l->v());
     }
 };
-
 struct TopologicalSort {
     template <typename node>
     using entry = bsl::pair<node, bsl::shared_ptr<List<node> > >;
-
     template <typename node>
     using graph = bsl::shared_ptr<List<entry<node> > >;
-
     template <typename node>
     using order = bsl::shared_ptr<List<bsl::shared_ptr<List<node> > > >;
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<T1> > get_elems(
                     F0&&                                              eqb_node,
@@ -393,7 +385,6 @@ struct TopologicalSort {
         };
         return get_elems_aux(l, List<T1>::ctor::nil_());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static entry<T1> make_entry(
                            F0&&                                       eqb_node,
@@ -413,7 +404,6 @@ struct TopologicalSort {
                     },
                     List<T1>::ctor::nil_()));
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static graph<T1> make_graph(
                            F0&&                                       eqb_node,
@@ -432,7 +422,6 @@ struct TopologicalSort {
                  List<bsl::pair<T1,
                                 bsl::shared_ptr<List<T1> > > >::ctor::nil_());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<T1> > graph_lookup(
                F0&&     eqb_node,
@@ -457,7 +446,6 @@ struct TopologicalSort {
             return List<T1>::ctor::nil_();
         }
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bool contains(F0&&                              eqb_node,
                          const T1                          elem,
@@ -475,7 +463,6 @@ struct TopologicalSort {
             return false;
         }
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static T1 cycle_entry_aux(
               F0&& eqb_node,
@@ -514,7 +501,6 @@ struct TopologicalSort {
             }
         }
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::optional<T1> cycle_entry(
             F0&& eqb_node,
@@ -543,7 +529,6 @@ struct TopologicalSort {
                 }},
             graph0->v());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<T1> > cycle_extract_aux(
               F0&& eqb_node,
@@ -576,7 +561,6 @@ struct TopologicalSort {
             }
         }
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<T1> > cycle_extract(
                F0&& eqb_node,
@@ -595,7 +579,6 @@ struct TopologicalSort {
             return List<T1>::ctor::nil_();
         }
     }
-
     template <typename T1>
     static bool null(const bsl::shared_ptr<List<T1> >& xs)
     {
@@ -608,7 +591,6 @@ struct TopologicalSort {
                               }},
              xs->v());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static order<T1> topological_sort_aux(
               F0&& eqb_node,
@@ -674,7 +656,6 @@ struct TopologicalSort {
             }
         }
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<bsl::shared_ptr<List<T1> > > >
     topological_sort(
@@ -685,7 +666,6 @@ struct TopologicalSort {
             g_ = make_graph<T1>(eqb_node, g);
         return topological_sort_aux<T1>(eqb_node, g_, g_->length());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static order<T1> topological_sort_graph(
                F0&& eqb_node,
@@ -694,7 +674,6 @@ struct TopologicalSort {
     {
         return topological_sort_aux<T1>(eqb_node, graph0, graph0->length());
     }
-
     template <typename T1, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<bsl::pair<T1, unsigned int> > >
     topological_rank_list(

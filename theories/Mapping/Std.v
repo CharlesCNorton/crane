@@ -4,7 +4,7 @@ From Crane Require Extraction.
 From Crane Require Export Mapping.Shared.
 
 #[export] Set Crane StdLib "std".
-#[export] Set Crane Format Style "LLVM".
+#[export] Set Crane Format Style "{BasedOnStyle: LLVM, SeparateDefinitionBlocks: Always}".
 
 Crane Extract Inductive option =>
   "std::optional<%t0>"

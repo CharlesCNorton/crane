@@ -23,7 +23,6 @@ struct Nat {
                                                       const unsigned int y,
                                                       const unsigned int q,
                                                       const unsigned int u);
-
   static unsigned int div(const unsigned int x, const unsigned int y);
 };
 
@@ -43,12 +42,8 @@ struct SPropTest {
   };
 
   static unsigned int guarded_pred(const unsigned int n);
-
   static unsigned int safe_div(const unsigned int, const unsigned int);
-
   static inline const unsigned int test_guarded = guarded_pred(5u);
-
   static inline const unsigned int test_box = 42u;
-
   static inline const unsigned int test_div = safe_div(10u, 3u);
 };

@@ -74,13 +74,10 @@ struct List {
     const variant_t& v() const { return v_; }
     variant_t&       v_mut() { return v_; }
 };
-
 struct STM {
 };
-
 struct TVar {
 };
-
 template <typename K, typename V>
 struct CHT {
     bsl::function<bool(K, K)> cht_eqb;
@@ -236,7 +233,6 @@ struct CHT {
                  }},
              xs->v());
     }
-
     template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
     static bsl::shared_ptr<List<bsl::pair<T1, T2> > > assoc_insert_or_replace(
                          F0&&                                              eqb,
@@ -273,7 +269,6 @@ struct CHT {
                  }},
              xs->v());
     }
-
     template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
     static
     bsl::pair<bsl::optional<T2>, bsl::shared_ptr<List<bsl::pair<T1, T2> > > >
@@ -316,7 +311,6 @@ struct CHT {
                 }},
             xs->v());
     }
-
     template <typename T1, typename T2>
     static bsl::vector<bsl::shared_ptr<
         stm::TVar<bsl::shared_ptr<List<bsl::pair<T1, T2> > > > > >
@@ -349,7 +343,6 @@ struct CHT {
         };
         return f(static_cast<unsigned int>(num));
     }
-
     template <typename T1,
               typename T2,
               MapsTo<bool, T1, T1> F0,

@@ -21,37 +21,48 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
+
   A nth(const unsigned int n, const A default0) const {
     if (n <= 0) {
       return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
@@ -84,21 +95,15 @@ struct PreservesAllPairs {
 
   static unsigned int get_reg(const std::shared_ptr<state> &s,
                               const unsigned int r);
-
   static unsigned int nibble_of_nat(const unsigned int n);
-
   static unsigned int get_reg_pair(const std::shared_ptr<state> &s,
                                    const unsigned int r);
-
   static std::shared_ptr<state> execute_add(std::shared_ptr<state> s,
                                             const unsigned int r);
-
   static std::shared_ptr<state> execute_ld(std::shared_ptr<state> s,
                                            const unsigned int r);
-
   static std::shared_ptr<state> execute_sub(std::shared_ptr<state> s,
                                             const unsigned int r);
-
   static inline const std::shared_ptr<state> sample = std::make_shared<state>(
       state{List<unsigned int>::ctor::cons_(
                 2u,
@@ -113,16 +118,12 @@ struct PreservesAllPairs {
                                 List<unsigned int>::ctor::cons_(
                                     1u, List<unsigned int>::ctor::nil_())))))),
             13u});
-
   static inline const bool add_preserves_pairs =
       (get_reg_pair(execute_add(sample, 4u), 2u) == get_reg_pair(sample, 2u));
-
   static inline const bool ld_preserves_pairs =
       (get_reg_pair(execute_ld(sample, 4u), 2u) == get_reg_pair(sample, 2u));
-
   static inline const bool sub_preserves_pairs =
       (get_reg_pair(execute_sub(sample, 4u), 2u) == get_reg_pair(sample, 2u));
-
   static inline const bool t =
       ((add_preserves_pairs && ld_preserves_pairs) && sub_preserves_pairs);
 };

@@ -127,6 +127,7 @@ std::shared_ptr<Pos::mask> Pos::sub_mask(const unsigned int x,
     }
   }
 }
+
 std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const unsigned int x,
                                                const unsigned int y) {
   if (x == 1u) {

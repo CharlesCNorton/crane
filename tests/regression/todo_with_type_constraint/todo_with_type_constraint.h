@@ -35,9 +35,7 @@ concept NAT_BASE = BASE<M>;
 struct TodoWithTypeConstraint {
   struct NatBase {
     using t = unsigned int;
-
     static inline const unsigned int zero = 0u;
-
     static unsigned int bump(const unsigned int n);
   };
 
@@ -49,6 +47,5 @@ struct TodoWithTypeConstraint {
   };
 
   using Applied = UseNat<NatBase>;
-
   static inline const unsigned int test_twice = Applied::twice();
 };

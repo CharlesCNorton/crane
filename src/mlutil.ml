@@ -992,7 +992,11 @@ let is_opt_pat (_,p,_) = match p with
   | Prel _ | Pwild -> true
   | _ -> false
 
-let factor_branches o typ br = None (* TODO: FIX EVENTUALLY!!!!
+(* NOTE: Branch factoring is disabled. This optimization was inherited from
+   the Rocq OCaml extraction but has not been adapted for C++ code generation.
+   The function returns None unconditionally, which skips the optimization
+   without affecting correctness. *)
+let factor_branches _o _typ _br = None (* TODO: FIX EVENTUALLY!!!!
   if Array.exists is_opt_pat br then None (* already optimized *)
   else begin
     census_clean ();

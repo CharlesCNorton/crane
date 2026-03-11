@@ -5,8 +5,8 @@ From Crane Require Export Mapping.Shared.
 
 #[export] Set Crane StdLib "BDE".
 (* If you have bde-format, you can uncomment the line below: *)
-(* #[export] Set Crane Format Style "BDE". *)
-#[export] Set Crane Format Style "LLVM".
+(* #[export] Set Crane Format Style "{BasedOnStyle: BDE, SeparateDefinitionBlocks: Always}". *)
+#[export] Set Crane Format Style "{BasedOnStyle: LLVM, SeparateDefinitionBlocks: Always}".
 
 Crane Extract Inductive option =>
   "bsl::optional<%t0>"

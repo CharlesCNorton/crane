@@ -20,36 +20,46 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -57,7 +67,6 @@ struct UniversePoly {
   template <typename T1> static T1 poly_id(const T1 x) { return x; }
 
   static inline const unsigned int test_id_nat = poly_id<unsigned int>(42u);
-
   static inline const bool test_id_bool = poly_id<bool>(true);
 
   template <typename A, typename B> struct ppair {
@@ -68,41 +77,49 @@ struct UniversePoly {
   static inline const std::shared_ptr<ppair<unsigned int, bool>> test_pair =
       std::make_shared<ppair<unsigned int, bool>>(
           ppair<unsigned int, bool>{5u, true});
-
   static inline const unsigned int test_pfst = test_pair->pfst;
-
   static inline const bool test_psnd = test_pair->psnd;
 
   template <typename A> struct poption {
   public:
     struct pnone {};
+
     struct psome {
       A _a0;
     };
+
     using variant_t = std::variant<pnone, psome>;
 
   private:
     variant_t v_;
+
     explicit poption(pnone _v) : v_(std::move(_v)) {}
+
     explicit poption(psome _v) : v_(std::move(_v)) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<poption<A>> pnone_() {
         return std::shared_ptr<poption<A>>(new poption<A>(pnone{}));
       }
+
       static std::shared_ptr<poption<A>> psome_(A a0) {
         return std::shared_ptr<poption<A>>(new poption<A>(psome{a0}));
       }
+
       static std::unique_ptr<poption<A>> pnone_uptr() {
         return std::unique_ptr<poption<A>>(new poption<A>(pnone{}));
       }
+
       static std::unique_ptr<poption<A>> psome_uptr(A a0) {
         return std::unique_ptr<poption<A>>(new poption<A>(psome{a0}));
       }
     };
+
     const variant_t &v() const { return v_; }
+
     variant_t &v_mut() { return v_; }
   };
 
@@ -167,12 +184,10 @@ struct UniversePoly {
       poption_map<unsigned int, unsigned int>(
           [](unsigned int n) { return (n + 1u); },
           poption<unsigned int>::ctor::psome_(5u));
-
   static inline const std::shared_ptr<poption<unsigned int>> test_map_none =
       poption_map<unsigned int, unsigned int>(
           [](unsigned int n) { return (n + 1u); },
           poption<unsigned int>::ctor::pnone_());
-
   static inline const std::shared_ptr<poption<unsigned int>> test_bind =
       poption_bind<unsigned int, unsigned int>(
           poption<unsigned int>::ctor::psome_(3u), [](unsigned int n) {

@@ -93,6 +93,7 @@ std::shared_ptr<Positive> Pos::add(const std::shared_ptr<Positive> &x,
           }},
       x->v());
 }
+
 std::shared_ptr<Positive> Pos::add_carry(const std::shared_ptr<Positive> &x,
                                          const std::shared_ptr<Positive> &y) {
   return std::visit(
@@ -311,6 +312,7 @@ std::shared_ptr<Pos::mask> Pos::sub_mask(const std::shared_ptr<Positive> &x,
           }},
       x->v());
 }
+
 std::shared_ptr<Pos::mask>
 Pos::sub_mask_carry(const std::shared_ptr<Positive> &x,
                     const std::shared_ptr<Positive> &y) {
@@ -534,6 +536,7 @@ std::shared_ptr<Positive> Coq_Pos::add(const std::shared_ptr<Positive> &x,
           }},
       x->v());
 }
+
 std::shared_ptr<Positive>
 Coq_Pos::add_carry(const std::shared_ptr<Positive> &x,
                    const std::shared_ptr<Positive> &y) {

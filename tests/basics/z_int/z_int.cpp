@@ -59,6 +59,7 @@ unsigned int Pos::add(const unsigned int x, const unsigned int y) {
     }
   }
 }
+
 unsigned int Pos::add_carry(const unsigned int x, const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {

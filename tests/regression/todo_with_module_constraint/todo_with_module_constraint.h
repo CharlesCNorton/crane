@@ -41,13 +41,11 @@ concept OUTER_NAT = OUTER<M>;
 struct TodoWithModuleConstraint {
   struct NatInner {
     using t = unsigned int;
-
     static inline const unsigned int zero = 0u;
   };
 
   struct NatOuter {
     using Inner = NatInner;
-
     static Inner::t step(const unsigned int n);
   };
 
@@ -59,6 +57,5 @@ struct TodoWithModuleConstraint {
   };
 
   using Applied = UseNat<NatOuter>;
-
   static inline const unsigned int test_twice = Applied::twice();
 };

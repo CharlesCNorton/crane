@@ -21,69 +21,89 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct Nat {
 public:
   struct O {};
+
   struct S {
     std::shared_ptr<Nat> _a0;
   };
+
   using variant_t = std::variant<O, S>;
 
 private:
   variant_t v_;
+
   explicit Nat(O _v) : v_(std::move(_v)) {}
+
   explicit Nat(S _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<Nat> O_() {
       return std::shared_ptr<Nat>(new Nat(O{}));
     }
+
     static std::shared_ptr<Nat> S_(const std::shared_ptr<Nat> &a0) {
       return std::shared_ptr<Nat>(new Nat(S{a0}));
     }
+
     static std::unique_ptr<Nat> O_uptr() {
       return std::unique_ptr<Nat>(new Nat(O{}));
     }
+
     static std::unique_ptr<Nat> S_uptr(const std::shared_ptr<Nat> &a0) {
       return std::unique_ptr<Nat>(new Nat(S{a0}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
 template <typename A> struct List {
 public:
   struct nil {};
+
   struct cons {
     A _a0;
     std::shared_ptr<List<A>> _a1;
   };
+
   using variant_t = std::variant<nil, cons>;
 
 private:
   variant_t v_;
+
   explicit List(nil _v) : v_(std::move(_v)) {}
+
   explicit List(cons _v) : v_(std::move(_v)) {}
 
 public:
   struct ctor {
     ctor() = delete;
+
     static std::shared_ptr<List<A>> nil_() {
       return std::shared_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::shared_ptr<List<A>> cons_(A a0,
                                           const std::shared_ptr<List<A>> &a1) {
       return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
+
     static std::unique_ptr<List<A>> nil_uptr() {
       return std::unique_ptr<List<A>>(new List<A>(nil{}));
     }
+
     static std::unique_ptr<List<A>>
     cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
       return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
     }
   };
+
   const variant_t &v() const { return v_; }
+
   variant_t &v_mut() { return v_; }
 };
 
@@ -94,26 +114,32 @@ struct Stream {
       A _a0;
       std::shared_ptr<stream<A>> _a1;
     };
+
     using variant_t = std::variant<scons>;
 
   private:
     crane::lazy<variant_t> lazy_v_;
+
     explicit stream(scons _v)
         : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+
     explicit stream(std::function<variant_t()> _thunk)
         : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<stream<A>>
       scons_(A a0, const std::shared_ptr<stream<A>> &a1) {
         return std::shared_ptr<stream<A>>(new stream<A>(scons{a0, a1}));
       }
+
       static std::unique_ptr<stream<A>>
       scons_uptr(A a0, const std::shared_ptr<stream<A>> &a1) {
         return std::unique_ptr<stream<A>>(new stream<A>(scons{a0, a1}));
       }
+
       static std::shared_ptr<stream<A>>
       lazy_(std::function<std::shared_ptr<stream<A>>()> thunk) {
         return std::shared_ptr<stream<A>>(
@@ -123,7 +149,9 @@ struct Stream {
             })));
       }
     };
+
     const variant_t &v() const { return lazy_v_.force(); }
+
     std::shared_ptr<List<A>> take(const std::shared_ptr<Nat> &n) const {
       return std::visit(
           Overloaded{
@@ -143,6 +171,7 @@ struct Stream {
               }},
           n->v());
     }
+
     std::shared_ptr<stream<A>> interleave(std::shared_ptr<stream<A>> sb) const {
       return stream<A>::ctor::lazy_([=,
                                      this](void) -> std::shared_ptr<stream<A>> {
@@ -166,20 +195,16 @@ struct Stream {
 
   static std::shared_ptr<stream<std::shared_ptr<Nat>>>
   nats_from(std::shared_ptr<Nat> n);
-
   static inline const std::shared_ptr<stream<std::shared_ptr<Nat>>> ones =
       repeat<std::shared_ptr<Nat>>(Nat::ctor::S_(Nat::ctor::O_()));
-
   static inline const std::shared_ptr<List<std::shared_ptr<Nat>>>
       first_five_nats =
           nats_from(Nat::ctor::O_())
               ->take(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(
                   Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))));
-
   static inline const std::shared_ptr<List<std::shared_ptr<Nat>>>
       first_five_ones = ones->take(Nat::ctor::S_(Nat::ctor::S_(
           Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))));
-
   static inline const std::shared_ptr<List<std::shared_ptr<Nat>>> interleaved =
       nats_from(Nat::ctor::O_())
           ->interleave(repeat<std::shared_ptr<Nat>>(Nat::ctor::S_(

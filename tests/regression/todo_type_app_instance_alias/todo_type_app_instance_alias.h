@@ -26,6 +26,7 @@ struct TodoTypeAppInstanceAlias {
   struct natBoxed {
     static unsigned int boxed_default() { return 7u; }
   };
+
   static_assert(Boxed<natBoxed, unsigned int>);
 
   template <typename _tcI0, typename T1> static T1 pick() {
