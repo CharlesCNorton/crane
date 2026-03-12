@@ -14,6 +14,7 @@ type config = {
   jobs : int;
   verbose : bool;
   project_root : string;
+  folder : string option;
 }
 
 let compare_test_id a b =

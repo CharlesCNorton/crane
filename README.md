@@ -60,12 +60,13 @@ The Makefile provides convenient build commands:
 - `make test` - Build and run all tests with clean summary output
 - `make test-verbose` - Run tests with detailed output
 - `make test-one TEST=name` - Run a single test (e.g., `make test-one TEST=list`)
+- `make test-folder FOLDER=name` - Run all tests in a folder (e.g., `make test-folder FOLDER=wip`)
 - `make test-list` - List all available tests
 - `make all` - Build everything including tests
 - `make clean` - Clean all build and test artifacts
 - `make help` - Show all available commands
 
-To preview the project, you can run `make test` to run the tests and see if the plugin is working properly on your machine. The test command will show a summary of passed/failed tests with a progress indicator. To run a single test during development, use `make test-one TEST=list` (or `tree`, `nat`, etc.). Use `make test-list` to see all available test names. Generated files (such as `list.cpp` for `List.v`) will be in the `tests` directory.
+To preview the project, you can run `make test` to run the tests and see if the plugin is working properly on your machine. The test command will show a summary of passed/failed tests with a progress indicator. To run a single test during development, use `make test-one TEST=list` (or `tree`, `nat`, etc.). To run all tests in a specific folder, use `make test-folder FOLDER=wip` (or `basics`, `monadic`, `regression`). Use `make test-list` to see all available test names. Generated files (such as `list.cpp` for `List.v`) will be in the `tests` directory.
 
 **Test expectations:** All tests in `basics/`, `monadic/`, and `regression/` are expected to pass. Failures in `wip/` tests are expected and can be ignored unless you are specifically working on fixing one of them. Note that `monadic/skiplist` and `monadic/par` are nondeterministic, so their occasional failures can be ignored if you haven't changed related files.
 

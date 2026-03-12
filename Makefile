@@ -1,4 +1,4 @@
-.PHONY: build install clean test test-verbose test-sequential test-raw test-one test-list theories plugin all extract format
+.PHONY: build install clean test test-verbose test-sequential test-raw test-one test-folder test-folder-verbose test-list theories plugin all extract format
 
 # Default target: build plugin and theories only (not tests)
 build: plugin theories
@@ -87,6 +87,47 @@ test-one:
 		      fi ;; \
 	esac
 
+# Run all tests in a folder: make test-folder FOLDER=basics
+# Examples:
+#   make test-folder FOLDER=basics
+#   make test-folder FOLDER=monadic
+#   make test-folder FOLDER=wip
+#   make test-folder FOLDER=regression
+test-folder: extract
+	@if [ -z "$(FOLDER)" ]; then \
+		echo "Usage: make test-folder FOLDER=<folder_name>"; \
+		echo ""; \
+		echo "Examples:"; \
+		echo "  make test-folder FOLDER=basics"; \
+		echo "  make test-folder FOLDER=monadic"; \
+		echo "  make test-folder FOLDER=wip"; \
+		echo "  make test-folder FOLDER=regression"; \
+		exit 1; \
+	fi
+	@if [ ! -d "tests/$(FOLDER)" ]; then \
+		echo "Error: Folder 'tests/$(FOLDER)' does not exist"; \
+		exit 1; \
+	fi
+	@dune build bin/test_runner/main.exe
+	@./_build/default/bin/test_runner/main.exe --folder $(FOLDER)
+
+# Run all tests in a folder with verbose error output
+test-folder-verbose: extract
+	@if [ -z "$(FOLDER)" ]; then \
+		echo "Usage: make test-folder-verbose FOLDER=<folder_name>"; \
+		echo ""; \
+		echo "Examples:"; \
+		echo "  make test-folder-verbose FOLDER=basics"; \
+		echo "  make test-folder-verbose FOLDER=wip"; \
+		exit 1; \
+	fi
+	@if [ ! -d "tests/$(FOLDER)" ]; then \
+		echo "Error: Folder 'tests/$(FOLDER)' does not exist"; \
+		exit 1; \
+	fi
+	@dune build bin/test_runner/main.exe
+	@./_build/default/bin/test_runner/main.exe --folder $(FOLDER) --verbose
+
 # List all available tests
 test-list:
 	@echo "Available tests:"
@@ -141,25 +182,29 @@ help:
 	@echo "Crane build system"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make                    - Build plugin and theories (default)"
-	@echo "  make extract            - Build + generate all test C++ files"
-	@echo "  make test               - Compile and run all tests (parallel)"
-	@echo "  make test-verbose       - Run tests with error details (parallel)"
-	@echo "  make test-sequential    - Run tests sequentially (old bash script)"
-	@echo "  make test-raw           - Run tests with raw dune output"
-	@echo "  make test-one TEST=name - Run a single test (e.g., TEST=list)"
-	@echo "  make test-list          - List all available tests"
-	@echo "  make all                - Build everything including test executables"
-	@echo "  make install            - Install the plugin"
-	@echo "  make format             - Format C++ test files and OCaml source"
-	@echo "  make clean              - Clean build artifacts and generated test files"
+	@echo "  make                      - Build plugin and theories (default)"
+	@echo "  make extract              - Build + generate all test C++ files"
+	@echo "  make test                 - Compile and run all tests (parallel)"
+	@echo "  make test-verbose         - Run tests with error details (parallel)"
+	@echo "  make test-sequential      - Run tests sequentially (old bash script)"
+	@echo "  make test-raw             - Run tests with raw dune output"
+	@echo "  make test-one TEST=name         - Run a single test (e.g., TEST=list)"
+	@echo "  make test-folder FOLDER=x       - Run all tests in a folder (e.g., FOLDER=wip)"
+	@echo "  make test-folder-verbose FOLDER - Run folder tests with error details"
+	@echo "  make test-list                  - List all available tests"
+	@echo "  make all                  - Build everything including test executables"
+	@echo "  make install              - Install the plugin"
+	@echo "  make format               - Format C++ test files and OCaml source"
+	@echo "  make clean                - Clean build artifacts and generated test files"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make test-list                   # Show all available tests"
-	@echo "  make test-one TEST=list          # Run the list test"
-	@echo "  make test-one TEST=tree          # Run the tree test"
-	@echo "  make test-one TEST=basics/nat    # Run nat from basics"
-	@echo "  make test-one TEST=monadic/io    # Run io from monadic"
+	@echo "  make test-list                     # Show all available tests"
+	@echo "  make test-one TEST=list            # Run the list test"
+	@echo "  make test-one TEST=tree            # Run the tree test"
+	@echo "  make test-one TEST=basics/nat      # Run nat from basics"
+	@echo "  make test-one TEST=monadic/io      # Run io from monadic"
+	@echo "  make test-folder FOLDER=basics     # Run all basics tests"
+	@echo "  make test-folder FOLDER=wip        # Run all wip tests"
 	@echo ""
 	@echo "Direct dune commands:"
 	@echo "  dune build @install - Build plugin and theories only"
