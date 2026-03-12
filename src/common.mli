@@ -150,6 +150,9 @@ val pp_global : kind -> GlobRef.t -> string
 (** Print just the short name of a reference (for declarations). *)
 val pp_global_name : kind -> GlobRef.t -> string
 
+(** Print the capitalized type name of a reference (for C++ type names). *)
+val pp_type_name_capitalized : GlobRef.t -> string
+
 (** Print a module path. *)
 val pp_module : ModPath.t -> string
 

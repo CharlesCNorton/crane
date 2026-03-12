@@ -167,24 +167,25 @@ struct BinomialHeap {
                 F1>
   static priqueue unzip(const std::shared_ptr<tree> &t, F1 &&cont) {
     return std::visit(
-        Overloaded{
-            [&](const typename tree::Node _args)
-                -> std::shared_ptr<List<std::shared_ptr<tree>>> {
-              unsigned int x = _args._a0;
-              std::shared_ptr<tree> t1 = _args._a1;
-              std::shared_ptr<tree> t2 = _args._a2;
-              std::function<std::shared_ptr<List<std::shared_ptr<tree>>>(
-                  std::shared_ptr<List<std::shared_ptr<tree>>>)>
-                  f = [=](std::shared_ptr<List<std::shared_ptr<tree>>> q) {
-                    return List<std::shared_ptr<tree>>::ctor::cons_(
-                        tree::ctor::Node_(x, t1, tree::ctor::Leaf_()), cont(q));
-                  };
-              return unzip(std::move(t2), f);
-            },
-            [&](const typename tree::Leaf _args)
-                -> std::shared_ptr<List<std::shared_ptr<tree>>> {
-              return cont(List<std::shared_ptr<tree>>::ctor::nil_());
-            }},
+        Overloaded{[&](const typename tree::Node _args)
+                       -> std::shared_ptr<List<std::shared_ptr<tree>>> {
+                     unsigned int x = _args._a0;
+                     std::shared_ptr<tree> t1 = _args._a1;
+                     std::shared_ptr<tree> t2 = _args._a2;
+                     std::function<std::shared_ptr<List<std::shared_ptr<tree>>>(
+                         std::shared_ptr<List<std::shared_ptr<tree>>>)>
+                         f = [=](std::shared_ptr<List<std::shared_ptr<tree>>>
+                                     q) mutable {
+                           return List<std::shared_ptr<tree>>::ctor::cons_(
+                               tree::ctor::Node_(x, t1, tree::ctor::Leaf_()),
+                               cont(q));
+                         };
+                     return unzip(std::move(t2), f);
+                   },
+                   [&](const typename tree::Leaf _args)
+                       -> std::shared_ptr<List<std::shared_ptr<tree>>> {
+                     return cont(List<std::shared_ptr<tree>>::ctor::nil_());
+                   }},
         t->v());
   }
 

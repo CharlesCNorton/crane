@@ -102,8 +102,8 @@ struct MutualCoind {
 
       static std::shared_ptr<streamA<A>>
       lazy_(std::function<std::shared_ptr<streamA<A>>()> thunk) {
-        return std::shared_ptr<streamA<A>>(
-            new streamA<A>(std::function<variant_t()>([=](void) -> variant_t {
+        return std::shared_ptr<streamA<A>>(new streamA<A>(
+            std::function<variant_t()>([=](void) mutable -> variant_t {
               std::shared_ptr<streamA<A>> _tmp = thunk();
               return _tmp->v();
             })));
@@ -147,8 +147,8 @@ struct MutualCoind {
 
       static std::shared_ptr<streamB<A>>
       lazy_(std::function<std::shared_ptr<streamB<A>>()> thunk) {
-        return std::shared_ptr<streamB<A>>(
-            new streamB<A>(std::function<variant_t()>([=](void) -> variant_t {
+        return std::shared_ptr<streamB<A>>(new streamB<A>(
+            std::function<variant_t()>([=](void) mutable -> variant_t {
               std::shared_ptr<streamB<A>> _tmp = thunk();
               return _tmp->v();
             })));
@@ -171,14 +171,16 @@ struct MutualCoind {
   template <typename T1>
   static std::shared_ptr<streamB<T1>>
   tailA(const std::shared_ptr<streamA<T1>> &s) {
-    return streamB<T1>::ctor::lazy_([=](void) -> std::shared_ptr<streamB<T1>> {
-      return std::visit(Overloaded{[](const typename streamA<T1>::consA _args)
-                                       -> std::shared_ptr<streamB<T1>> {
-                          std::shared_ptr<streamB<T1>> t = _args._a1;
-                          return t;
-                        }},
-                        s->v());
-    });
+    return streamB<T1>::ctor::lazy_(
+        [=](void) mutable -> std::shared_ptr<streamB<T1>> {
+          return std::visit(
+              Overloaded{[](const typename streamA<T1>::consA _args)
+                             -> std::shared_ptr<streamB<T1>> {
+                std::shared_ptr<streamB<T1>> t = _args._a1;
+                return t;
+              }},
+              s->v());
+        });
   }
 
   template <typename T1>
@@ -194,14 +196,16 @@ struct MutualCoind {
   template <typename T1>
   static std::shared_ptr<streamA<T1>>
   tailB(const std::shared_ptr<streamB<T1>> &s) {
-    return streamA<T1>::ctor::lazy_([=](void) -> std::shared_ptr<streamA<T1>> {
-      return std::visit(Overloaded{[](const typename streamB<T1>::consB _args)
-                                       -> std::shared_ptr<streamA<T1>> {
-                          std::shared_ptr<streamA<T1>> t = _args._a1;
-                          return t;
-                        }},
-                        s->v());
-    });
+    return streamA<T1>::ctor::lazy_(
+        [=](void) mutable -> std::shared_ptr<streamA<T1>> {
+          return std::visit(
+              Overloaded{[](const typename streamB<T1>::consB _args)
+                             -> std::shared_ptr<streamA<T1>> {
+                std::shared_ptr<streamA<T1>> t = _args._a1;
+                return t;
+              }},
+              s->v());
+        });
   }
 
   static std::shared_ptr<streamA<unsigned int>> countA(const unsigned int n);

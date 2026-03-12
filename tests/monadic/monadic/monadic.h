@@ -113,12 +113,12 @@ struct Monadic {
 
   template <typename T1, typename T2>
   static State<T1, T2> state_return(const T2 x) {
-    return [=](T1 s) { return std::make_pair(x, s); };
+    return [=](T1 s) mutable { return std::make_pair(x, s); };
   }
 
   template <typename T1, typename T2, typename T3, MapsTo<State<T1, T3>, T2> F1>
   static State<T1, T3> state_bind(const State<T1, T2> ma, F1 &&f) {
-    return [=](T1 s) {
+    return [=](T1 s) mutable {
       T2 a = ma(s).first;
       T1 s_ = ma(s).second;
       return f(a)(s_);
@@ -131,7 +131,7 @@ struct Monadic {
   }
 
   template <typename T1> static State<T1, unit> state_put(const T1 s) {
-    return [=](T1 _x) { return std::make_pair(unit::tt, s); };
+    return [=](T1 _x) mutable { return std::make_pair(unit::tt, s); };
   }
 
   template <typename T1>
@@ -146,7 +146,8 @@ struct Monadic {
                 return state_bind<unsigned int, unsigned int, unsigned int>(
                     state_get<unsigned int>(), [](unsigned int n) {
                       return state_bind<unsigned int, unit, unsigned int>(
-                          state_put<unsigned int>((n + 1)), [=](unit _x1) {
+                          state_put<unsigned int>((n + 1)),
+                          [=](unit _x1) mutable {
                             return state_return<unsigned int, unsigned int>(n);
                           });
                     });

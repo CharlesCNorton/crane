@@ -956,6 +956,10 @@ let pp_global_name k r =
   assert (List.length ls > 1);
   List.hd ls
 
+(** Print the capitalized type name of a reference (for C++ type names). *)
+let pp_type_name_capitalized r =
+  String.capitalize_ascii (pp_global_name Type r)
+
 (** Print a module path. The next function is used only in Ocaml extraction...
 *)
 let pp_module mp =

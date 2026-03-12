@@ -175,7 +175,7 @@ let is_local_inductive r =
 let inductive_name_info r =
   match r with
   | GlobRef.IndRef _ when is_eponymous_record_global r ->
-    (str (String.capitalize_ascii (Common.pp_global_name Type r)), false)
+    (str (Common.pp_type_name_capitalized r), false)
   | GlobRef.IndRef _ when is_local_inductive r -> (pp_global Type r, false)
   | GlobRef.IndRef _ -> (str (String.capitalize_ascii (str_global Type r)), true)
   | _ -> (pp_global Type r, false)
@@ -189,7 +189,7 @@ let pp_inductive_type_name r =
   let result =
     match r with
     | GlobRef.IndRef _ when is_eponymous_record_global r ->
-      str (String.capitalize_ascii (Common.pp_global_name Type r))
+      str (Common.pp_type_name_capitalized r)
     | GlobRef.IndRef _ when is_record_inductive r -> pp_global Type r
     | GlobRef.IndRef _ when is_local_inductive r -> pp_global Type r
     | GlobRef.IndRef _ when is_enum_inductive r ->

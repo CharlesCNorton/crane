@@ -87,7 +87,8 @@ struct CPS {
       return k(1u);
     } else {
       unsigned int n_ = n - 1;
-      return fact_cps(n_, [=](unsigned int r) { return k(((n_ + 1) * r)); });
+      return fact_cps(
+          n_, [=](unsigned int r) mutable { return k(((n_ + 1) * r)); });
     }
   }
 
@@ -104,8 +105,9 @@ struct CPS {
         return k(1u);
       } else {
         unsigned int n_ = n1 - 1;
-        return fib_cps(n_, [=](unsigned int a) {
-          return fib_cps(n1, [=](unsigned int b) { return k((a + b)); });
+        return fib_cps(n_, [=](unsigned int a) mutable {
+          return fib_cps(n1,
+                         [=](unsigned int b) mutable { return k((a + b)); });
         });
       }
     }
@@ -204,10 +206,12 @@ struct CPS {
                    [&](const typename tree::Node _args) -> unsigned int {
                      std::shared_ptr<tree> l = _args._a0;
                      std::shared_ptr<tree> r = _args._a1;
-                     return tree_sum_cps(std::move(l), [=](unsigned int sl) {
-                       return tree_sum_cps(
-                           r, [=](unsigned int sr) { return k((sl + sr)); });
-                     });
+                     return tree_sum_cps(
+                         std::move(l), [=](unsigned int sl) mutable {
+                           return tree_sum_cps(r, [=](unsigned int sr) mutable {
+                             return k((sl + sr));
+                           });
+                         });
                    }},
         t->v());
   }
@@ -225,8 +229,9 @@ struct CPS {
             [&](const typename List<unsigned int>::cons _args) -> unsigned int {
               unsigned int x = _args._a0;
               std::shared_ptr<List<unsigned int>> rest = _args._a1;
-              return sum_cps(std::move(rest),
-                             [=](unsigned int r) { return k((x + r)); });
+              return sum_cps(std::move(rest), [=](unsigned int r) mutable {
+                return k((x + r));
+              });
             }},
         l->v());
   }
@@ -251,7 +256,7 @@ struct CPS {
               return partition_cps(
                   p, std::move(rest),
                   [=](std::shared_ptr<List<unsigned int>> yes,
-                      std::shared_ptr<List<unsigned int>> no) {
+                      std::shared_ptr<List<unsigned int>> no) mutable {
                     if (p(x)) {
                       return k(List<unsigned int>::ctor::cons_(x, yes), no);
                     } else {

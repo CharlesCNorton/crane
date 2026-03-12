@@ -33,7 +33,7 @@ std::shared_ptr<List<std::function<
 PartialApply::prepend_each(const std::shared_ptr<List<unsigned int>> &l) {
   return l->template map<std::function<std::shared_ptr<List<unsigned int>>(
       std::shared_ptr<List<unsigned int>>)>>([](unsigned int x) {
-    return [=](std::shared_ptr<List<unsigned int>> x0) {
+    return [=](std::shared_ptr<List<unsigned int>> x0) mutable {
       return List<unsigned int>::ctor::cons_(x, x0);
     };
   });
@@ -43,7 +43,7 @@ std::shared_ptr<List<std::shared_ptr<PartialApply::tagged<bool>>>>
 PartialApply::tag_with(const unsigned int n,
                        const std::shared_ptr<List<bool>> &l) {
   return l->template map<std::shared_ptr<PartialApply::tagged<bool>>>(
-      [=](bool x) { return tagged<bool>::ctor::Tag_(n, x); });
+      [=](bool x) mutable { return tagged<bool>::ctor::Tag_(n, x); });
 }
 
 std::shared_ptr<

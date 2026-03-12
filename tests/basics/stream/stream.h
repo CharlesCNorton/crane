@@ -142,8 +142,8 @@ struct Stream {
 
       static std::shared_ptr<stream<A>>
       lazy_(std::function<std::shared_ptr<stream<A>>()> thunk) {
-        return std::shared_ptr<stream<A>>(
-            new stream<A>(std::function<variant_t()>([=](void) -> variant_t {
+        return std::shared_ptr<stream<A>>(new stream<A>(
+            std::function<variant_t()>([=](void) mutable -> variant_t {
               std::shared_ptr<stream<A>> _tmp = thunk();
               return _tmp->v();
             })));
@@ -188,9 +188,10 @@ struct Stream {
   };
 
   template <typename T1> static std::shared_ptr<stream<T1>> repeat(const T1 x) {
-    return stream<T1>::ctor::lazy_([=](void) -> std::shared_ptr<stream<T1>> {
-      return stream<T1>::ctor::scons_(x, repeat<T1>(x));
-    });
+    return stream<T1>::ctor::lazy_(
+        [=](void) mutable -> std::shared_ptr<stream<T1>> {
+          return stream<T1>::ctor::scons_(x, repeat<T1>(x));
+        });
   }
 
   static std::shared_ptr<stream<std::shared_ptr<Nat>>>

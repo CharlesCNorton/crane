@@ -155,8 +155,8 @@ struct Colist {
 
       static std::shared_ptr<colist<A>>
       lazy_(std::function<std::shared_ptr<colist<A>>()> thunk) {
-        return std::shared_ptr<colist<A>>(
-            new colist<A>(std::function<variant_t()>([=](void) -> variant_t {
+        return std::shared_ptr<colist<A>>(new colist<A>(
+            std::function<variant_t()>([=](void) mutable -> variant_t {
               std::shared_ptr<colist<A>> _tmp = thunk();
               return _tmp->v();
             })));

@@ -481,7 +481,7 @@ let rec pp_cpp_type par vl t =
         if is_eponymous_record_cached r' then
           (* Eponymous record: use capitalized name directly, no namespace
              nesting. *)
-          str (String.capitalize_ascii (Common.pp_global_name Type r'))
+          str (Common.pp_type_name_capitalized r')
           ++ templates
         else if is_enum_cached r' then
           (* Enum types at global scope need no struct qualification. Enums
@@ -622,7 +622,7 @@ and pp_cpp_expr env args t =
         if is_eponymous_record_cached x then
           (* Eponymous record: use capitalized name (merged into module
              struct). *)
-          str (String.capitalize_ascii (Common.pp_global_name Type x))
+          str (Common.pp_type_name_capitalized x)
         else if is_qualified_name type_name_str then
           (* Already qualified (e.g., C::t from module parameter): use as-is *)
           str type_name_str
@@ -838,6 +838,14 @@ and pp_cpp_expr env args t =
       else
         str "[&]("
     in
+    (* [=] lambdas need 'mutable' so captured variables aren't const-qualified.
+       Without it, forwarding-reference parameters (F0&&) captured by value
+       become const inside the lambda, preventing them from binding to F0&&
+       in recursive calls. *)
+    let mutable_str =
+      if capture_by_value && needs_capture && not uses_this then str " mutable"
+      else mt ()
+    in
     let params_s, capture =
       match params with
       | [] -> (str "void", capture_str)
@@ -856,14 +864,14 @@ and pp_cpp_expr env args t =
     let body_s = pp_list_stmt (pp_cpp_stmt env args) body in
     ( match ret_ty with
     | Some ty ->
-      h (capture ++ params_s ++ str ") -> " ++ pp_cpp_type false [] ty)
+      h (capture ++ params_s ++ str ")" ++ mutable_str ++ str " -> " ++ pp_cpp_type false [] ty)
       ++ str " {"
       ++ fnl ()
       ++ body_s
       ++ fnl ()
       ++ str "}"
     | None ->
-      h (capture ++ params_s ++ str ")")
+      h (capture ++ params_s ++ str ")" ++ mutable_str)
       ++ str " {"
       ++ fnl ()
       ++ body_s
@@ -885,7 +893,7 @@ and pp_cpp_expr env args t =
     let struct_name =
       match id with
       | GlobRef.IndRef _ when is_eponymous_record_cached id ->
-        str (String.capitalize_ascii (Common.pp_global_name Type id))
+        str (Common.pp_type_name_capitalized id)
       | _ -> pp_global Type id
     in
     struct_name ++ templates ++ str "::make(" ++ es_s ++ str ")"
@@ -899,7 +907,7 @@ and pp_cpp_expr env args t =
     let struct_name =
       match id with
       | GlobRef.IndRef _ when is_eponymous_record_cached id ->
-        str (String.capitalize_ascii (Common.pp_global_name Type id))
+        str (Common.pp_type_name_capitalized id)
       | _ -> pp_global Type id
     in
     struct_name ++ templates ++ str "{" ++ es_s ++ str "}"
@@ -1718,7 +1726,7 @@ let rec pp_cpp_decl env = function
     let struct_name =
       match id with
       | GlobRef.IndRef _ when is_eponymous_record_cached id ->
-        str (String.capitalize_ascii (Common.pp_global_name Type id))
+        str (Common.pp_type_name_capitalized id)
       | GlobRef.IndRef _ when is_record_cached id -> pp_global Type id
       | GlobRef.IndRef _ -> pp_global Type id
       | _ -> pp_global Type id
