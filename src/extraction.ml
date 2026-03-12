@@ -1840,7 +1840,20 @@ let extract_constant access env kn cb =
       Dterm (r, MLaxiom (Constant.to_string kn), t)
   in
   let mk_def c =
+    (* Check if the constant body is a CoFix term before extraction.
+       Register it BEFORE extracting so recursive references know to call it. *)
+    let is_cofix_body =
+      match EConstr.kind sg c with
+      | CoFix _ -> true
+      | _ -> false
+    in
+    if is_cofix_body then
+      add_cofixpoint r;
     let e, t = extract_std_constant env sg kn c typ in
+    (* Also check the extracted ML for MLfix with is_cofix=true *)
+    ( match e with
+    | MLfix (_, _, _, true) -> add_cofixpoint r
+    | _ -> () );
     Dterm (r, e, t)
   in
   try

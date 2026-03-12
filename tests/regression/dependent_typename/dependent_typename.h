@@ -55,13 +55,15 @@ struct DependentTypename {
   static inline const NatType::t test = NatUser::get_default();
 
   template <Container C> struct UseContainer {
-    static const typename C::t<unsigned int> &make_nat_container() {
-      static const typename C::t<unsigned int> v = C::empty<unsigned int>;
+    static const typename C::template t<unsigned int> &make_nat_container() {
+      static const typename C::template t<unsigned int> v =
+          C::template empty<unsigned int>;
       return v;
     }
 
-    static typename C::t<unsigned int> use_singleton(const unsigned int _x0) {
-      return C::singleton<unsigned int>(_x0);
+    static typename C::template t<unsigned int>
+    use_singleton(const unsigned int _x0) {
+      return C::template singleton<unsigned int>(_x0);
     }
   };
 };

@@ -447,9 +447,22 @@ let rec pp_cpp_type par vl t =
           ++ struct_qualifier_for r name_str
           ++ type_name
         | l ->
+          (* When type_name contains :: (qualified name like "C::t"), we need to
+             insert "template " before the last component for dependent templates.
+             E.g., "C::t" + <unsigned int> -> "C::template t<unsigned int>" *)
+          let type_name_with_template =
+            if String.contains name_str ':' then
+              let last_colon_pos = String.rindex name_str ':' in
+              let before = String.sub name_str 0 (last_colon_pos + 1) in
+              let after = String.sub name_str (last_colon_pos + 1)
+                (String.length name_str - last_colon_pos - 1) in
+              str before ++ str "template " ++ str after
+            else
+              type_name
+          in
           typename_prefix_for name_str
           ++ struct_qualifier_for r name_str
-          ++ type_name
+          ++ type_name_with_template
           ++ str "<"
           ++ pp_list (pp_rec false) l
           ++ str ">" ) )
@@ -720,7 +733,19 @@ and pp_cpp_expr env args t =
       | _, Some _ -> base_name
       | _ ->
         let ty_args = pp_list (pp_cpp_type false []) tys in
-        base_name ++ str "<" ++ ty_args ++ str ">"
+        (* Check if base_name contains :: (qualified name).
+           If so, we need to insert "template " before the last component.
+           E.g., "C::empty" + <unsigned int> -> "C::template empty<unsigned int>" *)
+        let base_name_str = string_of_ppcmds base_name in
+        if String.contains base_name_str ':' then
+          (* Find last occurrence of :: and insert "template " after it *)
+          let last_colon_pos = String.rindex base_name_str ':' in
+          let before = String.sub base_name_str 0 (last_colon_pos + 1) in
+          let after = String.sub base_name_str (last_colon_pos + 1)
+            (String.length base_name_str - last_colon_pos - 1) in
+          str before ++ str "template " ++ str after ++ str "<" ++ ty_args ++ str ">"
+        else
+          base_name ++ str "<" ++ ty_args ++ str ">"
     in
     let full_name = if is_accessor then full_name ++ str "()" else full_name in
     apply full_name
@@ -1014,11 +1039,11 @@ and pp_cpp_expr env args t =
   | CPPconvertible_to ty ->
     str "std::convertible_to<" ++ pp_cpp_type false [] ty ++ str ">"
   | CPPabort msg ->
-    str "([&]() -> auto { throw "
+    str "([]() -> std::any { throw "
     ++ str (sn ()).logic_error
     ++ str "(\""
     ++ str msg
-    ++ str "\"); })()"
+    ++ str "\"); return std::any{}; })()"
   | CPPenum_val (ind, ctor) ->
     (* Generate EnumType::Constructor for enum class values. Use str_global for
        proper module qualification (e.g., Outer::color::Red). *)
@@ -1786,7 +1811,18 @@ let rec pp_cpp_decl env = function
     ++ pp_cpp_type false [] ty
     ++ str ";"
   | Dasgn (id, ty, e) ->
-    let expr_pp = pp_cpp_expr env [] e in
+    (* Special handling for CPPabort: generate lambda with correct return type *)
+    let expr_pp = match e with
+      | CPPabort msg ->
+        str "([]() -> "
+        ++ pp_cpp_type false [] ty
+        ++ str " { throw "
+        ++ str (sn ()).logic_error
+        ++ str "(\""
+        ++ str msg
+        ++ str "\"); })()"
+      | _ -> pp_cpp_expr env [] e
+    in
     if render_ctx.rc_in_template then
       (* Inside template: use Meyers singleton to avoid static init order
          fiasco *)

@@ -558,7 +558,7 @@ let pp_hdecl = function
       | None ->
         ( pp_parameters l,
           if t == Taxiom then
-            str " (* AXIOM TO BE REALIZED *)"
+            str " = std::any /* AXIOM TO BE REALIZED */"
           else
             str " =" ++ spc () ++ pp_type false l t )
     in
@@ -691,7 +691,7 @@ let pp_hdecl_spec_only = function
       | None ->
         ( pp_parameters l,
           if t == Taxiom then
-            str " (* AXIOM TO BE REALIZED *)"
+            str " = std::any /* AXIOM TO BE REALIZED */"
           else
             str " =" ++ spc () ++ pp_type false l t )
     in
@@ -749,7 +749,7 @@ let pp_spec = function
         let ids = pp_parameters l in
         ( match ot with
         | None -> (ids, mt ())
-        | Some Taxiom -> (ids, str " (* AXIOM TO BE REALIZED *)")
+        | Some Taxiom -> (ids, str " = std::any /* AXIOM TO BE REALIZED */")
         | Some t -> (ids, str " =" ++ spc () ++ pp_type false l t) )
     in
     pp_tydef l name def

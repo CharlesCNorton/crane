@@ -1307,10 +1307,24 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
     let cglob = mk_cppglob x (filter_erased_type_args tys_cpp) in
     (* Monadic non-function definitions (e.g. [base : IO nat]) are generated as
        zero-arg thunks. A bare [MLglob] reference to such a definition must call
-       the thunk to obtain its value. *)
-    ( match find_type_opt x with
-    | Some ty when is_monadic_ml_type ty -> CPPfun_call (cglob, [])
-    | _ -> cglob )
+       the thunk to obtain its value. CoFixpoint definitions returning coinductive
+       types are also generated as zero-arg thunks. We detect them by checking if
+       the definition is a function type (Tdummy -> T) or (Tglob unit -> T) where
+       T is coinductive. *)
+    let needs_call =
+      match find_type_opt x with
+      | Some ty when is_monadic_ml_type ty -> true
+      | Some (Miniml.Tarr (arg, ret))
+        when (isTdummy arg || (match arg with Miniml.Tglob (r, [], _) -> is_void r | _ -> false))
+             && Table.is_coinductive_type ret ->
+          (* Zero-arg CoFixpoint: dummy/unit -> coinductive_type *)
+          true
+      | _ -> false
+    in
+    if needs_call then
+      CPPfun_call (cglob, [])
+    else
+      cglob
   | MLcons (_ty, r, _ts)
     when match r with
          | GlobRef.ConstructRef ((kn, i), _) ->

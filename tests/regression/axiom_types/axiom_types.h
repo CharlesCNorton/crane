@@ -18,8 +18,8 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct AxiomTypes {
-  using MysteryType(*AXIOM TO BE REALIZED *);
-  static inline const MysteryType mystery_value = ([&]() -> auto {
+  using MysteryType = std::any /* AXIOM TO BE REALIZED */;
+  static inline const MysteryType mystery_value = ([]() -> const MysteryType {
     throw std::logic_error(
         "unrealized axiom: "
         "CraneTestsWIP.axiom_types.AxiomTypes.AxiomTypes.mystery_value");

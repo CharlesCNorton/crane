@@ -472,11 +472,14 @@ let info_axioms = ref Refset'.empty
 
 let log_axioms = ref Refset'.empty
 
+let cofixpoints = ref Refset'.empty
+
 let symbols = ref Refmap'.empty
 
 let init_axioms () =
   info_axioms := Refset'.empty;
   log_axioms := Refset'.empty;
+  cofixpoints := Refset'.empty;
   symbols := Refmap'.empty
 
 let add_info_axiom r = info_axioms := Refset'.add r !info_axioms
@@ -484,6 +487,10 @@ let add_info_axiom r = info_axioms := Refset'.add r !info_axioms
 let remove_info_axiom r = info_axioms := Refset'.remove r !info_axioms
 
 let add_log_axiom r = log_axioms := Refset'.add r !log_axioms
+
+let add_cofixpoint r = cofixpoints := Refset'.add r !cofixpoints
+
+let is_cofixpoint r = Refset'.mem r !cofixpoints
 
 let add_symbol r =
   symbols :=

@@ -288,6 +288,12 @@ val remove_info_axiom : GlobRef.t -> unit
 (** Add log axiom. *)
 val add_log_axiom : GlobRef.t -> unit
 
+(** Add cofixpoint definition. *)
+val add_cofixpoint : GlobRef.t -> unit
+
+(** Check if a definition is a cofixpoint. *)
+val is_cofixpoint : GlobRef.t -> bool
+
 (** Add symbol. *)
 val add_symbol : GlobRef.t -> unit
 
