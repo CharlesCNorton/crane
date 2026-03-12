@@ -1766,7 +1766,7 @@ let extract_axiom env sg kn typ =
 
 (** Extracts a fixpoint (recursive function) definition, handling mutual
     recursion. *)
-let extract_fixpoint env sg vkn (fi, ti, ci) =
+let extract_fixpoint env sg vkn is_fix (fi, ti, ci) =
   let n = Array.length vkn in
   let types = Array.make n (Tdummy Kprop)
   and terms = Array.make n (MLdummy Kprop) in
@@ -1796,6 +1796,9 @@ let extract_fixpoint env sg vkn (fi, ti, ci) =
         error_singleton_become_prop ind
   done;
   current_fixpoints := [];
+  (* Register CoFixpoints. is_fix=true means regular fixpoint, is_fix=false means cofixpoint *)
+  if not is_fix then
+    Array.iter (fun kn -> add_cofixpoint (GlobRef.ConstRef kn)) vkn;
   Dfix (Array.map (fun kn -> GlobRef.ConstRef kn) vkn, terms, types)
 
 (** Main entry point for extracting a constant declaration, dispatching on kind
@@ -1840,20 +1843,7 @@ let extract_constant access env kn cb =
       Dterm (r, MLaxiom (Constant.to_string kn), t)
   in
   let mk_def c =
-    (* Check if the constant body is a CoFix term before extraction.
-       Register it BEFORE extracting so recursive references know to call it. *)
-    let is_cofix_body =
-      match EConstr.kind sg c with
-      | CoFix _ -> true
-      | _ -> false
-    in
-    if is_cofix_body then
-      add_cofixpoint r;
     let e, t = extract_std_constant env sg kn c typ in
-    (* Also check the extracted ML for MLfix with is_cofix=true *)
-    ( match e with
-    | MLfix (_, _, _, true) -> add_cofixpoint r
-    | _ -> () );
     Dterm (r, e, t)
   in
   try

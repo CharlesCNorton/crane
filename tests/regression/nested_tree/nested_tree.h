@@ -250,22 +250,24 @@ struct NestedTree {
 
 template <typename T1, typename T2, MapsTo<std::shared_ptr<List<T2>>, T1> F0>
 std::shared_ptr<List<std::shared_ptr<List<T2>>>>
-_flatten_tree_go(F0 &&f, const std::shared_ptr<NestedTree::tree<T1>> &t0) {
+_flatten_tree_go(F0 &&f,
+                 const std::shared_ptr<NestedTree::template tree<T1>> &t0) {
   return std::visit(
       Overloaded{
-          [](const typename NestedTree::tree<T1>::leaf _args)
+          [](const typename NestedTree::template tree<T1>::leaf _args)
               -> std::shared_ptr<List<std::shared_ptr<List<T2>>>> {
             return List<std::shared_ptr<List<T2>>>::ctor::nil_();
           },
-          [&](const typename NestedTree::tree<T1>::node _args)
+          [&](const typename NestedTree::template tree<T1>::node _args)
               -> std::shared_ptr<List<std::shared_ptr<List<T2>>>> {
             T1 a = _args._a0;
-            std::shared_ptr<NestedTree::tree<std::pair<T1, T1>>> t1 = _args._a1;
+            std::shared_ptr<NestedTree::template tree<std::pair<T1, T1>>> t1 =
+                _args._a1;
             return List<std::shared_ptr<List<T2>>>::ctor::cons_(
                 f(a),
                 _flatten_tree_go<T1, T2>(
                     [&](std::pair<T1, T1> _x0) -> std::shared_ptr<List<T2>> {
-                      return NestedTree::lift<T1, T2>(f, _x0);
+                      return NestedTree::template lift<T1, T2>(f, _x0);
                     },
                     std::move(t1)));
           }},

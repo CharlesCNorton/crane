@@ -172,14 +172,14 @@ let prec_declaration_equal sg (na1, ca1, ta1) (na2, ca2, ta2) =
   && Array.equal (EConstr.eq_constr sg) ta1 ta2
 
 let factor_fix env sg l cb msb =
-  let ((_, recd) as check) = check_fix env sg cb 0 in
+  let ((is_fix, recd) as check) = check_fix env sg cb 0 in
   let n =
     Array.length
       (let fi, _, _ = recd in
        fi )
   in
   if Int.equal n 1 then
-    ([|l|], recd, msb)
+    ([|l|], is_fix, recd, msb)
   else (
     if List.length msb < n - 1 then raise Impossible;
     let msb', msb'' = List.chop (n - 1) msb in
@@ -197,7 +197,7 @@ let factor_fix env sg l cb msb =
           labels.(j + 1) <- l
         | _ -> raise Impossible )
       msb';
-    (labels, recd, msb'') )
+    (labels, is_fix, recd, msb'') )
 
 (** Expanding a [module_alg_expr] into a version without abbreviations or
     functor applications. This is done via a detour to entries (hack proposed by
@@ -367,12 +367,12 @@ let rec extract_structure access env mp reso ~all = function
   | (l, SFBconst cb) :: struc ->
     ( try
         let sg = Evd.from_env env in
-        let vl, recd, struc = factor_fix env sg l cb struc in
+        let vl, is_fix, recd, struc = factor_fix env sg l cb struc in
         let vc = Array.map (make_cst reso mp) vl in
         let ms = extract_structure access env mp reso ~all struc in
         let b = Array.exists Visit.needed_cst vc in
         if all || b then
-          let d = extract_fixpoint env sg vc recd in
+          let d = extract_fixpoint env sg vc is_fix recd in
           if (not b) && logical_decl d then
             ms
           else (

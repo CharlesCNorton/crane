@@ -139,7 +139,7 @@ struct ListDef {
 
 template <typename T1>
 std::shared_ptr<Nat> _foo_aux(const T1 a, const std::shared_ptr<Nat> &n) {
-  return ListDef::repeat<T1>(a, n)->length();
+  return ListDef::template repeat<T1>(a, n)->length();
 }
 
 std::shared_ptr<Nat> foo(std::shared_ptr<Nat> n, const bool b);
@@ -154,7 +154,7 @@ std::shared_ptr<List<T1>> ListDef::repeat(const T1 x,
                  [&](const typename Nat::S _args) -> std::shared_ptr<List<T1>> {
                    std::shared_ptr<Nat> k = _args._a0;
                    return List<T1>::ctor::cons_(
-                       x, ListDef::repeat<T1>(x, std::move(k)));
+                       x, ListDef::template repeat<T1>(x, std::move(k)));
                  }},
       n->v());
 }

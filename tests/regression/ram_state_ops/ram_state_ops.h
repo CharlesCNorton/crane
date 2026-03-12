@@ -160,47 +160,51 @@ struct RamStateOps {
   };
 
   static inline const std::shared_ptr<ram_reg> empty_reg =
-      std::make_shared<ram_reg>(ram_reg{ListDef::repeat<unsigned int>(0u, 16u),
-                                        ListDef::repeat<unsigned int>(0u, 4u)});
+      std::make_shared<ram_reg>(
+          ram_reg{ListDef::template repeat<unsigned int>(0u, 16u),
+                  ListDef::template repeat<unsigned int>(0u, 4u)});
   static inline const std::shared_ptr<ram_chip> empty_chip =
       std::make_shared<ram_chip>(ram_chip{
-          ListDef::repeat<std::shared_ptr<ram_reg>>(empty_reg, 4u), 0u});
+          ListDef::template repeat<std::shared_ptr<ram_reg>>(empty_reg, 4u),
+          0u});
   static inline const std::shared_ptr<ram_bank> empty_bank =
-      std::make_shared<ram_bank>(
-          ram_bank{ListDef::repeat<std::shared_ptr<ram_chip>>(empty_chip, 4u)});
+      std::make_shared<ram_bank>(ram_bank{
+          ListDef::template repeat<std::shared_ptr<ram_chip>>(empty_chip, 4u)});
   static inline const std::shared_ptr<List<std::shared_ptr<ram_bank>>>
-      empty_ram = ListDef::repeat<std::shared_ptr<ram_bank>>(empty_bank, 4u);
+      empty_ram =
+          ListDef::template repeat<std::shared_ptr<ram_bank>>(empty_bank, 4u);
   static inline const std::shared_ptr<ram_sel> default_sel =
       std::make_shared<ram_sel>(ram_sel{0u, 0u, 0u, 0u});
   static inline const std::shared_ptr<state> init_state =
-      std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 16u), 0u,
-                                    false, 0u, List<unsigned int>::ctor::nil_(),
-                                    empty_ram, default_sel,
-                                    ListDef::repeat<unsigned int>(0u, 8u)});
+      std::make_shared<state>(
+          state{ListDef::template repeat<unsigned int>(0u, 16u), 0u, false, 0u,
+                List<unsigned int>::ctor::nil_(), empty_ram, default_sel,
+                ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<state> bad_state_wrong_reg_count =
-      std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 15u), 0u,
-                                    false, 0u, List<unsigned int>::ctor::nil_(),
-                                    empty_ram, default_sel,
-                                    ListDef::repeat<unsigned int>(0u, 8u)});
+      std::make_shared<state>(
+          state{ListDef::template repeat<unsigned int>(0u, 15u), 0u, false, 0u,
+                List<unsigned int>::ctor::nil_(), empty_ram, default_sel,
+                ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<state> bad_state_acc_overflow =
-      std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 16u), 16u,
-                                    false, 0u, List<unsigned int>::ctor::nil_(),
-                                    empty_ram, default_sel,
-                                    ListDef::repeat<unsigned int>(0u, 8u)});
+      std::make_shared<state>(
+          state{ListDef::template repeat<unsigned int>(0u, 16u), 16u, false, 0u,
+                List<unsigned int>::ctor::nil_(), empty_ram, default_sel,
+                ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<state> bad_state_pc_overflow =
       std::make_shared<state>(
-          state{ListDef::repeat<unsigned int>(0u, 16u), 0u, false, 4096u,
-                List<unsigned int>::ctor::nil_(), empty_ram, default_sel,
-                ListDef::repeat<unsigned int>(0u, 8u)});
+          state{ListDef::template repeat<unsigned int>(0u, 16u), 0u, false,
+                4096u, List<unsigned int>::ctor::nil_(), empty_ram, default_sel,
+                ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<state> bad_state_stack_overflow =
       std::make_shared<state>(state{
-          ListDef::repeat<unsigned int>(0u, 16u), 0u, false, 0u,
+          ListDef::template repeat<unsigned int>(0u, 16u), 0u, false, 0u,
           List<unsigned int>::ctor::cons_(
               0u, List<unsigned int>::ctor::cons_(
                       1u, List<unsigned int>::ctor::cons_(
                               2u, List<unsigned int>::ctor::cons_(
                                       3u, List<unsigned int>::ctor::nil_())))),
-          empty_ram, default_sel, ListDef::repeat<unsigned int>(0u, 8u)});
+          empty_ram, default_sel,
+          ListDef::template repeat<unsigned int>(0u, 8u)});
   static std::shared_ptr<state> reset_state(std::shared_ptr<state> s);
   static unsigned int get_main(const std::shared_ptr<ram_reg> &rg,
                                const unsigned int i);
@@ -245,19 +249,20 @@ struct RamStateOps {
   pop_stack(std::shared_ptr<state> s);
   static inline const std::shared_ptr<state> stack_state =
       std::make_shared<state>(state{
-          ListDef::repeat<unsigned int>(0u, 16u), 0u, false, 0u,
+          ListDef::template repeat<unsigned int>(0u, 16u), 0u, false, 0u,
           List<unsigned int>::ctor::cons_(
               17u, List<unsigned int>::ctor::cons_(
                        255u, List<unsigned int>::ctor::cons_(
                                  4095u, List<unsigned int>::ctor::nil_()))),
-          empty_ram, default_sel, ListDef::repeat<unsigned int>(0u, 8u)});
+          empty_ram, default_sel,
+          ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<state> cleared_state =
       std::make_shared<state>(
-          state{ListDef::repeat<unsigned int>(0u, 16u), 7u, true, 99u,
+          state{ListDef::template repeat<unsigned int>(0u, 16u), 7u, true, 99u,
                 List<unsigned int>::ctor::cons_(
                     300u, List<unsigned int>::ctor::nil_()),
                 empty_ram, std::make_shared<ram_sel>(ram_sel{3u, 2u, 1u, 7u}),
-                ListDef::repeat<unsigned int>(0u, 8u)});
+                ListDef::template repeat<unsigned int>(0u, 8u)});
   static inline const std::shared_ptr<ram_reg> patched_reg =
       upd_main_in_reg(empty_reg, 0u, 13u);
   static inline const std::shared_ptr<ram_chip> patched_chip =
@@ -276,6 +281,6 @@ std::shared_ptr<List<T1>> ListDef::repeat(const T1 x, const unsigned int n) {
     return List<T1>::ctor::nil_();
   } else {
     unsigned int k = n - 1;
-    return List<T1>::ctor::cons_(x, ListDef::repeat<T1>(x, k));
+    return List<T1>::ctor::cons_(x, ListDef::template repeat<T1>(x, k));
   }
 }

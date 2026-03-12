@@ -22,7 +22,7 @@ struct AxiomTypes {
   static inline const MysteryType mystery_value = ([]() -> const MysteryType {
     throw std::logic_error(
         "unrealized axiom: "
-        "CraneTestsWIP.axiom_types.AxiomTypes.AxiomTypes.mystery_value");
+        "CraneTestsRegression.axiom_types.AxiomTypes.AxiomTypes.mystery_value");
   })();
   static MysteryType mystery_function(const MysteryType);
   static inline const MysteryType use_axiom = mystery_function(mystery_value);

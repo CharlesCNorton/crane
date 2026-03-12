@@ -12,9 +12,9 @@
 
 AxiomTypes::MysteryType
 AxiomTypes::mystery_function(const AxiomTypes::MysteryType _x0) {
-  throw std::logic_error(
-      "unrealized axiom: "
-      "CraneTestsWIP.axiom_types.AxiomTypes.AxiomTypes.mystery_function");
+  throw std::logic_error("unrealized axiom: "
+                         "CraneTestsRegression.axiom_types.AxiomTypes."
+                         "AxiomTypes.mystery_function");
 }
 
 AxiomTypes::MysteryType AxiomTypes::extract_axiom_field(

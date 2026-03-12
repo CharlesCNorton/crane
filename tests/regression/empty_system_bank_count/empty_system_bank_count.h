@@ -102,17 +102,19 @@ struct EmptySystemBankCount {
   static inline const unsigned int NSTAT = 4u;
   static inline const std::shared_ptr<ram_reg> empty_reg =
       std::make_shared<ram_reg>(
-          ram_reg{ListDef::repeat<unsigned int>(0u, NMAIN),
-                  ListDef::repeat<unsigned int>(0u, NSTAT)});
+          ram_reg{ListDef::template repeat<unsigned int>(0u, NMAIN),
+                  ListDef::template repeat<unsigned int>(0u, NSTAT)});
   static inline const std::shared_ptr<ram_chip> empty_chip =
       std::make_shared<ram_chip>(ram_chip{
-          ListDef::repeat<std::shared_ptr<ram_reg>>(empty_reg, NREGS), 0u});
+          ListDef::template repeat<std::shared_ptr<ram_reg>>(empty_reg, NREGS),
+          0u});
   static inline const std::shared_ptr<ram_bank> empty_bank =
-      std::make_shared<ram_bank>(ram_bank{
-          ListDef::repeat<std::shared_ptr<ram_chip>>(empty_chip, NCHIPS)});
+      std::make_shared<ram_bank>(
+          ram_bank{ListDef::template repeat<std::shared_ptr<ram_chip>>(
+              empty_chip, NCHIPS)});
   static inline const std::shared_ptr<List<std::shared_ptr<ram_bank>>>
-      empty_sys =
-          ListDef::repeat<std::shared_ptr<ram_bank>>(empty_bank, NBANKS);
+      empty_sys = ListDef::template repeat<std::shared_ptr<ram_bank>>(
+          empty_bank, NBANKS);
   static inline const unsigned int t = empty_sys->length();
 };
 
@@ -122,6 +124,6 @@ std::shared_ptr<List<T1>> ListDef::repeat(const T1 x, const unsigned int n) {
     return List<T1>::ctor::nil_();
   } else {
     unsigned int k = n - 1;
-    return List<T1>::ctor::cons_(x, ListDef::repeat<T1>(x, k));
+    return List<T1>::ctor::cons_(x, ListDef::template repeat<T1>(x, k));
   }
 }

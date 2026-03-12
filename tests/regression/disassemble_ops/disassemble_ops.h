@@ -309,8 +309,9 @@ struct DisassembleOps {
   };
 
   static inline const std::shared_ptr<state> init_state =
-      std::make_shared<state>(state{ListDef::repeat<unsigned int>(0u, 16u),
-                                    ListDef::repeat<unsigned int>(0u, 4096u)});
+      std::make_shared<state>(
+          state{ListDef::template repeat<unsigned int>(0u, 16u),
+                ListDef::template repeat<unsigned int>(0u, 4096u)});
   static inline const unsigned int test_decode_disassemble_1 = [](void) {
     if (disassemble4(
             List<unsigned int>::ctor::cons_(
@@ -391,6 +392,6 @@ std::shared_ptr<List<T1>> ListDef::repeat(const T1 x, const unsigned int n) {
     return List<T1>::ctor::nil_();
   } else {
     unsigned int k = n - 1;
-    return List<T1>::ctor::cons_(x, ListDef::repeat<T1>(x, k));
+    return List<T1>::ctor::cons_(x, ListDef::template repeat<T1>(x, k));
   }
 }

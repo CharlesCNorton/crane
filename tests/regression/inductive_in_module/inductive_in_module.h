@@ -149,8 +149,8 @@ struct InductiveInModule {
     };
 
     static inline const unsigned int test_option =
-        Middle::get_or_default<unsigned int>(
-            42u, Middle::option<unsigned int>::ctor::Some_(99u));
+        Middle::template get_or_default<unsigned int>(
+            42u, Middle::template option<unsigned int>::ctor::Some_(99u));
   };
 
   static inline const unsigned int final_test = Outer::test_option;

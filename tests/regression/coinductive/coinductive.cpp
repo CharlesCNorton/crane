@@ -12,7 +12,7 @@
 
 std::shared_ptr<Coinductive::stream> Coinductive::zeros() {
   return stream::ctor::lazy_([](void) -> std::shared_ptr<Coinductive::stream> {
-    return stream::ctor::Cons_(0u, zeros);
+    return stream::ctor::Cons_(0u, zeros());
   });
 }
 

@@ -23,7 +23,8 @@ unsigned int stmtest::io_basic_counter() {
 
 unsigned int stmtest::stm_inc(const unsigned int x) {
   std::shared_ptr<stm::TVar<unsigned int>> c = stm::newTVar<unsigned int>(x);
-  ::modifyTVar<unsigned int>(c, [](unsigned int n) { return (n + 1); });
+  ::template modifyTVar<unsigned int>(c,
+                                      [](unsigned int n) { return (n + 1); });
   return c->read();
 }
 
