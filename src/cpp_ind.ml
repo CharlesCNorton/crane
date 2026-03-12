@@ -643,9 +643,9 @@ let pp_hdecl = function
         let ds, env, _ = gen_decl r a t in
         pp_cpp_decl env ds
       else
-        (* Use decl_to_spec on the result from gen_decl_for_pp to produce
-           a forward declaration. This correctly handles axiom values
-           (Dfundef -> Dfundecl). *)
+        (* Use decl_to_spec on the result from gen_decl_for_pp to produce a
+           forward declaration. This correctly handles axiom values (Dfundef ->
+           Dfundecl). *)
         pp_cpp_decl env (decl_to_spec ds)
     | Some ds, _ :: _ -> pp_cpp_decl env ds
     | None, _ ->

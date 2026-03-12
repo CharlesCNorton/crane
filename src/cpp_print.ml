@@ -448,14 +448,19 @@ let rec pp_cpp_type par vl t =
           ++ type_name
         | l ->
           (* When type_name contains :: (qualified name like "C::t"), we need to
-             insert "template " before the last component for dependent templates.
-             E.g., "C::t" + <unsigned int> -> "C::template t<unsigned int>" *)
+             insert "template " before the last component for dependent
+             templates. E.g., "C::t" + <unsigned int> -> "C::template t<unsigned
+             int>" *)
           let type_name_with_template =
             if String.contains name_str ':' then
               let last_colon_pos = String.rindex name_str ':' in
               let before = String.sub name_str 0 (last_colon_pos + 1) in
-              let after = String.sub name_str (last_colon_pos + 1)
-                (String.length name_str - last_colon_pos - 1) in
+              let after =
+                String.sub
+                  name_str
+                  (last_colon_pos + 1)
+                  (String.length name_str - last_colon_pos - 1)
+              in
               str before ++ str "template " ++ str after
             else
               type_name
@@ -494,8 +499,7 @@ let rec pp_cpp_type par vl t =
         if is_eponymous_record_cached r' then
           (* Eponymous record: use capitalized name directly, no namespace
              nesting. *)
-          str (Common.pp_type_name_capitalized r')
-          ++ templates
+          str (Common.pp_type_name_capitalized r') ++ templates
         else if is_enum_cached r' then
           (* Enum types at global scope need no struct qualification. Enums
              inside structs (e.g., Comparison::cmp) need it. *)
@@ -733,17 +737,26 @@ and pp_cpp_expr env args t =
       | _, Some _ -> base_name
       | _ ->
         let ty_args = pp_list (pp_cpp_type false []) tys in
-        (* Check if base_name contains :: (qualified name).
-           If so, we need to insert "template " before the last component.
-           E.g., "C::empty" + <unsigned int> -> "C::template empty<unsigned int>" *)
+        (* Check if base_name contains :: (qualified name). If so, we need to
+           insert "template " before the last component. E.g., "C::empty" +
+           <unsigned int> -> "C::template empty<unsigned int>" *)
         let base_name_str = string_of_ppcmds base_name in
         if String.contains base_name_str ':' then
           (* Find last occurrence of :: and insert "template " after it *)
           let last_colon_pos = String.rindex base_name_str ':' in
           let before = String.sub base_name_str 0 (last_colon_pos + 1) in
-          let after = String.sub base_name_str (last_colon_pos + 1)
-            (String.length base_name_str - last_colon_pos - 1) in
-          str before ++ str "template " ++ str after ++ str "<" ++ ty_args ++ str ">"
+          let after =
+            String.sub
+              base_name_str
+              (last_colon_pos + 1)
+              (String.length base_name_str - last_colon_pos - 1)
+          in
+          str before
+          ++ str "template "
+          ++ str after
+          ++ str "<"
+          ++ ty_args
+          ++ str ">"
         else
           base_name ++ str "<" ++ ty_args ++ str ">"
     in
@@ -865,11 +878,13 @@ and pp_cpp_expr env args t =
     in
     (* [=] lambdas need 'mutable' so captured variables aren't const-qualified.
        Without it, forwarding-reference parameters (F0&&) captured by value
-       become const inside the lambda, preventing them from binding to F0&&
-       in recursive calls. *)
+       become const inside the lambda, preventing them from binding to F0&& in
+       recursive calls. *)
     let mutable_str =
-      if capture_by_value && needs_capture && not uses_this then str " mutable"
-      else mt ()
+      if capture_by_value && needs_capture && not uses_this then
+        str " mutable"
+      else
+        mt ()
     in
     let params_s, capture =
       match params with
@@ -889,7 +904,13 @@ and pp_cpp_expr env args t =
     let body_s = pp_list_stmt (pp_cpp_stmt env args) body in
     ( match ret_ty with
     | Some ty ->
-      h (capture ++ params_s ++ str ")" ++ mutable_str ++ str " -> " ++ pp_cpp_type false [] ty)
+      h
+        ( capture
+        ++ params_s
+        ++ str ")"
+        ++ mutable_str
+        ++ str " -> "
+        ++ pp_cpp_type false [] ty )
       ++ str " {"
       ++ fnl ()
       ++ body_s
@@ -1811,8 +1832,10 @@ let rec pp_cpp_decl env = function
     ++ pp_cpp_type false [] ty
     ++ str ";"
   | Dasgn (id, ty, e) ->
-    (* Special handling for CPPabort: generate lambda with correct return type *)
-    let expr_pp = match e with
+    (* Special handling for CPPabort: generate lambda with correct return
+       type *)
+    let expr_pp =
+      match e with
       | CPPabort msg ->
         str "([]() -> "
         ++ pp_cpp_type false [] ty

@@ -41,7 +41,12 @@ val extract_with_type :
 (** Extract a mutual fixpoint definition. The bool parameter indicates whether
     it's a regular fixpoint (true) or a cofixpoint (false). *)
 val extract_fixpoint :
-  env -> evar_map -> Constant.t array -> bool -> EConstr.rec_declaration -> ml_decl
+  env ->
+  evar_map ->
+  Constant.t array ->
+  bool ->
+  EConstr.rec_declaration ->
+  ml_decl
 
 (** Extract a (mutual) inductive type definition. *)
 val extract_inductive : env -> MutInd.t -> ml_ind

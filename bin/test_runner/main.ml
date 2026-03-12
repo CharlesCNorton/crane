@@ -26,7 +26,10 @@ let parse_args () =
         "N Number of parallel jobs (default: CPU count)" );
       ("-v", Arg.Set verbose, " Verbose output (show error details)");
       ("--verbose", Arg.Set verbose, " Verbose output (show error details)");
-      ("--folder", Arg.String (fun f -> folder := Some f), " Run tests only from specified folder (basics, monadic, wip, regression)");
+      ( "--folder",
+        Arg.String (fun f -> folder := Some f),
+        " Run tests only from specified folder (basics, monadic, wip, \
+         regression)" );
     ]
   in
   let usage = "Usage: crane-test-runner [options]" in
@@ -38,16 +41,20 @@ let main () =
   let config = parse_args () in
   let all_tests = Discovery.find_all_tests config.project_root in
 
-  let tests = match config.folder with
+  let tests =
+    match config.folder with
     | None -> all_tests
     | Some folder -> List.filter (fun t -> t.category = folder) all_tests
   in
 
-  if tests = [] then (
-    match config.folder with
-    | None -> Printf.eprintf "No tests found\n"
-    | Some folder -> Printf.eprintf "No tests found in folder '%s'\n" folder;
-    exit 0 );
+  ( if tests = [] then
+      match
+        config.folder
+      with
+      | None -> Printf.eprintf "No tests found\n"
+      | Some folder ->
+        Printf.eprintf "No tests found in folder '%s'\n" folder;
+        exit 0 );
 
   Output.print_header ();
 

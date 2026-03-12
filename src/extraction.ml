@@ -1796,7 +1796,8 @@ let extract_fixpoint env sg vkn is_fix (fi, ti, ci) =
         error_singleton_become_prop ind
   done;
   current_fixpoints := [];
-  (* Register CoFixpoints. is_fix=true means regular fixpoint, is_fix=false means cofixpoint *)
+  (* Register CoFixpoints. is_fix=true means regular fixpoint, is_fix=false
+     means cofixpoint *)
   if not is_fix then
     Array.iter (fun kn -> add_cofixpoint (GlobRef.ConstRef kn)) vkn;
   Dfix (Array.map (fun kn -> GlobRef.ConstRef kn) vkn, terms, types)
@@ -1841,7 +1842,8 @@ let extract_constant access env kn cb =
       Dterm (r, MLdummy Kprop, Tdummy Kprop)
     else (
       (* Register non-function axioms as axiom values. These are generated as
-         zero-arg functions so they throw when called, not at static init time. *)
+         zero-arg functions so they throw when called, not at static init
+         time. *)
       if not has_args then add_axiom_value r;
       Dterm (r, MLaxiom (Constant.to_string kn), t) )
   in
