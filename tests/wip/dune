@@ -33,3 +33,179 @@
   (alias runtest)
   (deps skiplist.t.exe)
   (action (run ./skiplist.t.exe))))
+
+(subdir tuple
+ (rule
+  (targets tuple.t.exe)
+  (deps Tuple.vo tuple.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} tuple.t.exe tuple.cpp tuple.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps tuple.t.exe)
+  (action (run ./tuple.t.exe))))
+
+(subdir record_proj
+ (rule
+  (targets record_proj.t.exe)
+  (deps RecordProj.vo record_proj.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} record_proj.t.exe record_proj.cpp record_proj.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps record_proj.t.exe)
+  (action (run ./record_proj.t.exe))))
+
+(subdir pattern_impossible
+ (rule
+  (targets pattern_impossible.t.exe)
+  (deps PatternImpossible.vo pattern_impossible.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pattern_impossible.t.exe pattern_impossible.cpp pattern_impossible.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pattern_impossible.t.exe)
+  (action (run ./pattern_impossible.t.exe))))
+
+(subdir inductive_in_module
+ (rule
+  (targets inductive_in_module.t.exe)
+  (deps InductiveInModule.vo inductive_in_module.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} inductive_in_module.t.exe inductive_in_module.cpp inductive_in_module.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps inductive_in_module.t.exe)
+  (action (run ./inductive_in_module.t.exe))))
+
+(subdir dependent_typename
+ (rule
+  (targets dependent_typename.t.exe)
+  (deps DependentTypename.vo dependent_typename.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} dependent_typename.t.exe dependent_typename.cpp dependent_typename.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps dependent_typename.t.exe)
+  (action (run ./dependent_typename.t.exe))))
+
+(subdir type_app
+ (rule
+  (targets type_app.t.exe)
+  (deps TypeApp.vo type_app.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} type_app.t.exe type_app.cpp type_app.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps type_app.t.exe)
+  (action (run ./type_app.t.exe))))
+
+(subdir erased_record
+ (rule
+  (targets erased_record.t.exe)
+  (deps ErasedRecord.vo erased_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} erased_record.t.exe erased_record.cpp erased_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps erased_record.t.exe)
+  (action (run ./erased_record.t.exe))))
+
+(subdir dependent_template_stress
+ (rule
+  (targets dependent_template_stress.t.exe)
+  (deps DependentTemplateStress.vo dependent_template_stress.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} dependent_template_stress.t.exe dependent_template_stress.cpp dependent_template_stress.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps dependent_template_stress.t.exe)
+  (action (run ./dependent_template_stress.t.exe))))
+
+(subdir axiom_types
+ (rule
+  (targets axiom_types.t.exe)
+  (deps AxiomTypes.vo axiom_types.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} axiom_types.t.exe axiom_types.cpp axiom_types.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps axiom_types.t.exe)
+  (action (run ./axiom_types.t.exe))))
+
+(subdir pathological_record
+ (rule
+  (targets pathological_record.t.exe)
+  (deps PathologicalRecord.vo pathological_record.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} pathological_record.t.exe pathological_record.cpp pathological_record.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps pathological_record.t.exe)
+  (action (run ./pathological_record.t.exe))))
+
+(subdir coinductive
+ (rule
+  (targets coinductive.t.exe)
+  (deps Coinductive.vo coinductive.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} coinductive.t.exe coinductive.cpp coinductive.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps coinductive.t.exe)
+  (action (run ./coinductive.t.exe))))
+
+(subdir deep_pattern
+ (rule
+  (targets deep_pattern.t.exe)
+  (deps DeepPattern.vo deep_pattern.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} deep_pattern.t.exe deep_pattern.cpp deep_pattern.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps deep_pattern.t.exe)
+  (action (run ./deep_pattern.t.exe))))
+
+(subdir mutual_recursion
+ (rule
+  (targets mutual_recursion.t.exe)
+  (deps MutualRecursion.vo mutual_recursion.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} mutual_recursion.t.exe mutual_recursion.cpp mutual_recursion.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps mutual_recursion.t.exe)
+  (action (run ./mutual_recursion.t.exe))))
+
+(subdir record_case_body
+ (rule
+  (targets record_case_body.t.exe)
+  (deps RecordCaseBody.vo record_case_body.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} record_case_body.t.exe record_case_body.cpp record_case_body.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps record_case_body.t.exe)
+  (action (run ./record_case_body.t.exe))))
+
+(subdir sections_modules
+ (rule
+  (targets sections_modules.t.exe)
+  (deps SectionsModules.vo sections_modules.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} sections_modules.t.exe sections_modules.cpp sections_modules.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps sections_modules.t.exe)
+  (action (run ./sections_modules.t.exe))))
+
+(subdir unsound_axioms
+ (rule
+  (targets unsound_axioms.t.exe)
+  (deps UnsoundAxioms.vo unsound_axioms.t.cpp (source_tree .))
+  (action
+   (run %{project_root}/scripts/compile-std.sh %{project_root} unsound_axioms.t.exe unsound_axioms.cpp unsound_axioms.t.cpp)))
+ (rule
+  (alias runtest)
+  (deps unsound_axioms.t.exe)
+  (action (run ./unsound_axioms.t.exe))))
