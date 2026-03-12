@@ -764,6 +764,16 @@ let rec collect_free_rels_set n_bound acc = function
 let collect_free_rels n_bound body =
   IntSet.elements (collect_free_rels_set n_bound IntSet.empty body)
 
+(** Wraps a C++ parameter type with const/ref based on ownership semantics.
+    Owned shared_ptr params are passed by value; borrowed shared_ptr/unique_ptr
+    params are passed by const reference; other types are passed by const value.
+*)
+let wrap_param_by_ownership ?(is_owned = false) cpp_ty =
+  match cpp_ty with
+  | Tshared_ptr _ when is_owned -> cpp_ty
+  | Tshared_ptr _ | Tunique_ptr _ -> Tref (Tmod (TMconst, cpp_ty))
+  | _ -> Tmod (TMconst, cpp_ty)
+
 (** Convert ML type to C++ type. Handles custom types, inductives, type
     variables, and erased parameters. env: variable environment; ns: set of
     local references; tvars: type variable names *)
@@ -893,6 +903,14 @@ let rec convert_ml_type_to_cpp_type
 (* let _ = print_endline "TODO: TMETA OR TDUMMY OR TUNKNOWN OR TAXIOM" in assert
    false *)
 
+(** Convert ML type arguments to C++ template parameters, applying type
+    simplification. *)
+and build_template_params env tvars tys =
+  List.map
+    (fun ty ->
+      convert_ml_type_to_cpp_type env Refset'.empty tvars (type_simpl ty) )
+    tys
+
 (** Generate code for a custom-extracted constructor application *)
 and gen_expr_custom_cons env (ty : ml_type) r ts =
   let args = List.rev_map (gen_expr env) ts in
@@ -912,9 +930,7 @@ and gen_expr_custom_cons env (ty : ml_type) r ts =
         | None -> tys )
       | _ -> tys
     in
-    let temps =
-      List.map (convert_ml_type_to_cpp_type env Refset'.empty []) tys
-    in
+    let temps = build_template_params env [] tys in
     app (mk_cppglob r temps)
   | _ -> app (mk_cppglob r [])
 
@@ -1280,15 +1296,10 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
     ( match ty with
     | Tfun (dom, cod) ->
       eta_fun env (MLglob (x, tys)) [] (* TODO: could be only if contains '%' *)
-    | _ ->
-      mk_cppglob
-        x
-        (List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys) )
+    | _ -> mk_cppglob x (build_template_params env tvars tys) )
   | MLglob (x, tys) ->
     let tvars = get_current_type_vars () in
-    let tys_cpp =
-      List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys
-    in
+    let tys_cpp = build_template_params env tvars tys in
     (* If any type arg is Tany or a dummy type glob (from erased type/prop
        params), drop ALL explicit type args via filter_erased_type_args and let
        the compiler deduce everything. See filter_erased_type_args for why we
@@ -1486,9 +1497,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
               tys
           in
           let tvars = get_current_type_vars () in
-          let temps =
-            List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys
-          in
+          let temps = build_template_params env tvars tys in
           (* Get the constructor base name (without module path) and add
              underscore suffix *)
           let ctor_name = Common.pp_global_name Type r in
@@ -1530,9 +1539,7 @@ and gen_expr env (ml_e : ml_ast) : cpp_expr =
               | None -> tys )
             | _ -> tys
           in
-          let temps =
-            List.map (convert_ml_type_to_cpp_type env Refset'.empty []) tys
-          in
+          let temps = build_template_params env [] tys in
           CPPfun_call
             (CPPmk_shared (Tglob (n, temps, [])), [CPPstruct (n, temps, args)])
         | _ ->
@@ -1810,8 +1817,7 @@ and eta_fun env f args =
       match ml_arg with
       | MLglob (r, ts) ->
         (* Use the instance struct as a type - convert to Tglob *)
-        Tglob
-          (r, List.map (convert_ml_type_to_cpp_type env Refset'.empty []) ts, [])
+        Tglob (r, build_template_params env [] ts, [])
       | MLrel i ->
         (* The instance is a lambda parameter - look up its name in the env and
            create a Tvar reference to the template parameter *)
@@ -1830,11 +1836,7 @@ and eta_fun env f args =
               | _ -> Some (ml_arg_to_template_type arg) )
             inner_args
         in
-        Tglob
-          ( r,
-            List.map (convert_ml_type_to_cpp_type env Refset'.empty []) ts
-            @ template_args,
-            [] )
+        Tglob (r, build_template_params env [] ts @ template_args, [])
       | MLdummy _ -> Tany (* Should not happen at top level, but be safe *)
       | _ ->
         CErrors.anomaly
@@ -1873,9 +1875,7 @@ and eta_fun env f args =
        C++ can't deduce it from lambda arguments (lambdas don't participate in
        template argument deduction). In that case, recover the concrete type
        from the enclosing function's return type. *)
-    let regular_type_args =
-      List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys
-    in
+    let regular_type_args = build_template_params env tvars tys in
     (* Recover erased type args that C++ cannot deduce. Two cases: (a) tys is
        non-empty but all entries were erased (Tdummy Ktype) →
        filter_erased_type_args drops them all. (b) tys is empty — the Rocq
@@ -2140,11 +2140,10 @@ and eta_fun env f args =
               (fun i ty ->
                 let wrapped =
                   match ty with
-                  | Tshared_ptr _ | Tunique_ptr _ ->
-                    Tref (Tmod (TMconst, ty))
+                  | Tshared_ptr _ | Tunique_ptr _ -> Tref (Tmod (TMconst, ty))
                   | _ -> ty
                 in
-                (wrapped, Some (eta_param_id i)))
+                (wrapped, Some (eta_param_id i)) )
               missing_args
           in
           let call_args =
@@ -2221,9 +2220,7 @@ and gen_cpp_pat_lambda env (typ : ml_type) rty cname ids dummies body =
           | None -> tys )
         | _ -> tys
       in
-      let temps =
-        List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys
-      in
+      let temps = build_template_params env tvars tys in
       (* The constructor struct is nested inside the inductive type *)
       (* Generate: typename list<unsigned int>::nil *)
       (* Build the full inductive type first, then qualify with the constructor name *)
@@ -2647,8 +2644,7 @@ and gen_custom_cpp_case env k (typ : ml_type) t pv =
   let tvars = get_current_type_vars () in
   let temps =
     match typ with
-    | Tglob (r, tys, _) ->
-      List.map (convert_ml_type_to_cpp_type env Refset'.empty tvars) tys
+    | Tglob (r, tys, _) -> build_template_params env tvars tys
     | _ -> []
   in
   let typ = convert_ml_type_to_cpp_type env Refset'.empty tvars typ in
@@ -4909,15 +4905,7 @@ let gen_dfun n b dom cod ty temps =
     List.map
       (fun (x, ty, owned) ->
         let cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty [] ty in
-        let wrapped =
-          match cpp_ty with
-          | Tshared_ptr _ when owned ->
-            cpp_ty (* shared_ptr<T> by value — owned *)
-          | Tshared_ptr _ | Tunique_ptr _ ->
-            Tref (Tmod (TMconst, cpp_ty)) (* const shared_ptr<T>& — borrowed *)
-          | _ -> Tmod (TMconst, cpp_ty)
-          (* const T *)
-        in
+        let wrapped = wrap_param_by_ownership ~is_owned:owned cpp_ty in
         (x, wrapped) )
       ids_with_owned
   in
@@ -5233,15 +5221,7 @@ let gen_sfun n b dom cod temps =
     List.map
       (fun (x, ty, owned) ->
         let cpp_ty = convert_ml_type_to_cpp_type env Refset'.empty [] ty in
-        let wrapped =
-          match cpp_ty with
-          | Tshared_ptr _ when owned ->
-            cpp_ty (* shared_ptr<T> by value — owned *)
-          | Tshared_ptr _ | Tunique_ptr _ ->
-            Tref (Tmod (TMconst, cpp_ty)) (* const std::shared_ptr<T>& *)
-          | _ -> Tmod (TMconst, cpp_ty)
-          (* const T *)
-        in
+        let wrapped = wrap_param_by_ownership ~is_owned:owned cpp_ty in
         (Some x, wrapped) )
       ids_with_owned
   in
@@ -5250,13 +5230,7 @@ let gen_sfun n b dom cod temps =
   let args =
     List.mapi
       (fun i ty ->
-        let wrapped =
-          match ty with
-          | Tshared_ptr _ | Tunique_ptr _ ->
-            Tref (Tmod (TMconst, ty)) (* const std::shared_ptr<T>& *)
-          | _ -> Tmod (TMconst, ty)
-          (* const T *)
-        in
+        let wrapped = wrap_param_by_ownership ty in
         (None, wrapped) )
       dom
   in
@@ -6075,12 +6049,7 @@ let gen_single_method name vars (func_ref, body, ty, this_pos) =
         let wrapped =
           match cpp_ty with
           | Tfun _ -> Tref (Tref (Tvar (0, Some (fun_tparam_id i))))
-          | Tshared_ptr _ | Tunique_ptr _ ->
-            if owned then
-              cpp_ty (* Pass by value for owned params *)
-            else
-              Tref (Tmod (TMconst, cpp_ty)) (* Const ref for borrowed params *)
-          | _ -> Tmod (TMconst, cpp_ty)
+          | _ -> wrap_param_by_ownership ~is_owned:owned cpp_ty
         in
         (id, wrapped) )
       params_with_idx

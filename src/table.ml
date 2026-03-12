@@ -141,6 +141,13 @@ let labels_of_ref r =
 
 (** {2 Constants tables} *)
 
+(** Generic lookup helper with body checksum validation. Returns [Some data] if
+    the key exists and the body checksum matches. *)
+let lookup_with_body_check find_opt kn cb =
+  match find_opt kn with
+  | Some (cb0, data) when cb0 == cb -> Some data
+  | _ -> None
+
 let typedefs = ref (Cmap_env.empty : (constant_body * ml_type) Cmap_env.t)
 
 (** Initialize the typedef cache table. *)
@@ -153,9 +160,7 @@ let add_typedef kn cb t = typedefs := Cmap_env.add kn (cb, t) !typedefs
 (** Lookup a cached typedef, returning Some only if the constant body checksum
     matches. *)
 let lookup_typedef kn cb =
-  match Cmap_env.find_opt kn !typedefs with
-  | Some (cb0, t) when cb0 == cb -> Some t
-  | _ -> None
+  lookup_with_body_check (fun kn -> Cmap_env.find_opt kn !typedefs) kn cb
 
 let cst_types = ref (Cmap_env.empty : (constant_body * ml_schema) Cmap_env.t)
 
@@ -169,9 +174,7 @@ let add_cst_type kn cb s = cst_types := Cmap_env.add kn (cb, s) !cst_types
 (** Lookup a cached constant type scheme, returning Some only if the constant
     body checksum matches. *)
 let lookup_cst_type kn cb =
-  match Cmap_env.find_opt kn !cst_types with
-  | Some (cb0, s) when cb0 == cb -> Some s
-  | _ -> None
+  lookup_with_body_check (fun kn -> Cmap_env.find_opt kn !cst_types) kn cb
 
 (** {2 Inductives table} *)
 
@@ -336,6 +339,17 @@ let init_enum_inductives () = enum_inductives := Refset'.empty
 let add_enum_inductive r = enum_inductives := Refset'.add r !enum_inductives
 
 let is_enum_inductive r = Refset'.mem r !enum_inductives
+
+(** Check if an inductive packet qualifies as an enum: all constructors nullary,
+    no kept type parameters, at least one constructor. *)
+let is_enum_inductive_packet ind i =
+  let p = ind.ind_packets.(i) in
+  let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p.ip_types in
+  let param_sign = List.firstn ind.ind_nparams p.ip_sign in
+  let num_param_vars =
+    List.length (List.filter (fun x -> x == Miniml.Keep) param_sign)
+  in
+  all_nullary && num_param_vars = 0 && Array.length p.ip_types > 0
 
 (** {2 Sigma assertion table} *)
 
@@ -1686,33 +1700,24 @@ let extract_monad m b r s imports =
   let mon = Smartlocate.global_with_alias m in
   let bind = Smartlocate.global_with_alias b in
   let ret = Smartlocate.global_with_alias r in
+  (* Shared handler for monad extraction (works for both ConstRef and IndRef) *)
+  let handle_monad_extraction mon bind ret s imports =
+    if is_monad mon then
+      CErrors.user_err
+        ( str "The term "
+        ++ safe_pr_long_global mon
+        ++ str " is already defined as a custom monad" );
+    List.iter
+      (fun i ->
+        add_ref_import mon i;
+        Lib.add_leaf (ref_imports_object (mon, i)) )
+      imports;
+    Lib.add_leaf (monad_extraction (mon, bind, ret, s));
+    Lib.add_leaf (in_customs (mon, [], s))
+  in
   match mon with
-  | GlobRef.ConstRef kn ->
-    if is_monad mon then
-      CErrors.user_err
-        ( str "The term "
-        ++ safe_pr_long_global mon
-        ++ str " is already defined as a custom monad" );
-    List.iter
-      (fun i ->
-        add_ref_import mon i;
-        Lib.add_leaf (ref_imports_object (mon, i)) )
-      imports;
-    Lib.add_leaf (monad_extraction (mon, bind, ret, s));
-    Lib.add_leaf (in_customs (mon, [], s))
-  | GlobRef.IndRef kn ->
-    if is_monad mon then
-      CErrors.user_err
-        ( str "The term "
-        ++ safe_pr_long_global mon
-        ++ str " is already defined as a custom monad" );
-    List.iter
-      (fun i ->
-        add_ref_import mon i;
-        Lib.add_leaf (ref_imports_object (mon, i)) )
-      imports;
-    Lib.add_leaf (monad_extraction (mon, bind, ret, s));
-    Lib.add_leaf (in_customs (mon, [], s))
+  | GlobRef.ConstRef _ | GlobRef.IndRef _ ->
+    handle_monad_extraction mon bind ret s imports
   | _ -> error_constant ?loc:m.CAst.loc mon
 
 let void_ty = Summary.ref Refmap'.empty ~name:"CraneVoidTy"

@@ -219,6 +219,11 @@ val add_enum_inductive : GlobRef.t -> unit
 (** Check if inductive is enum. *)
 val is_enum_inductive : GlobRef.t -> bool
 
+(** Check if an inductive packet qualifies as an enum based on its structure.
+    Returns true if all constructors are nullary, no type parameters are kept,
+    and at least one constructor exists. *)
+val is_enum_inductive_packet : Miniml.ml_ind -> int -> bool
+
 (** Sigma type assertion. *)
 type sigma_assertion =
   | AssertExpr of string

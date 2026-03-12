@@ -67,19 +67,7 @@ let rec register_enum_inductives (sel : (Label.t * ml_structure_elem) list) :
             (fun i p ->
               let ind_ref = GlobRef.IndRef (kn, i) in
               if (not (is_custom ind_ref)) && not is_mutual then
-                let all_nullary =
-                  Array.for_all (fun tys_list -> tys_list = []) p.ip_types
-                in
-                let param_sign = List.firstn ind.ind_nparams p.ip_sign in
-                let num_param_vars =
-                  List.length
-                    (List.filter (fun x -> x == Miniml.Keep) param_sign)
-                in
-                if
-                  all_nullary
-                  && num_param_vars = 0
-                  && Array.length p.ip_types > 0
-                then
+                if Table.is_enum_inductive_packet ind i then
                   Table.add_enum_inductive ind_ref )
             ind.ind_packets )
       | SEmodule m ->

@@ -369,46 +369,53 @@ let std_names : std_names ref =
       convertible_to = "std::convertible_to";
     }
 
+(** Create a std_names record with the given prefix. *)
+let mk_std_names prefix =
+  match prefix with
+  | "bsl::" ->
+    {
+      shared_ptr = prefix ^ "shared_ptr";
+      unique_ptr = prefix ^ "unique_ptr";
+      make_shared = prefix ^ "make_shared";
+      make_unique = prefix ^ "make_unique";
+      visit = prefix ^ "visit";
+      move = prefix ^ "move";
+      forward = prefix ^ "forward";
+      any_cast = prefix ^ "any_cast";
+      logic_error = prefix ^ "logic_error";
+      overloaded = "bdlf::Overloaded";
+      ns = "bsl";
+      str_suffix = "_s";
+      same_as = "same_as";
+      declval = prefix ^ "declval";
+      convertible_to = "convertible_to";
+    }
+  | _ ->
+    (* Default to "std::" *)
+    {
+      shared_ptr = "std::shared_ptr";
+      unique_ptr = "std::unique_ptr";
+      make_shared = "std::make_shared";
+      make_unique = "std::make_unique";
+      visit = "std::visit";
+      move = "std::move";
+      forward = "std::forward";
+      any_cast = "std::any_cast";
+      logic_error = "std::logic_error";
+      overloaded = "Overloaded";
+      ns = "std";
+      str_suffix = "s";
+      same_as = "std::same_as";
+      declval = "std::declval";
+      convertible_to = "std::convertible_to";
+    }
+
 (** Initialize standard library names based on Table.std_lib() setting. *)
 let init_std_names () =
   if Table.std_lib () = "BDE" then
-    std_names :=
-      {
-        shared_ptr = "bsl::shared_ptr";
-        unique_ptr = "bsl::unique_ptr";
-        make_shared = "bsl::make_shared";
-        make_unique = "bsl::make_unique";
-        visit = "bsl::visit";
-        move = "bsl::move";
-        forward = "bsl::forward";
-        any_cast = "bsl::any_cast";
-        logic_error = "bsl::logic_error";
-        overloaded = "bdlf::Overloaded";
-        ns = "bsl";
-        str_suffix = "_s";
-        same_as = "same_as";
-        declval = "bsl::declval";
-        convertible_to = "convertible_to";
-      }
+    std_names := mk_std_names "bsl::"
   else
-    std_names :=
-      {
-        shared_ptr = "std::shared_ptr";
-        unique_ptr = "std::unique_ptr";
-        make_shared = "std::make_shared";
-        make_unique = "std::make_unique";
-        visit = "std::visit";
-        move = "std::move";
-        forward = "std::forward";
-        any_cast = "std::any_cast";
-        logic_error = "std::logic_error";
-        overloaded = "Overloaded";
-        ns = "std";
-        str_suffix = "s";
-        same_as = "std::same_as";
-        declval = "std::declval";
-        convertible_to = "std::convertible_to";
-      }
+    std_names := mk_std_names "std::"
 
 (** Short accessor for current standard library names. *)
 let sn () = !std_names

@@ -297,31 +297,25 @@ let rec rename_id id avoid =
   let id = remove_prime_id id in
   if Id.Set.mem id avoid then rename_id (increment_subscript id) avoid else id
 
+(** Shared helper for renaming variables with optional extra data. Takes a
+    projection to extract the identifier, a constructor to rebuild the element,
+    and processes the list in reverse order to maintain the same renaming
+    behavior as the original functions. *)
+let rec rename_vars_gen project rebuild avoid = function
+  | [] -> ([], avoid)
+  | elem :: elems ->
+    let elems', avoid = rename_vars_gen project rebuild avoid elems in
+    let id = project elem in
+    let id' = rename_id (lowercase_id id) avoid in
+    (rebuild id' elem :: elems', Id.Set.add id' avoid)
+
 (** Rename a list of variables to fresh lowercase names. *)
-let rec rename_vars avoid = function
-  | [] ->
-    ( [],
-      avoid
-      (* | id :: idl when id == dummy_name -> (* we don't rename dummy binders
-         *) let (idl', avoid') = rename_vars avoid idl in (id :: idl',
-         avoid') *) )
-  | id :: idl ->
-    let idl, avoid = rename_vars avoid idl in
-    let id = rename_id (lowercase_id id) avoid in
-    (id :: idl, Id.Set.add id avoid)
+let rename_vars avoid ids =
+  rename_vars_gen (fun id -> id) (fun id' _ -> id') avoid ids
 
 (** Rename a list of (id, type) pairs to fresh lowercase names. *)
-let rec rename_vars' avoid = function
-  | [] ->
-    ( [],
-      avoid
-      (* | (id, ty) :: idl when id == dummy_name -> (* we don't rename dummy
-         binders *) let (idl', avoid') = rename_vars' avoid idl in ((id, ty) ::
-         idl', avoid') *) )
-  | (id, ty) :: idl ->
-    let idl, avoid = rename_vars' avoid idl in
-    let id = rename_id (lowercase_id id) avoid in
-    ((id, ty) :: idl, Id.Set.add id avoid)
+let rename_vars' avoid pairs =
+  rename_vars_gen (fun (id, _) -> id) (fun id' (_, ty) -> (id', ty)) avoid pairs
 
 (** Rename type variables to fresh lowercase names. *)
 let rename_tvars avoid l =

@@ -299,32 +299,36 @@ let needs_global_qualifier x =
    HOW to render a name, while the original functions produce the actual
    name. *)
 
-(** Cache-backed is_eponymous_record check — avoids hashtable lookup. *)
-let is_eponymous_record_cached (r : GlobRef.t) : bool =
+(** Higher-order helper to reduce cache-fallback pattern duplication. *)
+let with_cache
+    (cached_lookup : Name_resolution.t -> GlobRef.t -> 'a)
+    (fallback : GlobRef.t -> 'a)
+    (r : GlobRef.t) : 'a =
   match !name_cache with
-  | Some cache -> Name_resolution.is_eponymous cache r
-  | None -> is_eponymous_record_global r
+  | Some cache -> cached_lookup cache r
+  | None -> fallback r
+
+(** Cache-backed is_eponymous_record check — avoids hashtable lookup. *)
+let is_eponymous_record_cached : GlobRef.t -> bool =
+  with_cache Name_resolution.is_eponymous is_eponymous_record_global
 
 (** Cache-backed is_global_scope_enum check — avoids hashtable lookup. *)
-let is_global_scope_enum_cached (r : GlobRef.t) : bool =
-  match !name_cache with
-  | Some cache -> Name_resolution.is_global_scope_enum cache r
-  | None -> Hashtbl.mem global_scope_enum_table r
+let is_global_scope_enum_cached : GlobRef.t -> bool =
+  with_cache Name_resolution.is_global_scope_enum (fun r ->
+    Hashtbl.mem global_scope_enum_table r )
 
 (** Cache-backed is_merged_inductive check — avoids hashtable lookup. *)
-let is_merged_inductive_cached (r : GlobRef.t) : bool =
-  match !name_cache with
-  | Some cache ->
-    ( match Name_resolution.resolve_type cache r with
-    | Some rtn -> rtn.Name_resolution.rtn_is_merged
-    | None -> is_merged_inductive r )
-  | None -> is_merged_inductive r
+let is_merged_inductive_cached : GlobRef.t -> bool =
+  with_cache
+    (fun cache r ->
+      match Name_resolution.resolve_type cache r with
+      | Some rtn -> rtn.Name_resolution.rtn_is_merged
+      | None -> is_merged_inductive r )
+    is_merged_inductive
 
 (** Cache-backed inductive classification queries. *)
-let get_ind_kind_cached (r : GlobRef.t) : Minicpp.cpp_ind_kind option =
-  match !name_cache with
-  | Some cache -> Name_resolution.get_ind_kind cache r
-  | None -> None
+let get_ind_kind_cached : GlobRef.t -> Minicpp.cpp_ind_kind option =
+  with_cache Name_resolution.get_ind_kind (fun _ -> None)
 
 let is_enum_cached (r : GlobRef.t) : bool =
   match get_ind_kind_cached r with
