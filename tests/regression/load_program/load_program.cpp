@@ -38,12 +38,12 @@ LoadProgram::load_program(std::shared_ptr<LoadProgram::state> s,
                           const std::shared_ptr<List<unsigned int>> &bytes) {
   return std::visit(
       Overloaded{
-          [&](const typename List<unsigned int>::nil _args)
+          [&](const typename List<unsigned int>::Nil _args)
               -> std::shared_ptr<LoadProgram::state> { return std::move(s); },
-          [&](const typename List<unsigned int>::cons _args)
+          [&](const typename List<unsigned int>::Cons _args)
               -> std::shared_ptr<LoadProgram::state> {
-            unsigned int b = _args._a0;
-            std::shared_ptr<List<unsigned int>> rest = _args._a1;
+            unsigned int b = _args.d_a0;
+            std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
             std::shared_ptr<LoadProgram::state> s_ =
                 set_prom_params(std::move(s), base, std::move(b), true);
             std::shared_ptr<LoadProgram::state> s__ =
@@ -87,14 +87,14 @@ std::shared_ptr<LoadProgram::state_simple> LoadProgram::load_program_simple(
     std::shared_ptr<LoadProgram::state_simple> s,
     const std::shared_ptr<List<unsigned int>> &bytes) {
   return std::visit(
-      Overloaded{[&](const typename List<unsigned int>::nil _args)
+      Overloaded{[&](const typename List<unsigned int>::Nil _args)
                      -> std::shared_ptr<LoadProgram::state_simple> {
                    return std::move(s);
                  },
-                 [&](const typename List<unsigned int>::cons _args)
+                 [&](const typename List<unsigned int>::Cons _args)
                      -> std::shared_ptr<LoadProgram::state_simple> {
-                   unsigned int b = _args._a0;
-                   std::shared_ptr<List<unsigned int>> rest = _args._a1;
+                   unsigned int b = _args.d_a0;
+                   std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
                    return load_program_simple(
                        write_byte(std::move(s), std::move(b)), std::move(rest));
                  }},

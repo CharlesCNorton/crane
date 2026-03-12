@@ -60,27 +60,27 @@ PageOps::disassemble(const std::shared_ptr<List<unsigned int>> &rom,
                      const unsigned int addr) {
   return std::visit(
       Overloaded{
-          [](const typename List<unsigned int>::nil _args)
+          [](const typename List<unsigned int>::Nil _args)
               -> std::optional<std::pair<std::shared_ptr<PageOps::instruction>,
                                          unsigned int>> {
             return std::nullopt;
           },
-          [&](const typename List<unsigned int>::cons _args)
+          [&](const typename List<unsigned int>::Cons _args)
               -> std::optional<std::pair<std::shared_ptr<PageOps::instruction>,
                                          unsigned int>> {
-            unsigned int b1 = _args._a0;
-            std::shared_ptr<List<unsigned int>> l = _args._a1;
+            unsigned int b1 = _args.d_a0;
+            std::shared_ptr<List<unsigned int>> l = _args.d_a1;
             return std::visit(
                 Overloaded{
-                    [](const typename List<unsigned int>::nil _args)
+                    [](const typename List<unsigned int>::Nil _args)
                         -> std::optional<
                             std::pair<std::shared_ptr<PageOps::instruction>,
                                       unsigned int>> { return std::nullopt; },
-                    [&](const typename List<unsigned int>::cons _args)
+                    [&](const typename List<unsigned int>::Cons _args)
                         -> std::optional<
                             std::pair<std::shared_ptr<PageOps::instruction>,
                                       unsigned int>> {
-                      unsigned int b2 = _args._a0;
+                      unsigned int b2 = _args.d_a0;
                       return std::make_optional<std::pair<
                           std::shared_ptr<PageOps::instruction>, unsigned int>>(
                           std::make_pair(decode(std::move(b1), std::move(b2)),

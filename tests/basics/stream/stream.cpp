@@ -16,7 +16,7 @@ Stream::nats_from(std::shared_ptr<Nat> n) {
   return stream<std::shared_ptr<Nat>>::ctor::lazy_(
       [=](void) mutable
           -> std::shared_ptr<Stream::stream<std::shared_ptr<Nat>>> {
-        return stream<std::shared_ptr<Nat>>::ctor::scons_(
+        return stream<std::shared_ptr<Nat>>::ctor::Scons_(
             n, nats_from(Nat::ctor::S_(n)));
       });
 }

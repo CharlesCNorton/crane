@@ -20,10 +20,10 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class comparison { Eq, Lt, Gt };
+enum class Comparison { e_EQ, e_LT, e_GT };
 
 struct Nat {
-  static comparison compare(const unsigned int n, const unsigned int m);
+  static Comparison compare(const unsigned int n, const unsigned int m);
 };
 
 template <typename M>
@@ -33,7 +33,7 @@ concept OrderedType = requires {
   typename M::t;
   {
     M::compare(std::declval<typename M::t>(), std::declval<typename M::t>())
-  } -> std::same_as<comparison>;
+  } -> std::same_as<Comparison>;
 };
 template <typename M>
 concept Map = requires {
@@ -65,22 +65,22 @@ template <OrderedType K, BaseType V> struct MakeMap {
     struct Empty {};
 
     struct Node {
-      std::shared_ptr<tree> _a0;
-      key _a1;
-      value _a2;
-      std::shared_ptr<tree> _a3;
+      std::shared_ptr<tree> d_a0;
+      key d_a1;
+      value d_a2;
+      std::shared_ptr<tree> d_a3;
     };
 
     using variant_t = std::variant<Empty, Node>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit tree(Empty _v) : v_(std::move(_v)) {}
+    explicit tree(Empty _v) : d_v_(std::move(_v)) {}
 
-    explicit tree(Node _v) : v_(std::move(_v)) {}
+    explicit tree(Node _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -109,10 +109,10 @@ template <OrderedType K, BaseType V> struct MakeMap {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   using t = std::shared_ptr<tree>;
@@ -131,20 +131,20 @@ template <OrderedType K, BaseType V> struct MakeMap {
                                        tree::ctor::Empty_());
             },
             [&](const typename tree::Node _args) -> std::shared_ptr<tree> {
-              std::shared_ptr<tree> l = _args._a0;
-              typename K::t k_ = _args._a1;
-              typename V::t v_ = _args._a2;
-              std::shared_ptr<tree> r = _args._a3;
+              std::shared_ptr<tree> l = _args.d_a0;
+              typename K::t k_ = _args.d_a1;
+              typename V::t v_ = _args.d_a2;
+              std::shared_ptr<tree> r = _args.d_a3;
               return [&](void) {
                 switch (K::compare(k, k_)) {
-                case comparison::Eq: {
+                case Comparison::e_EQ: {
                   return tree::ctor::Node_(std::move(l), k, v, std::move(r));
                 }
-                case comparison::Lt: {
+                case Comparison::e_LT: {
                   return tree::ctor::Node_(add(k, v, std::move(l)), k_, v_,
                                            std::move(r));
                 }
-                case comparison::Gt: {
+                case Comparison::e_GT: {
                   return tree::ctor::Node_(std::move(l), k_, v_,
                                            add(k, v, std::move(r)));
                 }
@@ -161,19 +161,19 @@ template <OrderedType K, BaseType V> struct MakeMap {
                        -> std::optional<typename V::t> { return std::nullopt; },
                    [&](const typename tree::Node _args)
                        -> std::optional<typename V::t> {
-                     std::shared_ptr<tree> l = _args._a0;
-                     typename K::t k_ = _args._a1;
-                     typename V::t v_ = _args._a2;
-                     std::shared_ptr<tree> r = _args._a3;
+                     std::shared_ptr<tree> l = _args.d_a0;
+                     typename K::t k_ = _args.d_a1;
+                     typename V::t v_ = _args.d_a2;
+                     std::shared_ptr<tree> r = _args.d_a3;
                      return [&](void) {
                        switch (K::compare(k, k_)) {
-                       case comparison::Eq: {
+                       case Comparison::e_EQ: {
                          return std::make_optional<typename V::t>(v_);
                        }
-                       case comparison::Lt: {
+                       case Comparison::e_LT: {
                          return find(k, std::move(l));
                        }
-                       case comparison::Gt: {
+                       case Comparison::e_GT: {
                          return find(k, std::move(r));
                        }
                        }
@@ -191,7 +191,7 @@ static_assert(BaseType<NatBase>);
 
 struct NatOrdered {
   using t = unsigned int;
-  static comparison compare(const unsigned int _x0, const unsigned int _x1);
+  static Comparison compare(const unsigned int _x0, const unsigned int _x1);
 };
 
 static_assert(OrderedType<NatOrdered>);

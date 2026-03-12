@@ -25,22 +25,22 @@ struct Coinductive {
   struct stream {
     // TYPES
     struct Cons {
-      unsigned int _a0;
-      std::shared_ptr<stream> _a1;
+      unsigned int d_a0;
+      std::shared_ptr<stream> d_a1;
     };
 
     using variant_t = std::variant<Cons>;
 
   private:
     // DATA
-    crane::lazy<variant_t> lazy_v_;
+    crane::lazy<variant_t> d_lazyV_;
 
     // CREATORS
     explicit stream(Cons _v)
-        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+        : d_lazyV_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
 
     explicit stream(std::function<variant_t()> _thunk)
-        : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
+        : d_lazyV_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     // TYPES
@@ -68,7 +68,7 @@ struct Coinductive {
     };
 
     // ACCESSORS
-    const variant_t &v() const { return lazy_v_.force(); }
+    const variant_t &v() const { return d_lazyV_.force(); }
   };
 
   static std::shared_ptr<stream> zeros();
@@ -82,8 +82,8 @@ struct Coinductive {
     return stream::ctor::lazy_([=](void) mutable -> std::shared_ptr<stream> {
       return std::visit(Overloaded{[&](const typename stream::Cons _args)
                                        -> std::shared_ptr<stream> {
-                          unsigned int x = _args._a0;
-                          std::shared_ptr<stream> xs = _args._a1;
+                          unsigned int x = _args.d_a0;
+                          std::shared_ptr<stream> xs = _args.d_a1;
                           return stream::ctor::Cons_(f(std::move(x)),
                                                      smap(f, xs));
                         }},
@@ -101,30 +101,30 @@ struct Coinductive {
   struct tree {
     // TYPES
     struct Leaf {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct Node {
-      unsigned int _a0;
-      std::shared_ptr<tree> _a1;
-      std::shared_ptr<tree> _a2;
+      unsigned int d_a0;
+      std::shared_ptr<tree> d_a1;
+      std::shared_ptr<tree> d_a2;
     };
 
     using variant_t = std::variant<Leaf, Node>;
 
   private:
     // DATA
-    crane::lazy<variant_t> lazy_v_;
+    crane::lazy<variant_t> d_lazyV_;
 
     // CREATORS
     explicit tree(Leaf _v)
-        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+        : d_lazyV_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
 
     explicit tree(Node _v)
-        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+        : d_lazyV_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
 
     explicit tree(std::function<variant_t()> _thunk)
-        : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
+        : d_lazyV_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     // TYPES
@@ -162,7 +162,7 @@ struct Coinductive {
     };
 
     // ACCESSORS
-    const variant_t &v() const { return lazy_v_.force(); }
+    const variant_t &v() const { return d_lazyV_.force(); }
   };
 
   static std::shared_ptr<tree> infinite_tree(const unsigned int n);

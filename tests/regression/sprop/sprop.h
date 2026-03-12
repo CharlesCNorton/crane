@@ -40,8 +40,8 @@ struct SPropTest {
     return v;
   }
 
-  template <typename A> struct Box {
-    A box_value;
+  template <typename t_A> struct Box {
+    t_A box_value;
   };
 
   static unsigned int guarded_pred(const unsigned int n);

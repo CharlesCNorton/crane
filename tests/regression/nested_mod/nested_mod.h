@@ -31,19 +31,19 @@ struct Nat {
 
 struct NestedMod {
   struct Outer {
-    enum class color { Red, Green, Blue };
+    enum class Color { e_RED, e_GREEN, e_BLUE };
 
     template <typename T1>
-    static T1 color_rect(const T1 f, const T1 f0, const T1 f1, const color c) {
+    static T1 color_rect(const T1 f, const T1 f0, const T1 f1, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Green: {
+        case Color::e_GREEN: {
           return f0;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f1;
         }
         }
@@ -51,16 +51,16 @@ struct NestedMod {
     }
 
     template <typename T1>
-    static T1 color_rec(const T1 f, const T1 f0, const T1 f1, const color c) {
+    static T1 color_rec(const T1 f, const T1 f0, const T1 f1, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Green: {
+        case Color::e_GREEN: {
           return f0;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f1;
         }
         }
@@ -71,31 +71,31 @@ struct NestedMod {
       struct shape {
         // TYPES
         struct Circle {
-          unsigned int _a0;
+          unsigned int d_a0;
         };
 
         struct Square {
-          unsigned int _a0;
+          unsigned int d_a0;
         };
 
         struct Triangle {
-          unsigned int _a0;
-          unsigned int _a1;
-          unsigned int _a2;
+          unsigned int d_a0;
+          unsigned int d_a1;
+          unsigned int d_a2;
         };
 
         using variant_t = std::variant<Circle, Square, Triangle>;
 
       private:
         // DATA
-        variant_t v_;
+        variant_t d_v_;
 
         // CREATORS
-        explicit shape(Circle _v) : v_(std::move(_v)) {}
+        explicit shape(Circle _v) : d_v_(std::move(_v)) {}
 
-        explicit shape(Square _v) : v_(std::move(_v)) {}
+        explicit shape(Square _v) : d_v_(std::move(_v)) {}
 
-        explicit shape(Triangle _v) : v_(std::move(_v)) {}
+        explicit shape(Triangle _v) : d_v_(std::move(_v)) {}
 
       public:
         // TYPES
@@ -130,10 +130,10 @@ struct NestedMod {
         };
 
         // MANIPULATORS
-        variant_t &v_mut() { return v_; }
+        variant_t &v_mut() { return d_v_; }
 
         // ACCESSORS
-        const variant_t &v() const { return v_; }
+        const variant_t &v() const { return d_v_; }
       };
 
       template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -143,17 +143,17 @@ struct NestedMod {
                            const std::shared_ptr<shape> &s) {
         return std::visit(
             Overloaded{[&](const typename shape::Circle _args) -> T1 {
-                         unsigned int n = _args._a0;
+                         unsigned int n = _args.d_a0;
                          return f(std::move(n));
                        },
                        [&](const typename shape::Square _args) -> T1 {
-                         unsigned int n = _args._a0;
+                         unsigned int n = _args.d_a0;
                          return f0(std::move(n));
                        },
                        [&](const typename shape::Triangle _args) -> T1 {
-                         unsigned int n = _args._a0;
-                         unsigned int n0 = _args._a1;
-                         unsigned int n1 = _args._a2;
+                         unsigned int n = _args.d_a0;
+                         unsigned int n0 = _args.d_a1;
+                         unsigned int n1 = _args.d_a2;
                          return f1(std::move(n), std::move(n0), std::move(n1));
                        }},
             s->v());
@@ -166,17 +166,17 @@ struct NestedMod {
                           const std::shared_ptr<shape> &s) {
         return std::visit(
             Overloaded{[&](const typename shape::Circle _args) -> T1 {
-                         unsigned int n = _args._a0;
+                         unsigned int n = _args.d_a0;
                          return f(std::move(n));
                        },
                        [&](const typename shape::Square _args) -> T1 {
-                         unsigned int n = _args._a0;
+                         unsigned int n = _args.d_a0;
                          return f0(std::move(n));
                        },
                        [&](const typename shape::Triangle _args) -> T1 {
-                         unsigned int n = _args._a0;
-                         unsigned int n0 = _args._a1;
-                         unsigned int n1 = _args._a2;
+                         unsigned int n = _args.d_a0;
+                         unsigned int n0 = _args.d_a1;
+                         unsigned int n1 = _args.d_a2;
                          return f1(std::move(n), std::move(n0), std::move(n1));
                        }},
             s->v());
@@ -186,13 +186,13 @@ struct NestedMod {
     };
 
     static unsigned int shape_with_color(const std::shared_ptr<Inner::shape> &s,
-                                         const color c);
-    static unsigned int color_code(const color c);
+                                         const Color c);
+    static unsigned int color_code(const Color c);
   };
 
   static inline const std::shared_ptr<Outer::Inner::shape> my_circle =
       Outer::Inner::shape::ctor::Circle_(5u);
-  static inline const Outer::color my_color = Outer::color::Red;
+  static inline const Outer::Color my_color = Outer::Color::e_RED;
   static inline const unsigned int test_area = Outer::Inner::area(my_circle);
   static inline const unsigned int test_combined =
       Outer::shape_with_color(my_circle, my_color);

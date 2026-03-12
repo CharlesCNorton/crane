@@ -24,23 +24,23 @@ struct ForwardSpecAscii {
   struct node {
     // TYPES
     struct ANode {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct BNode {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     using variant_t = std::variant<ANode, BNode>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit node(ANode _v) : v_(std::move(_v)) {}
+    explicit node(ANode _v) : d_v_(std::move(_v)) {}
 
-    explicit node(BNode _v) : v_(std::move(_v)) {}
+    explicit node(BNode _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -65,21 +65,21 @@ struct ForwardSpecAscii {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, unsigned int> F1>
   static T1 node_rect(F0 &&f, F1 &&f0, const std::shared_ptr<node> &n) {
     return std::visit(Overloaded{[&](const typename node::ANode _args) -> T1 {
-                                   unsigned int n0 = _args._a0;
+                                   unsigned int n0 = _args.d_a0;
                                    return f(std::move(n0));
                                  },
                                  [&](const typename node::BNode _args) -> T1 {
-                                   unsigned int n0 = _args._a0;
+                                   unsigned int n0 = _args.d_a0;
                                    return f0(std::move(n0));
                                  }},
                       n->v());
@@ -89,11 +89,11 @@ struct ForwardSpecAscii {
             MapsTo<T1, unsigned int> F1>
   static T1 node_rec(F0 &&f, F1 &&f0, const std::shared_ptr<node> &n) {
     return std::visit(Overloaded{[&](const typename node::ANode _args) -> T1 {
-                                   unsigned int n0 = _args._a0;
+                                   unsigned int n0 = _args.d_a0;
                                    return f(std::move(n0));
                                  },
                                  [&](const typename node::BNode _args) -> T1 {
-                                   unsigned int n0 = _args._a0;
+                                   unsigned int n0 = _args.d_a0;
                                    return f0(std::move(n0));
                                  }},
                       n->v());

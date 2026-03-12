@@ -239,3 +239,9 @@ val ctor_fallback_id : int -> Id.t
 val db_fallback_name : int -> string
 
 val db_fallback_id : int -> Id.t
+
+val tparam_name : Id.t -> Id.t
+
+val enum_ctor_name : string -> string
+
+val capitalize_last_component : string -> string

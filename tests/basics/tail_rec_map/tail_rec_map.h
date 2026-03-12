@@ -20,82 +20,83 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
-  std::shared_ptr<List<A>> rev() const {
+  std::shared_ptr<List<t_A>> rev() const {
     return std::visit(
-        Overloaded{
-            [](const typename List<A>::nil _args) -> std::shared_ptr<List<A>> {
-              return List<A>::ctor::nil_();
-            },
-            [](const typename List<A>::cons _args) -> std::shared_ptr<List<A>> {
-              A x = _args._a0;
-              std::shared_ptr<List<A>> l_ = _args._a1;
-              return std::move(l_)->rev()->app(
-                  List<A>::ctor::cons_(x, List<A>::ctor::nil_()));
-            }},
+        Overloaded{[](const typename List<t_A>::Nil _args)
+                       -> std::shared_ptr<List<t_A>> {
+                     return List<t_A>::ctor::Nil_();
+                   },
+                   [](const typename List<t_A>::Cons _args)
+                       -> std::shared_ptr<List<t_A>> {
+                     t_A x = _args.d_a0;
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
+                     return std::move(l_)->rev()->app(
+                         List<t_A>::ctor::Cons_(x, List<t_A>::ctor::Nil_()));
+                   }},
         this->v());
   }
 
-  std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
-    return std::visit(Overloaded{[&](const typename List<A>::nil _args)
-                                     -> std::shared_ptr<List<A>> { return m; },
-                                 [&](const typename List<A>::cons _args)
-                                     -> std::shared_ptr<List<A>> {
-                                   A a = _args._a0;
-                                   std::shared_ptr<List<A>> l1 = _args._a1;
-                                   return List<A>::ctor::cons_(
-                                       a, std::move(l1)->app(m));
-                                 }},
-                      this->v());
+  std::shared_ptr<List<t_A>> app(std::shared_ptr<List<t_A>> m) const {
+    return std::visit(
+        Overloaded{[&](const typename List<t_A>::Nil _args)
+                       -> std::shared_ptr<List<t_A>> { return m; },
+                   [&](const typename List<t_A>::Cons _args)
+                       -> std::shared_ptr<List<t_A>> {
+                     t_A a = _args.d_a0;
+                     std::shared_ptr<List<t_A>> l1 = _args.d_a1;
+                     return List<t_A>::ctor::Cons_(a, std::move(l1)->app(m));
+                   }},
+        this->v());
   }
 };
 
@@ -109,18 +110,18 @@ std::shared_ptr<List<T2>> better_map(F0 &&f,
            std::shared_ptr<List<T2>> acc) -> std::shared_ptr<List<T2>> {
     return std::visit(
         Overloaded{
-            [&](const typename List<T1>::nil _args)
+            [&](const typename List<T1>::Nil _args)
                 -> std::shared_ptr<List<T2>> { return std::move(acc)->rev(); },
-            [&](const typename List<T1>::cons _args)
+            [&](const typename List<T1>::Cons _args)
                 -> std::shared_ptr<List<T2>> {
-              T1 x = _args._a0;
-              std::shared_ptr<List<T1>> xs = _args._a1;
+              T1 x = _args.d_a0;
+              std::shared_ptr<List<T1>> xs = _args.d_a1;
               return go(std::move(xs),
-                        List<T2>::ctor::cons_(f(x), std::move(acc)));
+                        List<T2>::ctor::Cons_(f(x), std::move(acc)));
             }},
         l0->v());
   };
-  return go(l, List<T2>::ctor::nil_());
+  return go(l, List<T2>::ctor::Nil_());
 }
 
 #endif // INCLUDED_TAIL_REC_MAP

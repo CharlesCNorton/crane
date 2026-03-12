@@ -55,11 +55,11 @@ unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
 std::shared_ptr<List<unsigned int>>
 WellFoundedRec::countdown_acc(const unsigned int n) {
   if (n <= 0) {
-    return List<unsigned int>::ctor::cons_(0u,
-                                           List<unsigned int>::ctor::nil_());
+    return List<unsigned int>::ctor::Cons_(0u,
+                                           List<unsigned int>::ctor::Nil_());
   } else {
     unsigned int m = n - 1;
-    return List<unsigned int>::ctor::cons_(n, countdown_acc(std::move(m)));
+    return List<unsigned int>::ctor::Cons_(n, countdown_acc(std::move(m)));
   }
 }
 

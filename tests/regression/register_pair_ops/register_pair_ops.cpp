@@ -151,10 +151,10 @@ bool RegisterPairOps::pair_property(const unsigned int r) {
 std::shared_ptr<List<unsigned int>> ListDef::seq(const unsigned int start,
                                                  const unsigned int len) {
   if (len <= 0) {
-    return List<unsigned int>::ctor::nil_();
+    return List<unsigned int>::ctor::Nil_();
   } else {
     unsigned int len0 = len - 1;
-    return List<unsigned int>::ctor::cons_(start,
+    return List<unsigned int>::ctor::Cons_(start,
                                            ListDef::seq((start + 1), len0));
   }
 }

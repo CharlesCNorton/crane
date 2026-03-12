@@ -20,9 +20,9 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename I, typename A>
+template <typename I, typename t_A>
 concept Default = requires {
-  { I::def() } -> std::convertible_to<A>;
+  { I::def() } -> std::convertible_to<t_A>;
 };
 
 struct TodoErasedInstanceParam {

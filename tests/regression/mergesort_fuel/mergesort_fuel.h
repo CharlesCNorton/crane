@@ -21,63 +21,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
   unsigned int length() const {
     return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+        Overloaded{[](const typename List<t_A>::Nil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename List<A>::cons _args) -> unsigned int {
-                     std::shared_ptr<List<A>> l_ = _args._a1;
+                   [](const typename List<t_A>::Cons _args) -> unsigned int {
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
                      return (std::move(l_)->length() + 1);
                    }},
         this->v());

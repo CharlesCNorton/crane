@@ -21,67 +21,67 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
-template <typename I, typename A>
-concept Numeric = requires(A a0) {
+template <typename I, typename t_A>
+concept Numeric = requires(t_A a0) {
   { I::to_nat(a0) } -> std::convertible_to<unsigned int>;
 };
-template <typename I, typename A>
-concept Eq = requires(A a0, A a1) {
+template <typename I, typename t_A>
+concept Eq = requires(t_A a0, t_A a1) {
   { I::eqb(a1, a0) } -> std::convertible_to<bool>;
 };
-template <typename I, typename A>
-concept Ord = requires(A a0, A a1) {
+template <typename I, typename t_A>
+concept Ord = requires(t_A a0, t_A a1) {
   { I::leb(a1, a0) } -> std::convertible_to<bool>;
 };
 
@@ -121,12 +121,12 @@ struct Typeclasses {
       sum = [&](std::shared_ptr<List<T1>> l) -> unsigned int {
         return std::visit(
             Overloaded{
-                [](const typename List<T1>::nil _args) -> unsigned int {
+                [](const typename List<T1>::Nil _args) -> unsigned int {
                   return 0u;
                 },
-                [&](const typename List<T1>::cons _args) -> unsigned int {
-                  T1 x = _args._a0;
-                  std::shared_ptr<List<T1>> rest = _args._a1;
+                [&](const typename List<T1>::Cons _args) -> unsigned int {
+                  T1 x = _args.d_a0;
+                  std::shared_ptr<List<T1>> rest = _args.d_a1;
                   return (_tcI0::to_nat(x) + sum(std::move(rest)));
                 }},
             l->v());
@@ -202,16 +202,16 @@ struct Typeclasses {
   static inline const unsigned int test_option_none =
       numOption<numNat, unsigned int>::to_nat(std::nullopt);
   static inline const unsigned int test_list =
-      numList<numNat, unsigned int>::to_nat(List<unsigned int>::ctor::cons_(
-          1u, List<unsigned int>::ctor::cons_(
-                  2u, List<unsigned int>::ctor::cons_(
-                          3u, List<unsigned int>::ctor::cons_(
-                                  4u, List<unsigned int>::ctor::nil_())))));
+      numList<numNat, unsigned int>::to_nat(List<unsigned int>::ctor::Cons_(
+          1u, List<unsigned int>::ctor::Cons_(
+                  2u, List<unsigned int>::ctor::Cons_(
+                          3u, List<unsigned int>::ctor::Cons_(
+                                  4u, List<unsigned int>::ctor::Nil_())))));
   static inline const unsigned int test_sum =
-      numeric_sum<numNat, unsigned int>(List<unsigned int>::ctor::cons_(
-          10u, List<unsigned int>::ctor::cons_(
-                   20u, List<unsigned int>::ctor::cons_(
-                            30u, List<unsigned int>::ctor::nil_()))));
+      numeric_sum<numNat, unsigned int>(List<unsigned int>::ctor::Cons_(
+          10u, List<unsigned int>::ctor::Cons_(
+                   20u, List<unsigned int>::ctor::Cons_(
+                            30u, List<unsigned int>::ctor::Nil_()))));
   static inline const unsigned int test_double =
       numeric_double<numNat, unsigned int>(7u);
   static inline const std::pair<unsigned int, unsigned int> test_sort_pair =

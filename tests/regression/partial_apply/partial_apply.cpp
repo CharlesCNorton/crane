@@ -35,7 +35,7 @@ PartialApply::prepend_each(const std::shared_ptr<List<unsigned int>> &l) {
   return l->template map<std::function<std::shared_ptr<List<unsigned int>>(
       std::shared_ptr<List<unsigned int>>)>>([](unsigned int x) {
     return [=](std::shared_ptr<List<unsigned int>> x0) mutable {
-      return List<unsigned int>::ctor::cons_(x, x0);
+      return List<unsigned int>::ctor::Cons_(x, x0);
     };
   });
 }

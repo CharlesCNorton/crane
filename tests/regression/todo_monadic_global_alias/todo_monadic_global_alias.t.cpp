@@ -10,7 +10,7 @@ unsigned int nat_to_uint(const std::shared_ptr<Nat> &n) {
   return std::visit(Overloaded{
                         [](const Nat::O &) -> unsigned int { return 0u; },
                         [](const Nat::S &succ) -> unsigned int {
-                          return 1u + nat_to_uint(succ._a0);
+                          return 1u + nat_to_uint(succ.d_a0);
                         },
                     },
                     n->v());

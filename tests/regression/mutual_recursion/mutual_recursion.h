@@ -33,32 +33,32 @@ struct MutualRecursion {
   struct expr {
     // TYPES
     struct Val {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct BinOp {
-      unsigned int _a0;
-      std::shared_ptr<expr> _a1;
-      std::shared_ptr<expr> _a2;
+      unsigned int d_a0;
+      std::shared_ptr<expr> d_a1;
+      std::shared_ptr<expr> d_a2;
     };
 
     struct UnOp {
-      unsigned int _a0;
-      std::shared_ptr<expr> _a1;
+      unsigned int d_a0;
+      std::shared_ptr<expr> d_a1;
     };
 
     using variant_t = std::variant<Val, BinOp, UnOp>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit expr(Val _v) : v_(std::move(_v)) {}
+    explicit expr(Val _v) : d_v_(std::move(_v)) {}
 
-    explicit expr(BinOp _v) : v_(std::move(_v)) {}
+    explicit expr(BinOp _v) : d_v_(std::move(_v)) {}
 
-    explicit expr(UnOp _v) : v_(std::move(_v)) {}
+    explicit expr(UnOp _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -97,10 +97,10 @@ struct MutualRecursion {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -112,19 +112,19 @@ struct MutualRecursion {
                       const std::shared_ptr<expr> &e) {
     return std::visit(
         Overloaded{[&](const typename expr::Val _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename expr::BinOp _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<expr> e0 = _args._a1;
-                     std::shared_ptr<expr> e1 = _args._a2;
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<expr> e0 = _args.d_a1;
+                     std::shared_ptr<expr> e1 = _args.d_a2;
                      return f0(std::move(n), e0, expr_rect<T1>(f, f0, f4, e0),
                                e1, expr_rect<T1>(f, f0, f4, e1));
                    },
                    [&](const typename expr::UnOp _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<expr> e0 = _args._a1;
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<expr> e0 = _args.d_a1;
                      return f4(std::move(n), e0, expr_rect<T1>(f, f0, f4, e0));
                    }},
         e->v());
@@ -138,19 +138,19 @@ struct MutualRecursion {
   static T1 expr_rec(F0 &&f, F1 &&f0, F2 &&f4, const std::shared_ptr<expr> &e) {
     return std::visit(
         Overloaded{[&](const typename expr::Val _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename expr::BinOp _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<expr> e0 = _args._a1;
-                     std::shared_ptr<expr> e1 = _args._a2;
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<expr> e0 = _args.d_a1;
+                     std::shared_ptr<expr> e1 = _args.d_a2;
                      return f0(std::move(n), e0, expr_rec<T1>(f, f0, f4, e0),
                                e1, expr_rec<T1>(f, f0, f4, e1));
                    },
                    [&](const typename expr::UnOp _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<expr> e0 = _args._a1;
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<expr> e0 = _args.d_a1;
                      return f4(std::move(n), e0, expr_rec<T1>(f, f0, f4, e0));
                    }},
         e->v());

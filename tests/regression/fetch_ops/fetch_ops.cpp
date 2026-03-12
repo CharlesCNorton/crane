@@ -27,23 +27,23 @@ std::pair<unsigned int, unsigned int>
 FetchOps::fetch_pair(const std::shared_ptr<List<unsigned int>> &rom_data,
                      const unsigned int addr) {
   return std::visit(
-      Overloaded{[](const typename List<unsigned int>::nil _args)
+      Overloaded{[](const typename List<unsigned int>::Nil _args)
                      -> std::pair<unsigned int, unsigned int> {
                    return std::make_pair(0u, 0u);
                  },
-                 [](const typename List<unsigned int>::cons _args)
+                 [](const typename List<unsigned int>::Cons _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int b1 = _args._a0;
-                   std::shared_ptr<List<unsigned int>> l = _args._a1;
+                   unsigned int b1 = _args.d_a0;
+                   std::shared_ptr<List<unsigned int>> l = _args.d_a1;
                    return std::visit(
                        Overloaded{
-                           [](const typename List<unsigned int>::nil _args)
+                           [](const typename List<unsigned int>::Nil _args)
                                -> std::pair<unsigned int, unsigned int> {
                              return std::make_pair(0u, 0u);
                            },
-                           [&](const typename List<unsigned int>::cons _args)
+                           [&](const typename List<unsigned int>::Cons _args)
                                -> std::pair<unsigned int, unsigned int> {
-                             unsigned int b2 = _args._a0;
+                             unsigned int b2 = _args.d_a0;
                              return std::make_pair(std::move(b1),
                                                    std::move(b2));
                            }},
@@ -56,22 +56,22 @@ std::optional<std::pair<unsigned int, unsigned int>>
 FetchOps::fetch_window(const std::shared_ptr<List<unsigned int>> &rom_data,
                        const unsigned int addr) {
   return std::visit(
-      Overloaded{[](const typename List<unsigned int>::nil _args)
+      Overloaded{[](const typename List<unsigned int>::Nil _args)
                      -> std::optional<std::pair<unsigned int, unsigned int>> {
                    return std::nullopt;
                  },
-                 [&](const typename List<unsigned int>::cons _args)
+                 [&](const typename List<unsigned int>::Cons _args)
                      -> std::optional<std::pair<unsigned int, unsigned int>> {
-                   unsigned int b1 = _args._a0;
-                   std::shared_ptr<List<unsigned int>> l = _args._a1;
+                   unsigned int b1 = _args.d_a0;
+                   std::shared_ptr<List<unsigned int>> l = _args.d_a1;
                    return std::visit(
                        Overloaded{
-                           [](const typename List<unsigned int>::nil _args)
+                           [](const typename List<unsigned int>::Nil _args)
                                -> std::optional<
                                    std::pair<unsigned int, unsigned int>> {
                              return std::nullopt;
                            },
-                           [&](const typename List<unsigned int>::cons _args)
+                           [&](const typename List<unsigned int>::Cons _args)
                                -> std::optional<
                                    std::pair<unsigned int, unsigned int>> {
                              return std::make_optional<

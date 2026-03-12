@@ -18,18 +18,18 @@ unsigned int NestedMod::Outer::Inner::area(
       Overloaded{
           [](const typename NestedMod::Outer::Inner::shape::Circle _args)
               -> unsigned int {
-            unsigned int r = _args._a0;
+            unsigned int r = _args.d_a0;
             return ((r * r) * 3u);
           },
           [](const typename NestedMod::Outer::Inner::shape::Square _args)
               -> unsigned int {
-            unsigned int side = _args._a0;
+            unsigned int side = _args.d_a0;
             return (side * side);
           },
           [](const typename NestedMod::Outer::Inner::shape::Triangle _args)
               -> unsigned int {
-            unsigned int a = _args._a0;
-            unsigned int b = _args._a1;
+            unsigned int a = _args.d_a0;
+            unsigned int b = _args.d_a1;
             return Nat::div((std::move(a) * std::move(b)), 2u);
           }},
       s->v());
@@ -37,32 +37,32 @@ unsigned int NestedMod::Outer::Inner::area(
 
 unsigned int
 NestedMod::Outer::shape_with_color(const std::shared_ptr<Inner::shape> &s,
-                                   const NestedMod::Outer::color c) {
+                                   const NestedMod::Outer::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return (Inner::area(s) + 100u);
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return (Inner::area(s) + 200u);
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return (Inner::area(s) + 300u);
     }
     }
   }();
 }
 
-unsigned int NestedMod::Outer::color_code(const NestedMod::Outer::color c) {
+unsigned int NestedMod::Outer::color_code(const NestedMod::Outer::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return 1u;
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return 2u;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return 3u;
     }
     }

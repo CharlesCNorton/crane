@@ -16,7 +16,7 @@ unsigned int MatchFallbackNat::fallback(
   return std::visit(
       Overloaded{[](const typename MatchFallbackNat::maybe_nat::SomeNat _args)
                      -> unsigned int {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return std::move(n);
                  },
                  [](const typename MatchFallbackNat::maybe_nat::NoneNat _args)

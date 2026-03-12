@@ -32,8 +32,8 @@ struct SingletonRecord {
   static unsigned int unwrap(const std::shared_ptr<wrapper> &w);
   static std::shared_ptr<wrapper> double_wrapped(std::shared_ptr<wrapper> w);
 
-  template <typename A> struct box {
-    A contents;
+  template <typename t_A> struct box {
+    t_A contents;
   };
 
   static inline const std::shared_ptr<box<unsigned int>> boxed_three =

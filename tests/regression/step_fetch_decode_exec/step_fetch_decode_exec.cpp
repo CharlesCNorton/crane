@@ -39,7 +39,7 @@ std::shared_ptr<StepFetchDecodeExec::state> StepFetchDecodeExec::execute(
           },
           [&](const typename StepFetchDecodeExec::instruction::ADD_ACC _args)
               -> std::shared_ptr<StepFetchDecodeExec::state> {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::make_shared<StepFetchDecodeExec::state>(
                 state{((s->acc + std::move(n)) % 16u), (s->pc + 2u), s->rom});
           }},

@@ -22,19 +22,19 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct InductiveInModule {
   struct Inner {
-    enum class color { Red, Green, Blue };
+    enum class Color { e_RED, e_GREEN, e_BLUE };
 
     template <typename T1>
-    static T1 color_rect(const T1 f, const T1 f0, const T1 f1, const color c) {
+    static T1 color_rect(const T1 f, const T1 f0, const T1 f1, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Green: {
+        case Color::e_GREEN: {
           return f0;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f1;
         }
         }
@@ -42,77 +42,77 @@ struct InductiveInModule {
     }
 
     template <typename T1>
-    static T1 color_rec(const T1 f, const T1 f0, const T1 f1, const color c) {
+    static T1 color_rec(const T1 f, const T1 f0, const T1 f1, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Green: {
+        case Color::e_GREEN: {
           return f0;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f1;
         }
         }
       }();
     }
 
-    static inline const color default_color = color::Red;
-    static unsigned int color_to_nat(const color c);
+    static inline const Color default_color = Color::e_RED;
+    static unsigned int color_to_nat(const Color c);
   };
 
   static inline const unsigned int test_color =
-      Inner::color_to_nat(Inner::color::Red);
+      Inner::color_to_nat(Inner::Color::e_RED);
 
   struct Outer {
     struct Middle {
-      template <typename A> struct option {
+      template <typename t_A> struct option {
         // TYPES
         struct None {};
 
         struct Some {
-          A _a0;
+          t_A d_a0;
         };
 
         using variant_t = std::variant<None, Some>;
 
       private:
         // DATA
-        variant_t v_;
+        variant_t d_v_;
 
         // CREATORS
-        explicit option(None _v) : v_(std::move(_v)) {}
+        explicit option(None _v) : d_v_(std::move(_v)) {}
 
-        explicit option(Some _v) : v_(std::move(_v)) {}
+        explicit option(Some _v) : d_v_(std::move(_v)) {}
 
       public:
         // TYPES
         struct ctor {
           ctor() = delete;
 
-          static std::shared_ptr<option<A>> None_() {
-            return std::shared_ptr<option<A>>(new option<A>(None{}));
+          static std::shared_ptr<option<t_A>> None_() {
+            return std::shared_ptr<option<t_A>>(new option<t_A>(None{}));
           }
 
-          static std::shared_ptr<option<A>> Some_(A a0) {
-            return std::shared_ptr<option<A>>(new option<A>(Some{a0}));
+          static std::shared_ptr<option<t_A>> Some_(t_A a0) {
+            return std::shared_ptr<option<t_A>>(new option<t_A>(Some{a0}));
           }
 
-          static std::unique_ptr<option<A>> None_uptr() {
-            return std::unique_ptr<option<A>>(new option<A>(None{}));
+          static std::unique_ptr<option<t_A>> None_uptr() {
+            return std::unique_ptr<option<t_A>>(new option<t_A>(None{}));
           }
 
-          static std::unique_ptr<option<A>> Some_uptr(A a0) {
-            return std::unique_ptr<option<A>>(new option<A>(Some{a0}));
+          static std::unique_ptr<option<t_A>> Some_uptr(t_A a0) {
+            return std::unique_ptr<option<t_A>>(new option<t_A>(Some{a0}));
           }
         };
 
         // MANIPULATORS
-        variant_t &v_mut() { return v_; }
+        variant_t &v_mut() { return d_v_; }
 
         // ACCESSORS
-        const variant_t &v() const { return v_; }
+        const variant_t &v() const { return d_v_; }
       };
 
       template <typename T1, typename T2, MapsTo<T2, T1> F1>
@@ -122,7 +122,7 @@ struct InductiveInModule {
             Overloaded{
                 [&](const typename option<T1>::None _args) -> T2 { return f; },
                 [&](const typename option<T1>::Some _args) -> T2 {
-                  T1 a = _args._a0;
+                  T1 a = _args.d_a0;
                   return f0(a);
                 }},
             o->v());
@@ -135,7 +135,7 @@ struct InductiveInModule {
             Overloaded{
                 [&](const typename option<T1>::None _args) -> T2 { return f; },
                 [&](const typename option<T1>::Some _args) -> T2 {
-                  T1 a = _args._a0;
+                  T1 a = _args.d_a0;
                   return f0(a);
                 }},
             o->v());
@@ -149,7 +149,7 @@ struct InductiveInModule {
                          return default0;
                        },
                        [](const typename option<T1>::Some _args) -> T1 {
-                         T1 x = _args._a0;
+                         T1 x = _args.d_a0;
                          return x;
                        }},
             o->v());

@@ -21,7 +21,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class comparison { Eq, Lt, Gt };
+enum class Comparison { e_EQ, e_LT, e_GT };
 
 struct Pos {
   static unsigned int succ(const unsigned int x);
@@ -33,7 +33,7 @@ struct Pos {
     struct IsNul {};
 
     struct IsPos {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct IsNeg {};
@@ -42,14 +42,14 @@ struct Pos {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit mask(IsNul _v) : v_(std::move(_v)) {}
+    explicit mask(IsNul _v) : d_v_(std::move(_v)) {}
 
-    explicit mask(IsPos _v) : v_(std::move(_v)) {}
+    explicit mask(IsPos _v) : d_v_(std::move(_v)) {}
 
-    explicit mask(IsNeg _v) : v_(std::move(_v)) {}
+    explicit mask(IsNeg _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -82,10 +82,10 @@ struct Pos {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   static std::shared_ptr<mask> succ_double_mask(const std::shared_ptr<mask> &x);
@@ -95,9 +95,9 @@ struct Pos {
                                         const unsigned int y);
   static std::shared_ptr<mask> sub_mask_carry(const unsigned int x,
                                               const unsigned int y);
-  static comparison compare_cont(const comparison r, const unsigned int x,
+  static Comparison compare_cont(const Comparison r, const unsigned int x,
                                  const unsigned int y);
-  static comparison compare(const unsigned int _x0, const unsigned int _x1);
+  static Comparison compare(const unsigned int _x0, const unsigned int _x1);
   static bool eqb(const unsigned int p, const unsigned int q);
 };
 
@@ -106,7 +106,7 @@ struct Coq_Pos {
 };
 
 struct BinNat {
-  static comparison compare(const unsigned int n, const unsigned int m);
+  static Comparison compare(const unsigned int n, const unsigned int m);
   static std::pair<unsigned int, unsigned int>
   pos_div_eucl(const unsigned int a, const unsigned int b);
   static std::pair<unsigned int, unsigned int> div_eucl(const unsigned int a,

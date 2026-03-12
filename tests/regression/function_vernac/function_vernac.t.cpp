@@ -32,12 +32,12 @@ list_to_vector(const std::shared_ptr<List<unsigned int>> &l) {
   auto current = l;
   while (true) {
     bool done = false;
-    std::visit(Overloaded{[&](const typename List<unsigned int>::nil &) {
+    std::visit(Overloaded{[&](const typename List<unsigned int>::Nil &) {
                             done = true;
                           },
-                          [&](const typename List<unsigned int>::cons &c) {
-                            result.push_back(c._a0);
-                            current = c._a1;
+                          [&](const typename List<unsigned int>::Cons &c) {
+                            result.push_back(c.d_a0);
+                            current = c.d_a1;
                           }},
                current->v());
     if (done)
@@ -48,9 +48,9 @@ list_to_vector(const std::shared_ptr<List<unsigned int>> &l) {
 
 std::shared_ptr<List<unsigned int>>
 vector_to_list(const std::vector<unsigned int> &vec) {
-  auto result = List<unsigned int>::ctor::nil_();
+  auto result = List<unsigned int>::ctor::Nil_();
   for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
-    result = List<unsigned int>::ctor::cons_(*it, result);
+    result = List<unsigned int>::ctor::Cons_(*it, result);
   }
   return result;
 }

@@ -29,20 +29,20 @@ struct EvenOdd {
     struct ENil {};
 
     struct ECons {
-      unsigned int _a0;
-      std::shared_ptr<odd_list> _a1;
+      unsigned int d_a0;
+      std::shared_ptr<odd_list> d_a1;
     };
 
     using variant_t = std::variant<ENil, ECons>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit even_list(ENil _v) : v_(std::move(_v)) {}
+    explicit even_list(ENil _v) : d_v_(std::move(_v)) {}
 
-    explicit even_list(ECons _v) : v_(std::move(_v)) {}
+    explicit even_list(ECons _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -69,27 +69,27 @@ struct EvenOdd {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   struct odd_list {
     // TYPES
     struct OCons {
-      unsigned int _a0;
-      std::shared_ptr<even_list> _a1;
+      unsigned int d_a0;
+      std::shared_ptr<even_list> d_a1;
     };
 
     using variant_t = std::variant<OCons>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit odd_list(OCons _v) : v_(std::move(_v)) {}
+    explicit odd_list(OCons _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -108,10 +108,10 @@ struct EvenOdd {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   static unsigned int even_length(const std::shared_ptr<even_list> &e);

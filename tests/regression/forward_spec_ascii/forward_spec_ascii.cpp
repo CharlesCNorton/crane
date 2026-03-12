@@ -20,12 +20,12 @@ ForwardSpecAscii::bump_node(const std::shared_ptr<ForwardSpecAscii::node> &x) {
   return std::visit(
       Overloaded{[](const typename ForwardSpecAscii::node::ANode _args)
                      -> unsigned int {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return helper_nat(std::move(n));
                  },
                  [](const typename ForwardSpecAscii::node::BNode _args)
                      -> unsigned int {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return helper_nat(std::move(n));
                  }},
       x->v());

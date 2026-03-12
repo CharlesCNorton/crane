@@ -20,91 +20,91 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
-template <typename A> struct Sig {
+template <typename t_A> struct Sig {
   // TYPES
-  struct exist {
-    A _a0;
+  struct Exist {
+    t_A d_a0;
   };
 
-  using variant_t = std::variant<exist>;
+  using variant_t = std::variant<Exist>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Sig(exist _v) : v_(std::move(_v)) {}
+  explicit Sig(Exist _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<Sig<A>> exist_(A a0) {
-      return std::shared_ptr<Sig<A>>(new Sig<A>(exist{a0}));
+    static std::shared_ptr<Sig<t_A>> Exist_(t_A a0) {
+      return std::shared_ptr<Sig<t_A>>(new Sig<t_A>(Exist{a0}));
     }
 
-    static std::unique_ptr<Sig<A>> exist_uptr(A a0) {
-      return std::unique_ptr<Sig<A>>(new Sig<A>(exist{a0}));
+    static std::unique_ptr<Sig<t_A>> Exist_uptr(t_A a0) {
+      return std::unique_ptr<Sig<t_A>>(new Sig<t_A>(Exist{a0}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct FunctionVernac {
@@ -130,32 +130,32 @@ struct FunctionVernac {
   struct R_div2 {
     // TYPES
     struct R_div2_0 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct R_div2_1 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct R_div2_2 {
-      unsigned int _a0;
-      unsigned int _a1;
-      unsigned int _a2;
-      std::shared_ptr<R_div2> _a3;
+      unsigned int d_a0;
+      unsigned int d_a1;
+      unsigned int d_a2;
+      std::shared_ptr<R_div2> d_a3;
     };
 
     using variant_t = std::variant<R_div2_0, R_div2_1, R_div2_2>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit R_div2(R_div2_0 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_0 _v) : d_v_(std::move(_v)) {}
 
-    explicit R_div2(R_div2_1 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_1 _v) : d_v_(std::move(_v)) {}
 
-    explicit R_div2(R_div2_2 _v) : v_(std::move(_v)) {}
+    explicit R_div2(R_div2_2 _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -192,10 +192,10 @@ struct FunctionVernac {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -208,18 +208,18 @@ struct FunctionVernac {
                         const std::shared_ptr<R_div2> &r) {
     return std::visit(
         Overloaded{[&](const typename R_div2::R_div2_0 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename R_div2::R_div2_1 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename R_div2::R_div2_2 _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     unsigned int p = _args._a1;
-                     unsigned int _res = _args._a2;
-                     std::shared_ptr<R_div2> r0 = _args._a3;
+                     unsigned int n = _args.d_a0;
+                     unsigned int p = _args.d_a1;
+                     unsigned int _res = _args.d_a2;
+                     std::shared_ptr<R_div2> r0 = _args.d_a3;
                      return f1(std::move(n), p, _res, r0,
                                R_div2_rect<T1>(f, f0, f1, p, _res, r0));
                    }},
@@ -236,18 +236,18 @@ struct FunctionVernac {
                        const std::shared_ptr<R_div2> &r) {
     return std::visit(
         Overloaded{[&](const typename R_div2::R_div2_0 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename R_div2::R_div2_1 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename R_div2::R_div2_2 _args) -> T1 {
-                     unsigned int n = _args._a0;
-                     unsigned int p = _args._a1;
-                     unsigned int _res = _args._a2;
-                     std::shared_ptr<R_div2> r0 = _args._a3;
+                     unsigned int n = _args.d_a0;
+                     unsigned int p = _args.d_a1;
+                     unsigned int _res = _args.d_a2;
+                     std::shared_ptr<R_div2> r0 = _args.d_a3;
                      return f1(std::move(n), p, _res, r0,
                                R_div2_rec<T1>(f, f0, f1, p, _res, r0));
                    }},
@@ -291,12 +291,12 @@ struct FunctionVernac {
                                  const std::shared_ptr<List<unsigned int>> &l) {
     return std::visit(
         Overloaded{
-            [](const typename List<unsigned int>::nil _args) -> unsigned int {
+            [](const typename List<unsigned int>::Nil _args) -> unsigned int {
               return 0u;
             },
-            [&](const typename List<unsigned int>::cons _args) -> unsigned int {
-              unsigned int x = _args._a0;
-              std::shared_ptr<List<unsigned int>> xs = _args._a1;
+            [&](const typename List<unsigned int>::Cons _args) -> unsigned int {
+              unsigned int x = _args.d_a0;
+              std::shared_ptr<List<unsigned int>> xs = _args.d_a1;
               return (std::move(x) + list_sum0(std::move(xs)));
             }},
         l->v());
@@ -309,27 +309,27 @@ struct FunctionVernac {
   struct R_list_sum {
     // TYPES
     struct R_list_sum_0 {
-      std::shared_ptr<List<unsigned int>> _a0;
+      std::shared_ptr<List<unsigned int>> d_a0;
     };
 
     struct R_list_sum_1 {
-      std::shared_ptr<List<unsigned int>> _a0;
-      unsigned int _a1;
-      std::shared_ptr<List<unsigned int>> _a2;
-      unsigned int _a3;
-      std::shared_ptr<R_list_sum> _a4;
+      std::shared_ptr<List<unsigned int>> d_a0;
+      unsigned int d_a1;
+      std::shared_ptr<List<unsigned int>> d_a2;
+      unsigned int d_a3;
+      std::shared_ptr<R_list_sum> d_a4;
     };
 
     using variant_t = std::variant<R_list_sum_0, R_list_sum_1>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit R_list_sum(R_list_sum_0 _v) : v_(std::move(_v)) {}
+    explicit R_list_sum(R_list_sum_0 _v) : d_v_(std::move(_v)) {}
 
-    explicit R_list_sum(R_list_sum_1 _v) : v_(std::move(_v)) {}
+    explicit R_list_sum(R_list_sum_1 _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -365,10 +365,10 @@ struct FunctionVernac {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, std::shared_ptr<List<unsigned int>>> F0,
@@ -382,15 +382,15 @@ struct FunctionVernac {
                             const std::shared_ptr<R_list_sum> &r) {
     return std::visit(
         Overloaded{[&](const typename R_list_sum::R_list_sum_0 _args) -> T1 {
-                     std::shared_ptr<List<unsigned int>> l = _args._a0;
+                     std::shared_ptr<List<unsigned int>> l = _args.d_a0;
                      return f(std::move(l));
                    },
                    [&](const typename R_list_sum::R_list_sum_1 _args) -> T1 {
-                     std::shared_ptr<List<unsigned int>> l = _args._a0;
-                     unsigned int x = _args._a1;
-                     std::shared_ptr<List<unsigned int>> xs = _args._a2;
-                     unsigned int _res = _args._a3;
-                     std::shared_ptr<R_list_sum> r0 = _args._a4;
+                     std::shared_ptr<List<unsigned int>> l = _args.d_a0;
+                     unsigned int x = _args.d_a1;
+                     std::shared_ptr<List<unsigned int>> xs = _args.d_a2;
+                     unsigned int _res = _args.d_a3;
+                     std::shared_ptr<R_list_sum> r0 = _args.d_a4;
                      return f0(std::move(l), std::move(x), xs, _res, r0,
                                R_list_sum_rect<T1>(f, f0, xs, _res, r0));
                    }},
@@ -407,15 +407,15 @@ struct FunctionVernac {
                  const unsigned int _x0, const std::shared_ptr<R_list_sum> &r) {
     return std::visit(
         Overloaded{[&](const typename R_list_sum::R_list_sum_0 _args) -> T1 {
-                     std::shared_ptr<List<unsigned int>> l = _args._a0;
+                     std::shared_ptr<List<unsigned int>> l = _args.d_a0;
                      return f(std::move(l));
                    },
                    [&](const typename R_list_sum::R_list_sum_1 _args) -> T1 {
-                     std::shared_ptr<List<unsigned int>> l = _args._a0;
-                     unsigned int x = _args._a1;
-                     std::shared_ptr<List<unsigned int>> xs = _args._a2;
-                     unsigned int _res = _args._a3;
-                     std::shared_ptr<R_list_sum> r0 = _args._a4;
+                     std::shared_ptr<List<unsigned int>> l = _args.d_a0;
+                     unsigned int x = _args.d_a1;
+                     std::shared_ptr<List<unsigned int>> xs = _args.d_a2;
+                     unsigned int _res = _args.d_a3;
+                     std::shared_ptr<R_list_sum> r0 = _args.d_a4;
                      return f0(std::move(l), std::move(x), xs, _res, r0,
                                R_list_sum_rec<T1>(f, f0, xs, _res, r0));
                    }},
@@ -432,12 +432,12 @@ struct FunctionVernac {
         f1 = f0(l);
     T1 f2 = f(l);
     return std::visit(
-        Overloaded{[&](const typename List<unsigned int>::nil _args) -> auto {
+        Overloaded{[&](const typename List<unsigned int>::Nil _args) -> auto {
                      return f2();
                    },
-                   [&](const typename List<unsigned int>::cons _args) -> auto {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<List<unsigned int>> l0 = _args._a1;
+                   [&](const typename List<unsigned int>::Cons _args) -> auto {
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<List<unsigned int>> l0 = _args.d_a1;
                      std::function<T1(T1)> f3 = f1(std::move(n), std::move(l0));
                      T1 hrec = list_sum_rect<T1>(f, f0, std::move(l0));
                      return f3(hrec);
@@ -459,14 +459,14 @@ struct FunctionVernac {
                      const unsigned int _res);
   static inline const unsigned int test_div2 = div2(10u);
   static inline const unsigned int test_sum =
-      list_sum(List<unsigned int>::ctor::cons_(
+      list_sum(List<unsigned int>::ctor::Cons_(
           1u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               2u,
-              List<unsigned int>::ctor::cons_(
-                  3u, List<unsigned int>::ctor::cons_(
-                          4u, List<unsigned int>::ctor::cons_(
-                                  5u, List<unsigned int>::ctor::nil_()))))));
+              List<unsigned int>::ctor::Cons_(
+                  3u, List<unsigned int>::ctor::Cons_(
+                          4u, List<unsigned int>::ctor::Cons_(
+                                  5u, List<unsigned int>::ctor::Nil_()))))));
 };
 
 #endif // INCLUDED_FUNCTION_VERNAC

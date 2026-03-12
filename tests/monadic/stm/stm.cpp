@@ -49,7 +49,7 @@ void stmtest::stm_enqueue(
     const unsigned int x) {
   std::shared_ptr<List<unsigned int>> xs = q->read();
   return q->write(std::move(xs)->app(
-      List<unsigned int>::ctor::cons_(x, List<unsigned int>::ctor::nil_())));
+      List<unsigned int>::ctor::Cons_(x, List<unsigned int>::ctor::Nil_())));
 }
 
 unsigned int stmtest::stm_dequeue(
@@ -57,12 +57,12 @@ unsigned int stmtest::stm_dequeue(
   std::shared_ptr<List<unsigned int>> xs = q->read();
   return std::visit(
       Overloaded{
-          [](const typename List<unsigned int>::nil _args) -> unsigned int {
+          [](const typename List<unsigned int>::Nil _args) -> unsigned int {
             return stm::retry<unsigned int>();
           },
-          [&](const typename List<unsigned int>::cons _args) -> unsigned int {
-            unsigned int y = _args._a0;
-            std::shared_ptr<List<unsigned int>> ys = _args._a1;
+          [&](const typename List<unsigned int>::Cons _args) -> unsigned int {
+            unsigned int y = _args.d_a0;
+            std::shared_ptr<List<unsigned int>> ys = _args.d_a1;
             q->write(ys);
             return y;
           }},
@@ -78,7 +78,7 @@ unsigned int stmtest::stm_tryDequeue(
 unsigned int stmtest::stm_queue_roundtrip(const unsigned int x) {
   std::shared_ptr<stm::TVar<std::shared_ptr<List<unsigned int>>>> q =
       stm::newTVar<std::shared_ptr<List<unsigned int>>>(
-          List<unsigned int>::ctor::nil_());
+          List<unsigned int>::ctor::Nil_());
   stm_enqueue(q, x);
   return stm_dequeue(q);
 }
@@ -90,7 +90,7 @@ unsigned int stmtest::io_queue_roundtrip(const unsigned int x) {
 unsigned int stmtest::stm_orElse_retry_example() {
   std::shared_ptr<stm::TVar<std::shared_ptr<List<unsigned int>>>> q =
       stm::newTVar<std::shared_ptr<List<unsigned int>>>(
-          List<unsigned int>::ctor::nil_());
+          List<unsigned int>::ctor::Nil_());
   return stm::orElse<unsigned int>(stm_dequeue(q), 42u);
 }
 

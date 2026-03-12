@@ -21,7 +21,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class comparison { Eq, Lt, Gt };
+enum class Comparison { e_EQ, e_LT, e_GT };
 
 struct Pos {
   static mpz_class succ(const mpz_class x);
@@ -29,9 +29,9 @@ struct Pos {
   static mpz_class add_carry(const mpz_class x, const mpz_class y);
   static mpz_class pred_double(const mpz_class x);
   static mpz_class mul(const mpz_class x, const mpz_class y);
-  static comparison compare_cont(const comparison r, const mpz_class x,
+  static Comparison compare_cont(const Comparison r, const mpz_class x,
                                  const mpz_class y);
-  static comparison compare(const mpz_class _x0, const mpz_class _x1);
+  static Comparison compare(const mpz_class _x0, const mpz_class _x1);
   static bool eqb(const mpz_class p, const mpz_class q);
 };
 
@@ -40,11 +40,11 @@ struct BinInt {
   static mpz_class succ_double(const mpz_class x);
   static mpz_class pred_double(const mpz_class x);
   static mpz_class pos_sub(const mpz_class x, const mpz_class y);
-  static comparison compare(const mpz_class x, const mpz_class y);
+  static Comparison compare(const mpz_class x, const mpz_class y);
 };
 
 struct Datatypes {
-  static comparison CompOpp(const comparison r);
+  static Comparison CompOpp(const Comparison r);
 };
 
 struct ZGMPTest {

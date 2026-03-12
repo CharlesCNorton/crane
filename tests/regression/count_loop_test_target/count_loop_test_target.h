@@ -24,8 +24,8 @@ struct CountLoopTestTarget {
   struct instruction {
     // TYPES
     struct ISZ {
-      unsigned int _a0;
-      unsigned int _a1;
+      unsigned int d_a0;
+      unsigned int d_a1;
     };
 
     struct NOP {};
@@ -34,12 +34,12 @@ struct CountLoopTestTarget {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instruction(ISZ _v) : v_(std::move(_v)) {}
+    explicit instruction(ISZ _v) : d_v_(std::move(_v)) {}
 
-    explicit instruction(NOP _v) : v_(std::move(_v)) {}
+    explicit instruction(NOP _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -66,10 +66,10 @@ struct CountLoopTestTarget {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int, unsigned int> F0>
@@ -78,8 +78,8 @@ struct CountLoopTestTarget {
     return std::visit(
         Overloaded{
             [&](const typename instruction::ISZ _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
               return f(std::move(n), std::move(n0));
             },
             [&](const typename instruction::NOP _args) -> T1 { return f0; }},
@@ -92,8 +92,8 @@ struct CountLoopTestTarget {
     return std::visit(
         Overloaded{
             [&](const typename instruction::ISZ _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
               return f(std::move(n), std::move(n0));
             },
             [&](const typename instruction::NOP _args) -> T1 { return f0; }},

@@ -20,42 +20,42 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class unit { tt };
+enum class Unit { e_TT };
 
 struct AxiomTypes {
   using MysteryType = std::any /* AXIOM TO BE REALIZED */;
   static MysteryType mystery_value();
   static MysteryType mystery_function(const MysteryType _x0);
-  static MysteryType use_axiom(const unit _x);
+  static MysteryType use_axiom(const Unit _x);
 
   struct AxiomRecord {
     unsigned int normal_field;
     MysteryType axiom_field;
   };
 
-  static std::shared_ptr<AxiomRecord> make_axiom_record(const unit _x);
+  static std::shared_ptr<AxiomRecord> make_axiom_record(const Unit _x);
   static MysteryType extract_axiom_field(const std::shared_ptr<AxiomRecord> &r);
 
   struct AxiomInductive {
     // TYPES
     struct AxConstr1 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct AxConstr2 {
-      MysteryType _a0;
+      MysteryType d_a0;
     };
 
     using variant_t = std::variant<AxConstr1, AxConstr2>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit AxiomInductive(AxConstr1 _v) : v_(std::move(_v)) {}
+    explicit AxiomInductive(AxConstr1 _v) : d_v_(std::move(_v)) {}
 
-    explicit AxiomInductive(AxConstr2 _v) : v_(std::move(_v)) {}
+    explicit AxiomInductive(AxConstr2 _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -84,10 +84,10 @@ struct AxiomTypes {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -96,11 +96,11 @@ struct AxiomTypes {
                                 const std::shared_ptr<AxiomInductive> &a) {
     return std::visit(
         Overloaded{[&](const typename AxiomInductive::AxConstr1 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename AxiomInductive::AxConstr2 _args) -> T1 {
-                     MysteryType m = _args._a0;
+                     MysteryType m = _args.d_a0;
                      return f0(m);
                    }},
         a->v());
@@ -112,79 +112,79 @@ struct AxiomTypes {
                                const std::shared_ptr<AxiomInductive> &a) {
     return std::visit(
         Overloaded{[&](const typename AxiomInductive::AxConstr1 _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename AxiomInductive::AxConstr2 _args) -> T1 {
-                     MysteryType m = _args._a0;
+                     MysteryType m = _args.d_a0;
                      return f0(m);
                    }},
         a->v());
   }
 
-  static std::shared_ptr<AxiomInductive> use_axiom_inductive(const unit _x);
+  static std::shared_ptr<AxiomInductive> use_axiom_inductive(const Unit _x);
   static MysteryType axiom_identity(const MysteryType x);
-  static MysteryType nested_axiom(const unit _x);
+  static MysteryType nested_axiom(const Unit _x);
 
-  template <typename A> struct list {
+  template <typename t_A> struct list {
     // TYPES
-    struct nil {};
+    struct Nil {};
 
-    struct cons {
-      A _a0;
-      std::shared_ptr<list<A>> _a1;
+    struct Cons {
+      t_A d_a0;
+      std::shared_ptr<list<t_A>> d_a1;
     };
 
-    using variant_t = std::variant<nil, cons>;
+    using variant_t = std::variant<Nil, Cons>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit list(nil _v) : v_(std::move(_v)) {}
+    explicit list(Nil _v) : d_v_(std::move(_v)) {}
 
-    explicit list(cons _v) : v_(std::move(_v)) {}
+    explicit list(Cons _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<list<A>> nil_() {
-        return std::shared_ptr<list<A>>(new list<A>(nil{}));
+      static std::shared_ptr<list<t_A>> Nil_() {
+        return std::shared_ptr<list<t_A>>(new list<t_A>(Nil{}));
       }
 
-      static std::shared_ptr<list<A>>
-      cons_(A a0, const std::shared_ptr<list<A>> &a1) {
-        return std::shared_ptr<list<A>>(new list<A>(cons{a0, a1}));
+      static std::shared_ptr<list<t_A>>
+      Cons_(t_A a0, const std::shared_ptr<list<t_A>> &a1) {
+        return std::shared_ptr<list<t_A>>(new list<t_A>(Cons{a0, a1}));
       }
 
-      static std::unique_ptr<list<A>> nil_uptr() {
-        return std::unique_ptr<list<A>>(new list<A>(nil{}));
+      static std::unique_ptr<list<t_A>> Nil_uptr() {
+        return std::unique_ptr<list<t_A>>(new list<t_A>(Nil{}));
       }
 
-      static std::unique_ptr<list<A>>
-      cons_uptr(A a0, const std::shared_ptr<list<A>> &a1) {
-        return std::unique_ptr<list<A>>(new list<A>(cons{a0, a1}));
+      static std::unique_ptr<list<t_A>>
+      Cons_uptr(t_A a0, const std::shared_ptr<list<t_A>> &a1) {
+        return std::unique_ptr<list<t_A>>(new list<t_A>(Cons{a0, a1}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, typename T2,
             MapsTo<T2, T1, std::shared_ptr<list<T1>>, T2> F1>
   static T2 list_rect(const T2 f, F1 &&f0, const std::shared_ptr<list<T1>> &l) {
     return std::visit(
-        Overloaded{[&](const typename list<T1>::nil _args) -> T2 { return f; },
-                   [&](const typename list<T1>::cons _args) -> T2 {
-                     T1 y = _args._a0;
-                     std::shared_ptr<list<T1>> l0 = _args._a1;
+        Overloaded{[&](const typename list<T1>::Nil _args) -> T2 { return f; },
+                   [&](const typename list<T1>::Cons _args) -> T2 {
+                     T1 y = _args.d_a0;
+                     std::shared_ptr<list<T1>> l0 = _args.d_a1;
                      return f0(y, l0, list_rect<T1, T2>(f, f0, l0));
                    }},
         l->v());
@@ -194,20 +194,20 @@ struct AxiomTypes {
             MapsTo<T2, T1, std::shared_ptr<list<T1>>, T2> F1>
   static T2 list_rec(const T2 f, F1 &&f0, const std::shared_ptr<list<T1>> &l) {
     return std::visit(
-        Overloaded{[&](const typename list<T1>::nil _args) -> T2 { return f; },
-                   [&](const typename list<T1>::cons _args) -> T2 {
-                     T1 y = _args._a0;
-                     std::shared_ptr<list<T1>> l0 = _args._a1;
+        Overloaded{[&](const typename list<T1>::Nil _args) -> T2 { return f; },
+                   [&](const typename list<T1>::Cons _args) -> T2 {
+                     T1 y = _args.d_a0;
+                     std::shared_ptr<list<T1>> l0 = _args.d_a1;
                      return f0(y, l0, list_rec<T1, T2>(f, f0, l0));
                    }},
         l->v());
   }
 
-  static std::shared_ptr<list<MysteryType>> axiom_list(const unit _x);
+  static std::shared_ptr<list<MysteryType>> axiom_list(const Unit _x);
 
   template <typename T1> static T1 poly_axiom(const T1 x) { return x; }
 
-  static MysteryType use_poly_axiom(const unit _x);
+  static MysteryType use_poly_axiom(const Unit _x);
 };
 
 #endif // INCLUDED_AXIOM_TYPES

@@ -77,15 +77,15 @@ unsigned int InstructionClassifiers::count_writes_acc(
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_acc>>::nil _args)
+              std::shared_ptr<InstructionClassifiers::instr_acc>>::Nil _args)
               -> unsigned int { return 0u; },
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_acc>>::cons _args)
+              std::shared_ptr<InstructionClassifiers::instr_acc>>::Cons _args)
               -> unsigned int {
-            std::shared_ptr<InstructionClassifiers::instr_acc> i = _args._a0;
+            std::shared_ptr<InstructionClassifiers::instr_acc> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionClassifiers::instr_acc>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return ([&](void) {
               if (writes_acc(std::move(i))) {
                 return 1u;
@@ -126,15 +126,15 @@ unsigned int InstructionClassifiers::count_writes_ram(
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_ram>>::nil _args)
+              std::shared_ptr<InstructionClassifiers::instr_ram>>::Nil _args)
               -> unsigned int { return 0u; },
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_ram>>::cons _args)
+              std::shared_ptr<InstructionClassifiers::instr_ram>>::Cons _args)
               -> unsigned int {
-            std::shared_ptr<InstructionClassifiers::instr_ram> i = _args._a0;
+            std::shared_ptr<InstructionClassifiers::instr_ram> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionClassifiers::instr_ram>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return ([&](void) {
               if (writes_ram(std::move(i))) {
                 return 1u;
@@ -173,15 +173,15 @@ unsigned int InstructionClassifiers::count_writes_regs(
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_regs>>::nil _args)
+              std::shared_ptr<InstructionClassifiers::instr_regs>>::Nil _args)
               -> unsigned int { return 0u; },
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_regs>>::cons _args)
+              std::shared_ptr<InstructionClassifiers::instr_regs>>::Cons _args)
               -> unsigned int {
-            std::shared_ptr<InstructionClassifiers::instr_regs> i = _args._a0;
+            std::shared_ptr<InstructionClassifiers::instr_regs> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionClassifiers::instr_regs>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return ([&](void) {
               if (writes_regs(std::move(i))) {
                 return 1u;
@@ -222,15 +222,15 @@ unsigned int InstructionClassifiers::count_jumps(
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_jump>>::nil _args)
+              std::shared_ptr<InstructionClassifiers::instr_jump>>::Nil _args)
               -> unsigned int { return 0u; },
           [](const typename List<
-              std::shared_ptr<InstructionClassifiers::instr_jump>>::cons _args)
+              std::shared_ptr<InstructionClassifiers::instr_jump>>::Cons _args)
               -> unsigned int {
-            std::shared_ptr<InstructionClassifiers::instr_jump> i = _args._a0;
+            std::shared_ptr<InstructionClassifiers::instr_jump> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionClassifiers::instr_jump>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return ([&](void) {
               if (is_jump(std::move(i))) {
                 return 1u;

@@ -21,55 +21,55 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct RecRecord {
-  template <typename A> struct rlist {
+  template <typename t_A> struct rlist {
     // TYPES
-    struct rnil {};
+    struct Rnil {};
 
-    struct rcons {
-      A _a0;
-      std::shared_ptr<rlist<A>> _a1;
+    struct Rcons {
+      t_A d_a0;
+      std::shared_ptr<rlist<t_A>> d_a1;
     };
 
-    using variant_t = std::variant<rnil, rcons>;
+    using variant_t = std::variant<Rnil, Rcons>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit rlist(rnil _v) : v_(std::move(_v)) {}
+    explicit rlist(Rnil _v) : d_v_(std::move(_v)) {}
 
-    explicit rlist(rcons _v) : v_(std::move(_v)) {}
+    explicit rlist(Rcons _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<rlist<A>> rnil_() {
-        return std::shared_ptr<rlist<A>>(new rlist<A>(rnil{}));
+      static std::shared_ptr<rlist<t_A>> Rnil_() {
+        return std::shared_ptr<rlist<t_A>>(new rlist<t_A>(Rnil{}));
       }
 
-      static std::shared_ptr<rlist<A>>
-      rcons_(A a0, const std::shared_ptr<rlist<A>> &a1) {
-        return std::shared_ptr<rlist<A>>(new rlist<A>(rcons{a0, a1}));
+      static std::shared_ptr<rlist<t_A>>
+      Rcons_(t_A a0, const std::shared_ptr<rlist<t_A>> &a1) {
+        return std::shared_ptr<rlist<t_A>>(new rlist<t_A>(Rcons{a0, a1}));
       }
 
-      static std::unique_ptr<rlist<A>> rnil_uptr() {
-        return std::unique_ptr<rlist<A>>(new rlist<A>(rnil{}));
+      static std::unique_ptr<rlist<t_A>> Rnil_uptr() {
+        return std::unique_ptr<rlist<t_A>>(new rlist<t_A>(Rnil{}));
       }
 
-      static std::unique_ptr<rlist<A>>
-      rcons_uptr(A a0, const std::shared_ptr<rlist<A>> &a1) {
-        return std::unique_ptr<rlist<A>>(new rlist<A>(rcons{a0, a1}));
+      static std::unique_ptr<rlist<t_A>>
+      Rcons_uptr(t_A a0, const std::shared_ptr<rlist<t_A>> &a1) {
+        return std::unique_ptr<rlist<t_A>>(new rlist<t_A>(Rcons{a0, a1}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, typename T2,
@@ -78,10 +78,10 @@ struct RecRecord {
                        const std::shared_ptr<rlist<T1>> &r) {
     return std::visit(
         Overloaded{
-            [&](const typename rlist<T1>::rnil _args) -> T2 { return f; },
-            [&](const typename rlist<T1>::rcons _args) -> T2 {
-              T1 y = _args._a0;
-              std::shared_ptr<rlist<T1>> r0 = _args._a1;
+            [&](const typename rlist<T1>::Rnil _args) -> T2 { return f; },
+            [&](const typename rlist<T1>::Rcons _args) -> T2 {
+              T1 y = _args.d_a0;
+              std::shared_ptr<rlist<T1>> r0 = _args.d_a1;
               return f0(y, r0, rlist_rect<T1, T2>(f, f0, r0));
             }},
         r->v());
@@ -93,10 +93,10 @@ struct RecRecord {
                       const std::shared_ptr<rlist<T1>> &r) {
     return std::visit(
         Overloaded{
-            [&](const typename rlist<T1>::rnil _args) -> T2 { return f; },
-            [&](const typename rlist<T1>::rcons _args) -> T2 {
-              T1 y = _args._a0;
-              std::shared_ptr<rlist<T1>> r0 = _args._a1;
+            [&](const typename rlist<T1>::Rnil _args) -> T2 { return f; },
+            [&](const typename rlist<T1>::Rcons _args) -> T2 {
+              T1 y = _args.d_a0;
+              std::shared_ptr<rlist<T1>> r0 = _args.d_a1;
               return f0(y, r0, rlist_rec<T1, T2>(f, f0, r0));
             }},
         r->v());
@@ -141,11 +141,11 @@ struct RecRecord {
   template <typename T1>
   static unsigned int rlist_length(const std::shared_ptr<rlist<T1>> &l) {
     return std::visit(
-        Overloaded{[](const typename rlist<T1>::rnil _args) -> unsigned int {
+        Overloaded{[](const typename rlist<T1>::Rnil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename rlist<T1>::rcons _args) -> unsigned int {
-                     std::shared_ptr<rlist<T1>> rest = _args._a1;
+                   [](const typename rlist<T1>::Rcons _args) -> unsigned int {
+                     std::shared_ptr<rlist<T1>> rest = _args.d_a1;
                      return (rlist_length<T1>(std::move(rest)) + 1);
                    }},
         l->v());
@@ -154,10 +154,10 @@ struct RecRecord {
   static unsigned int rlist_sum(const std::shared_ptr<rlist<unsigned int>> &l);
   static unsigned int rnode_depth(const std::shared_ptr<RNode> &r);
   static inline const std::shared_ptr<rlist<unsigned int>> test_rlist =
-      rlist<unsigned int>::ctor::rcons_(
-          1u, rlist<unsigned int>::ctor::rcons_(
-                  2u, rlist<unsigned int>::ctor::rcons_(
-                          3u, rlist<unsigned int>::ctor::rnil_())));
+      rlist<unsigned int>::ctor::Rcons_(
+          1u, rlist<unsigned int>::ctor::Rcons_(
+                  2u, rlist<unsigned int>::ctor::Rcons_(
+                          3u, rlist<unsigned int>::ctor::Rnil_())));
   static inline const unsigned int test_rlist_len =
       rlist_length<unsigned int>(test_rlist);
   static inline const unsigned int test_rlist_sum = rlist_sum(test_rlist);

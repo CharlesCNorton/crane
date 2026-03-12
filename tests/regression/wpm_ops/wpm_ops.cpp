@@ -16,28 +16,28 @@ bool WpmOps::nat_list_eqb(const std::shared_ptr<List<unsigned int>> &xs,
                           const std::shared_ptr<List<unsigned int>> &ys) {
   return std::visit(
       Overloaded{
-          [&](const typename List<unsigned int>::nil _args) -> bool {
+          [&](const typename List<unsigned int>::Nil _args) -> bool {
             return std::visit(
                 Overloaded{
-                    [](const typename List<unsigned int>::nil _args) -> bool {
+                    [](const typename List<unsigned int>::Nil _args) -> bool {
                       return true;
                     },
-                    [](const typename List<unsigned int>::cons _args) -> bool {
+                    [](const typename List<unsigned int>::Cons _args) -> bool {
                       return false;
                     }},
                 ys->v());
           },
-          [&](const typename List<unsigned int>::cons _args) -> bool {
-            unsigned int x = _args._a0;
-            std::shared_ptr<List<unsigned int>> xs_ = _args._a1;
+          [&](const typename List<unsigned int>::Cons _args) -> bool {
+            unsigned int x = _args.d_a0;
+            std::shared_ptr<List<unsigned int>> xs_ = _args.d_a1;
             return std::visit(
                 Overloaded{
-                    [](const typename List<unsigned int>::nil _args) -> bool {
+                    [](const typename List<unsigned int>::Nil _args) -> bool {
                       return false;
                     },
-                    [&](const typename List<unsigned int>::cons _args) -> bool {
-                      unsigned int y = _args._a0;
-                      std::shared_ptr<List<unsigned int>> ys_ = _args._a1;
+                    [&](const typename List<unsigned int>::Cons _args) -> bool {
+                      unsigned int y = _args.d_a0;
+                      std::shared_ptr<List<unsigned int>> ys_ = _args.d_a1;
                       return ((std::move(x) == std::move(y)) &&
                               nat_list_eqb(std::move(xs_), std::move(ys_)));
                     }},

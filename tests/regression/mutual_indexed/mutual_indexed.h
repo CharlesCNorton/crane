@@ -29,21 +29,21 @@ struct MutualIndexed {
     struct ELeaf {};
 
     struct ENode {
-      unsigned int _a0;
-      unsigned int _a1;
-      std::shared_ptr<OddTree> _a2;
+      unsigned int d_a0;
+      unsigned int d_a1;
+      std::shared_ptr<OddTree> d_a2;
     };
 
     using variant_t = std::variant<ELeaf, ENode>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit EvenTree(ELeaf _v) : v_(std::move(_v)) {}
+    explicit EvenTree(ELeaf _v) : d_v_(std::move(_v)) {}
 
-    explicit EvenTree(ENode _v) : v_(std::move(_v)) {}
+    explicit EvenTree(ENode _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -72,28 +72,28 @@ struct MutualIndexed {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   struct OddTree {
     // TYPES
     struct ONode {
-      unsigned int _a0;
-      unsigned int _a1;
-      std::shared_ptr<EvenTree> _a2;
+      unsigned int d_a0;
+      unsigned int d_a1;
+      std::shared_ptr<EvenTree> d_a2;
     };
 
     using variant_t = std::variant<ONode>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit OddTree(ONode _v) : v_(std::move(_v)) {}
+    explicit OddTree(ONode _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -114,10 +114,10 @@ struct MutualIndexed {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1,
@@ -128,9 +128,9 @@ struct MutualIndexed {
         Overloaded{
             [&](const typename EvenTree::ELeaf _args) -> T1 { return f; },
             [&](const typename EvenTree::ENode _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
-              std::shared_ptr<OddTree> o = _args._a2;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
+              std::shared_ptr<OddTree> o = _args.d_a2;
               return f0(std::move(n), std::move(n0), std::move(o));
             }},
         e->v());
@@ -144,9 +144,9 @@ struct MutualIndexed {
         Overloaded{
             [&](const typename EvenTree::ELeaf _args) -> T1 { return f; },
             [&](const typename EvenTree::ENode _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
-              std::shared_ptr<OddTree> o = _args._a2;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
+              std::shared_ptr<OddTree> o = _args.d_a2;
               return f0(std::move(n), std::move(n0), std::move(o));
             }},
         e->v());
@@ -159,9 +159,9 @@ struct MutualIndexed {
                          const std::shared_ptr<OddTree> &o) {
     return std::visit(
         Overloaded{[&](const typename OddTree::ONode _args) -> T1 {
-          unsigned int n = _args._a0;
-          unsigned int n0 = _args._a1;
-          std::shared_ptr<EvenTree> e = _args._a2;
+          unsigned int n = _args.d_a0;
+          unsigned int n0 = _args.d_a1;
+          std::shared_ptr<EvenTree> e = _args.d_a2;
           return f(std::move(n), std::move(n0), std::move(e));
         }},
         o->v());
@@ -174,9 +174,9 @@ struct MutualIndexed {
                         const std::shared_ptr<OddTree> &o) {
     return std::visit(
         Overloaded{[&](const typename OddTree::ONode _args) -> T1 {
-          unsigned int n = _args._a0;
-          unsigned int n0 = _args._a1;
-          std::shared_ptr<EvenTree> e = _args._a2;
+          unsigned int n = _args.d_a0;
+          unsigned int n0 = _args.d_a1;
+          std::shared_ptr<EvenTree> e = _args.d_a2;
           return f(std::move(n), std::move(n0), std::move(e));
         }},
         o->v());

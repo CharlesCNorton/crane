@@ -33,7 +33,7 @@ void aSsErT(bool condition, const char *message, int line) {
 int nat_to_int(const std::shared_ptr<Nat> &n) {
   return std::visit(
       Overloaded{[](const Nat::O) -> int { return 0; },
-                 [](const Nat::S s) -> int { return 1 + nat_to_int(s._a0); }},
+                 [](const Nat::S s) -> int { return 1 + nat_to_int(s.d_a0); }},
       n->v());
 }
 
@@ -43,10 +43,10 @@ std::vector<A> list_to_vec(const std::shared_ptr<List<A>> &l) {
   auto cur = l;
   while (true) {
     bool done = std::visit(
-        Overloaded{[&](const typename List<A>::nil) -> bool { return true; },
-                   [&](const typename List<A>::cons c) -> bool {
-                     result.push_back(c._a0);
-                     cur = c._a1;
+        Overloaded{[&](const typename List<A>::Nil) -> bool { return true; },
+                   [&](const typename List<A>::Cons c) -> bool {
+                     result.push_back(c.d_a0);
+                     cur = c.d_a1;
                      return false;
                    }},
         cur->v());

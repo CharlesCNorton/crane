@@ -23,9 +23,9 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 struct ConstrainedPoly {
   template <typename T1> static T1 poly_id(const T1 x) { return x; }
 
-  template <typename A, typename B> struct UPair {
-    A ufst;
-    B usnd;
+  template <typename t_A, typename t_B> struct UPair {
+    t_A ufst;
+    t_B usnd;
   };
 
   template <typename T1, typename T2>
@@ -38,10 +38,10 @@ struct ConstrainedPoly {
     return std::make_shared<UPair<T1, T2>>(UPair<T1, T2>{a, b});
   }
 
-  template <typename A> struct UOption {
+  template <typename t_A> struct UOption {
     // TYPES
     struct USome {
-      A _a0;
+      t_A d_a0;
     };
 
     struct UNone {};
@@ -50,40 +50,40 @@ struct ConstrainedPoly {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit UOption(USome _v) : v_(std::move(_v)) {}
+    explicit UOption(USome _v) : d_v_(std::move(_v)) {}
 
-    explicit UOption(UNone _v) : v_(std::move(_v)) {}
+    explicit UOption(UNone _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<UOption<A>> USome_(A a0) {
-        return std::shared_ptr<UOption<A>>(new UOption<A>(USome{a0}));
+      static std::shared_ptr<UOption<t_A>> USome_(t_A a0) {
+        return std::shared_ptr<UOption<t_A>>(new UOption<t_A>(USome{a0}));
       }
 
-      static std::shared_ptr<UOption<A>> UNone_() {
-        return std::shared_ptr<UOption<A>>(new UOption<A>(UNone{}));
+      static std::shared_ptr<UOption<t_A>> UNone_() {
+        return std::shared_ptr<UOption<t_A>>(new UOption<t_A>(UNone{}));
       }
 
-      static std::unique_ptr<UOption<A>> USome_uptr(A a0) {
-        return std::unique_ptr<UOption<A>>(new UOption<A>(USome{a0}));
+      static std::unique_ptr<UOption<t_A>> USome_uptr(t_A a0) {
+        return std::unique_ptr<UOption<t_A>>(new UOption<t_A>(USome{a0}));
       }
 
-      static std::unique_ptr<UOption<A>> UNone_uptr() {
-        return std::unique_ptr<UOption<A>>(new UOption<A>(UNone{}));
+      static std::unique_ptr<UOption<t_A>> UNone_uptr() {
+        return std::unique_ptr<UOption<t_A>>(new UOption<t_A>(UNone{}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, typename T2, MapsTo<T2, T1> F0>
@@ -92,7 +92,7 @@ struct ConstrainedPoly {
     return std::visit(
         Overloaded{
             [&](const typename UOption<T1>::USome _args) -> T2 {
-              T1 a = _args._a0;
+              T1 a = _args.d_a0;
               return f(a);
             },
             [&](const typename UOption<T1>::UNone _args) -> T2 { return f0; }},
@@ -105,7 +105,7 @@ struct ConstrainedPoly {
     return std::visit(
         Overloaded{
             [&](const typename UOption<T1>::USome _args) -> T2 {
-              T1 a = _args._a0;
+              T1 a = _args.d_a0;
               return f(a);
             },
             [&](const typename UOption<T1>::UNone _args) -> T2 { return f0; }},
@@ -117,7 +117,7 @@ struct ConstrainedPoly {
   uoption_map(F0 &&f, const std::shared_ptr<UOption<T1>> &o) {
     return std::visit(Overloaded{[&](const typename UOption<T1>::USome _args)
                                      -> std::shared_ptr<UOption<T2>> {
-                                   T1 x = _args._a0;
+                                   T1 x = _args.d_a0;
                                    return UOption<T2>::ctor::USome_(f(x));
                                  },
                                  [](const typename UOption<T1>::UNone _args)

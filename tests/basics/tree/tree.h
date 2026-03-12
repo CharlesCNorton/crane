@@ -20,26 +20,26 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class bool0 { true0, false0 };
+enum class Bool0 { e_TRUE0, e_FALSE0 };
 
 struct Nat : public std::enable_shared_from_this<Nat> {
   // TYPES
   struct O {};
 
   struct S {
-    std::shared_ptr<Nat> _a0;
+    std::shared_ptr<Nat> d_a0;
   };
 
   using variant_t = std::variant<O, S>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(O _v) : d_v_(std::move(_v)) {}
 
-  explicit Nat(S _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
@@ -64,10 +64,10 @@ public:
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
   std::shared_ptr<Nat> max(std::shared_ptr<Nat> m) const {
     return std::visit(
@@ -76,7 +76,7 @@ public:
               return m;
             },
             [&](const typename Nat::S _args) -> std::shared_ptr<Nat> {
-              std::shared_ptr<Nat> n_ = _args._a0;
+              std::shared_ptr<Nat> n_ = _args.d_a0;
               return std::visit(
                   Overloaded{
                       [&](const typename Nat::O _args) -> std::shared_ptr<Nat> {
@@ -84,7 +84,7 @@ public:
                             this->shared_from_this());
                       },
                       [&](const typename Nat::S _args) -> std::shared_ptr<Nat> {
-                        std::shared_ptr<Nat> m_ = _args._a0;
+                        std::shared_ptr<Nat> m_ = _args.d_a0;
                         return Nat::ctor::S_(std::move(n_)->max(std::move(m_)));
                       }},
                   m->v());
@@ -98,172 +98,172 @@ public:
                      return m;
                    },
                    [&](const typename Nat::S _args) -> std::shared_ptr<Nat> {
-                     std::shared_ptr<Nat> p = _args._a0;
+                     std::shared_ptr<Nat> p = _args.d_a0;
                      return Nat::ctor::S_(std::move(p)->add(m));
                    }},
         this->v());
   }
 };
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
-  std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
-    return std::visit(Overloaded{[&](const typename List<A>::nil _args)
-                                     -> std::shared_ptr<List<A>> { return m; },
-                                 [&](const typename List<A>::cons _args)
-                                     -> std::shared_ptr<List<A>> {
-                                   A a = _args._a0;
-                                   std::shared_ptr<List<A>> l1 = _args._a1;
-                                   return List<A>::ctor::cons_(
-                                       a, std::move(l1)->app(m));
-                                 }},
-                      this->v());
+  std::shared_ptr<List<t_A>> app(std::shared_ptr<List<t_A>> m) const {
+    return std::visit(
+        Overloaded{[&](const typename List<t_A>::Nil _args)
+                       -> std::shared_ptr<List<t_A>> { return m; },
+                   [&](const typename List<t_A>::Cons _args)
+                       -> std::shared_ptr<List<t_A>> {
+                     t_A a = _args.d_a0;
+                     std::shared_ptr<List<t_A>> l1 = _args.d_a1;
+                     return List<t_A>::ctor::Cons_(a, std::move(l1)->app(m));
+                   }},
+        this->v());
   }
 };
 
 struct Tree {
-  template <typename A> struct tree {
+  template <typename t_A> struct tree {
     // TYPES
-    struct leaf {};
+    struct Leaf {};
 
-    struct node {
-      std::shared_ptr<tree<A>> _a0;
-      A _a1;
-      std::shared_ptr<tree<A>> _a2;
+    struct Node {
+      std::shared_ptr<tree<t_A>> d_a0;
+      t_A d_a1;
+      std::shared_ptr<tree<t_A>> d_a2;
     };
 
-    using variant_t = std::variant<leaf, node>;
+    using variant_t = std::variant<Leaf, Node>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit tree(leaf _v) : v_(std::move(_v)) {}
+    explicit tree(Leaf _v) : d_v_(std::move(_v)) {}
 
-    explicit tree(node _v) : v_(std::move(_v)) {}
+    explicit tree(Node _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<tree<A>> leaf_() {
-        return std::shared_ptr<tree<A>>(new tree<A>(leaf{}));
+      static std::shared_ptr<tree<t_A>> Leaf_() {
+        return std::shared_ptr<tree<t_A>>(new tree<t_A>(Leaf{}));
       }
 
-      static std::shared_ptr<tree<A>>
-      node_(const std::shared_ptr<tree<A>> &a0, A a1,
-            const std::shared_ptr<tree<A>> &a2) {
-        return std::shared_ptr<tree<A>>(new tree<A>(node{a0, a1, a2}));
+      static std::shared_ptr<tree<t_A>>
+      Node_(const std::shared_ptr<tree<t_A>> &a0, t_A a1,
+            const std::shared_ptr<tree<t_A>> &a2) {
+        return std::shared_ptr<tree<t_A>>(new tree<t_A>(Node{a0, a1, a2}));
       }
 
-      static std::unique_ptr<tree<A>> leaf_uptr() {
-        return std::unique_ptr<tree<A>>(new tree<A>(leaf{}));
+      static std::unique_ptr<tree<t_A>> Leaf_uptr() {
+        return std::unique_ptr<tree<t_A>>(new tree<t_A>(Leaf{}));
       }
 
-      static std::unique_ptr<tree<A>>
-      node_uptr(const std::shared_ptr<tree<A>> &a0, A a1,
-                const std::shared_ptr<tree<A>> &a2) {
-        return std::unique_ptr<tree<A>>(new tree<A>(node{a0, a1, a2}));
+      static std::unique_ptr<tree<t_A>>
+      Node_uptr(const std::shared_ptr<tree<t_A>> &a0, t_A a1,
+                const std::shared_ptr<tree<t_A>> &a2) {
+        return std::unique_ptr<tree<t_A>>(new tree<t_A>(Node{a0, a1, a2}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
 
-    template <typename T1, MapsTo<T1, std::shared_ptr<tree<A>>, T1, A,
-                                  std::shared_ptr<tree<A>>, T1>
+    template <typename T1, MapsTo<T1, std::shared_ptr<tree<t_A>>, T1, t_A,
+                                  std::shared_ptr<tree<t_A>>, T1>
                                F1>
     T1 tree_rec(const T1 f, F1 &&f0) const {
       return std::visit(
           Overloaded{
-              [&](const typename tree<A>::leaf _args) -> T1 { return f; },
-              [&](const typename tree<A>::node _args) -> T1 {
-                std::shared_ptr<tree<A>> t0 = _args._a0;
-                A y = _args._a1;
-                std::shared_ptr<tree<A>> t1 = _args._a2;
+              [&](const typename tree<t_A>::Leaf _args) -> T1 { return f; },
+              [&](const typename tree<t_A>::Node _args) -> T1 {
+                std::shared_ptr<tree<t_A>> t0 = _args.d_a0;
+                t_A y = _args.d_a1;
+                std::shared_ptr<tree<t_A>> t1 = _args.d_a2;
                 return f0(t0, t0->template tree_rec<T1>(f, f0), y, t1,
                           t1->template tree_rec<T1>(f, f0));
               }},
           this->v());
     }
 
-    template <typename T1, MapsTo<T1, std::shared_ptr<tree<A>>, T1, A,
-                                  std::shared_ptr<tree<A>>, T1>
+    template <typename T1, MapsTo<T1, std::shared_ptr<tree<t_A>>, T1, t_A,
+                                  std::shared_ptr<tree<t_A>>, T1>
                                F1>
     T1 tree_rect(const T1 f, F1 &&f0) const {
       return std::visit(
           Overloaded{
-              [&](const typename tree<A>::leaf _args) -> T1 { return f; },
-              [&](const typename tree<A>::node _args) -> T1 {
-                std::shared_ptr<tree<A>> t0 = _args._a0;
-                A y = _args._a1;
-                std::shared_ptr<tree<A>> t1 = _args._a2;
+              [&](const typename tree<t_A>::Leaf _args) -> T1 { return f; },
+              [&](const typename tree<t_A>::Node _args) -> T1 {
+                std::shared_ptr<tree<t_A>> t0 = _args.d_a0;
+                t_A y = _args.d_a1;
+                std::shared_ptr<tree<t_A>> t1 = _args.d_a2;
                 return f0(t0, t0->template tree_rect<T1>(f, f0), y, t1,
                           t1->template tree_rect<T1>(f, f0));
               }},
           this->v());
     }
 
-    bool0 is_leaf() const {
+    Bool0 is_leaf() const {
       return std::visit(
-          Overloaded{[](const typename tree<A>::leaf _args) -> bool0 {
-                       return bool0::true0;
+          Overloaded{[](const typename tree<t_A>::Leaf _args) -> Bool0 {
+                       return Bool0::e_TRUE0;
                      },
-                     [](const typename tree<A>::node _args) -> bool0 {
-                       return bool0::false0;
+                     [](const typename tree<t_A>::Node _args) -> Bool0 {
+                       return Bool0::e_FALSE0;
                      }},
           this->v());
     }
@@ -271,12 +271,12 @@ struct Tree {
     std::shared_ptr<Nat> size() const {
       return std::visit(
           Overloaded{
-              [](const typename tree<A>::leaf _args) -> std::shared_ptr<Nat> {
+              [](const typename tree<t_A>::Leaf _args) -> std::shared_ptr<Nat> {
                 return Nat::ctor::S_(Nat::ctor::O_());
               },
-              [](const typename tree<A>::node _args) -> std::shared_ptr<Nat> {
-                std::shared_ptr<tree<A>> l = _args._a0;
-                std::shared_ptr<tree<A>> r = _args._a2;
+              [](const typename tree<t_A>::Node _args) -> std::shared_ptr<Nat> {
+                std::shared_ptr<tree<t_A>> l = _args.d_a0;
+                std::shared_ptr<tree<t_A>> r = _args.d_a2;
                 return Nat::ctor::S_(Nat::ctor::O_())
                     ->add(std::move(l)->size())
                     ->add(std::move(r)->size());
@@ -287,74 +287,75 @@ struct Tree {
     std::shared_ptr<Nat> height() const {
       return std::visit(
           Overloaded{
-              [](const typename tree<A>::leaf _args) -> std::shared_ptr<Nat> {
+              [](const typename tree<t_A>::Leaf _args) -> std::shared_ptr<Nat> {
                 return Nat::ctor::S_(Nat::ctor::O_());
               },
-              [](const typename tree<A>::node _args) -> std::shared_ptr<Nat> {
-                std::shared_ptr<tree<A>> l = _args._a0;
-                std::shared_ptr<tree<A>> r = _args._a2;
+              [](const typename tree<t_A>::Node _args) -> std::shared_ptr<Nat> {
+                std::shared_ptr<tree<t_A>> l = _args.d_a0;
+                std::shared_ptr<tree<t_A>> r = _args.d_a2;
                 return Nat::ctor::S_(Nat::ctor::O_())
                     ->add(std::move(l)->height()->max(std::move(r)->height()));
               }},
           this->v());
     }
 
-    std::shared_ptr<List<A>> flatten() const {
+    std::shared_ptr<List<t_A>> flatten() const {
       return std::visit(
-          Overloaded{
-              [](const typename tree<A>::leaf _args)
-                  -> std::shared_ptr<List<A>> { return List<A>::ctor::nil_(); },
-              [](const typename tree<A>::node _args)
-                  -> std::shared_ptr<List<A>> {
-                std::shared_ptr<tree<A>> l = _args._a0;
-                A x = _args._a1;
-                std::shared_ptr<tree<A>> r = _args._a2;
-                return std::move(l)->flatten()->app(
-                    List<A>::ctor::cons_(x, std::move(r)->flatten()));
-              }},
+          Overloaded{[](const typename tree<t_A>::Leaf _args)
+                         -> std::shared_ptr<List<t_A>> {
+                       return List<t_A>::ctor::Nil_();
+                     },
+                     [](const typename tree<t_A>::Node _args)
+                         -> std::shared_ptr<List<t_A>> {
+                       std::shared_ptr<tree<t_A>> l = _args.d_a0;
+                       t_A x = _args.d_a1;
+                       std::shared_ptr<tree<t_A>> r = _args.d_a2;
+                       return std::move(l)->flatten()->app(
+                           List<t_A>::ctor::Cons_(x, std::move(r)->flatten()));
+                     }},
           this->v());
     }
 
-    template <MapsTo<A, A, A> F0>
-    std::shared_ptr<tree<A>> merge(F0 &&combine,
-                                   const std::shared_ptr<tree<A>> &t2) const {
+    template <MapsTo<t_A, t_A, t_A> F0>
+    std::shared_ptr<tree<t_A>>
+    merge(F0 &&combine, const std::shared_ptr<tree<t_A>> &t2) const {
       return std::visit(
           Overloaded{
-              [&](const typename tree<A>::leaf _args)
-                  -> std::shared_ptr<tree<A>> {
+              [&](const typename tree<t_A>::Leaf _args)
+                  -> std::shared_ptr<tree<t_A>> {
                 return std::visit(
-                    Overloaded{[](const typename tree<A>::leaf _args)
-                                   -> std::shared_ptr<tree<A>> {
-                                 return tree<A>::ctor::leaf_();
+                    Overloaded{[](const typename tree<t_A>::Leaf _args)
+                                   -> std::shared_ptr<tree<t_A>> {
+                                 return tree<t_A>::ctor::Leaf_();
                                },
-                               [](const typename tree<A>::node _args)
-                                   -> std::shared_ptr<tree<A>> {
-                                 A a = _args._a1;
-                                 return tree<A>::ctor::node_(
-                                     tree<A>::ctor::leaf_(), a,
-                                     tree<A>::ctor::leaf_());
+                               [](const typename tree<t_A>::Node _args)
+                                   -> std::shared_ptr<tree<t_A>> {
+                                 t_A a = _args.d_a1;
+                                 return tree<t_A>::ctor::Node_(
+                                     tree<t_A>::ctor::Leaf_(), a,
+                                     tree<t_A>::ctor::Leaf_());
                                }},
                     t2->v());
               },
-              [&](const typename tree<A>::node _args)
-                  -> std::shared_ptr<tree<A>> {
-                std::shared_ptr<tree<A>> l1 = _args._a0;
-                A a1 = _args._a1;
-                std::shared_ptr<tree<A>> r1 = _args._a2;
+              [&](const typename tree<t_A>::Node _args)
+                  -> std::shared_ptr<tree<t_A>> {
+                std::shared_ptr<tree<t_A>> l1 = _args.d_a0;
+                t_A a1 = _args.d_a1;
+                std::shared_ptr<tree<t_A>> r1 = _args.d_a2;
                 return std::visit(
                     Overloaded{
-                        [&](const typename tree<A>::leaf _args)
-                            -> std::shared_ptr<tree<A>> {
-                          return tree<A>::ctor::node_(tree<A>::ctor::leaf_(),
-                                                      a1,
-                                                      tree<A>::ctor::leaf_());
+                        [&](const typename tree<t_A>::Leaf _args)
+                            -> std::shared_ptr<tree<t_A>> {
+                          return tree<t_A>::ctor::Node_(
+                              tree<t_A>::ctor::Leaf_(), a1,
+                              tree<t_A>::ctor::Leaf_());
                         },
-                        [&](const typename tree<A>::node _args)
-                            -> std::shared_ptr<tree<A>> {
-                          std::shared_ptr<tree<A>> l2 = _args._a0;
-                          A a2 = _args._a1;
-                          std::shared_ptr<tree<A>> r2 = _args._a2;
-                          return tree<A>::ctor::node_(
+                        [&](const typename tree<t_A>::Node _args)
+                            -> std::shared_ptr<tree<t_A>> {
+                          std::shared_ptr<tree<t_A>> l2 = _args.d_a0;
+                          t_A a2 = _args.d_a1;
+                          std::shared_ptr<tree<t_A>> r2 = _args.d_a2;
+                          return tree<t_A>::ctor::Node_(
                               std::move(l1)->merge(combine, std::move(l2)),
                               combine(a1, a2),
                               std::move(r1)->merge(combine, std::move(r2)));
@@ -366,29 +367,29 @@ struct Tree {
   };
 
   static inline const std::shared_ptr<tree<std::shared_ptr<Nat>>> tree1 =
-      tree<std::shared_ptr<Nat>>::ctor::node_(
-          tree<std::shared_ptr<Nat>>::ctor::node_(
-              tree<std::shared_ptr<Nat>>::ctor::leaf_(),
+      tree<std::shared_ptr<Nat>>::ctor::Node_(
+          tree<std::shared_ptr<Nat>>::ctor::Node_(
+              tree<std::shared_ptr<Nat>>::ctor::Leaf_(),
               Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))),
-              tree<std::shared_ptr<Nat>>::ctor::node_(
-                  tree<std::shared_ptr<Nat>>::ctor::leaf_(),
+              tree<std::shared_ptr<Nat>>::ctor::Node_(
+                  tree<std::shared_ptr<Nat>>::ctor::Leaf_(),
                   Nat::ctor::S_(
                       Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(
                           Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))))),
-                  tree<std::shared_ptr<Nat>>::ctor::leaf_())),
+                  tree<std::shared_ptr<Nat>>::ctor::Leaf_())),
           Nat::ctor::S_(Nat::ctor::O_()),
-          tree<std::shared_ptr<Nat>>::ctor::node_(
-              tree<std::shared_ptr<Nat>>::ctor::leaf_(),
+          tree<std::shared_ptr<Nat>>::ctor::Node_(
+              tree<std::shared_ptr<Nat>>::ctor::Leaf_(),
               Nat::ctor::S_(
                   Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))),
-              tree<std::shared_ptr<Nat>>::ctor::node_(
-                  tree<std::shared_ptr<Nat>>::ctor::node_(
-                      tree<std::shared_ptr<Nat>>::ctor::leaf_(),
+              tree<std::shared_ptr<Nat>>::ctor::Node_(
+                  tree<std::shared_ptr<Nat>>::ctor::Node_(
+                      tree<std::shared_ptr<Nat>>::ctor::Leaf_(),
                       Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(
                           Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))))),
-                      tree<std::shared_ptr<Nat>>::ctor::leaf_()),
+                      tree<std::shared_ptr<Nat>>::ctor::Leaf_()),
                   Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())),
-                  tree<std::shared_ptr<Nat>>::ctor::leaf_())));
+                  tree<std::shared_ptr<Nat>>::ctor::Leaf_())));
 };
 
 #endif // INCLUDED_TREE

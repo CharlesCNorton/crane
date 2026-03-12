@@ -38,55 +38,55 @@ struct ImplicitArgs {
     return g(f(x));
   }
 
-  template <typename A> struct mylist {
+  template <typename t_A> struct mylist {
     // TYPES
-    struct mynil {};
+    struct Mynil {};
 
-    struct mycons {
-      A _a0;
-      std::shared_ptr<mylist<A>> _a1;
+    struct Mycons {
+      t_A d_a0;
+      std::shared_ptr<mylist<t_A>> d_a1;
     };
 
-    using variant_t = std::variant<mynil, mycons>;
+    using variant_t = std::variant<Mynil, Mycons>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit mylist(mynil _v) : v_(std::move(_v)) {}
+    explicit mylist(Mynil _v) : d_v_(std::move(_v)) {}
 
-    explicit mylist(mycons _v) : v_(std::move(_v)) {}
+    explicit mylist(Mycons _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<mylist<A>> mynil_() {
-        return std::shared_ptr<mylist<A>>(new mylist<A>(mynil{}));
+      static std::shared_ptr<mylist<t_A>> Mynil_() {
+        return std::shared_ptr<mylist<t_A>>(new mylist<t_A>(Mynil{}));
       }
 
-      static std::shared_ptr<mylist<A>>
-      mycons_(A a0, const std::shared_ptr<mylist<A>> &a1) {
-        return std::shared_ptr<mylist<A>>(new mylist<A>(mycons{a0, a1}));
+      static std::shared_ptr<mylist<t_A>>
+      Mycons_(t_A a0, const std::shared_ptr<mylist<t_A>> &a1) {
+        return std::shared_ptr<mylist<t_A>>(new mylist<t_A>(Mycons{a0, a1}));
       }
 
-      static std::unique_ptr<mylist<A>> mynil_uptr() {
-        return std::unique_ptr<mylist<A>>(new mylist<A>(mynil{}));
+      static std::unique_ptr<mylist<t_A>> Mynil_uptr() {
+        return std::unique_ptr<mylist<t_A>>(new mylist<t_A>(Mynil{}));
       }
 
-      static std::unique_ptr<mylist<A>>
-      mycons_uptr(A a0, const std::shared_ptr<mylist<A>> &a1) {
-        return std::unique_ptr<mylist<A>>(new mylist<A>(mycons{a0, a1}));
+      static std::unique_ptr<mylist<t_A>>
+      Mycons_uptr(t_A a0, const std::shared_ptr<mylist<t_A>> &a1) {
+        return std::unique_ptr<mylist<t_A>>(new mylist<t_A>(Mycons{a0, a1}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, typename T2,
@@ -95,10 +95,10 @@ struct ImplicitArgs {
                         const std::shared_ptr<mylist<T1>> &m) {
     return std::visit(
         Overloaded{
-            [&](const typename mylist<T1>::mynil _args) -> T2 { return f; },
-            [&](const typename mylist<T1>::mycons _args) -> T2 {
-              T1 y = _args._a0;
-              std::shared_ptr<mylist<T1>> m0 = _args._a1;
+            [&](const typename mylist<T1>::Mynil _args) -> T2 { return f; },
+            [&](const typename mylist<T1>::Mycons _args) -> T2 {
+              T1 y = _args.d_a0;
+              std::shared_ptr<mylist<T1>> m0 = _args.d_a1;
               return f0(y, m0, mylist_rect<T1, T2>(f, f0, m0));
             }},
         m->v());
@@ -110,10 +110,10 @@ struct ImplicitArgs {
                        const std::shared_ptr<mylist<T1>> &m) {
     return std::visit(
         Overloaded{
-            [&](const typename mylist<T1>::mynil _args) -> T2 { return f; },
-            [&](const typename mylist<T1>::mycons _args) -> T2 {
-              T1 y = _args._a0;
-              std::shared_ptr<mylist<T1>> m0 = _args._a1;
+            [&](const typename mylist<T1>::Mynil _args) -> T2 { return f; },
+            [&](const typename mylist<T1>::Mycons _args) -> T2 {
+              T1 y = _args.d_a0;
+              std::shared_ptr<mylist<T1>> m0 = _args.d_a1;
               return f0(y, m0, mylist_rec<T1, T2>(f, f0, m0));
             }},
         m->v());
@@ -122,11 +122,11 @@ struct ImplicitArgs {
   template <typename T1>
   static unsigned int length(const std::shared_ptr<mylist<T1>> &l) {
     return std::visit(
-        Overloaded{[](const typename mylist<T1>::mynil _args) -> unsigned int {
+        Overloaded{[](const typename mylist<T1>::Mynil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename mylist<T1>::mycons _args) -> unsigned int {
-                     std::shared_ptr<mylist<T1>> rest = _args._a1;
+                   [](const typename mylist<T1>::Mycons _args) -> unsigned int {
+                     std::shared_ptr<mylist<T1>> rest = _args.d_a1;
                      return (1u + length<T1>(std::move(rest)));
                    }},
         l->v());
@@ -162,28 +162,28 @@ struct ImplicitArgs {
   template <typename T1>
   static T1 head_or(const T1 default0, const std::shared_ptr<mylist<T1>> &l) {
     return std::visit(
-        Overloaded{[&](const typename mylist<T1>::mynil _args) -> T1 {
+        Overloaded{[&](const typename mylist<T1>::Mynil _args) -> T1 {
                      return default0;
                    },
-                   [](const typename mylist<T1>::mycons _args) -> T1 {
-                     T1 x = _args._a0;
+                   [](const typename mylist<T1>::Mycons _args) -> T1 {
+                     T1 x = _args.d_a0;
                      return x;
                    }},
         l->v());
   }
 
   static inline const unsigned int use_head_empty =
-      head_or<unsigned int>(0u, mylist<unsigned int>::ctor::mynil_());
+      head_or<unsigned int>(0u, mylist<unsigned int>::ctor::Mynil_());
   static inline const unsigned int use_head_nonempty =
-      head_or<unsigned int>(0u, mylist<unsigned int>::ctor::mycons_(
-                                    7u, mylist<unsigned int>::ctor::mynil_()));
+      head_or<unsigned int>(0u, mylist<unsigned int>::ctor::Mycons_(
+                                    7u, mylist<unsigned int>::ctor::Mynil_()));
   static unsigned int
   sum_with_init(const unsigned int init,
                 const std::shared_ptr<mylist<unsigned int>> &l);
   static inline const unsigned int use_sum_init =
-      sum_with_init(5u, mylist<unsigned int>::ctor::mycons_(
-                            1u, mylist<unsigned int>::ctor::mycons_(
-                                    2u, mylist<unsigned int>::ctor::mynil_())));
+      sum_with_init(5u, mylist<unsigned int>::ctor::Mycons_(
+                            1u, mylist<unsigned int>::ctor::Mycons_(
+                                    2u, mylist<unsigned int>::ctor::Mynil_())));
   static unsigned int nested_implicits(const unsigned int a,
                                        const unsigned int b,
                                        const unsigned int c);
@@ -204,10 +204,10 @@ struct ImplicitArgs {
           double_nat,
           [](unsigned int _x0) -> unsigned int { return (1u + _x0); }, 3u);
   static inline const unsigned int test_length =
-      length<unsigned int>(mylist<unsigned int>::ctor::mycons_(
-          1u, mylist<unsigned int>::ctor::mycons_(
-                  2u, mylist<unsigned int>::ctor::mycons_(
-                          3u, mylist<unsigned int>::ctor::mynil_()))));
+      length<unsigned int>(mylist<unsigned int>::ctor::Mycons_(
+          1u, mylist<unsigned int>::ctor::Mycons_(
+                  2u, mylist<unsigned int>::ctor::Mycons_(
+                          3u, mylist<unsigned int>::ctor::Mynil_()))));
   static inline const unsigned int test_explicit_id = explicit_id;
   static inline const unsigned int test_explicit_fst = explicit_fst;
   static inline const unsigned int test_add_implicit = use_add_implicit;

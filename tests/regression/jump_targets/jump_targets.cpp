@@ -18,12 +18,12 @@ std::optional<unsigned int> JumpTargets::jump_target_collection(
       Overloaded{
           [](const typename JumpTargets::instr_collection::JUN_coll _args)
               -> std::optional<unsigned int> {
-            unsigned int a = _args._a0;
+            unsigned int a = _args.d_a0;
             return std::make_optional<unsigned int>(std::move(a));
           },
           [](const typename JumpTargets::instr_collection::JMS_coll _args)
               -> std::optional<unsigned int> {
-            unsigned int a = _args._a0;
+            unsigned int a = _args.d_a0;
             return std::make_optional<unsigned int>(std::move(a));
           },
           [](const typename JumpTargets::instr_collection::NOP_coll _args)
@@ -37,20 +37,20 @@ std::shared_ptr<List<unsigned int>> JumpTargets::collect_targets(
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<JumpTargets::instr_collection>>::nil _args)
+              std::shared_ptr<JumpTargets::instr_collection>>::Nil _args)
               -> std::shared_ptr<List<unsigned int>> {
-            return List<unsigned int>::ctor::nil_();
+            return List<unsigned int>::ctor::Nil_();
           },
           [](const typename List<
-              std::shared_ptr<JumpTargets::instr_collection>>::cons _args)
+              std::shared_ptr<JumpTargets::instr_collection>>::Cons _args)
               -> std::shared_ptr<List<unsigned int>> {
-            std::shared_ptr<JumpTargets::instr_collection> i = _args._a0;
+            std::shared_ptr<JumpTargets::instr_collection> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<JumpTargets::instr_collection>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             if (jump_target_collection(i).has_value()) {
               unsigned int a = *jump_target_collection(i);
-              return List<unsigned int>::ctor::cons_(
+              return List<unsigned int>::ctor::Cons_(
                   std::move(a), collect_targets(std::move(rest)));
             } else {
               return collect_targets(std::move(rest));
@@ -69,12 +69,12 @@ std::optional<unsigned int> JumpTargets::jump_target_region(
   return std::visit(
       Overloaded{[](const typename JumpTargets::instr_region::JUN_reg _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_region::JMS_reg _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_region::NOP_reg _args)
@@ -98,12 +98,12 @@ JumpTargets::jump_target_jms(const std::shared_ptr<JumpTargets::instr_jms> &i) {
   return std::visit(
       Overloaded{[](const typename JumpTargets::instr_jms::JUN_jms _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_jms::JMS_jms _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_jms::NOP_jms _args)
@@ -126,12 +126,12 @@ JumpTargets::jump_target_jun(const std::shared_ptr<JumpTargets::instr_jun> &i) {
   return std::visit(
       Overloaded{[](const typename JumpTargets::instr_jun::JUN_jun _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_jun::JMS_jun _args)
                      -> std::optional<unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_optional<unsigned int>(std::move(a));
                  },
                  [](const typename JumpTargets::instr_jun::NOP_jun _args)

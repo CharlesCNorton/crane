@@ -23,10 +23,10 @@ template <typename A>
 A list_nth(const std::shared_ptr<List<A>> &l, unsigned int n) {
   auto cur = l;
   for (unsigned int i = 0; i < n; ++i) {
-    auto &c = std::get<typename List<A>::cons>(cur->v());
-    cur = c._a1;
+    auto &c = std::get<typename List<A>::Cons>(cur->v());
+    cur = c.d_a1;
   }
-  return std::get<typename List<A>::cons>(cur->v())._a0;
+  return std::get<typename List<A>::Cons>(cur->v()).d_a0;
 }
 
 } // namespace

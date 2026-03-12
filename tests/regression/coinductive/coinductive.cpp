@@ -29,7 +29,7 @@ unsigned int Coinductive::hd(const std::shared_ptr<Coinductive::stream> &s) {
   return std::visit(
       Overloaded{
           [](const typename Coinductive::stream::Cons _args) -> unsigned int {
-            unsigned int x = _args._a0;
+            unsigned int x = _args.d_a0;
             return std::move(x);
           }},
       s->v());
@@ -42,7 +42,7 @@ Coinductive::tl(const std::shared_ptr<Coinductive::stream> &s) {
         return std::visit(
             Overloaded{[](const typename Coinductive::stream::Cons _args)
                            -> std::shared_ptr<Coinductive::stream> {
-              std::shared_ptr<Coinductive::stream> xs = _args._a1;
+              std::shared_ptr<Coinductive::stream> xs = _args.d_a1;
               return xs;
             }},
             s->v());
@@ -57,8 +57,8 @@ Coinductive::interleave(const std::shared_ptr<Coinductive::stream> &s1,
         return std::visit(
             Overloaded{[&](const typename Coinductive::stream::Cons _args)
                            -> std::shared_ptr<Coinductive::stream> {
-              unsigned int x = _args._a0;
-              std::shared_ptr<Coinductive::stream> xs = _args._a1;
+              unsigned int x = _args.d_a0;
+              std::shared_ptr<Coinductive::stream> xs = _args.d_a1;
               return stream::ctor::Cons_(std::move(x), interleave(s2, xs));
             }},
             s1->v());

@@ -40,10 +40,10 @@ std::vector<T> list_to_vector(const std::shared_ptr<List<T>> &l) {
   auto current = l;
   while (true) {
     bool done = false;
-    std::visit(Overloaded{[&](const typename List<T>::nil &) { done = true; },
-                          [&](const typename List<T>::cons &c) {
-                            result.push_back(c._a0);
-                            current = c._a1;
+    std::visit(Overloaded{[&](const typename List<T>::Nil &) { done = true; },
+                          [&](const typename List<T>::Cons &c) {
+                            result.push_back(c.d_a0);
+                            current = c.d_a1;
                           }},
                current->v());
     if (done)
@@ -55,9 +55,9 @@ std::vector<T> list_to_vector(const std::shared_ptr<List<T>> &l) {
 // Helper to create a list from a vector
 template <typename T>
 std::shared_ptr<List<T>> vector_to_list(const std::vector<T> &vec) {
-  auto result = List<T>::ctor::nil_();
+  auto result = List<T>::ctor::Nil_();
   for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
-    result = List<T>::ctor::cons_(*it, result);
+    result = List<T>::ctor::Cons_(*it, result);
   }
   return result;
 }
@@ -66,8 +66,8 @@ std::shared_ptr<List<T>> vector_to_list(const std::vector<T> &vec) {
 template <typename A, typename B>
 std::pair<A, B> prod_to_pair(const std::shared_ptr<Prod<A, B>> &p) {
   std::pair<A, B> result;
-  std::visit(Overloaded{[&](const typename Prod<A, B>::pair &pr) {
-               result = std::make_pair(pr._a0, pr._a1);
+  std::visit(Overloaded{[&](const typename Prod<A, B>::Pair &pr) {
+               result = std::make_pair(pr.d_a0, pr.d_a1);
              }},
              p->v());
   return result;
@@ -88,8 +88,8 @@ list_to_pairs(const std::shared_ptr<List<std::shared_ptr<Prod<A, B>>>> &l) {
 int main() {
   // Test 1: Zip empty lists
   {
-    auto empty_a = List<unsigned int>::ctor::nil_();
-    auto empty_b = List<unsigned int>::ctor::nil_();
+    auto empty_a = List<unsigned int>::ctor::Nil_();
+    auto empty_b = List<unsigned int>::ctor::Nil_();
     auto result = better_zip<unsigned int, unsigned int>(empty_a, empty_b);
     auto vec = list_to_pairs<unsigned int, unsigned int>(result);
     ASSERT(vec.size() == 0);
@@ -99,9 +99,9 @@ int main() {
   // Test 2: Zip single elements
   {
     auto a =
-        List<unsigned int>::ctor::cons_(1, List<unsigned int>::ctor::nil_());
+        List<unsigned int>::ctor::Cons_(1, List<unsigned int>::ctor::Nil_());
     auto b =
-        List<unsigned int>::ctor::cons_(2, List<unsigned int>::ctor::nil_());
+        List<unsigned int>::ctor::Cons_(2, List<unsigned int>::ctor::Nil_());
     auto result = better_zip<unsigned int, unsigned int>(a, b);
     auto vec = list_to_pairs<unsigned int, unsigned int>(result);
     ASSERT(vec.size() == 1);

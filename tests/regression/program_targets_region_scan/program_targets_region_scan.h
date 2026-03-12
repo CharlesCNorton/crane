@@ -20,63 +20,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
-  template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
+  template <MapsTo<bool, t_A> F0> bool forallb(F0 &&f) const {
     return std::visit(
         Overloaded{
-            [](const typename List<A>::nil _args) -> bool { return true; },
-            [&](const typename List<A>::cons _args) -> bool {
-              A a = _args._a0;
-              std::shared_ptr<List<A>> l0 = _args._a1;
+            [](const typename List<t_A>::Nil _args) -> bool { return true; },
+            [&](const typename List<t_A>::Cons _args) -> bool {
+              t_A a = _args.d_a0;
+              std::shared_ptr<List<t_A>> l0 = _args.d_a1;
               return (f(a) && std::move(l0)->forallb(f));
             }},
         this->v());
@@ -87,11 +87,11 @@ struct ProgramTargetsRegionScan {
   struct instruction {
     // TYPES
     struct JUN {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct JMS {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NOP {};
@@ -100,14 +100,14 @@ struct ProgramTargetsRegionScan {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instruction(JUN _v) : v_(std::move(_v)) {}
+    explicit instruction(JUN _v) : d_v_(std::move(_v)) {}
 
-    explicit instruction(JMS _v) : v_(std::move(_v)) {}
+    explicit instruction(JMS _v) : d_v_(std::move(_v)) {}
 
-    explicit instruction(NOP _v) : v_(std::move(_v)) {}
+    explicit instruction(NOP _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -140,10 +140,10 @@ struct ProgramTargetsRegionScan {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -153,11 +153,11 @@ struct ProgramTargetsRegionScan {
     return std::visit(
         Overloaded{
             [&](const typename instruction::JUN _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instruction::JMS _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instruction::NOP _args) -> T1 { return f1; }},
@@ -171,11 +171,11 @@ struct ProgramTargetsRegionScan {
     return std::visit(
         Overloaded{
             [&](const typename instruction::JUN _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instruction::JMS _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instruction::NOP _args) -> T1 { return f1; }},
@@ -199,13 +199,13 @@ struct ProgramTargetsRegionScan {
   static inline const unsigned int t = [](void) {
     std::unique_ptr<layout> l = std::make_unique<layout>(layout{200u, 20u});
     std::unique_ptr<List<std::shared_ptr<instruction>>> p =
-        List<std::shared_ptr<instruction>>::ctor::cons_uptr(
+        List<std::shared_ptr<instruction>>::ctor::Cons_uptr(
             instruction::ctor::NOP_(),
-            List<std::shared_ptr<instruction>>::ctor::cons_(
+            List<std::shared_ptr<instruction>>::ctor::Cons_(
                 instruction::ctor::JUN_(205u),
-                List<std::shared_ptr<instruction>>::ctor::cons_(
+                List<std::shared_ptr<instruction>>::ctor::Cons_(
                     instruction::ctor::JMS_(218u),
-                    List<std::shared_ptr<instruction>>::ctor::nil_())));
+                    List<std::shared_ptr<instruction>>::ctor::Nil_())));
     if (program_targets_okb(std::move(p), std::move(l))) {
       return 1u;
     } else {

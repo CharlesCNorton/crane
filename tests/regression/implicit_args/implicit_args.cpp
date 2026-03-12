@@ -50,13 +50,13 @@ unsigned int ImplicitArgs::sum_with_init(
     const std::shared_ptr<ImplicitArgs::mylist<unsigned int>> &l) {
   return std::visit(
       Overloaded{
-          [&](const typename ImplicitArgs::mylist<unsigned int>::mynil _args)
+          [&](const typename ImplicitArgs::mylist<unsigned int>::Mynil _args)
               -> unsigned int { return std::move(init); },
-          [&](const typename ImplicitArgs::mylist<unsigned int>::mycons _args)
+          [&](const typename ImplicitArgs::mylist<unsigned int>::Mycons _args)
               -> unsigned int {
-            unsigned int x = _args._a0;
+            unsigned int x = _args.d_a0;
             std::shared_ptr<ImplicitArgs::mylist<unsigned int>> rest =
-                _args._a1;
+                _args.d_a1;
             return (std::move(x) +
                     sum_with_init(std::move(init), std::move(rest)));
           }},

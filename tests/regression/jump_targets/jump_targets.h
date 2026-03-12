@@ -21,63 +21,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
   unsigned int length() const {
     return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+        Overloaded{[](const typename List<t_A>::Nil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename List<A>::cons _args) -> unsigned int {
-                     std::shared_ptr<List<A>> l_ = _args._a1;
+                   [](const typename List<t_A>::Cons _args) -> unsigned int {
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
                      return (std::move(l_)->length() + 1);
                    }},
         this->v());
@@ -88,11 +88,11 @@ struct JumpTargets {
   struct instr_collection {
     // TYPES
     struct JUN_coll {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct JMS_coll {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NOP_coll {};
@@ -101,14 +101,14 @@ struct JumpTargets {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instr_collection(JUN_coll _v) : v_(std::move(_v)) {}
+    explicit instr_collection(JUN_coll _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_collection(JMS_coll _v) : v_(std::move(_v)) {}
+    explicit instr_collection(JMS_coll _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_collection(NOP_coll _v) : v_(std::move(_v)) {}
+    explicit instr_collection(NOP_coll _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -147,10 +147,10 @@ struct JumpTargets {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -159,11 +159,11 @@ struct JumpTargets {
                                   const std::shared_ptr<instr_collection> &i) {
     return std::visit(
         Overloaded{[&](const typename instr_collection::JUN_coll _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename instr_collection::JMS_coll _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename instr_collection::NOP_coll _args) -> T1 {
@@ -178,11 +178,11 @@ struct JumpTargets {
                                  const std::shared_ptr<instr_collection> &i) {
     return std::visit(
         Overloaded{[&](const typename instr_collection::JUN_coll _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename instr_collection::JMS_coll _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename instr_collection::NOP_coll _args) -> T1 {
@@ -197,26 +197,26 @@ struct JumpTargets {
       const std::shared_ptr<List<std::shared_ptr<instr_collection>>> &prog);
   static inline const unsigned int test_collection =
       collect_targets(
-          List<std::shared_ptr<instr_collection>>::ctor::cons_(
+          List<std::shared_ptr<instr_collection>>::ctor::Cons_(
               instr_collection::ctor::JUN_coll_(17u),
-              List<std::shared_ptr<instr_collection>>::ctor::cons_(
+              List<std::shared_ptr<instr_collection>>::ctor::Cons_(
                   instr_collection::ctor::NOP_coll_(),
-                  List<std::shared_ptr<instr_collection>>::ctor::cons_(
+                  List<std::shared_ptr<instr_collection>>::ctor::Cons_(
                       instr_collection::ctor::JMS_coll_(511u),
-                      List<std::shared_ptr<instr_collection>>::ctor::cons_(
+                      List<std::shared_ptr<instr_collection>>::ctor::Cons_(
                           instr_collection::ctor::NOP_coll_(),
                           List<std::shared_ptr<instr_collection>>::ctor::
-                              nil_())))))
+                              Nil_())))))
           ->length();
 
   struct instr_region {
     // TYPES
     struct JUN_reg {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct JMS_reg {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NOP_reg {};
@@ -225,14 +225,14 @@ struct JumpTargets {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instr_region(JUN_reg _v) : v_(std::move(_v)) {}
+    explicit instr_region(JUN_reg _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_region(JMS_reg _v) : v_(std::move(_v)) {}
+    explicit instr_region(JMS_reg _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_region(NOP_reg _v) : v_(std::move(_v)) {}
+    explicit instr_region(NOP_reg _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -265,10 +265,10 @@ struct JumpTargets {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -277,11 +277,11 @@ struct JumpTargets {
                               const std::shared_ptr<instr_region> &i) {
     return std::visit(
         Overloaded{[&](const typename instr_region::JUN_reg _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename instr_region::JMS_reg _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename instr_region::NOP_reg _args) -> T1 {
@@ -296,11 +296,11 @@ struct JumpTargets {
                              const std::shared_ptr<instr_region> &i) {
     return std::visit(
         Overloaded{[&](const typename instr_region::JUN_reg _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f(std::move(n));
                    },
                    [&](const typename instr_region::JMS_reg _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    },
                    [&](const typename instr_region::NOP_reg _args) -> T1 {
@@ -327,11 +327,11 @@ struct JumpTargets {
   struct instr_jms {
     // TYPES
     struct JUN_jms {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct JMS_jms {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NOP_jms {};
@@ -340,14 +340,14 @@ struct JumpTargets {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instr_jms(JUN_jms _v) : v_(std::move(_v)) {}
+    explicit instr_jms(JUN_jms _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_jms(JMS_jms _v) : v_(std::move(_v)) {}
+    explicit instr_jms(JMS_jms _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_jms(NOP_jms _v) : v_(std::move(_v)) {}
+    explicit instr_jms(NOP_jms _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -380,10 +380,10 @@ struct JumpTargets {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -393,11 +393,11 @@ struct JumpTargets {
     return std::visit(
         Overloaded{
             [&](const typename instr_jms::JUN_jms _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instr_jms::JMS_jms _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instr_jms::NOP_jms _args) -> T1 { return f1; }},
@@ -411,11 +411,11 @@ struct JumpTargets {
     return std::visit(
         Overloaded{
             [&](const typename instr_jms::JUN_jms _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instr_jms::JMS_jms _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instr_jms::NOP_jms _args) -> T1 { return f1; }},
@@ -431,11 +431,11 @@ struct JumpTargets {
   struct instr_jun {
     // TYPES
     struct JUN_jun {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct JMS_jun {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NOP_jun {};
@@ -444,14 +444,14 @@ struct JumpTargets {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instr_jun(JUN_jun _v) : v_(std::move(_v)) {}
+    explicit instr_jun(JUN_jun _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_jun(JMS_jun _v) : v_(std::move(_v)) {}
+    explicit instr_jun(JMS_jun _v) : d_v_(std::move(_v)) {}
 
-    explicit instr_jun(NOP_jun _v) : v_(std::move(_v)) {}
+    explicit instr_jun(NOP_jun _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -484,10 +484,10 @@ struct JumpTargets {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
@@ -497,11 +497,11 @@ struct JumpTargets {
     return std::visit(
         Overloaded{
             [&](const typename instr_jun::JUN_jun _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instr_jun::JMS_jun _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instr_jun::NOP_jun _args) -> T1 { return f1; }},
@@ -515,11 +515,11 @@ struct JumpTargets {
     return std::visit(
         Overloaded{
             [&](const typename instr_jun::JUN_jun _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename instr_jun::JMS_jun _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             },
             [&](const typename instr_jun::NOP_jun _args) -> T1 { return f1; }},

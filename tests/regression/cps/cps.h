@@ -20,63 +20,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
   unsigned int length() const {
     return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+        Overloaded{[](const typename List<t_A>::Nil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename List<A>::cons _args) -> unsigned int {
-                     std::shared_ptr<List<A>> l_ = _args._a1;
+                   [](const typename List<t_A>::Cons _args) -> unsigned int {
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
                      return (std::move(l_)->length() + 1);
                    }},
         this->v());
@@ -126,24 +126,24 @@ struct CPS {
   struct tree {
     // TYPES
     struct Leaf {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct Node {
-      std::shared_ptr<tree> _a0;
-      std::shared_ptr<tree> _a1;
+      std::shared_ptr<tree> d_a0;
+      std::shared_ptr<tree> d_a1;
     };
 
     using variant_t = std::variant<Leaf, Node>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit tree(Leaf _v) : v_(std::move(_v)) {}
+    explicit tree(Leaf _v) : d_v_(std::move(_v)) {}
 
-    explicit tree(Node _v) : v_(std::move(_v)) {}
+    explicit tree(Node _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -170,22 +170,22 @@ struct CPS {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, std::shared_ptr<tree>, T1, std::shared_ptr<tree>, T1> F1>
   static T1 tree_rect(F0 &&f, F1 &&f0, const std::shared_ptr<tree> &t) {
     return std::visit(Overloaded{[&](const typename tree::Leaf _args) -> T1 {
-                                   unsigned int n = _args._a0;
+                                   unsigned int n = _args.d_a0;
                                    return f(std::move(n));
                                  },
                                  [&](const typename tree::Node _args) -> T1 {
-                                   std::shared_ptr<tree> t0 = _args._a0;
-                                   std::shared_ptr<tree> t1 = _args._a1;
+                                   std::shared_ptr<tree> t0 = _args.d_a0;
+                                   std::shared_ptr<tree> t1 = _args.d_a1;
                                    return f0(t0, tree_rect<T1>(f, f0, t0), t1,
                                              tree_rect<T1>(f, f0, t1));
                                  }},
@@ -196,12 +196,12 @@ struct CPS {
             MapsTo<T1, std::shared_ptr<tree>, T1, std::shared_ptr<tree>, T1> F1>
   static T1 tree_rec(F0 &&f, F1 &&f0, const std::shared_ptr<tree> &t) {
     return std::visit(Overloaded{[&](const typename tree::Leaf _args) -> T1 {
-                                   unsigned int n = _args._a0;
+                                   unsigned int n = _args.d_a0;
                                    return f(std::move(n));
                                  },
                                  [&](const typename tree::Node _args) -> T1 {
-                                   std::shared_ptr<tree> t0 = _args._a0;
-                                   std::shared_ptr<tree> t1 = _args._a1;
+                                   std::shared_ptr<tree> t0 = _args.d_a0;
+                                   std::shared_ptr<tree> t1 = _args.d_a1;
                                    return f0(t0, tree_rec<T1>(f, f0, t0), t1,
                                              tree_rec<T1>(f, f0, t1));
                                  }},
@@ -213,12 +213,12 @@ struct CPS {
                const std::function<unsigned int(unsigned int)> k) {
     return std::visit(
         Overloaded{[&](const typename tree::Leaf _args) -> unsigned int {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return k(std::move(n));
                    },
                    [&](const typename tree::Node _args) -> unsigned int {
-                     std::shared_ptr<tree> l = _args._a0;
-                     std::shared_ptr<tree> r = _args._a1;
+                     std::shared_ptr<tree> l = _args.d_a0;
+                     std::shared_ptr<tree> r = _args.d_a1;
                      return tree_sum_cps(
                          std::move(l), [=](unsigned int sl) mutable {
                            return tree_sum_cps(r, [=](unsigned int sr) mutable {
@@ -236,12 +236,12 @@ struct CPS {
           const std::function<unsigned int(unsigned int)> k) {
     return std::visit(
         Overloaded{
-            [&](const typename List<unsigned int>::nil _args) -> unsigned int {
+            [&](const typename List<unsigned int>::Nil _args) -> unsigned int {
               return k(0u);
             },
-            [&](const typename List<unsigned int>::cons _args) -> unsigned int {
-              unsigned int x = _args._a0;
-              std::shared_ptr<List<unsigned int>> rest = _args._a1;
+            [&](const typename List<unsigned int>::Cons _args) -> unsigned int {
+              unsigned int x = _args.d_a0;
+              std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
               return sum_cps(std::move(rest), [=](unsigned int r) mutable {
                 return k((x + r));
               });
@@ -259,21 +259,21 @@ struct CPS {
           k) {
     return std::visit(
         Overloaded{
-            [&](const typename List<unsigned int>::nil _args) -> unsigned int {
-              return k(List<unsigned int>::ctor::nil_(),
-                       List<unsigned int>::ctor::nil_());
+            [&](const typename List<unsigned int>::Nil _args) -> unsigned int {
+              return k(List<unsigned int>::ctor::Nil_(),
+                       List<unsigned int>::ctor::Nil_());
             },
-            [&](const typename List<unsigned int>::cons _args) -> unsigned int {
-              unsigned int x = _args._a0;
-              std::shared_ptr<List<unsigned int>> rest = _args._a1;
+            [&](const typename List<unsigned int>::Cons _args) -> unsigned int {
+              unsigned int x = _args.d_a0;
+              std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
               return partition_cps(
                   p, std::move(rest),
                   [=](std::shared_ptr<List<unsigned int>> yes,
                       std::shared_ptr<List<unsigned int>> no) mutable {
                     if (p(x)) {
-                      return k(List<unsigned int>::ctor::cons_(x, yes), no);
+                      return k(List<unsigned int>::ctor::Cons_(x, yes), no);
                     } else {
-                      return k(yes, List<unsigned int>::ctor::cons_(x, no));
+                      return k(yes, List<unsigned int>::ctor::Cons_(x, no));
                     }
                   });
             }},
@@ -287,22 +287,22 @@ struct CPS {
       tree::ctor::Node_(tree::ctor::Leaf_(1u), tree::ctor::Leaf_(2u)),
       tree::ctor::Leaf_(3u)));
   static inline const unsigned int test_list_sum =
-      list_sum(List<unsigned int>::ctor::cons_(
-          10u, List<unsigned int>::ctor::cons_(
-                   20u, List<unsigned int>::ctor::cons_(
-                            30u, List<unsigned int>::ctor::nil_()))));
+      list_sum(List<unsigned int>::ctor::Cons_(
+          10u, List<unsigned int>::ctor::Cons_(
+                   20u, List<unsigned int>::ctor::Cons_(
+                            30u, List<unsigned int>::ctor::Nil_()))));
   static inline const unsigned int test_evens =
-      count_evens(List<unsigned int>::ctor::cons_(
+      count_evens(List<unsigned int>::ctor::Cons_(
           1u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               2u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   3u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       4u,
-                      List<unsigned int>::ctor::cons_(
-                          5u, List<unsigned int>::ctor::cons_(
-                                  6u, List<unsigned int>::ctor::nil_())))))));
+                      List<unsigned int>::ctor::Cons_(
+                          5u, List<unsigned int>::ctor::Cons_(
+                                  6u, List<unsigned int>::ctor::Nil_())))))));
 };
 
 #endif // INCLUDED_CPS

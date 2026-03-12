@@ -523,7 +523,7 @@ let rec pp_cpp_type par vl t =
                   mt ()
             | _ -> mt ()
           in
-          qualifier ++ str type_name_str ++ templates
+          qualifier ++ str (capitalize_enum_qualified type_name_str r') ++ templates
         else if is_qualified_name type_name_str then
           (* Already qualified (e.g., C::t from module parameter): add typename
              if in template *)
@@ -1067,8 +1067,8 @@ and pp_cpp_expr env args t =
     ++ str "\"); return std::any{}; })()"
   | CPPenum_val (ind, ctor) ->
     (* Generate EnumType::Constructor for enum class values. Use str_global for
-       proper module qualification (e.g., Outer::color::Red). *)
-    let full_name = str_global Type ind in
+       proper module qualification, with collision-aware capitalization. *)
+    let full_name = capitalize_enum_qualified (str_global Type ind) ind in
     str full_name ++ str "::" ++ Id.print ctor
   (* Low-level constructs for reuse optimization *)
   | CPPraw code -> str code
@@ -1111,9 +1111,8 @@ and pp_cpp_stmt env args = function
     ++ str "\");"
   | Sswitch (scrut, ind, branches) ->
     (* Generate switch statement for enum class matching. Use pp_global_name to
-       get the unqualified base name. *)
-    let base = Common.pp_global_name Type ind in
-    let type_name = str base in
+       get the unqualified base name, capitalize to match enum class definition. *)
+    let type_name = pp_inductive_type_name_cached ind in
     let pp_branch (ctor, stmts) =
       str "case "
       ++ type_name
@@ -1957,7 +1956,7 @@ let rec pp_cpp_decl env = function
   | Denum {de_ref = name; de_ctors = ctors; _} ->
     let struct_name =
       match name with
-      | GlobRef.IndRef _ -> str (Common.pp_global_name Type name)
+      | GlobRef.IndRef _ -> pp_inductive_type_name_cached name
       | _ -> pp_global Type name
     in
     let ctors_s =

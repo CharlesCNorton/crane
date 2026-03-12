@@ -40,54 +40,58 @@ struct EmptyMatch {
 
   static unsigned int from_empty(const std::shared_ptr<empty> &_x0);
 
-  template <typename A, typename B> struct either {
+  template <typename t_A, typename t_B> struct either {
     // TYPES
     struct Left {
-      A _a0;
+      t_A d_a0;
     };
 
     struct Right {
-      B _a0;
+      t_B d_a0;
     };
 
     using variant_t = std::variant<Left, Right>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit either(Left _v) : v_(std::move(_v)) {}
+    explicit either(Left _v) : d_v_(std::move(_v)) {}
 
-    explicit either(Right _v) : v_(std::move(_v)) {}
+    explicit either(Right _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<either<A, B>> Left_(A a0) {
-        return std::shared_ptr<either<A, B>>(new either<A, B>(Left{a0}));
+      static std::shared_ptr<either<t_A, t_B>> Left_(t_A a0) {
+        return std::shared_ptr<either<t_A, t_B>>(
+            new either<t_A, t_B>(Left{a0}));
       }
 
-      static std::shared_ptr<either<A, B>> Right_(B a0) {
-        return std::shared_ptr<either<A, B>>(new either<A, B>(Right{a0}));
+      static std::shared_ptr<either<t_A, t_B>> Right_(t_B a0) {
+        return std::shared_ptr<either<t_A, t_B>>(
+            new either<t_A, t_B>(Right{a0}));
       }
 
-      static std::unique_ptr<either<A, B>> Left_uptr(A a0) {
-        return std::unique_ptr<either<A, B>>(new either<A, B>(Left{a0}));
+      static std::unique_ptr<either<t_A, t_B>> Left_uptr(t_A a0) {
+        return std::unique_ptr<either<t_A, t_B>>(
+            new either<t_A, t_B>(Left{a0}));
       }
 
-      static std::unique_ptr<either<A, B>> Right_uptr(B a0) {
-        return std::unique_ptr<either<A, B>>(new either<A, B>(Right{a0}));
+      static std::unique_ptr<either<t_A, t_B>> Right_uptr(t_B a0) {
+        return std::unique_ptr<either<t_A, t_B>>(
+            new either<t_A, t_B>(Right{a0}));
       }
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, typename T2, typename T3, MapsTo<T3, T1> F0,
@@ -96,11 +100,11 @@ struct EmptyMatch {
                         const std::shared_ptr<either<T1, T2>> &e) {
     return std::visit(
         Overloaded{[&](const typename either<T1, T2>::Left _args) -> T3 {
-                     T1 a = _args._a0;
+                     T1 a = _args.d_a0;
                      return f(a);
                    },
                    [&](const typename either<T1, T2>::Right _args) -> T3 {
-                     T2 b = _args._a0;
+                     T2 b = _args.d_a0;
                      return f0(b);
                    }},
         e->v());
@@ -112,11 +116,11 @@ struct EmptyMatch {
                        const std::shared_ptr<either<T1, T2>> &e) {
     return std::visit(
         Overloaded{[&](const typename either<T1, T2>::Left _args) -> T3 {
-                     T1 a = _args._a0;
+                     T1 a = _args.d_a0;
                      return f(a);
                    },
                    [&](const typename either<T1, T2>::Right _args) -> T3 {
-                     T2 b = _args._a0;
+                     T2 b = _args.d_a0;
                      return f0(b);
                    }},
         e->v());
@@ -129,12 +133,12 @@ struct EmptyMatch {
         Overloaded{
             [](const typename either<T1, std::shared_ptr<empty>>::Left _args)
                 -> T1 {
-              T1 a = _args._a0;
+              T1 a = _args.d_a0;
               return a;
             },
             [](const typename either<T1, std::shared_ptr<empty>>::Right _args)
                 -> T1 {
-              std::shared_ptr<empty> v = _args._a0;
+              std::shared_ptr<empty> v = _args.d_a0;
               return absurd<T1>(std::move(v));
             }},
         e->v());

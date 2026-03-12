@@ -180,21 +180,40 @@ let inductive_name_info r =
   | GlobRef.IndRef _ -> (str (String.capitalize_ascii (str_global Type r)), true)
   | _ -> (pp_global Type r, false)
 
-(** Format an inductive type name for type references. Non-local inductives use
-    capitalized name directly (e.g., "List", "Nat"). Local inductives use
-    original Rocq name (e.g., "list", "EvenTree"). EXCEPTION 1: Eponymous
-    records (module M with record M) use capitalized name. EXCEPTION 2: Regular
-    records (not eponymous) keep their original case. *)
+(** Check if capitalizing an enum type name would collide with its parent
+    module's struct name. Returns true if so. *)
+let enum_name_collides_with_parent r =
+  match r with
+  | GlobRef.IndRef (kn, _) ->
+    let base_name = Common.pp_global_name Type r in
+    let capitalized = String.capitalize_ascii base_name in
+    let parent_mp = Names.MutInd.modpath kn in
+    ( match parent_mp with
+    | Names.ModPath.MPdot (_, label) ->
+      String.equal capitalized (String.capitalize_ascii (Names.Label.to_string label))
+    | _ -> false )
+  | _ -> false
+
+(** Capitalize an enum type name, avoiding collision with parent module. *)
+let capitalize_enum_name s r =
+  if enum_name_collides_with_parent r then s
+  else String.capitalize_ascii s
+
+(** Same as capitalize_enum_name but for qualified names (capitalize last component). *)
+let capitalize_enum_qualified s r =
+  if enum_name_collides_with_parent r then s
+  else Common.capitalize_last_component s
+
 let pp_inductive_type_name r =
   let result =
     match r with
     | GlobRef.IndRef _ when is_eponymous_record_global r ->
       str (Common.pp_type_name_capitalized r)
     | GlobRef.IndRef _ when is_record_inductive r -> pp_global Type r
-    | GlobRef.IndRef _ when is_local_inductive r -> pp_global Type r
     | GlobRef.IndRef _ when is_enum_inductive r ->
-      let name = str_global Type r in
-      str name
+      let base_name = Common.pp_global_name Type r in
+      str (capitalize_enum_name base_name r)
+    | GlobRef.IndRef _ when is_local_inductive r -> pp_global Type r
     | GlobRef.IndRef _ ->
       let base = str_global Type r in
       if is_qualified_name base then

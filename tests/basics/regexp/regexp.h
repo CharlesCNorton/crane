@@ -21,55 +21,55 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct Matcher {
@@ -80,47 +80,47 @@ struct Matcher {
     struct Any {};
 
     struct Char {
-      int64_t _a0;
+      int64_t d_a0;
     };
 
     struct Eps {};
 
     struct Cat {
-      std::shared_ptr<regexp> _a0;
-      std::shared_ptr<regexp> _a1;
+      std::shared_ptr<regexp> d_a0;
+      std::shared_ptr<regexp> d_a1;
     };
 
     struct Alt {
-      std::shared_ptr<regexp> _a0;
-      std::shared_ptr<regexp> _a1;
+      std::shared_ptr<regexp> d_a0;
+      std::shared_ptr<regexp> d_a1;
     };
 
     struct Zero {};
 
     struct Star {
-      std::shared_ptr<regexp> _a0;
+      std::shared_ptr<regexp> d_a0;
     };
 
     using variant_t = std::variant<Any, Char, Eps, Cat, Alt, Zero, Star>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit regexp(Any _v) : v_(std::move(_v)) {}
+    explicit regexp(Any _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Char _v) : v_(std::move(_v)) {}
+    explicit regexp(Char _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Eps _v) : v_(std::move(_v)) {}
+    explicit regexp(Eps _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Cat _v) : v_(std::move(_v)) {}
+    explicit regexp(Cat _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Alt _v) : v_(std::move(_v)) {}
+    explicit regexp(Alt _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Zero _v) : v_(std::move(_v)) {}
+    explicit regexp(Zero _v) : d_v_(std::move(_v)) {}
 
-    explicit regexp(Star _v) : v_(std::move(_v)) {}
+    explicit regexp(Star _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -192,10 +192,10 @@ struct Matcher {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <
@@ -210,25 +210,25 @@ struct Matcher {
         Overloaded{
             [&](const typename regexp::Any _args) -> T1 { return f; },
             [&](const typename regexp::Char _args) -> T1 {
-              int64_t c = _args._a0;
+              int64_t c = _args.d_a0;
               return f0(c);
             },
             [&](const typename regexp::Eps _args) -> T1 { return f1; },
             [&](const typename regexp::Cat _args) -> T1 {
-              std::shared_ptr<regexp> r1 = _args._a0;
-              std::shared_ptr<regexp> r2 = _args._a1;
+              std::shared_ptr<regexp> r1 = _args.d_a0;
+              std::shared_ptr<regexp> r2 = _args.d_a1;
               return f2(r1, regexp_rect<T1>(f, f0, f1, f2, f3, f4, f5, r1), r2,
                         regexp_rect<T1>(f, f0, f1, f2, f3, f4, f5, r2));
             },
             [&](const typename regexp::Alt _args) -> T1 {
-              std::shared_ptr<regexp> r1 = _args._a0;
-              std::shared_ptr<regexp> r2 = _args._a1;
+              std::shared_ptr<regexp> r1 = _args.d_a0;
+              std::shared_ptr<regexp> r2 = _args.d_a1;
               return f3(r1, regexp_rect<T1>(f, f0, f1, f2, f3, f4, f5, r1), r2,
                         regexp_rect<T1>(f, f0, f1, f2, f3, f4, f5, r2));
             },
             [&](const typename regexp::Zero _args) -> T1 { return f4; },
             [&](const typename regexp::Star _args) -> T1 {
-              std::shared_ptr<regexp> r0 = _args._a0;
+              std::shared_ptr<regexp> r0 = _args.d_a0;
               return f5(r0, regexp_rect<T1>(f, f0, f1, f2, f3, f4, f5, r0));
             }},
         r->v());
@@ -245,25 +245,25 @@ struct Matcher {
         Overloaded{
             [&](const typename regexp::Any _args) -> T1 { return f; },
             [&](const typename regexp::Char _args) -> T1 {
-              int64_t c = _args._a0;
+              int64_t c = _args.d_a0;
               return f0(c);
             },
             [&](const typename regexp::Eps _args) -> T1 { return f1; },
             [&](const typename regexp::Cat _args) -> T1 {
-              std::shared_ptr<regexp> r1 = _args._a0;
-              std::shared_ptr<regexp> r2 = _args._a1;
+              std::shared_ptr<regexp> r1 = _args.d_a0;
+              std::shared_ptr<regexp> r2 = _args.d_a1;
               return f2(r1, regexp_rec<T1>(f, f0, f1, f2, f3, f4, f5, r1), r2,
                         regexp_rec<T1>(f, f0, f1, f2, f3, f4, f5, r2));
             },
             [&](const typename regexp::Alt _args) -> T1 {
-              std::shared_ptr<regexp> r1 = _args._a0;
-              std::shared_ptr<regexp> r2 = _args._a1;
+              std::shared_ptr<regexp> r1 = _args.d_a0;
+              std::shared_ptr<regexp> r2 = _args.d_a1;
               return f3(r1, regexp_rec<T1>(f, f0, f1, f2, f3, f4, f5, r1), r2,
                         regexp_rec<T1>(f, f0, f1, f2, f3, f4, f5, r2));
             },
             [&](const typename regexp::Zero _args) -> T1 { return f4; },
             [&](const typename regexp::Star _args) -> T1 {
-              std::shared_ptr<regexp> r0 = _args._a0;
+              std::shared_ptr<regexp> r0 = _args.d_a0;
               return f5(r0, regexp_rec<T1>(f, f0, f1, f2, f3, f4, f5, r0));
             }},
         r->v());
@@ -292,19 +292,19 @@ struct Matcher {
       regexp::ctor::Cat_(regexp::ctor::Star_(regexp::ctor::Char_(int64_t(0))),
                          regexp::ctor::Char_(int64_t(1)));
   static inline const std::shared_ptr<List<int64_t>> s1 =
-      List<int64_t>::ctor::cons_(
+      List<int64_t>::ctor::Cons_(
           int64_t(0),
-          List<int64_t>::ctor::cons_(int64_t(1), List<int64_t>::ctor::nil_()));
+          List<int64_t>::ctor::Cons_(int64_t(1), List<int64_t>::ctor::Nil_()));
   static inline const std::shared_ptr<List<int64_t>> s2 =
-      List<int64_t>::ctor::cons_(int64_t(1), List<int64_t>::ctor::nil_());
+      List<int64_t>::ctor::Cons_(int64_t(1), List<int64_t>::ctor::Nil_());
   static inline const std::shared_ptr<List<int64_t>> s3 =
-      List<int64_t>::ctor::cons_(
+      List<int64_t>::ctor::Cons_(
           int64_t(0),
-          List<int64_t>::ctor::cons_(
-              int64_t(0), List<int64_t>::ctor::cons_(
-                              int64_t(1), List<int64_t>::ctor::nil_())));
+          List<int64_t>::ctor::Cons_(
+              int64_t(0), List<int64_t>::ctor::Cons_(
+                              int64_t(1), List<int64_t>::ctor::Nil_())));
   static inline const std::shared_ptr<List<int64_t>> s4 =
-      List<int64_t>::ctor::cons_(int64_t(0), List<int64_t>::ctor::nil_());
+      List<int64_t>::ctor::Cons_(int64_t(0), List<int64_t>::ctor::Nil_());
 };
 
 #endif // INCLUDED_REGEXP

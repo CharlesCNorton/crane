@@ -17,7 +17,7 @@ RamOps::get_bank_main(const std::shared_ptr<RamOps::state_main> &s,
                       const unsigned int b) {
   return s->ram_sys_main->nth(
       b, std::make_shared<RamOps::ram_bank_main>(ram_bank_main{
-             List<std::shared_ptr<RamOps::ram_chip_main>>::ctor::nil_()}));
+             List<std::shared_ptr<RamOps::ram_chip_main>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_chip_main>
@@ -25,7 +25,7 @@ RamOps::get_chip_main(const std::shared_ptr<RamOps::ram_bank_main> &bk,
                       const unsigned int c) {
   return bk->bank_chips_main->nth(
       c, std::make_shared<RamOps::ram_chip_main>(ram_chip_main{
-             List<std::shared_ptr<RamOps::ram_reg_main>>::ctor::nil_()}));
+             List<std::shared_ptr<RamOps::ram_reg_main>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_reg_main>
@@ -33,7 +33,7 @@ RamOps::get_reg_main(const std::shared_ptr<RamOps::ram_chip_main> &ch,
                      const unsigned int r) {
   return ch->chip_regs_main->nth(
       r, std::make_shared<RamOps::ram_reg_main>(
-             ram_reg_main{List<unsigned int>::ctor::nil_()}));
+             ram_reg_main{List<unsigned int>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_reg_main>
@@ -96,7 +96,7 @@ RamOps::get_bank_port(const std::shared_ptr<RamOps::state_port> &s,
                       const unsigned int b) {
   return s->ram_sys_port->nth(
       b, std::make_shared<RamOps::bank_port>(bank_port{
-             List<std::shared_ptr<RamOps::chip_port>>::ctor::nil_()}));
+             List<std::shared_ptr<RamOps::chip_port>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::chip_port>
@@ -148,7 +148,7 @@ RamOps::get_bank_status(const std::shared_ptr<RamOps::state_status> &s,
                         const unsigned int b) {
   return s->ram_sys_status->nth(
       b, std::make_shared<RamOps::ram_bank_status>(ram_bank_status{
-             List<std::shared_ptr<RamOps::ram_chip_status>>::ctor::nil_()}));
+             List<std::shared_ptr<RamOps::ram_chip_status>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_chip_status>
@@ -156,7 +156,7 @@ RamOps::get_chip_status(const std::shared_ptr<RamOps::ram_bank_status> &bk,
                         const unsigned int c) {
   return bk->bank_chips_status->nth(
       c, std::make_shared<RamOps::ram_chip_status>(ram_chip_status{
-             List<std::shared_ptr<RamOps::ram_reg_status>>::ctor::nil_()}));
+             List<std::shared_ptr<RamOps::ram_reg_status>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_reg_status>
@@ -164,7 +164,7 @@ RamOps::get_reg_status(const std::shared_ptr<RamOps::ram_chip_status> &ch,
                        const unsigned int r) {
   return ch->chip_regs_status->nth(
       r, std::make_shared<RamOps::ram_reg_status>(
-             ram_reg_status{List<unsigned int>::ctor::nil_()}));
+             ram_reg_status{List<unsigned int>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::ram_reg_status>
@@ -335,21 +335,21 @@ std::shared_ptr<RamOps::bank_nested_bank>
 RamOps::get_bank0(const std::shared_ptr<RamOps::state_nested_bank> &s) {
   return s->banks_->nth(
       0u, std::make_shared<RamOps::bank_nested_bank>(bank_nested_bank{
-              List<std::shared_ptr<RamOps::chip_nested_bank>>::ctor::nil_()}));
+              List<std::shared_ptr<RamOps::chip_nested_bank>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::chip_nested_bank>
 RamOps::get_chip0(const std::shared_ptr<RamOps::bank_nested_bank> &b) {
   return b->chips_->nth(
       0u, std::make_shared<RamOps::chip_nested_bank>(chip_nested_bank{
-              List<std::shared_ptr<RamOps::reg_nested_bank>>::ctor::nil_()}));
+              List<std::shared_ptr<RamOps::reg_nested_bank>>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::reg_nested_bank>
 RamOps::get_reg0(const std::shared_ptr<RamOps::chip_nested_bank> &c) {
   return c->regs_->nth(0u,
                        std::make_shared<RamOps::reg_nested_bank>(
-                           reg_nested_bank{List<unsigned int>::ctor::nil_()}));
+                           reg_nested_bank{List<unsigned int>::ctor::Nil_()}));
 }
 
 std::shared_ptr<RamOps::state_nested_bank>
@@ -383,13 +383,13 @@ RamOps::read_status0(const std::shared_ptr<RamOps::state_nested_bank> &s) {
   return std::move(r)->status_->nth(0u, 0u);
 }
 
-unsigned int RamOps::score(const RamOps::item x) {
+unsigned int RamOps::score(const RamOps::Item x) {
   return [&](void) {
     switch (x) {
-    case item::S_: {
+    case Item::e_S_: {
       return 1u;
     }
-    case item::S_0: {
+    case Item::e_S_0: {
       return 2u;
     }
     }

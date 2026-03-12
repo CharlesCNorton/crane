@@ -1119,7 +1119,7 @@ let fun_tparam_name i = "F" ^ string_of_int i
 
 let fun_tparam_id i = Id.of_string (fun_tparam_name i)
 
-let field_param_name i = "_a" ^ string_of_int i
+let field_param_name i = "d_a" ^ string_of_int i
 
 let field_param_id i = Id.of_string (field_param_name i)
 
@@ -1138,3 +1138,15 @@ let ctor_fallback_id i = Id.of_string (ctor_fallback_name i)
 let db_fallback_name i = "_db" ^ string_of_int i
 
 let db_fallback_id i = Id.of_string (db_fallback_name i)
+
+let tparam_name id = Id.of_string ("t_" ^ Id.to_string id)
+
+let enum_ctor_name s = "e_" ^ String.uppercase_ascii s
+
+let capitalize_last_component s =
+  match String.rindex_opt s ':' with
+  | Some i when i > 0 && i < String.length s - 1 && s.[i - 1] = ':' ->
+    let prefix = String.sub s 0 (i + 1) in
+    let suffix = String.sub s (i + 1) (String.length s - i - 1) in
+    prefix ^ String.capitalize_ascii suffix
+  | _ -> String.capitalize_ascii s

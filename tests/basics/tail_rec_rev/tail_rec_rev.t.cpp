@@ -39,10 +39,10 @@ std::vector<T> list_to_vector(const std::shared_ptr<List<T>> &l) {
   auto current = l;
   while (true) {
     bool done = false;
-    std::visit(Overloaded{[&](const typename List<T>::nil &) { done = true; },
-                          [&](const typename List<T>::cons &c) {
-                            result.push_back(c._a0);
-                            current = c._a1;
+    std::visit(Overloaded{[&](const typename List<T>::Nil &) { done = true; },
+                          [&](const typename List<T>::Cons &c) {
+                            result.push_back(c.d_a0);
+                            current = c.d_a1;
                           }},
                current->v());
     if (done)
@@ -54,9 +54,9 @@ std::vector<T> list_to_vector(const std::shared_ptr<List<T>> &l) {
 // Helper to create a list from a vector
 template <typename T>
 std::shared_ptr<List<T>> vector_to_list(const std::vector<T> &vec) {
-  auto result = List<T>::ctor::nil_();
+  auto result = List<T>::ctor::Nil_();
   for (auto it = vec.rbegin(); it != vec.rend(); ++it) {
-    result = List<T>::ctor::cons_(*it, result);
+    result = List<T>::ctor::Cons_(*it, result);
   }
   return result;
 }
@@ -64,7 +64,7 @@ std::shared_ptr<List<T>> vector_to_list(const std::vector<T> &vec) {
 int main() {
   // Test 1: Reverse empty list
   {
-    auto empty = List<unsigned int>::ctor::nil_();
+    auto empty = List<unsigned int>::ctor::Nil_();
     auto result = better_rev<unsigned int>(empty);
     auto vec = list_to_vector(result);
     ASSERT(vec.size() == 0);
@@ -74,7 +74,7 @@ int main() {
   // Test 2: Reverse single element
   {
     auto single =
-        List<unsigned int>::ctor::cons_(42, List<unsigned int>::ctor::nil_());
+        List<unsigned int>::ctor::Cons_(42, List<unsigned int>::ctor::Nil_());
     auto result = better_rev<unsigned int>(single);
     auto vec = list_to_vector(result);
     ASSERT(vec.size() == 1);

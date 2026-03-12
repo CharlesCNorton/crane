@@ -25,19 +25,19 @@ struct Nat {
   struct O {};
 
   struct S {
-    std::shared_ptr<Nat> _a0;
+    std::shared_ptr<Nat> d_a0;
   };
 
   using variant_t = std::variant<O, S>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(O _v) : d_v_(std::move(_v)) {}
 
-  explicit Nat(S _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
@@ -62,10 +62,10 @@ public:
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 const std::shared_ptr<Nat> one = Nat::ctor::S_(Nat::ctor::O_());

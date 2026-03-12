@@ -59,7 +59,7 @@ Pos::succ_double_mask(const std::shared_ptr<Pos::mask> &x) {
           },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            mpz_class p = _args._a0;
+            mpz_class p = _args.d_a0;
             return mask::ctor::IsPos_((2 * std::move(p) + 1));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -75,7 +75,7 @@ Pos::double_mask(const std::shared_ptr<Pos::mask> &x) {
               -> std::shared_ptr<Pos::mask> { return mask::ctor::IsNul_(); },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            mpz_class p = _args._a0;
+            mpz_class p = _args.d_a0;
             return mask::ctor::IsPos_((2 * std::move(p)));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -160,36 +160,36 @@ std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const mpz_class x,
   }
 }
 
-comparison Pos::compare_cont(const comparison r, const mpz_class x,
+Comparison Pos::compare_cont(const Comparison r, const mpz_class x,
                              const mpz_class y) {
   if (x == 1) {
     if (y == 1) {
       return r;
     } else if (y % 2 != 0) {
       mpz_class _x = (y - 1) / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       mpz_class _x = y / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else if (x % 2 != 0) {
     mpz_class p = (x - 1) / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
       return compare_cont(r, p, q);
     } else {
       mpz_class q = y / 2;
-      return compare_cont(comparison::Gt, p, q);
+      return compare_cont(Comparison::e_GT, p, q);
     }
   } else {
     mpz_class p = x / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
-      return compare_cont(comparison::Lt, p, q);
+      return compare_cont(Comparison::e_LT, p, q);
     } else {
       mpz_class q = y / 2;
       return compare_cont(r, p, q);
@@ -197,8 +197,8 @@ comparison Pos::compare_cont(const comparison r, const mpz_class x,
   }
 }
 
-comparison Pos::compare(const mpz_class _x0, const mpz_class _x1) {
-  return compare_cont(comparison::Eq, _x0, _x1);
+Comparison Pos::compare(const mpz_class _x0, const mpz_class _x1) {
+  return compare_cont(Comparison::e_EQ, _x0, _x1);
 }
 
 bool Pos::eqb(const mpz_class p, const mpz_class q) {
@@ -273,18 +273,18 @@ mpz_class Coq_Pos::add_carry(const mpz_class x, const mpz_class y) {
   }
 }
 
-comparison BinNat::compare(const mpz_class n, const mpz_class m) {
+Comparison BinNat::compare(const mpz_class n, const mpz_class m) {
   if (n == 0) {
     if (m == 0) {
-      return comparison::Eq;
+      return Comparison::e_EQ;
     } else {
       mpz_class _x = m;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else {
     mpz_class n_ = n;
     if (m == 0) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else {
       mpz_class m_ = m;
       return Pos::compare(n_, m_);

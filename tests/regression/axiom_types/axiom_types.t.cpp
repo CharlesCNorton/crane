@@ -56,7 +56,7 @@ int main() {
   {
     bool caught = false;
     try {
-      AxiomTypes::use_axiom(unit::tt);
+      AxiomTypes::use_axiom(Unit::e_TT);
     } catch (const std::logic_error &e) {
       caught = true;
     }
@@ -74,7 +74,7 @@ int main() {
   {
     bool caught = false;
     try {
-      AxiomTypes::nested_axiom(unit::tt);
+      AxiomTypes::nested_axiom(Unit::e_TT);
     } catch (const std::logic_error &e) {
       caught = true;
     }
@@ -85,7 +85,7 @@ int main() {
   {
     bool caught = false;
     try {
-      AxiomTypes::axiom_list(unit::tt);
+      AxiomTypes::axiom_list(Unit::e_TT);
     } catch (const std::logic_error &e) {
       caught = true;
     }

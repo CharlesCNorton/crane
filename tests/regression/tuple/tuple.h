@@ -25,19 +25,19 @@ struct Nat {
   struct O {};
 
   struct S {
-    std::shared_ptr<Nat> _a0;
+    std::shared_ptr<Nat> d_a0;
   };
 
   using variant_t = std::variant<O, S>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Nat(O _v) : v_(std::move(_v)) {}
+  explicit Nat(O _v) : d_v_(std::move(_v)) {}
 
-  explicit Nat(S _v) : v_(std::move(_v)) {}
+  explicit Nat(S _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
@@ -62,47 +62,47 @@ public:
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
-template <typename A, typename B> struct Prod {
+template <typename t_A, typename t_B> struct Prod {
   // TYPES
-  struct pair {
-    A _a0;
-    B _a1;
+  struct Pair {
+    t_A d_a0;
+    t_B d_a1;
   };
 
-  using variant_t = std::variant<pair>;
+  using variant_t = std::variant<Pair>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Prod(pair _v) : v_(std::move(_v)) {}
+  explicit Prod(Pair _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<Prod<A, B>> pair_(A a0, B a1) {
-      return std::shared_ptr<Prod<A, B>>(new Prod<A, B>(pair{a0, a1}));
+    static std::shared_ptr<Prod<t_A, t_B>> Pair_(t_A a0, t_B a1) {
+      return std::shared_ptr<Prod<t_A, t_B>>(new Prod<t_A, t_B>(Pair{a0, a1}));
     }
 
-    static std::unique_ptr<Prod<A, B>> pair_uptr(A a0, B a1) {
-      return std::unique_ptr<Prod<A, B>>(new Prod<A, B>(pair{a0, a1}));
+    static std::unique_ptr<Prod<t_A, t_B>> Pair_uptr(t_A a0, t_B a1) {
+      return std::unique_ptr<Prod<t_A, t_B>>(new Prod<t_A, t_B>(Pair{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct Tuple {
@@ -110,14 +110,14 @@ struct Tuple {
 
   template <typename T1, typename T2>
   static std::shared_ptr<Prod<T1, T2>> make_pair(const T1 a, const T2 b) {
-    return Prod<T1, T2>::ctor::pair_(a, b);
+    return Prod<T1, T2>::ctor::Pair_(a, b);
   }
 
   template <typename T1, typename T2>
   static T1 fst(const std::shared_ptr<Prod<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[](const typename Prod<T1, T2>::pair _args) -> T1 {
-          T1 a = _args._a0;
+        Overloaded{[](const typename Prod<T1, T2>::Pair _args) -> T1 {
+          T1 a = _args.d_a0;
           return a;
         }},
         p->v());
@@ -126,8 +126,8 @@ struct Tuple {
   template <typename T1, typename T2>
   static T2 snd(const std::shared_ptr<Prod<T1, T2>> &p) {
     return std::visit(
-        Overloaded{[](const typename Prod<T1, T2>::pair _args) -> T2 {
-          T2 b = _args._a1;
+        Overloaded{[](const typename Prod<T1, T2>::Pair _args) -> T2 {
+          T2 b = _args.d_a1;
           return b;
         }},
         p->v());
@@ -136,11 +136,11 @@ struct Tuple {
   template <typename T1, typename T2>
   static std::shared_ptr<Prod<T2, T1>>
   swap(const std::shared_ptr<Prod<T1, T2>> &p) {
-    return std::visit(Overloaded{[](const typename Prod<T1, T2>::pair _args)
+    return std::visit(Overloaded{[](const typename Prod<T1, T2>::Pair _args)
                                      -> std::shared_ptr<Prod<T2, T1>> {
-                        T1 a = _args._a0;
-                        T2 b = _args._a1;
-                        return Prod<T2, T1>::ctor::pair_(b, a);
+                        T1 a = _args.d_a0;
+                        T2 b = _args.d_a1;
+                        return Prod<T2, T1>::ctor::Pair_(b, a);
                       }},
                       p->v());
   }

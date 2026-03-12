@@ -21,55 +21,55 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct Nat {
@@ -104,19 +104,19 @@ struct PageOps {
     struct NOP {};
 
     struct LDM {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     using variant_t = std::variant<NOP, LDM>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit instruction(NOP _v) : v_(std::move(_v)) {}
+    explicit instruction(NOP _v) : d_v_(std::move(_v)) {}
 
-    explicit instruction(LDM _v) : v_(std::move(_v)) {}
+    explicit instruction(LDM _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -141,10 +141,10 @@ struct PageOps {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F1>
@@ -154,7 +154,7 @@ struct PageOps {
         Overloaded{
             [&](const typename instruction::NOP _args) -> T1 { return f; },
             [&](const typename instruction::LDM _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -167,7 +167,7 @@ struct PageOps {
         Overloaded{
             [&](const typename instruction::NOP _args) -> T1 { return f; },
             [&](const typename instruction::LDM _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -183,13 +183,13 @@ struct PageOps {
       return std::move(l);
     } else {
       unsigned int n_ = n - 1;
-      return std::visit(Overloaded{[](const typename List<T1>::nil _args)
+      return std::visit(Overloaded{[](const typename List<T1>::Nil _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     return List<T1>::ctor::nil_();
+                                     return List<T1>::ctor::Nil_();
                                    },
-                                   [&](const typename List<T1>::cons _args)
+                                   [&](const typename List<T1>::Cons _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     std::shared_ptr<List<T1>> l_ = _args._a1;
+                                     std::shared_ptr<List<T1>> l_ = _args.d_a1;
                                      return drop<T1>(std::move(n_),
                                                      std::move(l_));
                                    }},
@@ -226,20 +226,20 @@ struct PageOps {
       pc_inc2(std::make_shared<state>(state{max_addr}));
   static inline const unsigned int test_disassemble_edge = [](void) {
     if (disassemble(
-            List<unsigned int>::ctor::cons_(
+            List<unsigned int>::ctor::Cons_(
                 0u,
-                List<unsigned int>::ctor::cons_(
-                    7u, List<unsigned int>::ctor::cons_(
-                            9u, List<unsigned int>::ctor::cons_(
-                                    11u, List<unsigned int>::ctor::nil_())))),
+                List<unsigned int>::ctor::Cons_(
+                    7u, List<unsigned int>::ctor::Cons_(
+                            9u, List<unsigned int>::ctor::Cons_(
+                                    11u, List<unsigned int>::ctor::Nil_())))),
             0u)
             .has_value()) {
       std::pair<std::shared_ptr<instruction>, unsigned int> p = *disassemble(
-          List<unsigned int>::ctor::cons_(
-              0u, List<unsigned int>::ctor::cons_(
-                      7u, List<unsigned int>::ctor::cons_(
-                              9u, List<unsigned int>::ctor::cons_(
-                                      11u, List<unsigned int>::ctor::nil_())))),
+          List<unsigned int>::ctor::Cons_(
+              0u, List<unsigned int>::ctor::Cons_(
+                      7u, List<unsigned int>::ctor::Cons_(
+                              9u, List<unsigned int>::ctor::Cons_(
+                                      11u, List<unsigned int>::ctor::Nil_())))),
           0u);
       std::shared_ptr<instruction> _x = p.first;
       unsigned int next = p.second;

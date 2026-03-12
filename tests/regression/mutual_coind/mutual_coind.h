@@ -21,164 +21,164 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct MutualCoind {
-  template <typename A> struct streamA;
-  template <typename A> struct streamB;
+  template <typename t_A> struct streamA;
+  template <typename t_A> struct streamB;
 
-  template <typename A> struct streamA {
+  template <typename t_A> struct streamA {
     // TYPES
-    struct consA {
-      A _a0;
-      std::shared_ptr<streamB<A>> _a1;
+    struct ConsA {
+      t_A d_a0;
+      std::shared_ptr<streamB<t_A>> d_a1;
     };
 
-    using variant_t = std::variant<consA>;
+    using variant_t = std::variant<ConsA>;
 
   private:
     // DATA
-    crane::lazy<variant_t> lazy_v_;
+    crane::lazy<variant_t> d_lazyV_;
 
     // CREATORS
-    explicit streamA(consA _v)
-        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+    explicit streamA(ConsA _v)
+        : d_lazyV_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
 
     explicit streamA(std::function<variant_t()> _thunk)
-        : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
+        : d_lazyV_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<streamA<A>>
-      consA_(A a0, const std::shared_ptr<streamB<A>> &a1) {
-        return std::shared_ptr<streamA<A>>(new streamA<A>(consA{a0, a1}));
+      static std::shared_ptr<streamA<t_A>>
+      ConsA_(t_A a0, const std::shared_ptr<streamB<t_A>> &a1) {
+        return std::shared_ptr<streamA<t_A>>(new streamA<t_A>(ConsA{a0, a1}));
       }
 
-      static std::unique_ptr<streamA<A>>
-      consA_uptr(A a0, const std::shared_ptr<streamB<A>> &a1) {
-        return std::unique_ptr<streamA<A>>(new streamA<A>(consA{a0, a1}));
+      static std::unique_ptr<streamA<t_A>>
+      ConsA_uptr(t_A a0, const std::shared_ptr<streamB<t_A>> &a1) {
+        return std::unique_ptr<streamA<t_A>>(new streamA<t_A>(ConsA{a0, a1}));
       }
 
-      static std::shared_ptr<streamA<A>>
-      lazy_(std::function<std::shared_ptr<streamA<A>>()> thunk) {
-        return std::shared_ptr<streamA<A>>(new streamA<A>(
+      static std::shared_ptr<streamA<t_A>>
+      lazy_(std::function<std::shared_ptr<streamA<t_A>>()> thunk) {
+        return std::shared_ptr<streamA<t_A>>(new streamA<t_A>(
             std::function<variant_t()>([=](void) mutable -> variant_t {
-              std::shared_ptr<streamA<A>> _tmp = thunk();
+              std::shared_ptr<streamA<t_A>> _tmp = thunk();
               return _tmp->v();
             })));
       }
     };
 
     // ACCESSORS
-    const variant_t &v() const { return lazy_v_.force(); }
+    const variant_t &v() const { return d_lazyV_.force(); }
   };
 
-  template <typename A> struct streamB {
+  template <typename t_A> struct streamB {
     // TYPES
-    struct consB {
-      A _a0;
-      std::shared_ptr<streamA<A>> _a1;
+    struct ConsB {
+      t_A d_a0;
+      std::shared_ptr<streamA<t_A>> d_a1;
     };
 
-    using variant_t = std::variant<consB>;
+    using variant_t = std::variant<ConsB>;
 
   private:
     // DATA
-    crane::lazy<variant_t> lazy_v_;
+    crane::lazy<variant_t> d_lazyV_;
 
     // CREATORS
-    explicit streamB(consB _v)
-        : lazy_v_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
+    explicit streamB(ConsB _v)
+        : d_lazyV_(crane::lazy<variant_t>(variant_t(std::move(_v)))) {}
 
     explicit streamB(std::function<variant_t()> _thunk)
-        : lazy_v_(crane::lazy<variant_t>(std::move(_thunk))) {}
+        : d_lazyV_(crane::lazy<variant_t>(std::move(_thunk))) {}
 
   public:
     // TYPES
     struct ctor {
       ctor() = delete;
 
-      static std::shared_ptr<streamB<A>>
-      consB_(A a0, const std::shared_ptr<streamA<A>> &a1) {
-        return std::shared_ptr<streamB<A>>(new streamB<A>(consB{a0, a1}));
+      static std::shared_ptr<streamB<t_A>>
+      ConsB_(t_A a0, const std::shared_ptr<streamA<t_A>> &a1) {
+        return std::shared_ptr<streamB<t_A>>(new streamB<t_A>(ConsB{a0, a1}));
       }
 
-      static std::unique_ptr<streamB<A>>
-      consB_uptr(A a0, const std::shared_ptr<streamA<A>> &a1) {
-        return std::unique_ptr<streamB<A>>(new streamB<A>(consB{a0, a1}));
+      static std::unique_ptr<streamB<t_A>>
+      ConsB_uptr(t_A a0, const std::shared_ptr<streamA<t_A>> &a1) {
+        return std::unique_ptr<streamB<t_A>>(new streamB<t_A>(ConsB{a0, a1}));
       }
 
-      static std::shared_ptr<streamB<A>>
-      lazy_(std::function<std::shared_ptr<streamB<A>>()> thunk) {
-        return std::shared_ptr<streamB<A>>(new streamB<A>(
+      static std::shared_ptr<streamB<t_A>>
+      lazy_(std::function<std::shared_ptr<streamB<t_A>>()> thunk) {
+        return std::shared_ptr<streamB<t_A>>(new streamB<t_A>(
             std::function<variant_t()>([=](void) mutable -> variant_t {
-              std::shared_ptr<streamB<A>> _tmp = thunk();
+              std::shared_ptr<streamB<t_A>> _tmp = thunk();
               return _tmp->v();
             })));
       }
     };
 
     // ACCESSORS
-    const variant_t &v() const { return lazy_v_.force(); }
+    const variant_t &v() const { return d_lazyV_.force(); }
   };
 
   template <typename T1>
   static T1 headA(const std::shared_ptr<streamA<T1>> &s) {
     return std::visit(
-        Overloaded{[](const typename streamA<T1>::consA _args) -> T1 {
-          T1 x = _args._a0;
+        Overloaded{[](const typename streamA<T1>::ConsA _args) -> T1 {
+          T1 x = _args.d_a0;
           return x;
         }},
         s->v());
@@ -190,9 +190,9 @@ struct MutualCoind {
     return streamB<T1>::ctor::lazy_(
         [=](void) mutable -> std::shared_ptr<streamB<T1>> {
           return std::visit(
-              Overloaded{[](const typename streamA<T1>::consA _args)
+              Overloaded{[](const typename streamA<T1>::ConsA _args)
                              -> std::shared_ptr<streamB<T1>> {
-                std::shared_ptr<streamB<T1>> t = _args._a1;
+                std::shared_ptr<streamB<T1>> t = _args.d_a1;
                 return t;
               }},
               s->v());
@@ -202,8 +202,8 @@ struct MutualCoind {
   template <typename T1>
   static T1 headB(const std::shared_ptr<streamB<T1>> &s) {
     return std::visit(
-        Overloaded{[](const typename streamB<T1>::consB _args) -> T1 {
-          T1 x = _args._a0;
+        Overloaded{[](const typename streamB<T1>::ConsB _args) -> T1 {
+          T1 x = _args.d_a0;
           return x;
         }},
         s->v());
@@ -215,9 +215,9 @@ struct MutualCoind {
     return streamA<T1>::ctor::lazy_(
         [=](void) mutable -> std::shared_ptr<streamA<T1>> {
           return std::visit(
-              Overloaded{[](const typename streamB<T1>::consB _args)
+              Overloaded{[](const typename streamB<T1>::ConsB _args)
                              -> std::shared_ptr<streamA<T1>> {
-                std::shared_ptr<streamA<T1>> t = _args._a1;
+                std::shared_ptr<streamA<T1>> t = _args.d_a1;
                 return t;
               }},
               s->v());
@@ -231,14 +231,14 @@ struct MutualCoind {
   static std::shared_ptr<List<T1>>
   takeA(const unsigned int fuel, const std::shared_ptr<streamA<T1>> &s) {
     if (fuel <= 0) {
-      return List<T1>::ctor::nil_();
+      return List<T1>::ctor::Nil_();
     } else {
       unsigned int f = fuel - 1;
-      return std::visit(Overloaded{[&](const typename streamA<T1>::consA _args)
+      return std::visit(Overloaded{[&](const typename streamA<T1>::ConsA _args)
                                        -> std::shared_ptr<List<T1>> {
-                          T1 x = _args._a0;
-                          std::shared_ptr<streamB<T1>> t = _args._a1;
-                          return List<T1>::ctor::cons_(x, takeB<T1>(f, t));
+                          T1 x = _args.d_a0;
+                          std::shared_ptr<streamB<T1>> t = _args.d_a1;
+                          return List<T1>::ctor::Cons_(x, takeB<T1>(f, t));
                         }},
                         s->v());
     }
@@ -248,14 +248,14 @@ struct MutualCoind {
   static std::shared_ptr<List<T1>>
   takeB(const unsigned int fuel, const std::shared_ptr<streamB<T1>> &s) {
     if (fuel <= 0) {
-      return List<T1>::ctor::nil_();
+      return List<T1>::ctor::Nil_();
     } else {
       unsigned int f = fuel - 1;
-      return std::visit(Overloaded{[&](const typename streamB<T1>::consB _args)
+      return std::visit(Overloaded{[&](const typename streamB<T1>::ConsB _args)
                                        -> std::shared_ptr<List<T1>> {
-                          T1 x = _args._a0;
-                          std::shared_ptr<streamA<T1>> t = _args._a1;
-                          return List<T1>::ctor::cons_(x, takeA<T1>(f, t));
+                          T1 x = _args.d_a0;
+                          std::shared_ptr<streamA<T1>> t = _args.d_a1;
+                          return List<T1>::ctor::Cons_(x, takeA<T1>(f, t));
                         }},
                         s->v());
     }

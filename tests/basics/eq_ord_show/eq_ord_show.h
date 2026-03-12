@@ -21,20 +21,20 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename I, typename A>
-concept Eq = requires(A a0, A a1) {
+template <typename I, typename t_A>
+concept Eq = requires(t_A a0, t_A a1) {
   { I::eqb(a1, a0) } -> std::convertible_to<bool>;
   { I::neqb(a1, a0) } -> std::convertible_to<bool>;
 };
-template <typename I, typename A>
-concept Ord = requires(A a0, A a1) {
+template <typename I, typename t_A>
+concept Ord = requires(t_A a0, t_A a1) {
   { I::lt(a1, a0) } -> std::convertible_to<bool>;
   { I::le(a1, a0) } -> std::convertible_to<bool>;
   { I::gt(a1, a0) } -> std::convertible_to<bool>;
   { I::ge(a1, a0) } -> std::convertible_to<bool>;
 };
-template <typename I, typename A>
-concept Show = requires(A a0) {
+template <typename I, typename t_A>
+concept Show = requires(t_A a0) {
   { I::show(a0) } -> std::convertible_to<std::string>;
 };
 
@@ -82,17 +82,17 @@ template <typename _tcI0, typename _tcI1, typename T1>
 bool is_less_or_equal(const T1 x, const T1 y) {
   return _tcI0::le(x, y);
 }
-enum class Ordering { LT, EQ, GT };
+enum class Ordering { e_LT, e_EQ, e_GT };
 
 template <typename _tcI0, typename _tcI1, typename T1>
 Ordering compare(const T1 x, const T1 y) {
   if (_tcI0::lt(x, y)) {
-    return Ordering::LT;
+    return Ordering::e_LT;
   } else {
     if (_tcI1::eqb(x, y)) {
-      return Ordering::EQ;
+      return Ordering::e_EQ;
     } else {
-      return Ordering::GT;
+      return Ordering::e_GT;
     }
   }
 }

@@ -18,8 +18,8 @@ unsigned int DepElim::fin_to_nat(const unsigned int _x,
                    return 0u;
                  },
                  [](const typename DepElim::fin::FS _args) -> unsigned int {
-                   unsigned int n0 = _args._a0;
-                   std::shared_ptr<DepElim::fin> f_ = _args._a1;
+                   unsigned int n0 = _args.d_a0;
+                   std::shared_ptr<DepElim::fin> f_ = _args.d_a1;
                    return (fin_to_nat(std::move(n0), std::move(f_)) + 1);
                  }},
       f->v());
@@ -28,11 +28,11 @@ unsigned int DepElim::fin_to_nat(const unsigned int _x,
 unsigned int DepElim::get_present(const std::shared_ptr<DepElim::avail> &a) {
   return std::visit(
       Overloaded{
-          [](const typename DepElim::avail::present _args) -> unsigned int {
-            unsigned int n = _args._a0;
+          [](const typename DepElim::avail::Present _args) -> unsigned int {
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
-          [](const typename DepElim::avail::absent _args) -> unsigned int {
+          [](const typename DepElim::avail::Absent _args) -> unsigned int {
             throw std::logic_error("unreachable");
           }},
       a->v());

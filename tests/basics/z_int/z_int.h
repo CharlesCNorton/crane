@@ -22,7 +22,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class comparison { Eq, Lt, Gt };
+enum class Comparison { e_EQ, e_LT, e_GT };
 
 struct Pos {
   static unsigned int succ(const unsigned int x);
@@ -30,9 +30,9 @@ struct Pos {
   static unsigned int add_carry(const unsigned int x, const unsigned int y);
   static unsigned int pred_double(const unsigned int x);
   static unsigned int mul(const unsigned int x, const unsigned int y);
-  static comparison compare_cont(const comparison r, const unsigned int x,
+  static Comparison compare_cont(const Comparison r, const unsigned int x,
                                  const unsigned int y);
-  static comparison compare(const unsigned int _x0, const unsigned int _x1);
+  static Comparison compare(const unsigned int _x0, const unsigned int _x1);
   static bool eqb(const unsigned int p, const unsigned int q);
 };
 
@@ -41,11 +41,11 @@ struct BinInt {
   static int64_t succ_double(const int64_t x);
   static int64_t pred_double(const int64_t x);
   static int64_t pos_sub(const unsigned int x, const unsigned int y);
-  static comparison compare(const int64_t x, const int64_t y);
+  static Comparison compare(const int64_t x, const int64_t y);
 };
 
 struct Datatypes {
-  static comparison CompOpp(const comparison r);
+  static Comparison CompOpp(const Comparison r);
 };
 
 struct ZIntTest {

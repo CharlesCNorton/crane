@@ -94,21 +94,21 @@ std::shared_ptr<List<unsigned int>>
 ComputationalProof::insert_dec(const unsigned int x,
                                const std::shared_ptr<List<unsigned int>> &l) {
   return std::visit(
-      Overloaded{[&](const typename List<unsigned int>::nil _args)
+      Overloaded{[&](const typename List<unsigned int>::Nil _args)
                      -> std::shared_ptr<List<unsigned int>> {
-                   return List<unsigned int>::ctor::cons_(
-                       std::move(x), List<unsigned int>::ctor::nil_());
+                   return List<unsigned int>::ctor::Cons_(
+                       std::move(x), List<unsigned int>::ctor::Nil_());
                  },
-                 [&](const typename List<unsigned int>::cons _args)
+                 [&](const typename List<unsigned int>::Cons _args)
                      -> std::shared_ptr<List<unsigned int>> {
-                   unsigned int y = _args._a0;
-                   std::shared_ptr<List<unsigned int>> rest = _args._a1;
+                   unsigned int y = _args.d_a0;
+                   std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
                    if (le_dec(x, y)) {
-                     return List<unsigned int>::ctor::cons_(
-                         std::move(x), List<unsigned int>::ctor::cons_(
+                     return List<unsigned int>::ctor::Cons_(
+                         std::move(x), List<unsigned int>::ctor::Cons_(
                                            std::move(y), std::move(rest)));
                    } else {
-                     return List<unsigned int>::ctor::cons_(
+                     return List<unsigned int>::ctor::Cons_(
                          std::move(y),
                          insert_dec(std::move(x), std::move(rest)));
                    }
@@ -119,14 +119,14 @@ ComputationalProof::insert_dec(const unsigned int x,
 std::shared_ptr<List<unsigned int>>
 ComputationalProof::isort_dec(const std::shared_ptr<List<unsigned int>> &l) {
   return std::visit(
-      Overloaded{[](const typename List<unsigned int>::nil _args)
+      Overloaded{[](const typename List<unsigned int>::Nil _args)
                      -> std::shared_ptr<List<unsigned int>> {
-                   return List<unsigned int>::ctor::nil_();
+                   return List<unsigned int>::ctor::Nil_();
                  },
-                 [](const typename List<unsigned int>::cons _args)
+                 [](const typename List<unsigned int>::Cons _args)
                      -> std::shared_ptr<List<unsigned int>> {
-                   unsigned int x = _args._a0;
-                   std::shared_ptr<List<unsigned int>> rest = _args._a1;
+                   unsigned int x = _args.d_a0;
+                   std::shared_ptr<List<unsigned int>> rest = _args.d_a1;
                    return insert_dec(std::move(x), isort_dec(std::move(rest)));
                  }},
       l->v());

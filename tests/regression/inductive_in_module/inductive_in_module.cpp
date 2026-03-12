@@ -12,16 +12,16 @@
 #include <variant>
 
 unsigned int InductiveInModule::Inner::color_to_nat(
-    const InductiveInModule::Inner::color c) {
+    const InductiveInModule::Inner::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return 0u;
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return 1u;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return 2u;
     }
     }

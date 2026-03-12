@@ -56,7 +56,7 @@ Pos::succ_double_mask(const std::shared_ptr<Pos::mask> &x) {
               -> std::shared_ptr<Pos::mask> { return mask::ctor::IsPos_(1u); },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            unsigned int p = _args._a0;
+            unsigned int p = _args.d_a0;
             return mask::ctor::IsPos_((2u * std::move(p) + 1u));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -72,7 +72,7 @@ Pos::double_mask(const std::shared_ptr<Pos::mask> &x) {
               -> std::shared_ptr<Pos::mask> { return mask::ctor::IsNul_(); },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            unsigned int p = _args._a0;
+            unsigned int p = _args.d_a0;
             return mask::ctor::IsPos_((2u * std::move(p)));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -158,36 +158,36 @@ std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const unsigned int x,
   }
 }
 
-comparison Pos::compare_cont(const comparison r, const unsigned int x,
+Comparison Pos::compare_cont(const Comparison r, const unsigned int x,
                              const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {
       return r;
     } else if (y % 2u != 0u) {
       unsigned int _x = (y - 1u) / 2u;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       unsigned int _x = y / 2u;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else if (x % 2u != 0u) {
     unsigned int p = (x - 1u) / 2u;
     if (y == 1u) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2u != 0u) {
       unsigned int q = (y - 1u) / 2u;
       return compare_cont(r, p, q);
     } else {
       unsigned int q = y / 2u;
-      return compare_cont(comparison::Gt, p, q);
+      return compare_cont(Comparison::e_GT, p, q);
     }
   } else {
     unsigned int p = x / 2u;
     if (y == 1u) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2u != 0u) {
       unsigned int q = (y - 1u) / 2u;
-      return compare_cont(comparison::Lt, p, q);
+      return compare_cont(Comparison::e_LT, p, q);
     } else {
       unsigned int q = y / 2u;
       return compare_cont(r, p, q);
@@ -195,8 +195,8 @@ comparison Pos::compare_cont(const comparison r, const unsigned int x,
   }
 }
 
-comparison Pos::compare(const unsigned int _x0, const unsigned int _x1) {
-  return compare_cont(comparison::Eq, _x0, _x1);
+Comparison Pos::compare(const unsigned int _x0, const unsigned int _x1) {
+  return compare_cont(Comparison::e_EQ, _x0, _x1);
 }
 
 bool Pos::eqb(const unsigned int p, const unsigned int q) {
@@ -271,18 +271,18 @@ unsigned int Coq_Pos::add_carry(const unsigned int x, const unsigned int y) {
   }
 }
 
-comparison BinNat::compare(const unsigned int n, const unsigned int m) {
+Comparison BinNat::compare(const unsigned int n, const unsigned int m) {
   if (n == 0u) {
     if (m == 0u) {
-      return comparison::Eq;
+      return Comparison::e_EQ;
     } else {
       unsigned int _x = m;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else {
     unsigned int n_ = n;
     if (m == 0u) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else {
       unsigned int m_ = m;
       return Pos::compare(n_, m_);

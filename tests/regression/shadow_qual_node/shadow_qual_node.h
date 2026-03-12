@@ -22,22 +22,22 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct ShadowQualNode {
   struct Node {
-    enum class shadow { Tag };
+    enum class Shadow { e_TAG };
 
-    template <typename T1> static T1 shadow_rect(const T1 f, const shadow s) {
+    template <typename T1> static T1 shadow_rect(const T1 f, const Shadow s) {
       return [&](void) {
         switch (s) {
-        case shadow::Tag: {
+        case Shadow::e_TAG: {
           return f;
         }
         }
       }();
     }
 
-    template <typename T1> static T1 shadow_rec(const T1 f, const shadow s) {
+    template <typename T1> static T1 shadow_rec(const T1 f, const Shadow s) {
       return [&](void) {
         switch (s) {
-        case shadow::Tag: {
+        case Shadow::e_TAG: {
           return f;
         }
         }
@@ -45,8 +45,8 @@ struct ShadowQualNode {
     }
   };
 
-  static Node::shadow id(const Node::shadow x);
-  static inline const Node::shadow t = id(Node::shadow::Tag);
+  static Node::Shadow id(const Node::Shadow x);
+  static inline const Node::Shadow t = id(Node::Shadow::e_TAG);
 };
 
 #endif // INCLUDED_SHADOW_QUAL_NODE

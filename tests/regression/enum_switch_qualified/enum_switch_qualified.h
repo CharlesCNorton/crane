@@ -22,16 +22,16 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct EnumSwitchQualified {
   struct Outer {
-    enum class color { Red, Blue };
+    enum class Color { e_RED, e_BLUE };
 
     template <typename T1>
-    static T1 color_rect(const T1 f, const T1 f0, const color c) {
+    static T1 color_rect(const T1 f, const T1 f0, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f0;
         }
         }
@@ -39,25 +39,25 @@ struct EnumSwitchQualified {
     }
 
     template <typename T1>
-    static T1 color_rec(const T1 f, const T1 f0, const color c) {
+    static T1 color_rec(const T1 f, const T1 f0, const Color c) {
       return [&](void) {
         switch (c) {
-        case color::Red: {
+        case Color::e_RED: {
           return f;
         }
-        case color::Blue: {
+        case Color::e_BLUE: {
           return f0;
         }
         }
       }();
     }
 
-    static color flip(const color c);
-    static unsigned int code(const color c);
+    static Color flip(const Color c);
+    static unsigned int code(const Color c);
   };
 
   static inline const unsigned int t =
-      Outer::code(Outer::flip(Outer::color::Red));
+      Outer::code(Outer::flip(Outer::Color::e_RED));
 };
 
 #endif // INCLUDED_ENUM_SWITCH_QUALIFIED

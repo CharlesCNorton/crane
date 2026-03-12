@@ -31,10 +31,10 @@ to_vector(const std::shared_ptr<List<unsigned int>> &l) {
   auto cur = l;
   while (true) {
     auto ok = std::visit(
-        Overloaded{[&](const List<unsigned int>::nil) -> bool { return false; },
-                   [&](const List<unsigned int>::cons args) -> bool {
-                     result.push_back(args._a0);
-                     cur = args._a1;
+        Overloaded{[&](const List<unsigned int>::Nil) -> bool { return false; },
+                   [&](const List<unsigned int>::Cons args) -> bool {
+                     result.push_back(args.d_a0);
+                     cur = args.d_a1;
                      return true;
                    }},
         cur->v());

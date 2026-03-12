@@ -24,7 +24,7 @@ struct MatchFallbackNat {
   struct maybe_nat {
     // TYPES
     struct SomeNat {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
 
     struct NoneNat {};
@@ -33,12 +33,12 @@ struct MatchFallbackNat {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit maybe_nat(SomeNat _v) : v_(std::move(_v)) {}
+    explicit maybe_nat(SomeNat _v) : d_v_(std::move(_v)) {}
 
-    explicit maybe_nat(NoneNat _v) : v_(std::move(_v)) {}
+    explicit maybe_nat(NoneNat _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -63,10 +63,10 @@ struct MatchFallbackNat {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0>
@@ -75,7 +75,7 @@ struct MatchFallbackNat {
     return std::visit(
         Overloaded{
             [&](const typename maybe_nat::SomeNat _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename maybe_nat::NoneNat _args) -> T1 { return f0; }},
@@ -88,7 +88,7 @@ struct MatchFallbackNat {
     return std::visit(
         Overloaded{
             [&](const typename maybe_nat::SomeNat _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename maybe_nat::NoneNat _args) -> T1 { return f0; }},

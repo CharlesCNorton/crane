@@ -172,12 +172,12 @@ unsigned int RecordCaseBody::sum_list(
     const std::shared_ptr<RecordCaseBody::list<unsigned int>> &l) {
   return std::visit(
       Overloaded{
-          [](const typename RecordCaseBody::list<unsigned int>::nil _args)
+          [](const typename RecordCaseBody::list<unsigned int>::Nil _args)
               -> unsigned int { return 0u; },
-          [](const typename RecordCaseBody::list<unsigned int>::cons _args)
+          [](const typename RecordCaseBody::list<unsigned int>::Cons _args)
               -> unsigned int {
-            unsigned int x = _args._a0;
-            std::shared_ptr<RecordCaseBody::list<unsigned int>> xs = _args._a1;
+            unsigned int x = _args.d_a0;
+            std::shared_ptr<RecordCaseBody::list<unsigned int>> xs = _args.d_a1;
             return (std::move(x) + sum_list(std::move(xs)));
           }},
       l->v());
@@ -189,9 +189,9 @@ RecordCaseBody::list_in_body(const std::shared_ptr<RecordCaseBody::Rec> &r) {
     unsigned int a = r->f1;
     unsigned int b = r->f2;
     unsigned int c = r->f3;
-    return sum_list(list<unsigned int>::ctor::cons_(
-        a, list<unsigned int>::ctor::cons_(
-               b, list<unsigned int>::ctor::cons_(
-                      c, list<unsigned int>::ctor::nil_()))));
+    return sum_list(list<unsigned int>::ctor::Cons_(
+        a, list<unsigned int>::ctor::Cons_(
+               b, list<unsigned int>::ctor::Cons_(
+                      c, list<unsigned int>::ctor::Nil_()))));
   }();
 }

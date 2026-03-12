@@ -20,40 +20,40 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct Sig {
+template <typename t_A> struct Sig {
   // TYPES
-  struct exist {
-    A _a0;
+  struct Exist {
+    t_A d_a0;
   };
 
-  using variant_t = std::variant<exist>;
+  using variant_t = std::variant<Exist>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit Sig(exist _v) : v_(std::move(_v)) {}
+  explicit Sig(Exist _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<Sig<A>> exist_(A a0) {
-      return std::shared_ptr<Sig<A>>(new Sig<A>(exist{a0}));
+    static std::shared_ptr<Sig<t_A>> Exist_(t_A a0) {
+      return std::shared_ptr<Sig<t_A>>(new Sig<t_A>(Exist{a0}));
     }
 
-    static std::unique_ptr<Sig<A>> exist_uptr(A a0) {
-      return std::unique_ptr<Sig<A>>(new Sig<A>(exist{a0}));
+    static std::unique_ptr<Sig<t_A>> Exist_uptr(t_A a0) {
+      return std::unique_ptr<Sig<t_A>>(new Sig<t_A>(Exist{a0}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 };
 
 struct Opaque {

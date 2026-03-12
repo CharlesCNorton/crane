@@ -21,87 +21,89 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
+template <typename t_A> struct List {
   // TYPES
-  struct nil {};
+  struct Nil {};
 
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
 
-  using variant_t = std::variant<nil, cons>;
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
   // DATA
-  variant_t v_;
+  variant_t d_v_;
 
   // CREATORS
-  explicit List(nil _v) : v_(std::move(_v)) {}
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
 
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
   // TYPES
   struct ctor {
     ctor() = delete;
 
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
 
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
 
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
 
   // MANIPULATORS
-  variant_t &v_mut() { return v_; }
+  variant_t &v_mut() { return d_v_; }
 
   // ACCESSORS
-  const variant_t &v() const { return v_; }
+  const variant_t &v() const { return d_v_; }
 
-  template <MapsTo<bool, A> F0> bool forallb(F0 &&f) const {
+  template <MapsTo<bool, t_A> F0> bool forallb(F0 &&f) const {
     return std::visit(
         Overloaded{
-            [](const typename List<A>::nil _args) -> bool { return true; },
-            [&](const typename List<A>::cons _args) -> bool {
-              A a = _args._a0;
-              std::shared_ptr<List<A>> l0 = _args._a1;
+            [](const typename List<t_A>::Nil _args) -> bool { return true; },
+            [&](const typename List<t_A>::Cons _args) -> bool {
+              t_A a = _args.d_a0;
+              std::shared_ptr<List<t_A>> l0 = _args.d_a1;
               return (f(a) && std::move(l0)->forallb(f));
             }},
         this->v());
   }
 
-  A nth(const unsigned int n, const A default0) const {
+  t_A nth(const unsigned int n, const t_A default0) const {
     if (n <= 0) {
-      return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
-                                     return default0;
-                                   },
-                                   [](const typename List<A>::cons _args) -> A {
-                                     A x = _args._a0;
-                                     return x;
-                                   }},
-                        this->v());
+      return std::visit(
+          Overloaded{[&](const typename List<t_A>::Nil _args) -> t_A {
+                       return default0;
+                     },
+                     [](const typename List<t_A>::Cons _args) -> t_A {
+                       t_A x = _args.d_a0;
+                       return x;
+                     }},
+          this->v());
     } else {
       unsigned int m = n - 1;
       return std::visit(
-          Overloaded{
-              [&](const typename List<A>::nil _args) -> A { return default0; },
-              [&](const typename List<A>::cons _args) -> A {
-                std::shared_ptr<List<A>> l_ = _args._a1;
-                return std::move(l_)->nth(m, default0);
-              }},
+          Overloaded{[&](const typename List<t_A>::Nil _args) -> t_A {
+                       return default0;
+                     },
+                     [&](const typename List<t_A>::Cons _args) -> t_A {
+                       std::shared_ptr<List<t_A>> l_ = _args.d_a1;
+                       return std::move(l_)->nth(m, default0);
+                     }},
           this->v());
     }
   }
@@ -131,28 +133,28 @@ struct RegisterPairOps {
   update_nth(const unsigned int n, const T1 x,
              const std::shared_ptr<List<T1>> &l) {
     if (n <= 0) {
-      return std::visit(Overloaded{[](const typename List<T1>::nil _args)
+      return std::visit(Overloaded{[](const typename List<T1>::Nil _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     return List<T1>::ctor::nil_();
+                                     return List<T1>::ctor::Nil_();
                                    },
-                                   [&](const typename List<T1>::cons _args)
+                                   [&](const typename List<T1>::Cons _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     std::shared_ptr<List<T1>> xs = _args._a1;
-                                     return List<T1>::ctor::cons_(
+                                     std::shared_ptr<List<T1>> xs = _args.d_a1;
+                                     return List<T1>::ctor::Cons_(
                                          x, std::move(xs));
                                    }},
                         l->v());
     } else {
       unsigned int n_ = n - 1;
-      return std::visit(Overloaded{[](const typename List<T1>::nil _args)
+      return std::visit(Overloaded{[](const typename List<T1>::Nil _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     return List<T1>::ctor::nil_();
+                                     return List<T1>::ctor::Nil_();
                                    },
-                                   [&](const typename List<T1>::cons _args)
+                                   [&](const typename List<T1>::Cons _args)
                                        -> std::shared_ptr<List<T1>> {
-                                     T1 y = _args._a0;
-                                     std::shared_ptr<List<T1>> ys = _args._a1;
-                                     return List<T1>::ctor::cons_(
+                                     T1 y = _args.d_a0;
+                                     std::shared_ptr<List<T1>> ys = _args.d_a1;
+                                     return List<T1>::ctor::Cons_(
                                          y,
                                          update_nth<T1>(n_, x, std::move(ys)));
                                    }},
@@ -174,117 +176,117 @@ struct RegisterPairOps {
                                              const unsigned int r,
                                              const unsigned int v);
   static inline const unsigned int test_get_reg_pair_even_value = get_reg_pair(
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
-          0u, List<unsigned int>::ctor::cons_(
-                  1u, List<unsigned int>::ctor::cons_(
-                          10u, List<unsigned int>::ctor::cons_(
-                                   11u, List<unsigned int>::ctor::nil_()))))}),
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
+          0u, List<unsigned int>::ctor::Cons_(
+                  1u, List<unsigned int>::ctor::Cons_(
+                          10u, List<unsigned int>::ctor::Cons_(
+                                   11u, List<unsigned int>::ctor::Nil_()))))}),
       2u);
   static inline const std::shared_ptr<state> sample_from_regs =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           0u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   10u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       11u,
-                      List<unsigned int>::ctor::cons_(
-                          0u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          0u, List<unsigned int>::ctor::Cons_(
+                                  0u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_get_reg_pair_from_regs =
       PeanoNat::eqb(get_reg_pair(sample_from_regs, 2u), 171u);
   static inline const bool test_get_reg_pair_odd_normalizes = PeanoNat::eqb(
       get_reg_pair(
-          std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+          std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
-                  1u, List<unsigned int>::ctor::cons_(
-                          10u, List<unsigned int>::ctor::cons_(
-                                   11u, List<unsigned int>::ctor::nil_()))))}),
+              List<unsigned int>::ctor::Cons_(
+                  1u, List<unsigned int>::ctor::Cons_(
+                          10u, List<unsigned int>::ctor::Cons_(
+                                   11u, List<unsigned int>::ctor::Nil_()))))}),
           2u),
       get_reg_pair(
-          std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+          std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
-                  1u, List<unsigned int>::ctor::cons_(
-                          10u, List<unsigned int>::ctor::cons_(
-                                   11u, List<unsigned int>::ctor::nil_()))))}),
+              List<unsigned int>::ctor::Cons_(
+                  1u, List<unsigned int>::ctor::Cons_(
+                          10u, List<unsigned int>::ctor::Cons_(
+                                   11u, List<unsigned int>::ctor::Nil_()))))}),
           3u));
   static inline const std::shared_ptr<state> sample_pair_high =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           2u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               9u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   4u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       7u,
-                      List<unsigned int>::ctor::cons_(
-                          8u, List<unsigned int>::ctor::cons_(
-                                  1u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          8u, List<unsigned int>::ctor::Cons_(
+                                  1u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_set_reg_affects_pair_high =
       PeanoNat::eqb(get_reg_pair(set_reg(sample_pair_high, 2u, 13u), 2u),
                     ((13u * 16u) + get_reg(sample_pair_high, 3u)));
   static inline const std::shared_ptr<state> sample_pair_low =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           2u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               9u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   4u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       7u,
-                      List<unsigned int>::ctor::cons_(
-                          8u, List<unsigned int>::ctor::cons_(
-                                  1u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          8u, List<unsigned int>::ctor::Cons_(
+                                  1u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_set_reg_affects_pair_low =
       PeanoNat::eqb(get_reg_pair(set_reg(sample_pair_low, 3u, 12u), 3u),
                     ((get_reg(sample_pair_low, 2u) * 16u) + 12u));
   static inline const std::shared_ptr<state> sample_idempotent =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           0u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   0u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       0u,
-                      List<unsigned int>::ctor::cons_(
-                          0u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          0u, List<unsigned int>::ctor::Cons_(
+                                  0u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_set_reg_pair_idempotent = PeanoNat::eqb(
       get_reg_pair(
           set_reg_pair(set_reg_pair(sample_idempotent, 2u, 34u), 2u, 171u), 2u),
       171u);
   static inline const std::shared_ptr<state> sample_preserves =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           1u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               2u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   3u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       4u,
-                      List<unsigned int>::ctor::cons_(
-                          5u, List<unsigned int>::ctor::cons_(
-                                  6u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          5u, List<unsigned int>::ctor::Cons_(
+                                  6u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_set_reg_pair_preserves_other_pairs =
       PeanoNat::eqb(get_reg_pair(set_reg_pair(sample_preserves, 0u, 171u), 2u),
                     get_reg_pair(sample_preserves, 2u));
   static unsigned int pair_base(const unsigned int r);
   static inline const std::shared_ptr<state> sample_register_pair =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           0u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   0u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       0u,
-                      List<unsigned int>::ctor::cons_(
-                          0u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          0u, List<unsigned int>::ctor::Cons_(
+                                  0u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_even_projection =
       PeanoNat::eqb(pair_base(6u), 6u);
   static inline const bool test_odd_projection =
@@ -300,31 +302,31 @@ struct RegisterPairOps {
   static inline const bool test_register_pair_architecture =
       test_regs->forallb(pair_property);
   static inline const std::shared_ptr<state> sample_even_rounding =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           0u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               1u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   2u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       3u,
-                      List<unsigned int>::ctor::cons_(
-                          4u, List<unsigned int>::ctor::cons_(
-                                  5u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          4u, List<unsigned int>::ctor::Cons_(
+                                  5u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const unsigned int test_register_pair_even_rounding =
       get_reg_pair(set_reg_pair(sample_even_rounding, 3u, 45u), 3u);
   static inline const std::shared_ptr<state> sample_successor =
-      std::make_shared<state>(state{List<unsigned int>::ctor::cons_(
+      std::make_shared<state>(state{List<unsigned int>::ctor::Cons_(
           0u,
-          List<unsigned int>::ctor::cons_(
+          List<unsigned int>::ctor::Cons_(
               0u,
-              List<unsigned int>::ctor::cons_(
+              List<unsigned int>::ctor::Cons_(
                   10u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       11u,
-                      List<unsigned int>::ctor::cons_(
-                          0u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_()))))))});
+                      List<unsigned int>::ctor::Cons_(
+                          0u, List<unsigned int>::ctor::Cons_(
+                                  0u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool test_even_same_as_successor = PeanoNat::eqb(
       get_reg_pair(sample_successor, 2u), get_reg_pair(sample_successor, 3u));
   static inline const bool test_odd_same_as_predecessor = PeanoNat::eqb(

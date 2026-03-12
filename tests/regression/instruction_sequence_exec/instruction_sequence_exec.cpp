@@ -28,7 +28,7 @@ InstructionSequenceExec::execute(
           },
           [&](const typename InstructionSequenceExec::instruction::ADD_ACC
                   _args) -> std::shared_ptr<InstructionSequenceExec::state> {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::make_shared<InstructionSequenceExec::state>(
                 state{s->pc_, (s->acc_ + std::move(n))});
           }},
@@ -43,17 +43,18 @@ InstructionSequenceExec::exec_program(
   return std::visit(
       Overloaded{
           [&](const typename List<
-              std::shared_ptr<InstructionSequenceExec::instruction>>::nil _args)
+              std::shared_ptr<InstructionSequenceExec::instruction>>::Nil _args)
               -> std::shared_ptr<InstructionSequenceExec::state> {
             return std::move(s);
           },
           [&](const typename List<
-              std::shared_ptr<InstructionSequenceExec::instruction>>::cons
+              std::shared_ptr<InstructionSequenceExec::instruction>>::Cons
                   _args) -> std::shared_ptr<InstructionSequenceExec::state> {
-            std::shared_ptr<InstructionSequenceExec::instruction> i = _args._a0;
+            std::shared_ptr<InstructionSequenceExec::instruction> i =
+                _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionSequenceExec::instruction>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return exec_program(std::move(rest),
                                 execute(std::move(s), std::move(i)));
           }},

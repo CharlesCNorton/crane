@@ -26,19 +26,19 @@ struct Nat {
     struct O {};
 
     struct S {
-      std::shared_ptr<nat> _a0;
+      std::shared_ptr<nat> d_a0;
     };
 
     using variant_t = std::variant<O, S>;
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit nat(O _v) : v_(std::move(_v)) {}
+    explicit nat(O _v) : d_v_(std::move(_v)) {}
 
-    explicit nat(S _v) : v_(std::move(_v)) {}
+    explicit nat(S _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -63,16 +63,16 @@ struct Nat {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
 
     int nat_to_int() const {
       return std::visit(
           Overloaded{[](const typename nat::O _args) -> int { return 0; },
                      [](const typename nat::S _args) -> int {
-                       std::shared_ptr<nat> n_ = _args._a0;
+                       std::shared_ptr<nat> n_ = _args.d_a0;
                        return 1 + std::move(n_)->nat_to_int();
                      }},
           this->v());
@@ -83,7 +83,7 @@ struct Nat {
       return std::visit(
           Overloaded{[&](const typename nat::O _args) -> T1 { return f; },
                      [&](const typename nat::S _args) -> T1 {
-                       std::shared_ptr<nat> n0 = _args._a0;
+                       std::shared_ptr<nat> n0 = _args.d_a0;
                        return f0(n0, n0->template nat_rec<T1>(f, f0));
                      }},
           this->v());
@@ -94,7 +94,7 @@ struct Nat {
       return std::visit(
           Overloaded{[&](const typename nat::O _args) -> T1 { return f; },
                      [&](const typename nat::S _args) -> T1 {
-                       std::shared_ptr<nat> n0 = _args._a0;
+                       std::shared_ptr<nat> n0 = _args.d_a0;
                        return f0(n0, n0->template nat_rect<T1>(f, f0));
                      }},
           this->v());
@@ -106,7 +106,7 @@ struct Nat {
                        return n;
                      },
                      [&](const typename nat::S _args) -> std::shared_ptr<nat> {
-                       std::shared_ptr<nat> x = _args._a0;
+                       std::shared_ptr<nat> x = _args.d_a0;
                        return nat::ctor::S_(std::move(x)->add(n));
                      }},
           this->v());

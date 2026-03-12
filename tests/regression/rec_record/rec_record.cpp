@@ -14,13 +14,13 @@
 unsigned int
 RecRecord::rlist_sum(const std::shared_ptr<RecRecord::rlist<unsigned int>> &l) {
   return std::visit(
-      Overloaded{[](const typename RecRecord::rlist<unsigned int>::rnil _args)
+      Overloaded{[](const typename RecRecord::rlist<unsigned int>::Rnil _args)
                      -> unsigned int { return 0u; },
-                 [](const typename RecRecord::rlist<unsigned int>::rcons _args)
+                 [](const typename RecRecord::rlist<unsigned int>::Rcons _args)
                      -> unsigned int {
-                   unsigned int x = _args._a0;
+                   unsigned int x = _args.d_a0;
                    std::shared_ptr<RecRecord::rlist<unsigned int>> rest =
-                       _args._a1;
+                       _args.d_a1;
                    return (std::move(x) + rlist_sum(std::move(rest)));
                  }},
       l->v());

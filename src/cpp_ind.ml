@@ -61,7 +61,7 @@ let pp_cpp_ind kn ind =
           let num_param_vars =
             List.length (List.filter (fun x -> x == Miniml.Keep) param_sign)
           in
-          let param_vars = List.firstn num_param_vars p.ip_vars in
+          let param_vars = List.map Common.tparam_name (List.firstn num_param_vars p.ip_vars) in
           pp_cpp_decl
             (empty_env ())
             (gen_ind_cpp param_vars names.(i) cnames.(i) p.ip_types)
@@ -218,7 +218,7 @@ let pp_cpp_ind_header kn ind =
               let num_param_vars =
                 List.length (List.filter (fun x -> x == Miniml.Keep) param_sign)
               in
-              let param_vars = List.firstn num_param_vars p.ip_vars in
+              let param_vars = List.map Common.tparam_name (List.firstn num_param_vars p.ip_vars) in
               (* Use the same name as the struct definition (see Dstruct
                  printing below) so forward declarations match their
                  definitions. *)
@@ -480,7 +480,7 @@ let pp_cpp_ind_header kn ind =
           let num_param_vars =
             List.length (List.filter (fun x -> x == Miniml.Keep) param_sign)
           in
-          let param_vars = List.firstn num_param_vars p.ip_vars in
+          let param_vars = List.map Common.tparam_name (List.firstn num_param_vars p.ip_vars) in
           (* Register methods that return std::any (for indexed inductives). A
              method returns std::any if its ML return type becomes an unnamed
              Tvar (indicating type erasure) after C++ conversion. *)

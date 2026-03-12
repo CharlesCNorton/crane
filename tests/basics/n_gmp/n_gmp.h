@@ -22,7 +22,7 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class comparison { Eq, Lt, Gt };
+enum class Comparison { e_EQ, e_LT, e_GT };
 
 struct Pos {
   static mpz_class succ(const mpz_class x);
@@ -34,7 +34,7 @@ struct Pos {
     struct IsNul {};
 
     struct IsPos {
-      mpz_class _a0;
+      mpz_class d_a0;
     };
 
     struct IsNeg {};
@@ -43,14 +43,14 @@ struct Pos {
 
   private:
     // DATA
-    variant_t v_;
+    variant_t d_v_;
 
     // CREATORS
-    explicit mask(IsNul _v) : v_(std::move(_v)) {}
+    explicit mask(IsNul _v) : d_v_(std::move(_v)) {}
 
-    explicit mask(IsPos _v) : v_(std::move(_v)) {}
+    explicit mask(IsPos _v) : d_v_(std::move(_v)) {}
 
-    explicit mask(IsNeg _v) : v_(std::move(_v)) {}
+    explicit mask(IsNeg _v) : d_v_(std::move(_v)) {}
 
   public:
     // TYPES
@@ -83,10 +83,10 @@ struct Pos {
     };
 
     // MANIPULATORS
-    variant_t &v_mut() { return v_; }
+    variant_t &v_mut() { return d_v_; }
 
     // ACCESSORS
-    const variant_t &v() const { return v_; }
+    const variant_t &v() const { return d_v_; }
   };
 
   static std::shared_ptr<mask> succ_double_mask(const std::shared_ptr<mask> &x);
@@ -95,9 +95,9 @@ struct Pos {
   static std::shared_ptr<mask> sub_mask(const mpz_class x, const mpz_class y);
   static std::shared_ptr<mask> sub_mask_carry(const mpz_class x,
                                               const mpz_class y);
-  static comparison compare_cont(const comparison r, const mpz_class x,
+  static Comparison compare_cont(const Comparison r, const mpz_class x,
                                  const mpz_class y);
-  static comparison compare(const mpz_class _x0, const mpz_class _x1);
+  static Comparison compare(const mpz_class _x0, const mpz_class _x1);
   static bool eqb(const mpz_class p, const mpz_class q);
 };
 
@@ -106,7 +106,7 @@ struct Coq_Pos {
 };
 
 struct BinNat {
-  static comparison compare(const mpz_class n, const mpz_class m);
+  static Comparison compare(const mpz_class n, const mpz_class m);
   static std::pair<mpz_class, mpz_class> pos_div_eucl(const mpz_class a,
                                                       const mpz_class b);
   static std::pair<mpz_class, mpz_class> div_eucl(const mpz_class a,

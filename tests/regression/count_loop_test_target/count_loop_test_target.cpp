@@ -21,7 +21,7 @@ unsigned int CountLoopTestTarget::target_of(
   return std::visit(
       Overloaded{[](const typename CountLoopTestTarget::instruction::ISZ _args)
                      -> unsigned int {
-                   unsigned int a = _args._a1;
+                   unsigned int a = _args.d_a1;
                    return std::move(a);
                  },
                  [](const typename CountLoopTestTarget::instruction::NOP _args)

@@ -11,28 +11,28 @@
 #include <string>
 #include <variant>
 
-EnumSwitchQualified::Outer::color
-EnumSwitchQualified::Outer::flip(const EnumSwitchQualified::Outer::color c) {
+EnumSwitchQualified::Outer::Color
+EnumSwitchQualified::Outer::flip(const EnumSwitchQualified::Outer::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
-      return color::Blue;
+    case Color::e_RED: {
+      return Color::e_BLUE;
     }
-    case color::Blue: {
-      return color::Red;
+    case Color::e_BLUE: {
+      return Color::e_RED;
     }
     }
   }();
 }
 
 unsigned int
-EnumSwitchQualified::Outer::code(const EnumSwitchQualified::Outer::color c) {
+EnumSwitchQualified::Outer::code(const EnumSwitchQualified::Outer::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return 1u;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return 2u;
     }
     }

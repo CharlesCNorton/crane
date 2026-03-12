@@ -120,36 +120,36 @@ mpz_class Pos::mul(const mpz_class x, const mpz_class y) {
   }
 }
 
-comparison Pos::compare_cont(const comparison r, const mpz_class x,
+Comparison Pos::compare_cont(const Comparison r, const mpz_class x,
                              const mpz_class y) {
   if (x == 1) {
     if (y == 1) {
       return r;
     } else if (y % 2 != 0) {
       mpz_class _x = (y - 1) / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       mpz_class _x = y / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else if (x % 2 != 0) {
     mpz_class p = (x - 1) / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
       return compare_cont(r, p, q);
     } else {
       mpz_class q = y / 2;
-      return compare_cont(comparison::Gt, p, q);
+      return compare_cont(Comparison::e_GT, p, q);
     }
   } else {
     mpz_class p = x / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
-      return compare_cont(comparison::Lt, p, q);
+      return compare_cont(Comparison::e_LT, p, q);
     } else {
       mpz_class q = y / 2;
       return compare_cont(r, p, q);
@@ -157,8 +157,8 @@ comparison Pos::compare_cont(const comparison r, const mpz_class x,
   }
 }
 
-comparison Pos::compare(const mpz_class _x0, const mpz_class _x1) {
-  return compare_cont(comparison::Eq, _x0, _x1);
+Comparison Pos::compare(const mpz_class _x0, const mpz_class _x1) {
+  return compare_cont(Comparison::e_EQ, _x0, _x1);
 }
 
 bool Pos::eqb(const mpz_class p, const mpz_class q) {
@@ -269,35 +269,35 @@ mpz_class BinInt::pos_sub(const mpz_class x, const mpz_class y) {
   }
 }
 
-comparison BinInt::compare(const mpz_class x, const mpz_class y) {
+Comparison BinInt::compare(const mpz_class x, const mpz_class y) {
   if (x == 0) {
     if (y == 0) {
-      return comparison::Eq;
+      return Comparison::e_EQ;
     } else if (y > 0) {
       mpz_class _x = y;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       mpz_class _x = -y;
-      return comparison::Gt;
+      return Comparison::e_GT;
     }
   } else if (x > 0) {
     mpz_class x_ = x;
     if (y == 0) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y > 0) {
       mpz_class y_ = y;
       return Pos::compare(x_, y_);
     } else {
       mpz_class _x = -y;
-      return comparison::Gt;
+      return Comparison::e_GT;
     }
   } else {
     mpz_class x_ = -x;
     if (y == 0) {
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else if (y > 0) {
       mpz_class _x = y;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       mpz_class y_ = -y;
       return Datatypes::CompOpp(Pos::compare(x_, y_));
@@ -345,17 +345,17 @@ mpz_class ZGMPTest::z_sign(const mpz_class z) {
   }
 }
 
-comparison Datatypes::CompOpp(const comparison r) {
+Comparison Datatypes::CompOpp(const Comparison r) {
   return [&](void) {
     switch (r) {
-    case comparison::Eq: {
-      return comparison::Eq;
+    case Comparison::e_EQ: {
+      return Comparison::e_EQ;
     }
-    case comparison::Lt: {
-      return comparison::Gt;
+    case Comparison::e_LT: {
+      return Comparison::e_GT;
     }
-    case comparison::Gt: {
-      return comparison::Lt;
+    case Comparison::e_GT: {
+      return Comparison::e_LT;
     }
     }
   }();

@@ -22,11 +22,11 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-enum class unit { tt };
+enum class Unit { e_TT };
 
 struct iotest {
   static void test1(const std::string _x);
-  static unit test2(const std::string s);
+  static Unit test2(const std::string s);
   static void test3(const std::string s);
   static std::string test4();
   static void test5();

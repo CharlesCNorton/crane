@@ -16,41 +16,41 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
   return std::visit(
       Overloaded{
           [](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
           [](const typename DeepPattern::tree::Node _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> t0 = _args._a0;
-            std::shared_ptr<DeepPattern::tree> t1 = _args._a1;
+            std::shared_ptr<DeepPattern::tree> t0 = _args.d_a0;
+            std::shared_ptr<DeepPattern::tree> t1 = _args.d_a1;
             return std::visit(
                 Overloaded{
                     [&](const typename DeepPattern::tree::Leaf _args)
                         -> unsigned int {
-                      unsigned int a = _args._a0;
+                      unsigned int a = _args.d_a0;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::tree::Leaf _args)
                                   -> unsigned int {
-                                unsigned int b = _args._a0;
+                                unsigned int b = _args.d_a0;
                                 return (std::move(a) + std::move(b));
                               },
                               [&](const typename DeepPattern::tree::Node _args)
                                   -> unsigned int {
                                 std::shared_ptr<DeepPattern::tree> t2 =
-                                    _args._a0;
+                                    _args.d_a0;
                                 std::shared_ptr<DeepPattern::tree> t3 =
-                                    _args._a1;
+                                    _args.d_a1;
                                 return std::visit(
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int b = _args._a0;
+                                          unsigned int b = _args.d_a0;
                                           return std::visit(
                                               Overloaded{
                                                   [&](const typename DeepPattern::
                                                           tree::Leaf _args)
                                                       -> unsigned int {
-                                                    unsigned int c = _args._a0;
+                                                    unsigned int c = _args.d_a0;
                                                     return ((std::move(a) +
                                                              std::move(b)) +
                                                             std::move(c));
@@ -72,24 +72,24 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                     },
                     [&](const typename DeepPattern::tree::Node _args)
                         -> unsigned int {
-                      std::shared_ptr<DeepPattern::tree> t2 = _args._a0;
-                      std::shared_ptr<DeepPattern::tree> t3 = _args._a1;
+                      std::shared_ptr<DeepPattern::tree> t2 = _args.d_a0;
+                      std::shared_ptr<DeepPattern::tree> t3 = _args.d_a1;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::tree::Leaf _args)
                                   -> unsigned int {
-                                unsigned int a = _args._a0;
+                                unsigned int a = _args.d_a0;
                                 return std::visit(
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int b = _args._a0;
+                                          unsigned int b = _args.d_a0;
                                           return std::visit(
                                               Overloaded{
                                                   [&](const typename DeepPattern::
                                                           tree::Leaf _args)
                                                       -> unsigned int {
-                                                    unsigned int c = _args._a0;
+                                                    unsigned int c = _args.d_a0;
                                                     return ((std::move(a) +
                                                              std::move(b)) +
                                                             std::move(c));
@@ -99,10 +99,10 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                                                       -> unsigned int {
                                                     std::shared_ptr<
                                                         DeepPattern::tree>
-                                                        t4 = _args._a0;
+                                                        t4 = _args.d_a0;
                                                     std::shared_ptr<
                                                         DeepPattern::tree>
-                                                        t5 = _args._a1;
+                                                        t5 = _args.d_a1;
                                                     return std::visit(
                                                         Overloaded{
                                                             [&](const typename DeepPattern::
@@ -110,7 +110,7 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                                                                         _args)
                                                                 -> unsigned int {
                                                               unsigned int c =
-                                                                  _args._a0;
+                                                                  _args.d_a0;
                                                               return std::visit(
                                                                   Overloaded{
                                                                       [&](const typename DeepPattern::
@@ -119,7 +119,7 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                                                                           -> unsigned int {
                                                                         unsigned int d =
                                                                             _args
-                                                                                ._a0;
+                                                                                .d_a0;
                                                                         return (
                                                                             ((std::move(
                                                                                   a) +
@@ -158,20 +158,20 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                               [&](const typename DeepPattern::tree::Node _args)
                                   -> unsigned int {
                                 std::shared_ptr<DeepPattern::tree> t4 =
-                                    _args._a0;
+                                    _args.d_a0;
                                 std::shared_ptr<DeepPattern::tree> t5 =
-                                    _args._a1;
+                                    _args.d_a1;
                                 return std::visit(
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int a = _args._a0;
+                                          unsigned int a = _args.d_a0;
                                           return std::visit(
                                               Overloaded{
                                                   [&](const typename DeepPattern::
                                                           tree::Leaf _args)
                                                       -> unsigned int {
-                                                    unsigned int b = _args._a0;
+                                                    unsigned int b = _args.d_a0;
                                                     return std::visit(
                                                         Overloaded{
                                                             [&](const typename DeepPattern::
@@ -179,7 +179,7 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                                                                         _args)
                                                                 -> unsigned int {
                                                               unsigned int c =
-                                                                  _args._a0;
+                                                                  _args.d_a0;
                                                               return std::visit(
                                                                   Overloaded{
                                                                       [&](const typename DeepPattern::
@@ -188,7 +188,7 @@ DeepPattern::deep_match(const std::shared_ptr<DeepPattern::tree> &t) {
                                                                           -> unsigned int {
                                                                         unsigned int d =
                                                                             _args
-                                                                                ._a0;
+                                                                                .d_a0;
                                                                         return (
                                                                             ((std::move(
                                                                                   a) +
@@ -242,22 +242,22 @@ DeepPattern::multi_constructor(const std::shared_ptr<DeepPattern::tree> &t1,
   return std::visit(
       Overloaded{
           [&](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
-            unsigned int a = _args._a0;
+            unsigned int a = _args.d_a0;
             return std::visit(
                 Overloaded{
                     [&](const typename DeepPattern::tree::Leaf _args)
                         -> unsigned int {
-                      unsigned int b = _args._a0;
+                      unsigned int b = _args.d_a0;
                       return (std::move(a) + std::move(b));
                     },
                     [&](const typename DeepPattern::tree::Node _args)
                         -> unsigned int {
-                      std::shared_ptr<DeepPattern::tree> t = _args._a0;
+                      std::shared_ptr<DeepPattern::tree> t = _args.d_a0;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::tree::Leaf _args)
                                   -> unsigned int {
-                                unsigned int b = _args._a0;
+                                unsigned int b = _args.d_a0;
                                 return (std::move(a) + std::move(b));
                               },
                               [](const typename DeepPattern::tree::Node _args)
@@ -267,37 +267,37 @@ DeepPattern::multi_constructor(const std::shared_ptr<DeepPattern::tree> &t1,
                 t2->v());
           },
           [&](const typename DeepPattern::tree::Node _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> t = _args._a0;
-            std::shared_ptr<DeepPattern::tree> t0 = _args._a1;
+            std::shared_ptr<DeepPattern::tree> t = _args.d_a0;
+            std::shared_ptr<DeepPattern::tree> t0 = _args.d_a1;
             return std::visit(
                 Overloaded{
                     [&](const typename DeepPattern::tree::Leaf _args)
                         -> unsigned int {
-                      unsigned int a = _args._a0;
+                      unsigned int a = _args.d_a0;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::tree::Leaf _args)
                                   -> unsigned int {
-                                unsigned int b = _args._a0;
+                                unsigned int b = _args.d_a0;
                                 return std::visit(
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int b0 = _args._a0;
+                                          unsigned int b0 = _args.d_a0;
                                           return (std::move(a) + std::move(b0));
                                         },
                                         [&](const typename DeepPattern::tree::
                                                 Node _args) -> unsigned int {
                                           std::shared_ptr<DeepPattern::tree>
-                                              t3 = _args._a0;
+                                              t3 = _args.d_a0;
                                           std::shared_ptr<DeepPattern::tree>
-                                              t4 = _args._a1;
+                                              t4 = _args.d_a1;
                                           return std::visit(
                                               Overloaded{
                                                   [&](const typename DeepPattern::
                                                           tree::Leaf _args)
                                                       -> unsigned int {
-                                                    unsigned int c = _args._a0;
+                                                    unsigned int c = _args.d_a0;
                                                     return std::visit(
                                                         Overloaded{
                                                             [&](const typename DeepPattern::
@@ -305,7 +305,7 @@ DeepPattern::multi_constructor(const std::shared_ptr<DeepPattern::tree> &t1,
                                                                         _args)
                                                                 -> unsigned int {
                                                               unsigned int d =
-                                                                  _args._a0;
+                                                                  _args.d_a0;
                                                               return (
                                                                   ((std::move(
                                                                         a) +
@@ -338,7 +338,7 @@ DeepPattern::multi_constructor(const std::shared_ptr<DeepPattern::tree> &t1,
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int b = _args._a0;
+                                          unsigned int b = _args.d_a0;
                                           return (std::move(a) + std::move(b));
                                         },
                                         [](const typename DeepPattern::tree::
@@ -362,46 +362,46 @@ unsigned int DeepPattern::list_deep_match(
   return std::visit(
       Overloaded{
           [](const typename DeepPattern::list<
-              std::shared_ptr<DeepPattern::tree>>::nil _args) -> unsigned int {
+              std::shared_ptr<DeepPattern::tree>>::Nil _args) -> unsigned int {
             return 0u;
           },
           [](const typename DeepPattern::list<
-              std::shared_ptr<DeepPattern::tree>>::cons _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> t = _args._a0;
+              std::shared_ptr<DeepPattern::tree>>::Cons _args) -> unsigned int {
+            std::shared_ptr<DeepPattern::tree> t = _args.d_a0;
             std::shared_ptr<
                 DeepPattern::list<std::shared_ptr<DeepPattern::tree>>>
-                l0 = _args._a1;
+                l0 = _args.d_a1;
             return std::visit(
                 Overloaded{
                     [&](const typename DeepPattern::tree::Leaf _args)
                         -> unsigned int {
-                      unsigned int a = _args._a0;
+                      unsigned int a = _args.d_a0;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::list<
-                                  std::shared_ptr<DeepPattern::tree>>::nil
+                                  std::shared_ptr<DeepPattern::tree>>::Nil
                                       _args) -> unsigned int {
                                 return std::move(a);
                               },
                               [&](const typename DeepPattern::list<
-                                  std::shared_ptr<DeepPattern::tree>>::cons
+                                  std::shared_ptr<DeepPattern::tree>>::Cons
                                       _args) -> unsigned int {
                                 std::shared_ptr<DeepPattern::tree> t0 =
-                                    _args._a0;
+                                    _args.d_a0;
                                 std::shared_ptr<DeepPattern::list<
                                     std::shared_ptr<DeepPattern::tree>>>
-                                    l1 = _args._a1;
+                                    l1 = _args.d_a1;
                                 return std::visit(
                                     Overloaded{
                                         [&](const typename DeepPattern::tree::
                                                 Leaf _args) -> unsigned int {
-                                          unsigned int b = _args._a0;
+                                          unsigned int b = _args.d_a0;
                                           return std::visit(
                                               Overloaded{
                                                   [&](const typename DeepPattern::
                                                           list<std::shared_ptr<
                                                               DeepPattern::
-                                                                  tree>>::nil
+                                                                  tree>>::Nil
                                                               _args)
                                                       -> unsigned int {
                                                     return (std::move(a) +
@@ -410,7 +410,7 @@ unsigned int DeepPattern::list_deep_match(
                                                   [](const typename DeepPattern::
                                                          list<std::shared_ptr<
                                                              DeepPattern::
-                                                                 tree>>::cons
+                                                                 tree>>::Cons
                                                              _args)
                                                       -> unsigned int {
                                                     return 0u;
@@ -427,36 +427,36 @@ unsigned int DeepPattern::list_deep_match(
                     },
                     [&](const typename DeepPattern::tree::Node _args)
                         -> unsigned int {
-                      std::shared_ptr<DeepPattern::tree> t0 = _args._a0;
-                      std::shared_ptr<DeepPattern::tree> t1 = _args._a1;
+                      std::shared_ptr<DeepPattern::tree> t0 = _args.d_a0;
+                      std::shared_ptr<DeepPattern::tree> t1 = _args.d_a1;
                       return std::visit(
                           Overloaded{
                               [&](const typename DeepPattern::tree::Leaf _args)
                                   -> unsigned int {
-                                unsigned int a = _args._a0;
+                                unsigned int a = _args.d_a0;
                                 return std::visit(
                                     Overloaded{[&](const typename DeepPattern::
                                                        tree::Leaf _args)
                                                    -> unsigned int {
-                                                 unsigned int b = _args._a0;
+                                                 unsigned int b = _args.d_a0;
                                                  return std::visit(Overloaded{[](const typename DeepPattern::list<
                                                                                   std::shared_ptr<
                                                                                       DeepPattern::
                                                                                           tree>>::
-                                                                                     nil _args)
+                                                                                     Nil _args)
                                                                                   -> unsigned int {
                                                                                 return 0u;
                                                                               },
                                                                               [&](const typename DeepPattern::list<
                                                                                   std::shared_ptr<
                                                                                       DeepPattern::
-                                                                                          tree>>::cons _args) -> unsigned int {
+                                                                                          tree>>::Cons _args) -> unsigned int {
                                                                                 std::shared_ptr<
                                                                                     DeepPattern::
                                                                                         tree>
                                                                                     t2 =
                                                                                         _args
-                                                                                            ._a0;
+                                                                                            .d_a0;
                                                                                 std::shared_ptr<
                                                                                     DeepPattern::list<
                                                                                         std::shared_ptr<
@@ -464,7 +464,7 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                 tree>>>
                                                                                     l1 =
                                                                                         _args
-                                                                                            ._a1;
+                                                                                            .d_a1;
                                                                                 return std::
                                                                                     visit(
                                                                                         Overloaded{
@@ -474,14 +474,14 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                 -> unsigned int {
                                                                                               unsigned int
                                                                                                   c = _args
-                                                                                                          ._a0;
+                                                                                                          .d_a0;
                                                                                               return std::visit(
                                                                                                   Overloaded{
                                                                                                       [&](const typename DeepPattern::list<
                                                                                                           std::shared_ptr<
                                                                                                               DeepPattern::
                                                                                                                   tree>>::
-                                                                                                              nil _args)
+                                                                                                              Nil _args)
                                                                                                           -> unsigned int {
                                                                                                         return (
                                                                                                             (std::move(
@@ -495,7 +495,7 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                           std::shared_ptr<
                                                                                                               DeepPattern::
                                                                                                                   tree>>::
-                                                                                                             cons
+                                                                                                             Cons
                                                                                                                  _args)
                                                                                                           -> unsigned int {
                                                                                                         return 0u;
@@ -513,18 +513,18 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                       tree>
                                                                                                   t3 =
                                                                                                       _args
-                                                                                                          ._a0;
+                                                                                                          .d_a0;
                                                                                               std::shared_ptr<
                                                                                                   DeepPattern::
                                                                                                       tree>
                                                                                                   t4 =
                                                                                                       _args
-                                                                                                          ._a1;
+                                                                                                          .d_a1;
                                                                                               return std::
                                                                                                   visit(Overloaded{[&](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
                                                                                                                      unsigned int
                                                                                                                          c = _args
-                                                                                                                                 ._a0;
+                                                                                                                                 .d_a0;
                                                                                                                      return std::visit(
                                                                                                                          Overloaded{
                                                                                                                              [&](const typename DeepPattern::
@@ -533,14 +533,14 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                                                  -> unsigned int {
                                                                                                                                unsigned int
                                                                                                                                    d = _args
-                                                                                                                                           ._a0;
+                                                                                                                                           .d_a0;
                                                                                                                                return std::visit(
                                                                                                                                    Overloaded{
                                                                                                                                        [&](const typename DeepPattern::list<
                                                                                                                                            std::shared_ptr<
                                                                                                                                                DeepPattern::
                                                                                                                                                    tree>>::
-                                                                                                                                               nil _args)
+                                                                                                                                               Nil _args)
                                                                                                                                            -> unsigned int {
                                                                                                                                          return (
                                                                                                                                              ((std::move(
@@ -556,7 +556,7 @@ unsigned int DeepPattern::list_deep_match(
                                                                                                                                            std::shared_ptr<
                                                                                                                                                DeepPattern::
                                                                                                                                                    tree>>::
-                                                                                                                                              cons
+                                                                                                                                              Cons
                                                                                                                                                   _args)
                                                                                                                                            -> unsigned int {
                                                                                                                                          return 0u;
@@ -613,16 +613,16 @@ unsigned int DeepPattern::wildcard_with_bindings(
   return std::visit(
       Overloaded{
           [](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
           [](const typename DeepPattern::tree::Node _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> l = _args._a0;
-            std::shared_ptr<DeepPattern::tree> r = _args._a1;
+            std::shared_ptr<DeepPattern::tree> l = _args.d_a0;
+            std::shared_ptr<DeepPattern::tree> r = _args.d_a1;
             unsigned int x = std::visit(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
-                             unsigned int a = _args._a0;
+                             unsigned int a = _args.d_a0;
                              return std::move(a);
                            },
                            [](const typename DeepPattern::tree::Node _args)
@@ -631,7 +631,7 @@ unsigned int DeepPattern::wildcard_with_bindings(
             unsigned int y = std::visit(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
-                             unsigned int b = _args._a0;
+                             unsigned int b = _args.d_a0;
                              return std::move(b);
                            },
                            [](const typename DeepPattern::tree::Node _args)
@@ -657,12 +657,12 @@ bool DeepPattern::has_value(const std::shared_ptr<DeepPattern::tree> &t,
                             const unsigned int target) {
   return std::visit(
       Overloaded{[&](const typename DeepPattern::tree::Leaf _args) -> bool {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return (std::move(n) == target);
                  },
                  [&](const typename DeepPattern::tree::Node _args) -> bool {
-                   std::shared_ptr<DeepPattern::tree> l = _args._a0;
-                   std::shared_ptr<DeepPattern::tree> r = _args._a1;
+                   std::shared_ptr<DeepPattern::tree> l = _args.d_a0;
+                   std::shared_ptr<DeepPattern::tree> r = _args.d_a1;
                    return (has_value(std::move(l), target) ||
                            has_value(std::move(r), target));
                  }},
@@ -675,7 +675,7 @@ DeepPattern::conditional_match(const std::shared_ptr<DeepPattern::tree> &t,
   return std::visit(
       Overloaded{
           [&](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             if ((n == target)) {
               return 100u;
             } else {
@@ -683,14 +683,14 @@ DeepPattern::conditional_match(const std::shared_ptr<DeepPattern::tree> &t,
             }
           },
           [&](const typename DeepPattern::tree::Node _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> l = _args._a0;
+            std::shared_ptr<DeepPattern::tree> l = _args.d_a0;
             if (has_value(t, target)) {
               return 200u;
             } else {
               return std::visit(
                   Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                  -> unsigned int {
-                               unsigned int a = _args._a0;
+                               unsigned int a = _args.d_a0;
                                return std::move(a);
                              },
                              [](const typename DeepPattern::tree::Node _args)
@@ -706,16 +706,16 @@ DeepPattern::nested_let_match(const std::shared_ptr<DeepPattern::tree> &t) {
   return std::visit(
       Overloaded{
           [](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
           [](const typename DeepPattern::tree::Node _args) -> unsigned int {
-            std::shared_ptr<DeepPattern::tree> l = _args._a0;
-            std::shared_ptr<DeepPattern::tree> r = _args._a1;
+            std::shared_ptr<DeepPattern::tree> l = _args.d_a0;
+            std::shared_ptr<DeepPattern::tree> r = _args.d_a1;
             unsigned int a = std::visit(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
-                             unsigned int x = _args._a0;
+                             unsigned int x = _args.d_a0;
                              return std::move(x);
                            },
                            [](const typename DeepPattern::tree::Node _args)
@@ -724,7 +724,7 @@ DeepPattern::nested_let_match(const std::shared_ptr<DeepPattern::tree> &t) {
             unsigned int b = std::visit(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
-                             unsigned int y = _args._a0;
+                             unsigned int y = _args.d_a0;
                              return std::move(y);
                            },
                            [](const typename DeepPattern::tree::Node _args)

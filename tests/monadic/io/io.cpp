@@ -14,9 +14,9 @@
 
 void iotest::test1(const std::string _x) { return; }
 
-unit iotest::test2(const std::string s) {
+Unit iotest::test2(const std::string s) {
   std::cout << s;
-  return unit::tt;
+  return Unit::e_TT;
 }
 
 void iotest::test3(const std::string s) {
