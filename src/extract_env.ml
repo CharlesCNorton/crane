@@ -1168,10 +1168,10 @@ let full_extr opaque_access f (refs, mps) =
   ( match filenames with
   | Some fn, _, _ ->
     let source = derive_source_file fn in
-    if source <> "" then Doc_comments.parse_file source
+    if source <> "" then
+      Doc_comments.set_table (Doc_comments.parse_file source)
   | _ -> () );
   print_structure_to_file filenames false struc;
-  Doc_comments.clear ();
   reset ()
 
 (** Main entry point for full library extraction. Extracts the given references

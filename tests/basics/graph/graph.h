@@ -139,6 +139,10 @@ public:
   }
 };
 
+/// A graph abstraction parameterized by a container type G and
+/// node type A. Provides operations for building and querying
+/// the graph.
+
 /// Decidable equality via a boolean function eqb.
 template <typename I, typename t_A>
 concept Eq = requires(t_A a0, t_A a1) {

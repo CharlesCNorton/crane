@@ -1402,22 +1402,11 @@ let rec pp_cpp_field ?(struct_name : Pp.t option) env = function
         str "template <" ++ args ++ str ">" ++ fnl ()
     in
     let doc_comment =
-      let name = Id.to_string mf_name in
-      match Doc_comments.find_opt name with
+      match Doc_comments.find (Id.to_string mf_name) with
       | None -> mt ()
       | Some text ->
-        let text =
-          Doc_comments.translate_brackets ~translate:(fun s -> s) text
-        in
-        let lines = String.split_on_char '\n' text in
-        let lines =
-          List.map
-            (fun line ->
-              let trimmed = String.trim line in
-              if trimmed = "" then str "///" else str "/// " ++ str trimmed )
-            lines
-        in
-        prlist_with_sep fnl (fun x -> x) lines ++ fnl ()
+        let lines = Doc_comments.format_as_cpp_lines text in
+        prlist_with_sep fnl (fun l -> str l) lines ++ fnl ()
     in
     doc_comment
     ++ template_s

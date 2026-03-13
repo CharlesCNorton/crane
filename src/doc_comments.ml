@@ -4,19 +4,24 @@
 (** Extract doc comments from Rocq (.v) source files.
 
     Parses [(** ... *)] documentation comments and associates each with the
-    definition that immediately follows it. The result is stored in a global
-    table consulted during C++ pretty-printing to emit [///] comments. *)
+    definition that immediately follows it. The table is set explicitly via
+    [set_table] and queried via [find] during C++ pretty-printing. *)
 
-(** {2 Global doc-comment table}
+(** {2 Doc-comment table}
 
-    Maps Rocq definition names (as they appear in the source, e.g. ["add"],
-    ["MyList"]) to their doc comment text. *)
+    The table is populated by [parse_file] (which returns a fresh table) and
+    installed via [set_table]. Queries go through [find]. *)
 
-let doc_table : (string, string) Hashtbl.t = Hashtbl.create 64
+let current_table : (string, string) Hashtbl.t ref = ref (Hashtbl.create 0)
 
-let clear () = Hashtbl.clear doc_table
+(** Install a doc comment table for the current extraction pass. *)
+let set_table tbl = current_table := tbl
 
-let find_opt name = Hashtbl.find_opt doc_table name
+(** Look up a doc comment by definition name. *)
+let find name = Hashtbl.find_opt !current_table name
+
+(** Reset the doc comment table (called between extraction passes). *)
+let reset () = current_table := Hashtbl.create 0
 
 (** {2 Comment parser}
 
@@ -188,42 +193,44 @@ let try_match_definition s i =
     ( "Module Type"
     :: List.filter (fun k -> k <> "Module Type") definition_keywords )
 
-(** Parse a [.v] file and populate the global doc comment table. *)
+(** Parse a [.v] file and return a fresh doc comment table mapping definition
+    names to their comment text. *)
 let parse_file path =
-  clear ();
-  try
-    let ic = open_in path in
-    let len = in_channel_length ic in
-    let s = Bytes.create len in
-    really_input ic s 0 len;
-    close_in ic;
-    let s = Bytes.to_string s in
-    let slen = String.length s in
-    let i = ref 0 in
-    while !i < slen do
-      let pos = !i in
-      (* Look for doc comments *)
-      if
-        pos + 3 < slen
-        && s.[pos] = '('
-        && s.[pos + 1] = '*'
-        && s.[pos + 2] = '*'
-        (* Exclude the degenerate case which is not a doc comment *)
-        && not (pos + 3 < slen && s.[pos + 3] = ')')
-      then (
-        let body, next = extract_doc_comment s pos in
-        ( if body <> "" then
-            (* Skip whitespace/regular comments after doc comment to find
-               definition *)
-            let def_start = skip_whitespace_and_comments s next in
-            match try_match_definition s def_start with
-            | Some name -> Hashtbl.replace doc_table name body
-            | None -> () );
-        i := next )
-      else
-        incr i
-    done
-  with Sys_error _ -> ()
+  let tbl = Hashtbl.create 64 in
+  ( try
+      let ic = open_in path in
+      let len = in_channel_length ic in
+      let s = Bytes.create len in
+      really_input ic s 0 len;
+      close_in ic;
+      let s = Bytes.to_string s in
+      let slen = String.length s in
+      let i = ref 0 in
+      while !i < slen do
+        let pos = !i in
+        (* Look for doc comments *)
+        if
+          pos + 3 < slen
+          && s.[pos] = '('
+          && s.[pos + 1] = '*'
+          && s.[pos + 2] = '*'
+          (* Exclude the degenerate case which is not a doc comment *)
+          && not (pos + 3 < slen && s.[pos + 3] = ')')
+        then (
+          let body, next = extract_doc_comment s pos in
+          ( if body <> "" then
+              (* Skip whitespace/regular comments after doc comment to find
+                 definition *)
+              let def_start = skip_whitespace_and_comments s next in
+              match try_match_definition s def_start with
+              | Some name -> Hashtbl.replace tbl name body
+              | None -> () );
+          i := next )
+        else
+          incr i
+      done
+    with Sys_error _ -> () );
+  tbl
 
 (** {2 Bracket reference translation}
 
@@ -263,3 +270,18 @@ let translate_brackets ~translate text =
       incr i )
   done;
   Buffer.contents buf
+
+(** {2 Formatting}
+
+    Shared helper for rendering doc comment text as C++ [///] comment lines. *)
+
+(** Format a doc comment string as a list of [///]-prefixed lines. Translates
+    bracket references [[name]] by stripping the brackets. *)
+let format_as_cpp_lines text =
+  let text = translate_brackets ~translate:(fun s -> s) text in
+  let lines = String.split_on_char '\n' text in
+  List.map
+    (fun line ->
+      let trimmed = String.trim line in
+      if trimmed = "" then "///" else "/// " ^ trimmed )
+    lines

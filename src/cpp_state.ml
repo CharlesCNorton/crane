@@ -602,6 +602,7 @@ let reset_cpp_state () =
   render_ctx.rc_struct_name <- None;
   render_ctx.rc_struct_mp <- None;
   render_ctx.rc_in_template <- false;
+  Doc_comments.reset ();
   eponymous_type_ref := None;
   eponymous_record := None;
   method_candidates := [];
