@@ -137,7 +137,7 @@ PromOps::execute_wpm10(std::shared_ptr<PromOps::state10> s) {
     new_rom =
         update_nth<unsigned int>(s->prom_addr10, s->prom_data10, s->rom10);
   } else {
-    new_rom = std::move(s)->rom10;
+    new_rom = s->rom10;
   }
   return std::make_shared<PromOps::state10>(
       state10{s->regs10, std::move(new_rom), s->acc10, s->pc10, s->stack10,

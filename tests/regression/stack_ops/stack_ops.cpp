@@ -161,7 +161,7 @@ StackOps::push_stack_cap(const std::shared_ptr<StackOps::state_basic> &s,
           [&](const typename List<unsigned int>::Nil _args)
               -> std::shared_ptr<List<unsigned int>> {
             return List<unsigned int>::ctor::Cons_(
-                std::move(addr), List<unsigned int>::ctor::Nil_());
+                addr, List<unsigned int>::ctor::Nil_());
           },
           [&](const typename List<unsigned int>::Cons _args)
               -> std::shared_ptr<List<unsigned int>> {
@@ -172,24 +172,21 @@ StackOps::push_stack_cap(const std::shared_ptr<StackOps::state_basic> &s,
                     [&](const typename List<unsigned int>::Nil _args)
                         -> std::shared_ptr<List<unsigned int>> {
                       return List<unsigned int>::ctor::Cons_(
-                          std::move(addr),
-                          List<unsigned int>::ctor::Cons_(
-                              std::move(a), List<unsigned int>::ctor::Nil_()));
+                          addr, List<unsigned int>::ctor::Cons_(
+                                    a, List<unsigned int>::ctor::Nil_()));
                     },
                     [&](const typename List<unsigned int>::Cons _args)
                         -> std::shared_ptr<List<unsigned int>> {
                       unsigned int b = _args.d_a0;
                       std::shared_ptr<List<unsigned int>> l0 = _args.d_a1;
                       return [&](void) {
-                        if (std::move(l0).use_count() == 1 &&
-                            std::move(l0)->v().index() == 1) {
-                          auto &_rf = std::get<1>(std::move(l0)->v_mut());
+                        if (l0.use_count() == 1 && l0->v().index() == 1) {
+                          auto &_rf = std::get<1>(l0->v_mut());
                           _rf.d_a0 = addr;
                           _rf.d_a1 = List<unsigned int>::ctor::Cons_(
                               a, List<unsigned int>::ctor::Cons_(
-                                     std::move(b),
-                                     List<unsigned int>::ctor::Nil_()));
-                          return std::move(l0);
+                                     b, List<unsigned int>::ctor::Nil_()));
+                          return l0;
                         } else {
                           return std::visit(
                               Overloaded{
@@ -197,31 +194,27 @@ StackOps::push_stack_cap(const std::shared_ptr<StackOps::state_basic> &s,
                                           _args)
                                       -> std::shared_ptr<List<unsigned int>> {
                                     return List<unsigned int>::ctor::Cons_(
-                                        std::move(addr),
+                                        addr,
                                         List<unsigned int>::ctor::Cons_(
-                                            std::move(a),
-                                            List<unsigned int>::ctor::Cons_(
-                                                std::move(b),
-                                                List<unsigned int>::ctor::
-                                                    Nil_())));
+                                            a, List<unsigned int>::ctor::Cons_(
+                                                   b, List<unsigned int>::ctor::
+                                                          Nil_())));
                                   },
                                   [&](const typename List<unsigned int>::Cons
                                           _args)
                                       -> std::shared_ptr<List<unsigned int>> {
                                     return List<unsigned int>::ctor::Cons_(
-                                        std::move(addr),
+                                        addr,
                                         List<unsigned int>::ctor::Cons_(
-                                            std::move(a),
-                                            List<unsigned int>::ctor::Cons_(
-                                                std::move(b),
-                                                List<unsigned int>::ctor::
-                                                    Nil_())));
+                                            a, List<unsigned int>::ctor::Cons_(
+                                                   b, List<unsigned int>::ctor::
+                                                          Nil_())));
                                   }},
-                              std::move(l0)->v());
+                              l0->v());
                         }
                       }();
                     }},
-                std::move(l)->v());
+                l->v());
           }},
       s->stack_basic->v());
   return std::make_shared<StackOps::state_basic>(

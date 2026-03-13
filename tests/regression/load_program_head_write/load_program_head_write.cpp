@@ -82,7 +82,7 @@ std::shared_ptr<LoadProgramHeadWrite::state> LoadProgramHeadWrite::execute_wpm(
   if (s->prom_enable) {
     new_rom = update_nth(s->prom_addr, s->prom_data, s->rom);
   } else {
-    new_rom = std::move(s)->rom;
+    new_rom = s->rom;
   }
   return std::make_shared<LoadProgramHeadWrite::state>(
       state{std::move(new_rom), s->prom_addr, s->prom_data, s->prom_enable});

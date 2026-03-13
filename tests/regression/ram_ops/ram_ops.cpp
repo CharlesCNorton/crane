@@ -77,11 +77,9 @@ RamOps::ram_write_main_sys(const std::shared_ptr<RamOps::state_main> &s,
   unsigned int c = s->sel_chip_main;
   unsigned int r = s->sel_reg_main;
   unsigned int i = s->sel_char_main;
-  std::shared_ptr<RamOps::ram_bank_main> bk = get_bank_main(s, std::move(b));
-  std::shared_ptr<RamOps::ram_chip_main> ch =
-      get_chip_main(std::move(bk), std::move(c));
-  std::shared_ptr<RamOps::ram_reg_main> rg =
-      get_reg_main(std::move(ch), std::move(r));
+  std::shared_ptr<RamOps::ram_bank_main> bk = get_bank_main(s, b);
+  std::shared_ptr<RamOps::ram_chip_main> ch = get_chip_main(bk, c);
+  std::shared_ptr<RamOps::ram_reg_main> rg = get_reg_main(ch, r);
   std::shared_ptr<RamOps::ram_reg_main> rg_ =
       upd_main_in_reg(std::move(rg), std::move(i), v);
   std::shared_ptr<RamOps::ram_chip_main> ch_ =
@@ -134,9 +132,8 @@ RamOps::ram_write_port_sys(const std::shared_ptr<RamOps::state_port> &s,
                            const unsigned int v) {
   unsigned int b = s->cur_bank_port;
   unsigned int c = s->sel_chip_port;
-  std::shared_ptr<RamOps::bank_port> bk = get_bank_port(s, std::move(b));
-  std::shared_ptr<RamOps::chip_port> ch =
-      get_chip_port(std::move(bk), std::move(c));
+  std::shared_ptr<RamOps::bank_port> bk = get_bank_port(s, b);
+  std::shared_ptr<RamOps::chip_port> ch = get_chip_port(bk, c);
   std::shared_ptr<RamOps::chip_port> ch_ = upd_port_in_chip(std::move(ch), v);
   std::shared_ptr<RamOps::bank_port> bk_ =
       upd_chip_in_bank_port(std::move(bk), std::move(c), std::move(ch_));
@@ -207,12 +204,9 @@ RamOps::ram_write_status_sys(const std::shared_ptr<RamOps::state_status> &s,
   unsigned int b = s->cur_bank_status;
   unsigned int c = s->sel_chip_status;
   unsigned int r = s->sel_reg_status;
-  std::shared_ptr<RamOps::ram_bank_status> bk =
-      get_bank_status(s, std::move(b));
-  std::shared_ptr<RamOps::ram_chip_status> ch =
-      get_chip_status(std::move(bk), std::move(c));
-  std::shared_ptr<RamOps::ram_reg_status> rg =
-      get_reg_status(std::move(ch), std::move(r));
+  std::shared_ptr<RamOps::ram_bank_status> bk = get_bank_status(s, b);
+  std::shared_ptr<RamOps::ram_chip_status> ch = get_chip_status(bk, c);
+  std::shared_ptr<RamOps::ram_reg_status> rg = get_reg_status(ch, r);
   std::shared_ptr<RamOps::ram_reg_status> rg_ =
       upd_status_in_reg(std::move(rg), idx, v);
   std::shared_ptr<RamOps::ram_chip_status> ch_ =
@@ -356,9 +350,9 @@ RamOps::get_reg0(const std::shared_ptr<RamOps::chip_nested_bank> &c) {
 std::shared_ptr<RamOps::state_nested_bank>
 RamOps::write_status0(std::shared_ptr<RamOps::state_nested_bank> s,
                       const unsigned int v) {
-  std::shared_ptr<RamOps::bank_nested_bank> b = get_bank0(std::move(s));
-  std::shared_ptr<RamOps::chip_nested_bank> c = get_chip0(std::move(b));
-  std::shared_ptr<RamOps::reg_nested_bank> r = get_reg0(std::move(c));
+  std::shared_ptr<RamOps::bank_nested_bank> b = get_bank0(s);
+  std::shared_ptr<RamOps::chip_nested_bank> c = get_chip0(b);
+  std::shared_ptr<RamOps::reg_nested_bank> r = get_reg0(c);
   std::shared_ptr<RamOps::reg_nested_bank> r_ =
       std::make_shared<RamOps::reg_nested_bank>(
           reg_nested_bank{update_nth_nested_bank<unsigned int>(

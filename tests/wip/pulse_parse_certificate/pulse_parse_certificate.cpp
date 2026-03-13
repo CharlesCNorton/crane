@@ -205,10 +205,10 @@ PulseParseCertificateCase::pulse_parse_certificate_self_consistent(
 
 std::shared_ptr<PulseParseCertificateCase::PulseCertificate>
 PulseParseCertificateCase::certify_trace(std::shared_ptr<List<bool>> xs) {
-  std::shared_ptr<List<unsigned int>> runs = trace_to_runs(std::move(xs));
-  unsigned int base = pulse_base_from_runs(std::move(runs));
+  std::shared_ptr<List<unsigned int>> runs = trace_to_runs(xs);
+  unsigned int base = pulse_base_from_runs(runs);
   std::shared_ptr<List<PulseParseCertificateCase::PulseClass>> classes =
-      classify_runs_with_base(std::move(base), std::move(runs));
+      classify_runs_with_base(base, runs);
   return std::make_shared<PulseParseCertificateCase::PulseCertificate>(
       PulseCertificate{first_true(xs), last_true(xs), std::move(runs),
                        std::move(base), std::move(classes)});

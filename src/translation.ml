@@ -66,6 +66,7 @@ type translation_ctx = {
   mutable current_letin_depth : int;
   mutable move_owned_vars : Escape.IntSet.t;
   mutable move_dead_after : Escape.IntSet.t;
+  mutable move_suppress_tail : bool;
   mutable move_n_params : int;
 }
 
@@ -81,6 +82,7 @@ let tctx =
     current_letin_depth = 0;
     move_owned_vars = Escape.IntSet.empty;
     move_dead_after = Escape.IntSet.empty;
+    move_suppress_tail = false;
     move_n_params = 0;
   }
 
@@ -3319,8 +3321,11 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
           tctx.move_owned_vars
       in
       tctx.move_dead_after <- Escape.IntSet.union dead_in_a dead_from_above;
+      let saved_suppress = tctx.move_suppress_tail in
+      tctx.move_suppress_tail <- true;
       let afun v = Sasgn (x_renamed, None, v) in
       let asgn = gen_stmts env afun a in
+      tctx.move_suppress_tail <- saved_suppress;
       tctx.move_dead_after <- saved_dead;
       (* The new let binding is owned (it's a local variable). Update
          move_owned_vars for processing [b]: shift all existing indices by 1
@@ -3708,14 +3713,17 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
   | MLcase (typ, t, pv) when is_custom_match pv ->
     (* Set up dead-after for owned variables at their last use, same as the
        default tail-position case below. Without this, unique_ptr variables
-       passed as function arguments in the scrutinee would not get std::move. *)
+       passed as function arguments in the scrutinee would not get std::move.
+       Suppress when processing a let-binding RHS to avoid use-after-move. *)
     let saved_dead = tctx.move_dead_after in
-    let tail_dead =
-      Escape.IntSet.filter
-        (fun i -> Escape.nb_occur_match i ast = 1)
-        tctx.move_owned_vars
-    in
-    tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead;
+    if not tctx.move_suppress_tail then begin
+      let tail_dead =
+        Escape.IntSet.filter
+          (fun i -> Escape.nb_occur_match i ast = 1)
+          tctx.move_owned_vars
+      in
+      tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead
+    end;
     let result = [gen_custom_cpp_case env k typ t pv] in
     tctx.move_dead_after <- saved_dead;
     result
@@ -3730,14 +3738,16 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
   | t ->
     (* Tail position: all owned variables used here are at their last use. Set
        move_dead_after to include all owned variables that occur exactly once in
-       t. *)
+       t. Suppress when processing a let-binding RHS to avoid use-after-move. *)
     let saved_dead = tctx.move_dead_after in
-    let tail_dead =
-      Escape.IntSet.filter
-        (fun i -> Escape.nb_occur_match i t = 1)
-        tctx.move_owned_vars
-    in
-    tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead;
+    if not tctx.move_suppress_tail then begin
+      let tail_dead =
+        Escape.IntSet.filter
+          (fun i -> Escape.nb_occur_match i t = 1)
+          tctx.move_owned_vars
+      in
+      tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead
+    end;
     let result = [k (gen_expr env t)] in
     tctx.move_dead_after <- saved_dead;
     result

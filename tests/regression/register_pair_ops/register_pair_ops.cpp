@@ -133,8 +133,7 @@ RegisterPairOps::set_reg_pair(const std::shared_ptr<RegisterPairOps::state> &s,
       (((r - PeanoNat::modulo(r, 2u)) > r ? 0 : (r - PeanoNat::modulo(r, 2u))));
   unsigned int hi = PeanoNat::div(v, 16u);
   unsigned int lo = PeanoNat::modulo(v, 16u);
-  std::shared_ptr<RegisterPairOps::state> s1 =
-      set_reg(s, std::move(base), std::move(hi));
+  std::shared_ptr<RegisterPairOps::state> s1 = set_reg(s, base, std::move(hi));
   return set_reg(std::move(s1), (std::move(base) + 1u), std::move(lo));
 }
 

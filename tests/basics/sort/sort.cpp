@@ -27,7 +27,7 @@ Sort::sort_cons_prog(const unsigned int a,
             auto y = _args.d_a0;
             auto l = _args.d_a1;
             std::shared_ptr<Sig<std::shared_ptr<List<unsigned int>>>> s =
-                sort_cons_prog(std::move(a), l, l);
+                sort_cons_prog(a, l, l);
             return std::visit(
                 Overloaded{
                     [&](const typename Sig<
@@ -35,7 +35,7 @@ Sort::sort_cons_prog(const unsigned int a,
                         -> std::shared_ptr<
                             Sig<std::shared_ptr<List<unsigned int>>>> {
                       std::shared_ptr<List<unsigned int>> x = _args.d_a0;
-                      bool s0 = Compare_dec::le_lt_dec(std::move(a), y);
+                      bool s0 = Compare_dec::le_lt_dec(a, y);
                       if (std::move(s0)) {
                         return Sig<std::shared_ptr<List<unsigned int>>>::ctor::
                             Exist_(List<unsigned int>::ctor::Cons_(

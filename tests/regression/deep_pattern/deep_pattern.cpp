@@ -623,7 +623,7 @@ __attribute__((pure)) unsigned int DeepPattern::wildcard_with_bindings(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
                              unsigned int a = _args.d_a0;
-                             return std::move(a);
+                             return a;
                            },
                            [](const typename DeepPattern::tree::Node _args)
                                -> unsigned int { return 0u; }},
@@ -632,7 +632,7 @@ __attribute__((pure)) unsigned int DeepPattern::wildcard_with_bindings(
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
                              unsigned int b = _args.d_a0;
-                             return std::move(b);
+                             return b;
                            },
                            [](const typename DeepPattern::tree::Node _args)
                                -> unsigned int { return 0u; }},
@@ -717,7 +717,7 @@ DeepPattern::nested_let_match(const std::shared_ptr<DeepPattern::tree> &t) {
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
                              unsigned int x = _args.d_a0;
-                             return std::move(x);
+                             return x;
                            },
                            [](const typename DeepPattern::tree::Node _args)
                                -> unsigned int { return 0u; }},
@@ -726,7 +726,7 @@ DeepPattern::nested_let_match(const std::shared_ptr<DeepPattern::tree> &t) {
                 Overloaded{[](const typename DeepPattern::tree::Leaf _args)
                                -> unsigned int {
                              unsigned int y = _args.d_a0;
-                             return std::move(y);
+                             return y;
                            },
                            [](const typename DeepPattern::tree::Node _args)
                                -> unsigned int { return 0u; }},

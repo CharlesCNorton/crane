@@ -19,9 +19,9 @@ __attribute__((pure)) unsigned int InstructionCycles::cycles_jcn(
       Overloaded{[&](const typename InstructionCycles::instruction1::JCN1 _args)
                      -> unsigned int {
                    unsigned int cond = _args.d_a0;
-                   unsigned int c1 = Nat::div(std::move(cond), 8u);
-                   unsigned int c2 = (Nat::div(std::move(cond), 4u) % 2u);
-                   unsigned int c3 = (Nat::div(std::move(cond), 2u) % 2u);
+                   unsigned int c1 = Nat::div(cond, 8u);
+                   unsigned int c2 = (Nat::div(cond, 4u) % 2u);
+                   unsigned int c3 = (Nat::div(cond, 2u) % 2u);
                    unsigned int c4 = (std::move(cond) % 2u);
                    bool base_cond =
                        ((s->acc1 == 0u && std::move(c2) == 1u) ||

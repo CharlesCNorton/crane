@@ -440,7 +440,7 @@ struct FunctionVernac {
                    [&](const typename List<unsigned int>::Cons _args) -> auto {
                      unsigned int n = _args.d_a0;
                      std::shared_ptr<List<unsigned int>> l0 = _args.d_a1;
-                     std::function<T1(T1)> f3 = f1(std::move(n), std::move(l0));
+                     std::function<T1(T1)> f3 = f1(std::move(n), l0);
                      T1 hrec = list_sum_rect<T1>(f, f0, std::move(l0));
                      return f3(hrec);
                    }},

@@ -39,7 +39,7 @@ std::shared_ptr<FinOperatesOnPairs::state> FinOperatesOnPairs::set_reg_pair(
   unsigned int hi = Nat::div(v, 16u);
   unsigned int lo = (v % 16u);
   std::shared_ptr<FinOperatesOnPairs::state> s1 =
-      set_reg(s, std::move(base), std::move(hi));
+      set_reg(s, base, std::move(hi));
   return set_reg(std::move(s1), (std::move(base) + 1u), std::move(lo));
 }
 

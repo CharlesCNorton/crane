@@ -26,7 +26,7 @@ LoadProgram::execute_wpm(std::shared_ptr<LoadProgram::state> s) {
   if (s->prom_enable) {
     new_rom = update_nth<unsigned int>(s->prom_addr, s->prom_data, s->rom);
   } else {
-    new_rom = std::move(s)->rom;
+    new_rom = s->rom;
   }
   return std::make_shared<LoadProgram::state>(
       state{std::move(new_rom), s->prom_addr, s->prom_data, s->prom_enable});
@@ -69,7 +69,7 @@ LoadProgram::execute_wpm_ext(std::shared_ptr<LoadProgram::state_extended> s) {
     new_rom = update_nth<unsigned int>(s->prom_addr_ext, s->prom_data_ext,
                                        s->rom_ext);
   } else {
-    new_rom = std::move(s)->rom_ext;
+    new_rom = s->rom_ext;
   }
   return std::make_shared<LoadProgram::state_extended>(
       state_extended{s->regs_len, std::move(new_rom), s->pc, s->stack_len,

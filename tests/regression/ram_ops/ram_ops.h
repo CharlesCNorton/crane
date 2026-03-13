@@ -651,7 +651,7 @@ struct RamOps {
         sample_bank_frame->nth(
             0u, List<std::shared_ptr<List<unsigned int>>>::ctor::Nil_());
     std::shared_ptr<List<unsigned int>> rg =
-        std::move(ch)->nth(1u, List<unsigned int>::ctor::Nil_());
+        ch->nth(1u, List<unsigned int>::ctor::Nil_());
     std::shared_ptr<List<unsigned int>> rg_ =
         upd_main_in_reg_frame(std::move(rg), 2u, 99u);
     std::shared_ptr<List<std::shared_ptr<List<unsigned int>>>> ch_ =

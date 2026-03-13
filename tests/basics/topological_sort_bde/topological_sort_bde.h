@@ -347,7 +347,7 @@ struct TopologicalSort {
   template <typename T1, MapsTo<bool, T1, T1> F0>
   __attribute__((pure)) static graph<T1>
   make_graph(F0 &&eqb_node, bsl::shared_ptr<List<bsl::pair<T1, T1>>> l) {
-    bsl::shared_ptr<List<T1>> elems = get_elems<T1>(eqb_node, bsl::move(l));
+    bsl::shared_ptr<List<T1>> elems = get_elems<T1>(eqb_node, l);
     return bsl::move(elems)
         ->template fold_right<bsl::shared_ptr<List<entry<T1>>>>(
             [=](T1 e,
@@ -512,7 +512,7 @@ struct TopologicalSort {
         if (null<T1>(mins)) {
           mins_ = cycle_extract<T1>(eqb_node, graph0);
         } else {
-          mins_ = bsl::move(mins);
+          mins_ = mins;
         }
         bsl::shared_ptr<List<bsl::pair<T1, bsl::shared_ptr<List<T1>>>>> rest =
             graph0->filter(

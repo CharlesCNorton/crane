@@ -32,8 +32,8 @@ JinUsesPairForJump::page_of(const unsigned int addr) {
 std::shared_ptr<JinUsesPairForJump::state>
 JinUsesPairForJump::execute_jin(std::shared_ptr<JinUsesPairForJump::state> s,
                                 const unsigned int r) {
-  unsigned int next_page = page_of((std::move(s)->pc + 1u));
-  unsigned int pair_val = get_reg_pair(std::move(s), r);
+  unsigned int next_page = page_of((s->pc + 1u));
+  unsigned int pair_val = get_reg_pair(s, r);
   return std::make_shared<JinUsesPairForJump::state>(
       state{std::move(s)->regs,
             ((std::move(next_page) * 256u) + (std::move(pair_val) % 256u))});

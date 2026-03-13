@@ -301,23 +301,13 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String> &s,
                                                   std::shared_ptr<
                                                       Levenshtein::chain>
                                                       r1_ = aux_insert(
-                                                          s, std::move(t),
-                                                          std::move(x),
-                                                          std::move(xs),
-                                                          std::move(y),
-                                                          std::move(ys),
-                                                          std::move(n1),
-                                                          std::move(r1));
+                                                          s, t, x, xs, y, ys,
+                                                          n1, std::move(r1));
                                                   std::shared_ptr<
                                                       Levenshtein::chain>
                                                       r2_ = aux_delete(
-                                                          s, std::move(t),
-                                                          std::move(x),
-                                                          std::move(xs),
-                                                          std::move(y),
-                                                          std::move(ys),
-                                                          std::move(n2),
-                                                          std::move(r2));
+                                                          s, t, x, xs, y, ys,
+                                                          n2, std::move(r2));
                                                   std::shared_ptr<
                                                       Levenshtein::chain>
                                                       r3_ = aux_update(
@@ -325,8 +315,7 @@ Levenshtein::levenshtein_chain(const std::shared_ptr<String> &s,
                                                           std::move(x),
                                                           std::move(xs),
                                                           std::move(y),
-                                                          std::move(ys),
-                                                          std::move(n3),
+                                                          std::move(ys), n3,
                                                           std::move(r3));
                                                   return min3_app<
                                                       std::shared_ptr<SigT<
