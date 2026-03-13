@@ -33,7 +33,7 @@ std::optional<unsigned int> ProgramTargetsRegionScan::jump_target(
 bool ProgramTargetsRegionScan::addr_in_regionb(
     const unsigned int addr,
     const std::shared_ptr<ProgramTargetsRegionScan::layout> &l) {
-  return ((l->base_addr <= addr) && (addr < (l->base_addr + l->code_size)));
+  return (l->base_addr <= addr && addr < (l->base_addr + l->code_size));
 }
 
 bool ProgramTargetsRegionScan::target_in_layoutb(

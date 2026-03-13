@@ -14,7 +14,7 @@
 
 std::shared_ptr<DecodeList::instruction>
 DecodeList::decode(const unsigned int b1, const unsigned int b2) {
-  if ((b1 == 0u)) {
+  if (b1 == 0u) {
     return instruction::ctor::NOP_();
   } else {
     return instruction::ctor::LDM_((std::move(b2) % 16u));

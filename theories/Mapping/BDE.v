@@ -51,7 +51,7 @@ Crane Extract Inlined Constant PrimFloat.div => "(%a0 / %a1)".
 Crane Extract Inlined Constant PrimFloat.opp => "(-%a0)".
 Crane Extract Inlined Constant PrimFloat.abs => "bsl::abs(%a0)" From "bsl_cmath.h".
 Crane Extract Inlined Constant PrimFloat.sqrt => "bsl::sqrt(%a0)" From "bsl_cmath.h".
-Crane Extract Inlined Constant PrimFloat.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant PrimFloat.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant PrimFloat.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant PrimFloat.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant PrimFloat.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant PrimFloat.leb => "%a0 <= %a1".
 Crane Extract Inlined Constant PrimFloat.of_uint63 => "static_cast<double>(%a0)".

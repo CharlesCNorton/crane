@@ -374,7 +374,7 @@ struct InstructionCycles {
                                           Instr3::e_ISZZERO3,
                                           List<Instr3>::ctor::Nil_())))))))));
   static inline const bool test_min_cycles_per_instruction =
-      all_instrs3->forallb([](Instr3 i) { return (8u <= cycles_min(i)); });
+      all_instrs3->forallb([](Instr3 i) { return 8u <= cycles_min(i); });
   enum class Instr4 {
     e_NOP4,
     e_ADD4,
@@ -483,7 +483,7 @@ struct InstructionCycles {
                                           Instr4::e_ISZZERO4,
                                           List<Instr4>::ctor::Nil_())))))))));
   static inline const bool test_max_cycles_per_instruction =
-      all_instrs4->forallb([](Instr4 i) { return (cycles_max(i) <= 24u); });
+      all_instrs4->forallb([](Instr4 i) { return cycles_max(i) <= 24u; });
 
   struct state5 {
     unsigned int acc5;

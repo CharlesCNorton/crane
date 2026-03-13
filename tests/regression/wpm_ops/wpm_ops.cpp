@@ -38,7 +38,7 @@ bool WpmOps::nat_list_eqb(const std::shared_ptr<List<unsigned int>> &xs,
                     [&](const typename List<unsigned int>::Cons _args) -> bool {
                       unsigned int y = _args.d_a0;
                       std::shared_ptr<List<unsigned int>> ys_ = _args.d_a1;
-                      return ((std::move(x) == std::move(y)) &&
+                      return (std::move(x) == std::move(y) &&
                               nat_list_eqb(std::move(xs_), std::move(ys_)));
                     }},
                 ys->v());

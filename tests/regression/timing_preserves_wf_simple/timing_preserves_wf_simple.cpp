@@ -13,8 +13,8 @@
 
 bool TimingPreservesWfSimple::wf(
     const std::shared_ptr<TimingPreservesWfSimple::state> &s) {
-  return ((s->regs_len == 4u) &&
-          ((s->rom_len == 4u) && ((s->pc < 4096u) && (s->stack_len <= 3u))));
+  return (s->regs_len == 4u &&
+          (s->rom_len == 4u && (s->pc < 4096u && s->stack_len <= 3u)));
 }
 
 unsigned int

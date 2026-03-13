@@ -177,7 +177,7 @@ struct SrcWrrUpdatesRomPort {
           0u});
   static inline const std::shared_ptr<state> after =
       execute_wrr(execute_src(sample, 3u));
-  static inline const bool t = (after->rom_ports->nth(2u, 0u) == 13u);
+  static inline const bool t = after->rom_ports->nth(2u, 0u) == 13u;
 };
 
 #endif // INCLUDED_SRC_WRR_UPDATES_ROM_PORT

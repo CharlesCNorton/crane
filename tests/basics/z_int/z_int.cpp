@@ -323,15 +323,15 @@ int64_t ZIntTest::abs_test(const int64_t _x0) { return std::abs(_x0); }
 int64_t ZIntTest::opp_test(const int64_t _x0) { return (-_x0); }
 
 bool ZIntTest::eqb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 == _x1);
+  return _x0 == _x1;
 }
 
 bool ZIntTest::ltb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 < _x1);
+  return _x0 < _x1;
 }
 
 bool ZIntTest::leb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 <= _x1);
+  return _x0 <= _x1;
 }
 
 int64_t ZIntTest::z_sign(const int64_t z) {

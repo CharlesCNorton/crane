@@ -29,11 +29,11 @@ Crane Extract Inlined Constant Z.opp => "(-%a0)".
 Crane Extract Inlined Constant Z.abs => "abs(%a0)".
 Crane Extract Inlined Constant Z.succ => "(%a0 + 1)".
 Crane Extract Inlined Constant Z.pred => "(%a0 - 1)".
-Crane Extract Inlined Constant Z.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant Z.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant Z.leb => "(%a0 <= %a1)".
-Crane Extract Inlined Constant Z.gtb => "(%a0 > %a1)".
-Crane Extract Inlined Constant Z.geb => "(%a0 >= %a1)".
+Crane Extract Inlined Constant Z.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant Z.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant Z.leb => "%a0 <= %a1".
+Crane Extract Inlined Constant Z.gtb => "%a0 > %a1".
+Crane Extract Inlined Constant Z.geb => "%a0 >= %a1".
 Crane Extract Inlined Constant Z.min => "(%a0 <= %a1 ? %a0 : %a1)".
 Crane Extract Inlined Constant Z.max => "(%a0 >= %a1 ? %a0 : %a1)".
 

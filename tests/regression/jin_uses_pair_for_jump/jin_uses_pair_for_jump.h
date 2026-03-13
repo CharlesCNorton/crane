@@ -132,7 +132,7 @@ struct JinUsesPairForJump {
                                 List<unsigned int>::ctor::Cons_(
                                     0u, List<unsigned int>::ctor::Nil_())))))),
             300u});
-  static inline const bool t = (execute_jin(sample, 3u)->pc == 555u);
+  static inline const bool t = execute_jin(sample, 3u)->pc == 555u;
 };
 
 #endif // INCLUDED_JIN_USES_PAIR_FOR_JUMP

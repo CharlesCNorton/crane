@@ -173,7 +173,7 @@ struct WrmThenRdmReadsBack {
           0u});
   static inline const std::shared_ptr<state> roundtrip =
       execute_rdm(execute_wrm(execute_src(sample, 3u)));
-  static inline const bool t = (roundtrip->acc == 12u);
+  static inline const bool t = roundtrip->acc == 12u;
 };
 
 #endif // INCLUDED_WRM_THEN_RDM_READS_BACK

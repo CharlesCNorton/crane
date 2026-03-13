@@ -161,27 +161,25 @@ struct IncXchNibble {
                                     1u, List<unsigned int>::ctor::Nil_())))))),
             13u});
   static inline const bool inc_modifies_single_nibble_even =
-      (get_reg_pair(execute_inc(sample, 2u), 2u) ==
-       ((nibble_of_nat((get_reg(sample, 2u) + 1u)) * 16u) +
-        get_reg(sample, 3u)));
+      get_reg_pair(execute_inc(sample, 2u), 2u) ==
+      ((nibble_of_nat((get_reg(sample, 2u) + 1u)) * 16u) + get_reg(sample, 3u));
   static inline const bool inc_modifies_single_nibble_odd =
-      (get_reg_pair(execute_inc(sample, 3u), 3u) ==
-       ((get_reg(sample, 2u) * 16u) +
-        nibble_of_nat((get_reg(sample, 3u) + 1u))));
+      get_reg_pair(execute_inc(sample, 3u), 3u) ==
+      ((get_reg(sample, 2u) * 16u) + nibble_of_nat((get_reg(sample, 3u) + 1u)));
   static inline const bool inc_preserves_pair_partner =
-      (get_reg(execute_inc(sample, 2u), 3u) == get_reg(sample, 3u));
+      get_reg(execute_inc(sample, 2u), 3u) == get_reg(sample, 3u);
   static inline const bool inc_preserves_pair_partner_odd =
-      (get_reg(execute_inc(sample, 3u), 2u) == get_reg(sample, 2u));
+      get_reg(execute_inc(sample, 3u), 2u) == get_reg(sample, 2u);
   static inline const bool xch_modifies_single_nibble_even =
-      (get_reg_pair(execute_xch(sample, 2u), 2u) ==
-       ((nibble_of_nat(sample->acc) * 16u) + get_reg(sample, 3u)));
+      get_reg_pair(execute_xch(sample, 2u), 2u) ==
+      ((nibble_of_nat(sample->acc) * 16u) + get_reg(sample, 3u));
   static inline const bool xch_modifies_single_nibble_odd =
-      (get_reg_pair(execute_xch(sample, 3u), 3u) ==
-       ((get_reg(sample, 2u) * 16u) + nibble_of_nat(sample->acc)));
+      get_reg_pair(execute_xch(sample, 3u), 3u) ==
+      ((get_reg(sample, 2u) * 16u) + nibble_of_nat(sample->acc));
   static inline const bool xch_preserves_pair_partner =
-      (get_reg(execute_xch(sample, 2u), 3u) == get_reg(sample, 3u));
+      get_reg(execute_xch(sample, 2u), 3u) == get_reg(sample, 3u);
   static inline const bool xch_preserves_pair_partner_odd =
-      (get_reg(execute_xch(sample, 3u), 2u) == get_reg(sample, 2u));
+      get_reg(execute_xch(sample, 3u), 2u) == get_reg(sample, 2u);
   static inline const bool t = (((((((inc_modifies_single_nibble_even &&
                                       inc_modifies_single_nibble_odd) &&
                                      inc_preserves_pair_partner) &&

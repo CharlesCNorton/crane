@@ -148,7 +148,7 @@ struct WrrRdrRoundtrip {
                               7u, List<unsigned int>::ctor::Cons_(
                                       4u, List<unsigned int>::ctor::Nil_())))),
           2u});
-  static inline const bool t = (execute_rdr(execute_wrr(sample))->acc == 13u);
+  static inline const bool t = execute_rdr(execute_wrr(sample))->acc == 13u;
 };
 
 #endif // INCLUDED_WRR_RDR_ROUNDTRIP

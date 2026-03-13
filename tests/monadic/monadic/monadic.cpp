@@ -24,7 +24,7 @@ std::optional<unsigned int> Monadic::safe_div(const unsigned int n,
 
 std::optional<unsigned int> Monadic::safe_sub(const unsigned int n,
                                               const unsigned int m) {
-  if ((n < m)) {
+  if (n < m) {
     return std::nullopt;
   } else {
     return std::make_optional<unsigned int>(

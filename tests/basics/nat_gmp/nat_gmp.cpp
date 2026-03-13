@@ -25,15 +25,15 @@ mpz_class NatGMPTest::sub_test(const mpz_class _x0, const mpz_class _x1) {
 }
 
 bool NatGMPTest::eqb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 == _x1);
+  return _x0 == _x1;
 }
 
 bool NatGMPTest::ltb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 < _x1);
+  return _x0 < _x1;
 }
 
 bool NatGMPTest::leb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 <= _x1);
+  return _x0 <= _x1;
 }
 
 mpz_class NatGMPTest::pred_test(const mpz_class _x0) {

@@ -51,7 +51,7 @@ BinomialHeap::smash(const std::shared_ptr<BinomialHeap::tree> &t,
                                                 Leaf _args)
                                             -> std::shared_ptr<
                                                 BinomialHeap::tree> {
-                                          if ((y < x)) {
+                                          if (y < x) {
                                             return tree::ctor::Node_(
                                                 std::move(x),
                                                 tree::ctor::Node_(
@@ -397,7 +397,7 @@ BinomialHeap::key BinomialHeap::find_max_helper(
                              unsigned int x = _args.d_a0;
                              return find_max_helper(
                                  [&](void) {
-                                   if ((current < x)) {
+                                   if (current < x) {
                                      return std::move(x);
                                    } else {
                                      return std::move(current);
@@ -496,7 +496,7 @@ BinomialHeap::delete_max_aux(
                                           std::shared_ptr<BinomialHeap::tree>>>,
                                       std::shared_ptr<List<std::shared_ptr<
                                           BinomialHeap::tree>>>> {
-                                if ((x < m)) {
+                                if (x < m) {
                                   std::shared_ptr<
                                       List<std::shared_ptr<BinomialHeap::tree>>>
                                       j = delete_max_aux(m, p_).first;

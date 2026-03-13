@@ -136,9 +136,9 @@ struct SrcUsesPairValue {
             0u, 0u, 0u, 0u});
   static inline const std::shared_ptr<state> after = execute_src(sample, 3u);
   static inline const bool t =
-      ((after->sel_rom == 1u) &&
-       ((after->sel_chip == 0u) &&
-        ((after->sel_reg == 1u) && (after->sel_char == 11u))));
+      (after->sel_rom == 1u &&
+       (after->sel_chip == 0u &&
+        (after->sel_reg == 1u && after->sel_char == 11u)));
 };
 
 #endif // INCLUDED_SRC_USES_PAIR_VALUE

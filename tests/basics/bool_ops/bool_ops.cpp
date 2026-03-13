@@ -65,13 +65,13 @@ bool BoolOps::complex_bool(const bool a, const bool b, const bool c) {
 }
 
 bool BoolOps::nat_eq(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 == _x1);
+  return _x0 == _x1;
 }
 
 bool BoolOps::nat_lt(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 < _x1);
+  return _x0 < _x1;
 }
 
 bool BoolOps::nat_le(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 <= _x1);
+  return _x0 <= _x1;
 }

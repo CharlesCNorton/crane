@@ -178,8 +178,8 @@ StackOps::push_stack_cap(const std::shared_ptr<StackOps::state_basic> &s,
                       unsigned int b = _args.d_a0;
                       std::shared_ptr<List<unsigned int>> l0 = _args.d_a1;
                       return [&](void) {
-                        if (((std::move(l0).use_count() == 1) &&
-                             (std::move(l0)->v().index() == 1))) {
+                        if (std::move(l0).use_count() == 1 &&
+                            std::move(l0)->v().index() == 1) {
                           auto &_rf = std::get<1>(std::move(l0)->v_mut());
                           _rf.d_a0 = addr;
                           _rf.d_a1 = List<unsigned int>::ctor::Cons_(

@@ -169,7 +169,7 @@ struct FimOperatesOnPairs {
                           0u, List<unsigned int>::ctor::Cons_(
                                   0u, List<unsigned int>::ctor::Nil_()))))))});
   static inline const bool t =
-      (get_reg_pair(execute_fim(sample, 2u, 171u), 2u) == 171u);
+      get_reg_pair(execute_fim(sample, 2u, 171u), 2u) == 171u;
 };
 
 #endif // INCLUDED_FIM_OPERATES_ON_PAIRS

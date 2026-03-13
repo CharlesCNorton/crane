@@ -635,7 +635,7 @@ unsigned int Coq_Pos::to_nat(const std::shared_ptr<Positive> &x) {
 std::shared_ptr<N> BinNat::sub(std::shared_ptr<N> n,
                                const std::shared_ptr<N> &m) {
   return [&](void) {
-    if (((n.use_count() == 1) && (n->v().index() == 0))) {
+    if (n.use_count() == 1 && n->v().index() == 0) {
       auto &_rf = std::get<0>(n->v_mut());
       return n;
     } else {
@@ -728,8 +728,8 @@ std::shared_ptr<N> BinNat::add(std::shared_ptr<N> n, std::shared_ptr<N> m) {
           [&](const typename N::Npos _args) -> std::shared_ptr<N> {
             std::shared_ptr<Positive> p = _args.d_a0;
             return [&](void) {
-              if (((std::move(m).use_count() == 1) &&
-                   (std::move(m)->v().index() == 1))) {
+              if (std::move(m).use_count() == 1 &&
+                  std::move(m)->v().index() == 1) {
                 auto &_rf = std::get<1>(std::move(m)->v_mut());
                 std::shared_ptr<Positive> q = std::move(_rf.d_a0);
                 _rf.d_a0 = Coq_Pos::add(std::move(p), std::move(q));
@@ -912,8 +912,8 @@ std::shared_ptr<Z> BinInt::add(std::shared_ptr<Z> x, std::shared_ptr<Z> y) {
           [&](const typename Z::Zpos _args) -> std::shared_ptr<Z> {
             std::shared_ptr<Positive> x_ = _args.d_a0;
             return [&](void) {
-              if (((std::move(y).use_count() == 1) &&
-                   (std::move(y)->v().index() == 1))) {
+              if (std::move(y).use_count() == 1 &&
+                  std::move(y)->v().index() == 1) {
                 auto &_rf = std::get<1>(std::move(y)->v_mut());
                 std::shared_ptr<Positive> y_ = std::move(_rf.d_a0);
                 _rf.d_a0 = Pos::add(std::move(x_), std::move(y_));
@@ -942,8 +942,8 @@ std::shared_ptr<Z> BinInt::add(std::shared_ptr<Z> x, std::shared_ptr<Z> y) {
           [&](const typename Z::Zneg _args) -> std::shared_ptr<Z> {
             std::shared_ptr<Positive> x_ = _args.d_a0;
             return [&](void) {
-              if (((std::move(y).use_count() == 1) &&
-                   (std::move(y)->v().index() == 2))) {
+              if (std::move(y).use_count() == 1 &&
+                  std::move(y)->v().index() == 2) {
                 auto &_rf = std::get<2>(std::move(y)->v_mut());
                 std::shared_ptr<Positive> y_ = std::move(_rf.d_a0);
                 _rf.d_a0 = Pos::add(std::move(x_), std::move(y_));

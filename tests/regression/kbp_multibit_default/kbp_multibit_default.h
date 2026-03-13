@@ -29,7 +29,7 @@ struct KbpMultibitDefault {
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{3u});
 
-  static inline const bool t = (execute_kbp(sample)->acc == 15u);
+  static inline const bool t = execute_kbp(sample)->acc == 15u;
 };
 
 #endif // INCLUDED_KBP_MULTIBIT_DEFAULT

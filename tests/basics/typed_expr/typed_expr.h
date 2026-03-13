@@ -148,9 +148,10 @@ public:
             [](const typename Expr::EEq _args) -> std::any {
               std::shared_ptr<Expr> a = _args.d_a0;
               std::shared_ptr<Expr> b = _args.d_a1;
-              return (
-                  std::any_cast<unsigned int>(std::move(a)->eval(Ty::e_TNAT)) ==
-                  std::any_cast<unsigned int>(std::move(b)->eval(Ty::e_TNAT)));
+              return std::any_cast<unsigned int>(
+                         std::move(a)->eval(Ty::e_TNAT)) ==
+                     std::any_cast<unsigned int>(
+                         std::move(b)->eval(Ty::e_TNAT));
             },
             [](const typename Expr::EIf _args) -> std::any {
               Ty t0 = _args.d_a0;

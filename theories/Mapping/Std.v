@@ -40,9 +40,9 @@ Crane Extract Inlined Constant PrimInt63.sub => "((%a0 - %a1) & 0x7FFFFFFFFFFFFF
 Crane Extract Inlined Constant PrimInt63.mul => "((%a0 * %a1) & 0x7FFFFFFFFFFFFFFFLL)".
 Crane Extract Inlined Constant PrimInt63.div => "(%a1 == 0 ? 0 : %a0 / %a1)".
 Crane Extract Inlined Constant PrimInt63.mod => "(%a1 == 0 ? 0 : %a0 % %a1)".
-Crane Extract Inlined Constant PrimInt63.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant PrimInt63.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant PrimInt63.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant PrimInt63.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant PrimInt63.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant PrimInt63.leb => "%a0 <= %a1".
 Crane Extract Inlined Constant PrimInt63.land => "(%a0 & %a1)".
 Crane Extract Inlined Constant PrimInt63.lor => "(%a0 | %a1)".
 Crane Extract Inlined Constant PrimInt63.lxor => "(%a0 ^ %a1)".
@@ -61,7 +61,7 @@ Crane Extract Inlined Constant PrimFloat.div => "(%a0 / %a1)".
 Crane Extract Inlined Constant PrimFloat.opp => "(-%a0)".
 Crane Extract Inlined Constant PrimFloat.abs => "std::abs(%a0)" From "cmath".
 Crane Extract Inlined Constant PrimFloat.sqrt => "std::sqrt(%a0)" From "cmath".
-Crane Extract Inlined Constant PrimFloat.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant PrimFloat.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant PrimFloat.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant PrimFloat.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant PrimFloat.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant PrimFloat.leb => "%a0 <= %a1".
 Crane Extract Inlined Constant PrimFloat.of_uint63 => "static_cast<double>(%a0)".

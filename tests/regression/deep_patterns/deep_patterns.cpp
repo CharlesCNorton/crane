@@ -167,7 +167,7 @@ unsigned int
 DeepPatterns::guarded_match(const std::pair<unsigned int, unsigned int> p) {
   unsigned int a = p.first;
   unsigned int b = p.second;
-  if ((a <= b)) {
+  if (a <= b) {
     return (((b - a) > b ? 0 : (b - a)));
   } else {
     return (((a - b) > a ? 0 : (a - b)));

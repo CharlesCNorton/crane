@@ -176,8 +176,7 @@ struct FinOperatesOnPairs {
                   44u, List<unsigned int>::ctor::Cons_(
                            55u, List<unsigned int>::ctor::Cons_(
                                     66u, List<unsigned int>::ctor::Nil_()))))});
-  static inline const bool t =
-      (get_reg_pair(execute_fin(sample, 2u), 2u) == 55u);
+  static inline const bool t = get_reg_pair(execute_fin(sample, 2u), 2u) == 55u;
 };
 
 #endif // INCLUDED_FIN_OPERATES_ON_PAIRS

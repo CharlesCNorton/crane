@@ -312,7 +312,7 @@ BinNat::pos_div_eucl(const unsigned int a, const unsigned int b) {
     unsigned int q = BinNat::pos_div_eucl(a_, b).first;
     unsigned int r = BinNat::pos_div_eucl(a_, b).second;
     unsigned int r_ = (std::move(r) * 2u + 1u);
-    if ((b <= std::move(r_))) {
+    if (b <= std::move(r_)) {
       return std::make_pair((q * 2u + 1u),
                             (std::move(r_) >= b ? std::move(r_) - b : 0u));
     } else {
@@ -323,7 +323,7 @@ BinNat::pos_div_eucl(const unsigned int a, const unsigned int b) {
     unsigned int q = BinNat::pos_div_eucl(a_, b).first;
     unsigned int r = BinNat::pos_div_eucl(a_, b).second;
     unsigned int r_ = (std::move(r) * 2u);
-    if ((b <= std::move(r_))) {
+    if (b <= std::move(r_)) {
       return std::make_pair((q * 2u + 1u),
                             (std::move(r_) >= b ? std::move(r_) - b : 0u));
     } else {
@@ -368,15 +368,15 @@ unsigned int NIntTest::div_test(const unsigned int _x0,
 }
 
 bool NIntTest::eqb_test(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 == _x1);
+  return _x0 == _x1;
 }
 
 bool NIntTest::ltb_test(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 < _x1);
+  return _x0 < _x1;
 }
 
 bool NIntTest::leb_test(const unsigned int _x0, const unsigned int _x1) {
-  return (_x0 <= _x1);
+  return _x0 <= _x1;
 }
 
 unsigned int NIntTest::succ_test(const unsigned int _x0) { return (_x0 + 1u); }

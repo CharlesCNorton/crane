@@ -35,7 +35,7 @@ struct JmsBblRoundtrip {
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{100u, 0u, false});
   static inline const bool t =
-      (execute_bbl(execute_jms(sample, 200u))->pc == 102u);
+      execute_bbl(execute_jms(sample, 200u))->pc == 102u;
 };
 
 #endif // INCLUDED_JMS_BBL_ROUNDTRIP

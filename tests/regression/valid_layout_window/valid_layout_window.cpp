@@ -13,5 +13,5 @@
 
 bool ValidLayoutWindow::valid_layoutb(
     const std::shared_ptr<ValidLayoutWindow::layout> &l) {
-  return ((l->base_addr + l->code_size) <= 4096u);
+  return (l->base_addr + l->code_size) <= 4096u;
 }

@@ -77,16 +77,14 @@ concept Magma = requires(typename I::carrier a0, typename I::carrier a1) {
   { I::op(a1, a0) } -> std::convertible_to<typename I::carrier>;
 };
 template <typename I>
-concept Monoid = (requires (typename I::m_carrier a0, typename I::m_carrier
-a1) {
+concept Monoid = requires(typename I::m_carrier a0, typename I::m_carrier a1) {
   typename I::m_carrier;
-  { I::m_op(a1,
-a0) } -> std::convertible_to<typename I::m_carrier>;
-} && (requires {
+  { I::m_op(a1, a0) } -> std::convertible_to<typename I::m_carrier>;
+} && requires {
   { I::m_id() } -> std::convertible_to<typename I::m_carrier>;
 } || requires {
   { I::m_id } -> std::convertible_to<typename I::m_carrier>;
-}));
+};
 
 struct DepRecord {
   using carrier = std::any;

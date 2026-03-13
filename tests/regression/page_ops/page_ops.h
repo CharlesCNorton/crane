@@ -213,7 +213,7 @@ struct PageOps {
   static inline const unsigned int test_base_for_next_page_cross_2 =
       base_for_next2(std::make_shared<state>(state{255u}));
   static inline const bool test_page_decomp_roundtrip =
-      (((Nat::div(1027u, 256u) * 256u) + (1027u % 256u)) == 1027u);
+      ((Nat::div(1027u, 256u) * 256u) + (1027u % 256u)) == 1027u;
   static inline const unsigned int test_page_offset_recompose =
       recompose(addr12_of_nat(1027u));
   static inline const unsigned int test_page_recompose =

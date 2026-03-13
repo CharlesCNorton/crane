@@ -29,10 +29,10 @@ unsigned int Comparison::cmp_to_nat(const Comparison::Cmp c) {
 
 Comparison::Cmp Comparison::compare_nats(const unsigned int a,
                                          const unsigned int b) {
-  if ((a < b)) {
+  if (a < b) {
     return Cmp::e_CMPLT;
   } else {
-    if ((a == b)) {
+    if (a == b) {
       return Cmp::e_CMPEQ;
     } else {
       return Cmp::e_CMPGT;

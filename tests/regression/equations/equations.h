@@ -28,15 +28,13 @@ struct PeanoNat {
   static unsigned int div2(const unsigned int n);
 };
 
-template <typename I, typename
-t_A>
-concept FunctionalInduction = (requires {
-  typename I::fun_ind_prf_ty;
-} && (requires {
-  { I::fun_ind_prf() } -> std::convertible_to<typename I::fun_ind_prf_ty>;
-} || requires {
-  { I::fun_ind_prf } -> std::convertible_to<typename I::fun_ind_prf_ty>;
-}));
+template <typename I, typename t_A>
+concept FunctionalInduction =
+    requires { typename I::fun_ind_prf_ty; } && requires {
+      { I::fun_ind_prf() } -> std::convertible_to<typename I::fun_ind_prf_ty>;
+    } || requires {
+      { I::fun_ind_prf } -> std::convertible_to<typename I::fun_ind_prf_ty>;
+    };
 
 struct Equations {
   template <MapsTo<unsigned int, std::pair<unsigned int, unsigned int>> F3>

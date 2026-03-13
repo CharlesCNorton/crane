@@ -145,8 +145,8 @@ RecordCaseBody::guarded_body(const std::shared_ptr<RecordCaseBody::Rec> &r) {
     unsigned int a = r->f1;
     unsigned int b = r->f2;
     unsigned int c = r->f3;
-    if ((a == 0u)) {
-      if ((b == 0u)) {
+    if (a == 0u) {
+      if (b == 0u) {
         return c;
       } else {
         return b;

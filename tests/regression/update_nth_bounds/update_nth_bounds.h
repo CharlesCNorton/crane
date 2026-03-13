@@ -139,7 +139,7 @@ struct UpdateNthBounds {
   template <typename T1>
   static std::shared_ptr<List<T1>> update_nth(const unsigned int n, const T1 x,
                                               std::shared_ptr<List<T1>> l) {
-    if ((n < l->length())) {
+    if (n < l->length()) {
       return l->firstn(n)->app(List<T1>::ctor::Cons_(x, l->skipn((n + 1))));
     } else {
       return std::move(l);

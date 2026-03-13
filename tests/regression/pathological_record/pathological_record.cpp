@@ -95,10 +95,10 @@ unsigned int PathologicalRecord::guarded_pattern(
     unsigned int a = r->f1;
     unsigned int b = r->f2;
     unsigned int c = r->f3;
-    if ((a == 0u)) {
+    if (a == 0u) {
       return (b + c);
     } else {
-      if ((b == 0u)) {
+      if (b == 0u) {
         return (a + c);
       } else {
         return (a + b);

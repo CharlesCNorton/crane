@@ -113,7 +113,7 @@ struct RdrReadsFromSelectedPort {
                               7u, List<unsigned int>::ctor::Cons_(
                                       4u, List<unsigned int>::ctor::Nil_())))),
           2u});
-  static inline const bool t = (execute_rdr(sample)->acc == 7u);
+  static inline const bool t = execute_rdr(sample)->acc == 7u;
 };
 
 #endif // INCLUDED_RDR_READS_FROM_SELECTED_PORT

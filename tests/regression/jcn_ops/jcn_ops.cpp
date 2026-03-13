@@ -18,10 +18,10 @@ bool JcnOps::jcn_condition(const std::shared_ptr<JcnOps::state> &s,
   unsigned int c2 = (Nat::div(cond, 4u) % 2u);
   unsigned int c3 = (Nat::div(cond, 2u) % 2u);
   unsigned int c4 = (cond % 2u);
-  bool base = (((s->acc == 0u) && (std::move(c2) == 1u)) ||
-               ((s->carry && (std::move(c3) == 1u)) ||
-                (!(s->test_pin) && (std::move(c4) == 1u))));
-  if ((std::move(c1) == 1u)) {
+  bool base = ((s->acc == 0u && std::move(c2) == 1u) ||
+               ((s->carry && std::move(c3) == 1u) ||
+                (!(s->test_pin) && std::move(c4) == 1u)));
+  if (std::move(c1) == 1u) {
     return !(std::move(base));
   } else {
     return std::move(base);

@@ -179,7 +179,7 @@ struct SrcWrrRomPortRoundtrip {
       execute_src(sample, 3u);
   static inline const std::shared_ptr<state> after_wrr = execute_wrr(after_src);
   static inline const bool t =
-      (after_wrr->rom_ports->nth(after_src->sel_rom, 0u) == 13u);
+      after_wrr->rom_ports->nth(after_src->sel_rom, 0u) == 13u;
 };
 
 #endif // INCLUDED_SRC_WRR_ROM_PORT_ROUNDTRIP

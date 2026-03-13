@@ -154,10 +154,10 @@ struct WpmOps {
           2u, 99u, false});
   static inline const std::shared_ptr<state1> after1 = execute_wpm1(sample1);
   static inline const bool test_wpm_disabled_is_nop =
-      ((after1->rom1->nth(0u, 0u) == 10u) &&
-       ((after1->rom1->nth(1u, 0u) == 11u) &&
-        ((after1->rom1->nth(2u, 0u) == 12u) &&
-         (after1->rom1->nth(3u, 0u) == 13u))));
+      (after1->rom1->nth(0u, 0u) == 10u &&
+       (after1->rom1->nth(1u, 0u) == 11u &&
+        (after1->rom1->nth(2u, 0u) == 12u &&
+         after1->rom1->nth(3u, 0u) == 13u)));
 
   struct state2 {
     std::shared_ptr<List<unsigned int>> ram_sys2;
@@ -242,7 +242,7 @@ struct WpmOps {
                                     13u, List<unsigned int>::ctor::Nil_())))),
           2u, 99u, true});
   static inline const bool test_wpm_updates_rom_at_addr =
-      (execute_wpm5(sample5)->rom5->nth(2u, 0u) == 99u);
+      execute_wpm5(sample5)->rom5->nth(2u, 0u) == 99u;
 
   struct state6 {
     std::shared_ptr<List<unsigned int>> rom6;
@@ -263,10 +263,10 @@ struct WpmOps {
           2u, 99u, true});
   static inline const std::shared_ptr<state6> after6 = execute_wpm6(sample6);
   static inline const bool test_wpm_writes_exactly_once =
-      ((after6->rom6->nth(2u, 0u) == 99u) &&
-       ((after6->rom6->nth(0u, 0u) == 10u) &&
-        ((after6->rom6->nth(1u, 0u) == 11u) &&
-         (after6->rom6->nth(3u, 0u) == 13u))));
+      (after6->rom6->nth(2u, 0u) == 99u &&
+       (after6->rom6->nth(0u, 0u) == 10u &&
+        (after6->rom6->nth(1u, 0u) == 11u &&
+         after6->rom6->nth(3u, 0u) == 13u)));
   static inline const std::pair<
       std::pair<std::pair<std::pair<std::pair<bool, bool>, bool>, unsigned int>,
                 bool>,

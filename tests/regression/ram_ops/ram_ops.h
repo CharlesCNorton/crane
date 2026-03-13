@@ -657,10 +657,10 @@ struct RamOps {
     return upd_chip_in_bank_frame(sample_bank_frame, 0u, std::move(ch_));
   }();
   static inline const bool test_write_frame_different_chip =
-      (updated_bank_frame
-           ->nth(1u, List<std::shared_ptr<List<unsigned int>>>::ctor::Nil_())
-           ->nth(0u, List<unsigned int>::ctor::Nil_())
-           ->nth(2u, 0u) == 7u);
+      updated_bank_frame
+          ->nth(1u, List<std::shared_ptr<List<unsigned int>>>::ctor::Nil_())
+          ->nth(0u, List<unsigned int>::ctor::Nil_())
+          ->nth(2u, 0u) == 7u;
 
   template <typename T1>
   static std::shared_ptr<List<T1>>
@@ -716,8 +716,7 @@ struct RamOps {
                                     40u, List<unsigned int>::ctor::Nil_())))),
           1u});
   static inline const bool test_write_main_preserves_other_bank =
-      (execute_write(sample_preserve, 99u)->ram_sys_preserve->nth(3u, 0u) ==
-       40u);
+      execute_write(sample_preserve, 99u)->ram_sys_preserve->nth(3u, 0u) == 40u;
   static bool ram_addr_disjointb(const unsigned int b1, const unsigned int c1,
                                  const unsigned int r1, const unsigned int i1,
                                  const unsigned int b2, const unsigned int c2,

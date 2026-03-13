@@ -11,6 +11,4 @@
 #include <string>
 #include <variant>
 
-bool BcdDigitUpperBound::is_bcd_digitb(const unsigned int n) {
-  return (n <= 9u);
-}
+bool BcdDigitUpperBound::is_bcd_digitb(const unsigned int n) { return n <= 9u; }

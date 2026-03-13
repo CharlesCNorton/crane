@@ -86,8 +86,8 @@ struct TimingPreservesWfSimple {
       std::make_shared<state>(state{4u, 4u, 100u, 2u});
   static inline const bool t =
       (wf(sample) &&
-       ((cycles(Instr::e_JMS) == 24u) && (wf(execute(sample, Instr::e_NOP)) &&
-                                          wf(execute(sample, Instr::e_FIM)))));
+       (cycles(Instr::e_JMS) == 24u && (wf(execute(sample, Instr::e_NOP)) &&
+                                        wf(execute(sample, Instr::e_FIM)))));
 };
 
 #endif // INCLUDED_TIMING_PRESERVES_WF_SIMPLE

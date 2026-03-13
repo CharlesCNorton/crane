@@ -1075,13 +1075,11 @@ and pp_cpp_expr env args t =
   (* Low-level constructs for reuse optimization *)
   | CPPraw code -> str code
   | CPPbinop (op, lhs, rhs) ->
-    str "("
-    ++ pp_cpp_expr env args lhs
+    pp_cpp_expr env args lhs
     ++ str " "
     ++ str op
     ++ str " "
     ++ pp_cpp_expr env args rhs
-    ++ str ")"
 
 (** Pretty-print a MiniCpp statement as C++ source. *)
 and pp_cpp_stmt env args = function

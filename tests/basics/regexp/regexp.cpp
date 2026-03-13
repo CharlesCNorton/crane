@@ -13,7 +13,7 @@
 #include <variant>
 
 bool Matcher::char_eq(const int64_t x, const int64_t y) {
-  bool b = (x == y);
+  bool b = x == y;
   if (std::move(b)) {
     return true;
   } else {
@@ -251,7 +251,7 @@ std::shared_ptr<Matcher::regexp>
 Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
                 std::shared_ptr<Matcher::regexp> r2) {
   return [&](void) {
-    if (((r1.use_count() == 1) && (r1->v().index() == 5))) {
+    if (r1.use_count() == 1 && r1->v().index() == 5) {
       auto &_rf = std::get<5>(r1->v_mut());
       return r1;
     } else {
@@ -260,7 +260,7 @@ Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
               [&](const typename Matcher::regexp::Any _args)
                   -> std::shared_ptr<Matcher::regexp> {
                 return [&](void) {
-                  if (((r2.use_count() == 1) && (r2->v().index() == 3))) {
+                  if (r2.use_count() == 1 && r2->v().index() == 3) {
                     auto &_rf = std::get<3>(r2->v_mut());
                     _rf.d_a0 = r1;
                     _rf.d_a1 = r2;
@@ -308,7 +308,7 @@ Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
               [&](const typename Matcher::regexp::Char _args)
                   -> std::shared_ptr<Matcher::regexp> {
                 return [&](void) {
-                  if (((r2.use_count() == 1) && (r2->v().index() == 3))) {
+                  if (r2.use_count() == 1 && r2->v().index() == 3) {
                     auto &_rf = std::get<3>(r2->v_mut());
                     _rf.d_a0 = r1;
                     _rf.d_a1 = r2;
@@ -358,7 +358,7 @@ Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
               [&](const typename Matcher::regexp::Cat _args)
                   -> std::shared_ptr<Matcher::regexp> {
                 return [&](void) {
-                  if (((r2.use_count() == 1) && (r2->v().index() == 3))) {
+                  if (r2.use_count() == 1 && r2->v().index() == 3) {
                     auto &_rf = std::get<3>(r2->v_mut());
                     _rf.d_a0 = r1;
                     _rf.d_a1 = r2;
@@ -406,7 +406,7 @@ Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
               [&](const typename Matcher::regexp::Alt _args)
                   -> std::shared_ptr<Matcher::regexp> {
                 return [&](void) {
-                  if (((r2.use_count() == 1) && (r2->v().index() == 3))) {
+                  if (r2.use_count() == 1 && r2->v().index() == 3) {
                     auto &_rf = std::get<3>(r2->v_mut());
                     _rf.d_a0 = r1;
                     _rf.d_a1 = r2;
@@ -458,7 +458,7 @@ Matcher::OptCat(std::shared_ptr<Matcher::regexp> r1,
               [&](const typename Matcher::regexp::Star _args)
                   -> std::shared_ptr<Matcher::regexp> {
                 return [&](void) {
-                  if (((r2.use_count() == 1) && (r2->v().index() == 3))) {
+                  if (r2.use_count() == 1 && r2->v().index() == 3) {
                     auto &_rf = std::get<3>(r2->v_mut());
                     _rf.d_a0 = r1;
                     _rf.d_a1 = r2;

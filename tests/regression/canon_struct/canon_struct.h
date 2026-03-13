@@ -36,7 +36,7 @@ struct CanonStruct {
   struct nat_eqType {
     using carrier = unsigned int;
 
-    static bool eqb(unsigned int a0, unsigned int a1) { return (a0 == a1); }
+    static bool eqb(unsigned int a0, unsigned int a1) { return a0 == a1; }
   };
 
   static_assert(EqType<nat_eqType>);

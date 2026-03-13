@@ -24,11 +24,11 @@ unsigned int InstructionCycles::cycles_jcn(
                    unsigned int c3 = (Nat::div(std::move(cond), 2u) % 2u);
                    unsigned int c4 = (std::move(cond) % 2u);
                    bool base_cond =
-                       (((s->acc1 == 0u) && (std::move(c2) == 1u)) ||
-                        ((s->carry1 && (std::move(c3) == 1u)) ||
-                         (!(s->test_pin1) && (std::move(c4) == 1u))));
+                       ((s->acc1 == 0u && std::move(c2) == 1u) ||
+                        ((s->carry1 && std::move(c3) == 1u) ||
+                         (!(s->test_pin1) && std::move(c4) == 1u)));
                    bool jump;
-                   if ((std::move(c1) == 1u)) {
+                   if (std::move(c1) == 1u) {
                      jump = !(std::move(base_cond));
                    } else {
                      jump = std::move(base_cond);
@@ -132,11 +132,11 @@ unsigned int InstructionCycles::cycles_sum(
                  [&](const typename InstructionCycles::instruction5::JCN5 _args)
                      -> unsigned int {
                    unsigned int n = _args.d_a0;
-                   if ((Nat::div(n, 8u) == 1u)) {
+                   if (Nat::div(n, 8u) == 1u) {
                      return 16u;
                    } else {
-                     if (((s->acc5 == 0u) &&
-                          ((Nat::div(std::move(n), 4u) % 2u) == 1u))) {
+                     if ((s->acc5 == 0u &&
+                          (Nat::div(std::move(n), 4u) % 2u) == 1u)) {
                        return 16u;
                      } else {
                        return 8u;

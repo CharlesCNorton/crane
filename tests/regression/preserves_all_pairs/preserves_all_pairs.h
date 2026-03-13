@@ -129,11 +129,11 @@ struct PreservesAllPairs {
                                     1u, List<unsigned int>::ctor::Nil_())))))),
             13u});
   static inline const bool add_preserves_pairs =
-      (get_reg_pair(execute_add(sample, 4u), 2u) == get_reg_pair(sample, 2u));
+      get_reg_pair(execute_add(sample, 4u), 2u) == get_reg_pair(sample, 2u);
   static inline const bool ld_preserves_pairs =
-      (get_reg_pair(execute_ld(sample, 4u), 2u) == get_reg_pair(sample, 2u));
+      get_reg_pair(execute_ld(sample, 4u), 2u) == get_reg_pair(sample, 2u);
   static inline const bool sub_preserves_pairs =
-      (get_reg_pair(execute_sub(sample, 4u), 2u) == get_reg_pair(sample, 2u));
+      get_reg_pair(execute_sub(sample, 4u), 2u) == get_reg_pair(sample, 2u);
   static inline const bool t =
       ((add_preserves_pairs && ld_preserves_pairs) && sub_preserves_pairs);
 };

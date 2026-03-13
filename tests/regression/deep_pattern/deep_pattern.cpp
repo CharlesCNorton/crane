@@ -658,7 +658,7 @@ bool DeepPattern::has_value(const std::shared_ptr<DeepPattern::tree> &t,
   return std::visit(
       Overloaded{[&](const typename DeepPattern::tree::Leaf _args) -> bool {
                    unsigned int n = _args.d_a0;
-                   return (std::move(n) == target);
+                   return std::move(n) == target;
                  },
                  [&](const typename DeepPattern::tree::Node _args) -> bool {
                    std::shared_ptr<DeepPattern::tree> l = _args.d_a0;
@@ -676,7 +676,7 @@ DeepPattern::conditional_match(const std::shared_ptr<DeepPattern::tree> &t,
       Overloaded{
           [&](const typename DeepPattern::tree::Leaf _args) -> unsigned int {
             unsigned int n = _args.d_a0;
-            if ((n == target)) {
+            if (n == target) {
               return 100u;
             } else {
               return std::move(n);

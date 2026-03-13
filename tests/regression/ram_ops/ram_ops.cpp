@@ -328,7 +328,7 @@ bool RamOps::ram_addr_disjointb(const unsigned int b1, const unsigned int c1,
                                 const unsigned int r1, const unsigned int i1,
                                 const unsigned int b2, const unsigned int c2,
                                 const unsigned int r2, const unsigned int i2) {
-  return !(((((b1 == b2) && (c1 == c2)) && (r1 == r2)) && (i1 == i2)));
+  return !((((b1 == b2 && c1 == c2) && r1 == r2) && i1 == i2));
 }
 
 std::shared_ptr<RamOps::bank_nested_bank>

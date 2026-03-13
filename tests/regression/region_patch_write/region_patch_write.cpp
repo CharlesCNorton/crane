@@ -27,8 +27,8 @@ RegionPatchWrite::update_region(const std::shared_ptr<List<unsigned int>> &rom,
             std::shared_ptr<List<unsigned int>> rom_ = _args.d_a1;
             if (base <= 0) {
               return [&](void) {
-                if (((std::move(bytes).use_count() == 1) &&
-                     (std::move(bytes)->v().index() == 1))) {
+                if (std::move(bytes).use_count() == 1 &&
+                    std::move(bytes)->v().index() == 1) {
                   auto &_rf = std::get<1>(std::move(bytes)->v_mut());
                   unsigned int b = std::move(_rf.d_a0);
                   std::shared_ptr<List<unsigned int>> bytes_ =

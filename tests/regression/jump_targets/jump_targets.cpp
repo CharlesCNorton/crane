@@ -61,7 +61,7 @@ std::shared_ptr<List<unsigned int>> JumpTargets::collect_targets(
 
 bool JumpTargets::addr_in_region(
     const unsigned int addr, const std::shared_ptr<JumpTargets::layout> &l) {
-  return ((l->base_ <= addr) && (addr < (l->base_ + l->code_)));
+  return (l->base_ <= addr && addr < (l->base_ + l->code_));
 }
 
 std::optional<unsigned int> JumpTargets::jump_target_region(

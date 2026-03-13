@@ -17,7 +17,7 @@ LoadProgramHeadWrite::update_nth(const unsigned int n, const unsigned int x,
                                  std::shared_ptr<List<unsigned int>> l) {
   if (n <= 0) {
     return [&](void) {
-      if (((l.use_count() == 1) && (l->v().index() == 1))) {
+      if (l.use_count() == 1 && l->v().index() == 1) {
         auto &_rf = std::get<1>(l->v_mut());
         std::shared_ptr<List<unsigned int>> xs = std::move(_rf.d_a1);
         _rf.d_a0 = x;
@@ -41,8 +41,7 @@ LoadProgramHeadWrite::update_nth(const unsigned int n, const unsigned int x,
   } else {
     unsigned int n_ = n - 1;
     return [&](void) {
-      if (((std::move(l).use_count() == 1) &&
-           (std::move(l)->v().index() == 1))) {
+      if (std::move(l).use_count() == 1 && std::move(l)->v().index() == 1) {
         auto &_rf = std::get<1>(std::move(l)->v_mut());
         unsigned int y = std::move(_rf.d_a0);
         std::shared_ptr<List<unsigned int>> ys = std::move(_rf.d_a1);

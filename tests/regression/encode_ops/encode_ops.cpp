@@ -71,7 +71,7 @@ EncodeOps::encode1(const std::shared_ptr<EncodeOps::instruction1> &i) {
 bool EncodeOps::pair_in_range(const std::pair<unsigned int, unsigned int> p) {
   unsigned int b1 = p.first;
   unsigned int b2 = p.second;
-  return ((b1 < 256u) && (b2 < 256u));
+  return (b1 < 256u && b2 < 256u);
 }
 
 std::pair<unsigned int, unsigned int>
