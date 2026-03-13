@@ -37,10 +37,19 @@ HB_LLVM="${HB_LLVM:-/opt/homebrew/opt/llvm}"
 # Build the compiler command
 if [ -d "$HB_LLVM" ]; then
     CXX="$HB_LLVM/bin/clang++"
+    # On macOS, Homebrew clang may not find the SDK automatically
+    SYSROOT_FLAGS=()
+    if [ "$(uname)" = "Darwin" ]; then
+        SDK="${SDKROOT:-$(xcrun --show-sdk-path 2>/dev/null)}"
+        if [ -n "$SDK" ] && [ -d "$SDK" ]; then
+            SYSROOT_FLAGS=(-isysroot "$SDK")
+        fi
+    fi
     CXX_FLAGS=(
         -std=c++23
         -"$OPT_LEVEL"
         -fbracket-depth=1024
+        "${SYSROOT_FLAGS[@]}"
         -I .
         -I "$THEORIES_CPP"
         -nostdlib++

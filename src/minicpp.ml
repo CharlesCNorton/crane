@@ -383,6 +383,7 @@ type cpp_decl =
       (GlobRef.t * cpp_type list) list
       * cpp_type
       * (Id.t option * cpp_type) list
+      * bool (* suppress __attribute__((pure)) — e.g. axiom stubs that throw *)
   | Dstruct of {
       ds_ref : GlobRef.t;
       ds_fields : (cpp_field * cpp_visibility * section_tag) list;

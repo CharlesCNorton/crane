@@ -24,10 +24,9 @@ enum class Unit { e_TT };
 
 struct AxiomTypes {
   using MysteryType = std::any /* AXIOM TO BE REALIZED */;
-  __attribute__((pure)) static MysteryType mystery_value();
-  __attribute__((pure)) static MysteryType
-  mystery_function(const MysteryType _x0);
-  __attribute__((pure)) static MysteryType use_axiom(const Unit _x);
+  static MysteryType mystery_value();
+  static MysteryType mystery_function(const MysteryType _x0);
+  static MysteryType use_axiom(const Unit _x);
 
   struct AxiomRecord {
     unsigned int normal_field;
@@ -35,8 +34,7 @@ struct AxiomTypes {
   };
 
   static std::shared_ptr<AxiomRecord> make_axiom_record(const Unit _x);
-  __attribute__((pure)) static MysteryType
-  extract_axiom_field(const std::shared_ptr<AxiomRecord> &r);
+  static MysteryType extract_axiom_field(const std::shared_ptr<AxiomRecord> &r);
 
   struct AxiomInductive {
     // TYPES
@@ -125,8 +123,8 @@ struct AxiomTypes {
   }
 
   static std::shared_ptr<AxiomInductive> use_axiom_inductive(const Unit _x);
-  __attribute__((pure)) static MysteryType axiom_identity(const MysteryType x);
-  __attribute__((pure)) static MysteryType nested_axiom(const Unit _x);
+  static MysteryType axiom_identity(const MysteryType x);
+  static MysteryType nested_axiom(const Unit _x);
 
   template <typename t_A> struct list {
     // TYPES
@@ -209,7 +207,7 @@ struct AxiomTypes {
 
   template <typename T1> static T1 poly_axiom(const T1 x) { return x; }
 
-  __attribute__((pure)) static MysteryType use_poly_axiom(const Unit _x);
+  static MysteryType use_poly_axiom(const Unit _x);
 };
 
 #endif // INCLUDED_AXIOM_TYPES

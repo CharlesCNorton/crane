@@ -70,12 +70,22 @@ if [ "$(uname)" = "Darwin" ]; then
     BDE_LIBS=$(echo "$BDE_LIBS" | sed 's/-lrt//g; s/-lstdc++//g')
 fi
 
+# On macOS, clang may not find the SDK automatically
+SYSROOT_FLAGS=""
+if [ "$(uname)" = "Darwin" ]; then
+    SDK="${SDKROOT:-$(xcrun --show-sdk-path 2>/dev/null)}"
+    if [ -n "$SDK" ] && [ -d "$SDK" ]; then
+        SYSROOT_FLAGS="-isysroot $SDK"
+    fi
+fi
+
 # Compile with C++20, BDE ABI compatibility, and suppress deprecation warnings
 exec clang++ \
     -std=c++20 \
     -DBSLS_LIBRARYFEATURES_FORCE_ABI_CPP17 \
     -Wno-deprecated-literal-operator \
     -$OPT_LEVEL \
+    $SYSROOT_FLAGS \
     -I . \
     -I "$THEORIES_CPP_BDE" \
     $BDE_CFLAGS \

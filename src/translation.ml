@@ -3716,14 +3716,14 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
        passed as function arguments in the scrutinee would not get std::move.
        Suppress when processing a let-binding RHS to avoid use-after-move. *)
     let saved_dead = tctx.move_dead_after in
-    if not tctx.move_suppress_tail then begin
-      let tail_dead =
-        Escape.IntSet.filter
-          (fun i -> Escape.nb_occur_match i ast = 1)
-          tctx.move_owned_vars
-      in
-      tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead
-    end;
+    ( if not tctx.move_suppress_tail then
+        let tail_dead =
+          Escape.IntSet.filter
+            (fun i -> Escape.nb_occur_match i ast = 1)
+            tctx.move_owned_vars
+        in
+        tctx.move_dead_after <-
+          Escape.IntSet.union tctx.move_dead_after tail_dead );
     let result = [gen_custom_cpp_case env k typ t pv] in
     tctx.move_dead_after <- saved_dead;
     result
@@ -3740,14 +3740,14 @@ and gen_stmts env (k : cpp_expr -> cpp_stmt) ast =
        move_dead_after to include all owned variables that occur exactly once in
        t. Suppress when processing a let-binding RHS to avoid use-after-move. *)
     let saved_dead = tctx.move_dead_after in
-    if not tctx.move_suppress_tail then begin
-      let tail_dead =
-        Escape.IntSet.filter
-          (fun i -> Escape.nb_occur_match i t = 1)
-          tctx.move_owned_vars
-      in
-      tctx.move_dead_after <- Escape.IntSet.union tctx.move_dead_after tail_dead
-    end;
+    ( if not tctx.move_suppress_tail then
+        let tail_dead =
+          Escape.IntSet.filter
+            (fun i -> Escape.nb_occur_match i t = 1)
+            tctx.move_owned_vars
+        in
+        tctx.move_dead_after <-
+          Escape.IntSet.union tctx.move_dead_after tail_dead );
     let result = [k (gen_expr env t)] in
     tctx.move_dead_after <- saved_dead;
     result
@@ -5272,9 +5272,9 @@ let gen_sfun n b dom cod temps =
       List.length args
       > List.length ids (* TODO: find/fix bug so we don't need this *)
     then
-      Dfundecl ([(n, [])], cod, List.rev args)
+      Dfundecl ([(n, [])], cod, List.rev args, false)
     else
-      Dfundecl ([(n, [])], cod, ids)
+      Dfundecl ([(n, [])], cod, ids, false)
   in
   match temps with
   | [] -> (inner, env)
@@ -5666,8 +5666,14 @@ let gen_dfuns (ns, bs, tys) =
     constraints). *)
 let rec decl_to_spec (d : cpp_decl) : cpp_decl =
   match d with
-  | Dfundef (ids, ret_ty, params, _body) ->
-    Dfundecl (ids, ret_ty, List.map (fun (id, ty) -> (Some id, ty)) params)
+  | Dfundef (ids, ret_ty, params, body) ->
+    let no_pure =
+      match body with
+      | [Sreturn (Some (CPPabort _))] -> true
+      | _ -> false
+    in
+    Dfundecl
+      (ids, ret_ty, List.map (fun (id, ty) -> (Some id, ty)) params, no_pure)
   | Dtemplate (temps, cstr, inner) -> Dtemplate (temps, cstr, decl_to_spec inner)
   | _ -> d (* Already a declaration, return as-is *)
 

@@ -319,8 +319,9 @@ type cpp_decl =
       (GlobRef.t * cpp_type list) list
       * cpp_type
       * (Id.t option * cpp_type) list
+      * bool
       (** Function declaration: names with type args, return type, parameters
-          (may be unnamed) *)
+          (may be unnamed). Bool suppresses pure attribute (for axiom stubs). *)
   | Dstruct of {
       ds_ref : GlobRef.t;  (** Struct reference *)
       ds_fields : (cpp_field * cpp_visibility * section_tag) list;

@@ -107,7 +107,9 @@ let pp_decl = function
     mt ()
   | Dterm (r, _, _) when is_suppressed_projection r -> mt ()
   | Dind (kn, i) -> mt () (* Inductives are fully defined in headers *)
-  | Dtype (r, l, t) -> mt ()
+  | Dtype (r, _, t) ->
+    if t == Taxiom then register_axiom_type r;
+    mt ()
   | Dterm (r, a, Tglob (ty, args, e)) when is_monad ty ->
     let defs =
       List.filter
@@ -565,8 +567,9 @@ let pp_hdecl = function
       | Some (ids, s) -> (pp_string_parameters ids, str " =" ++ spc () ++ str s)
       | None ->
         ( pp_parameters l,
-          if t == Taxiom then
-            str " = std::any /* AXIOM TO BE REALIZED */"
+          if t == Taxiom then (
+            register_axiom_type r;
+            str " = std::any /* AXIOM TO BE REALIZED */")
           else
             str " =" ++ spc () ++ pp_type false l t )
     in
@@ -700,8 +703,9 @@ let pp_hdecl_spec_only = function
       | Some (ids, s) -> (pp_string_parameters ids, str " =" ++ spc () ++ str s)
       | None ->
         ( pp_parameters l,
-          if t == Taxiom then
-            str " = std::any /* AXIOM TO BE REALIZED */"
+          if t == Taxiom then (
+            register_axiom_type r;
+            str " = std::any /* AXIOM TO BE REALIZED */")
           else
             str " =" ++ spc () ++ pp_type false l t )
     in
@@ -760,7 +764,9 @@ let pp_spec = function
         let ids = pp_parameters l in
         ( match ot with
         | None -> (ids, mt ())
-        | Some Taxiom -> (ids, str " = std::any /* AXIOM TO BE REALIZED */")
+        | Some Taxiom ->
+          register_axiom_type r;
+          (ids, str " = std::any /* AXIOM TO BE REALIZED */")
         | Some t -> (ids, str " =" ++ spc () ++ pp_type false l t) )
     in
     pp_tydef l name def

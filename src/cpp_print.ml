@@ -30,6 +30,15 @@ open Translation
 open Cpp_state
 open Cpp_names
 
+(** Registry of GlobRefs that are axiom types (extracted as std::any).
+    Functions whose return type involves an axiom type should not be marked
+    __attribute__((pure)) because they may transitively call axiom stubs that
+    throw std::logic_error. *)
+let axiom_type_refs : (GlobRef.t, unit) Hashtbl.t = Hashtbl.create 16
+
+let register_axiom_type (r : GlobRef.t) = Hashtbl.replace axiom_type_refs r ()
+let is_axiom_type_ref (r : GlobRef.t) = Hashtbl.mem axiom_type_refs r
+
 (** Check if a lambda actually needs to capture variables from enclosing scope.
     A lambda needs [&] capture if its body references variables that are:
     - Not lambda parameters
@@ -1213,10 +1222,13 @@ and pp_cpp_stmt env args = function
 
 (** Check if a return type is eligible for __attribute__((pure)). Types that
     involve allocation (shared_ptr, unique_ptr), side effects (void), or are
-    unknown at definition time (type variables, any, todo) are excluded. *)
+    unknown at definition time (type variables, any, todo) are excluded.
+    Axiom type refs are also excluded since functions operating on axiom types
+    may transitively call axiom stubs that throw std::logic_error. *)
 and is_pure_return_type = function
   | Tshared_ptr _ | Tunique_ptr _ -> false
   | Tvoid | Tvar _ | Tany | Ttodo | Tunknown -> false
+  | Tglob (r, _, _) when is_axiom_type_ref r -> false
   | Tmod (_, t) | Tref t -> is_pure_return_type t
   | _ -> true
 
@@ -1362,8 +1374,13 @@ let rec pp_cpp_field ?(struct_name : Pp.t option) env = function
         params
     in
     let body_s = pp_list_stmt (pp_cpp_stmt env []) body in
+    let body_throws =
+      match body with
+      | [Sreturn (Some (CPPabort _))] -> true
+      | _ -> false
+    in
     let pure_attr =
-      if is_pure_return_type ret_ty then
+      if is_pure_return_type ret_ty && not body_throws then
         str "__attribute__((pure)) "
       else
         mt ()
@@ -1794,8 +1811,13 @@ let rec pp_cpp_decl env = function
       else
         mt ()
     in
+    let body_throws =
+      match body with
+      | [Sreturn (Some (CPPabort _))] -> true
+      | _ -> false
+    in
     let pure_attr =
-      if is_pure_return_type ret_ty then
+      if is_pure_return_type ret_ty && not body_throws then
         str "__attribute__((pure)) "
       else
         mt ()
@@ -1810,7 +1832,7 @@ let rec pp_cpp_decl env = function
     ++ str "{"
     ++ body_s
     ++ str "}"
-  | Dfundecl (ids, ret_ty, params) ->
+  | Dfundecl (ids, ret_ty, params, no_pure) ->
     let params_s =
       pp_list
         (fun (id, ty) ->
@@ -1842,7 +1864,7 @@ let rec pp_cpp_decl env = function
     let is_struct_member = is_qualified || render_ctx.rc_in_struct in
     let static_kw = if is_struct_member then str "static " else mt () in
     let pure_attr =
-      if is_pure_return_type ret_ty then
+      if is_pure_return_type ret_ty && not no_pure then
         str "__attribute__((pure)) "
       else
         mt ()
