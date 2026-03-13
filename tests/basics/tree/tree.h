@@ -259,6 +259,7 @@ struct Tree {
           this->v());
     }
 
+    /// Returns true if t is a leaf, false otherwise.
     Bool0 is_leaf() const {
       return std::visit(
           Overloaded{[](const typename tree<t_A>::Leaf _args) -> Bool0 {
@@ -270,6 +271,7 @@ struct Tree {
           this->v());
     }
 
+    /// Number of nodes in tree t. A leaf counts as 1.
     std::shared_ptr<Nat> size() const {
       return std::visit(
           Overloaded{
@@ -286,6 +288,7 @@ struct Tree {
           this->v());
     }
 
+    /// Height of tree t. A leaf has height 1.
     std::shared_ptr<Nat> height() const {
       return std::visit(
           Overloaded{
@@ -301,6 +304,7 @@ struct Tree {
           this->v());
     }
 
+    /// Collect all values in t into a list via in-order traversal.
     std::shared_ptr<List<t_A>> flatten() const {
       return std::visit(
           Overloaded{[](const typename tree<t_A>::Leaf _args)
@@ -318,6 +322,8 @@ struct Tree {
           this->v());
     }
 
+    /// Merge two trees t1 and t2 element-wise using combine.
+    /// Subtrees beyond the shape of the other tree are truncated.
     template <MapsTo<t_A, t_A, t_A> F0>
     std::shared_ptr<tree<t_A>>
     merge(F0 &&combine, const std::shared_ptr<tree<t_A>> &t2) const {

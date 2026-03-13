@@ -69,6 +69,7 @@ struct Nat {
     // ACCESSORS
     const variant_t &v() const { return d_v_; }
 
+    /// Convert a Peano nat to a machine int.
     int nat_to_int() const {
       return std::visit(
           Overloaded{[](const typename nat::O _args) -> int { return 0; },
@@ -101,6 +102,7 @@ struct Nat {
           this->v());
     }
 
+    /// add m n computes the sum of m and n by recursion on m.
     std::shared_ptr<nat> add(std::shared_ptr<nat> n) const {
       return std::visit(
           Overloaded{[&](const typename nat::O _args) -> std::shared_ptr<nat> {

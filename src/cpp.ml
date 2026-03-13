@@ -305,9 +305,8 @@ and pp_module_type params = function
 
 (** Format a doc comment string as [///] comment lines. Translates bracket
     references [[name]] by stripping the brackets. Returns [mt ()] if no doc
-    comment is found for the given label. *)
-let pp_doc_comment label =
-  let name = Label.to_string label in
+    comment is found for the given name. *)
+let pp_doc_comment_for_name name =
   match Doc_comments.find_opt name with
   | None -> mt ()
   | Some text ->
@@ -324,6 +323,8 @@ let pp_doc_comment label =
         lines
     in
     prlist_with_sep fnl (fun x -> x) lines ++ fnl ()
+
+let pp_doc_comment label = pp_doc_comment_for_name (Label.to_string label)
 
 (** Pretty-print a structure element (label, elem) pair. Handles modules, module
     types, and declarations. *)
@@ -342,7 +343,6 @@ let rec pp_structure_elem ~is_header f = function
         ++ fnl ()
         ++ str "};" )
   | l, SEmodule m ->
-    let doc = pp_doc_comment l in
     let mp = MPdot (top_visible_mp (), l) in
     let name = pp_modname mp in
     let mod_pp =
@@ -587,7 +587,7 @@ let rec pp_structure_elem ~is_header f = function
         let typeclass_concepts =
           if is_header then
             List.concat_map
-              (fun (_l, se) ->
+              (fun (l, se) ->
                 match se with
                 | SEdecl (Dind (kn, ind)) ->
                   List.concat
@@ -596,14 +596,16 @@ let rec pp_structure_elem ~is_header f = function
                        | TypeClass fields ->
                          let ind_ref = GlobRef.IndRef (kn, i) in
                          let packet = ind.ind_packets.(i) in
-                         [
+                         let concept_pp =
                            pp_cpp_decl
                              (empty_env ())
                              (Translation.gen_typeclass_cpp
                                 ind_ref
                                 fields
-                                packet );
-                         ]
+                                packet )
+                         in
+                         let doc = pp_doc_comment l in
+                         [doc ++ concept_pp]
                        | _ -> [] ) )
                 | _ -> [] )
               sel
@@ -617,7 +619,7 @@ let rec pp_structure_elem ~is_header f = function
           if typeclass_concepts = [] then
             mt ()
           else
-            typeclasses_pp ++ fnl () ++ fnl ()
+            fnl () ++ typeclasses_pp ++ fnl () ++ fnl ()
         in
         let modtype_concepts =
           if is_header then
@@ -759,6 +761,9 @@ let rec pp_structure_elem ~is_header f = function
                   ty_vars
                   non_projection_candidates
               in
+              let methods_with_refs =
+                List.combine non_projection_candidates method_fields
+              in
               let methods_pp =
                 if method_fields = [] then
                   mt ()
@@ -768,8 +773,12 @@ let rec pp_structure_elem ~is_header f = function
                   let result =
                     prlist_with_sep
                       fnl
-                      (fun (fld, _vis, _tag) -> pp_cpp_field (empty_env ()) fld)
-                      method_fields
+                      (fun ((r, _, _, _), (fld, _vis, _tag)) ->
+                        let doc =
+                          pp_doc_comment_for_name (Common.pp_global_name Term r)
+                        in
+                        doc ++ pp_cpp_field (empty_env ()) fld )
+                      methods_with_refs
                     ++ fnl ()
                   in
                   method_candidates := saved_methods;
@@ -826,6 +835,39 @@ let rec pp_structure_elem ~is_header f = function
     if Pp.ismt mod_pp then
       mt ()
     else
+      (* Suppress module-level doc comment when typeclass concepts are hoisted
+         with a matching name, since the concept already carries the doc comment
+         and the module label would produce a duplicate. *)
+      let has_name_collision =
+        match m.ml_mod_expr with
+        | MEstruct (_, sel) ->
+          let module_name = Label.to_string l in
+          List.exists
+            (fun (_l', se) ->
+              match se with
+              | SEdecl (Dind (kn, ind)) ->
+                let found = ref false in
+                Array.iteri
+                  (fun i _p ->
+                    match ind.ind_kind with
+                    | TypeClass _ ->
+                      let ind_name =
+                        Common.pp_global_name Type (GlobRef.IndRef (kn, i))
+                      in
+                      if
+                        String.equal
+                          (String.lowercase_ascii ind_name)
+                          (String.lowercase_ascii module_name)
+                      then
+                        found := true
+                    | _ -> () )
+                  ind.ind_packets;
+                !found
+              | _ -> false )
+            sel
+        | _ -> false
+      in
+      let doc = if has_name_collision then mt () else pp_doc_comment l in
       doc ++ mod_pp
   | l, SEmodtype m ->
     if (not is_header) || render_ctx.rc_in_struct then
