@@ -1,3 +1,6 @@
+#ifndef INCLUDED_MULTI_IND_FUNCTOR
+#define INCLUDED_MULTI_IND_FUNCTOR
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -31,36 +34,51 @@ concept Elem = requires {
 
 template <Elem E> struct Container {
   struct maybe {
-  public:
+    // TYPES
     struct Nothing {};
+
     struct Just {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     using variant_t = std::variant<Nothing, Just>;
 
   private:
-    variant_t v_;
-    explicit maybe(Nothing _v) : v_(std::move(_v)) {}
-    explicit maybe(Just _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit maybe(Nothing _v) : d_v_(std::move(_v)) {}
+
+    explicit maybe(Just _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<maybe> Nothing_() {
         return std::shared_ptr<maybe>(new maybe(Nothing{}));
       }
+
       static std::shared_ptr<maybe> Just_(unsigned int a0) {
         return std::shared_ptr<maybe>(new maybe(Just{a0}));
       }
+
       static std::unique_ptr<maybe> Nothing_uptr() {
         return std::unique_ptr<maybe>(new maybe(Nothing{}));
       }
+
       static std::unique_ptr<maybe> Just_uptr(unsigned int a0) {
         return std::unique_ptr<maybe>(new maybe(Just{a0}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F1>
@@ -68,7 +86,7 @@ template <Elem E> struct Container {
     return std::visit(
         Overloaded{[&](const typename maybe::Nothing _args) -> T1 { return f; },
                    [&](const typename maybe::Just _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    }},
         m->v());
@@ -79,47 +97,62 @@ template <Elem E> struct Container {
     return std::visit(
         Overloaded{[&](const typename maybe::Nothing _args) -> T1 { return f; },
                    [&](const typename maybe::Just _args) -> T1 {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return f0(std::move(n));
                    }},
         m->v());
   }
 
   struct mlist {
-  public:
+    // TYPES
     struct MNil {};
+
     struct MCons {
-      std::shared_ptr<maybe> _a0;
-      std::shared_ptr<mlist> _a1;
+      std::shared_ptr<maybe> d_a0;
+      std::shared_ptr<mlist> d_a1;
     };
+
     using variant_t = std::variant<MNil, MCons>;
 
   private:
-    variant_t v_;
-    explicit mlist(MNil _v) : v_(std::move(_v)) {}
-    explicit mlist(MCons _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit mlist(MNil _v) : d_v_(std::move(_v)) {}
+
+    explicit mlist(MCons _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<mlist> MNil_() {
         return std::shared_ptr<mlist>(new mlist(MNil{}));
       }
+
       static std::shared_ptr<mlist> MCons_(const std::shared_ptr<maybe> &a0,
                                            const std::shared_ptr<mlist> &a1) {
         return std::shared_ptr<mlist>(new mlist(MCons{a0, a1}));
       }
+
       static std::unique_ptr<mlist> MNil_uptr() {
         return std::unique_ptr<mlist>(new mlist(MNil{}));
       }
+
       static std::unique_ptr<mlist>
       MCons_uptr(const std::shared_ptr<maybe> &a0,
                  const std::shared_ptr<mlist> &a1) {
         return std::unique_ptr<mlist>(new mlist(MCons{a0, a1}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1,
@@ -128,8 +161,8 @@ template <Elem E> struct Container {
     return std::visit(
         Overloaded{[&](const typename mlist::MNil _args) -> T1 { return f; },
                    [&](const typename mlist::MCons _args) -> T1 {
-                     std::shared_ptr<maybe> m0 = _args._a0;
-                     std::shared_ptr<mlist> m1 = _args._a1;
+                     std::shared_ptr<maybe> m0 = _args.d_a0;
+                     std::shared_ptr<mlist> m1 = _args.d_a1;
                      return f0(std::move(m0), m1, mlist_rect<T1>(f, f0, m1));
                    }},
         m->v());
@@ -141,59 +174,74 @@ template <Elem E> struct Container {
     return std::visit(
         Overloaded{[&](const typename mlist::MNil _args) -> T1 { return f; },
                    [&](const typename mlist::MCons _args) -> T1 {
-                     std::shared_ptr<maybe> m0 = _args._a0;
-                     std::shared_ptr<mlist> m1 = _args._a1;
+                     std::shared_ptr<maybe> m0 = _args.d_a0;
+                     std::shared_ptr<mlist> m1 = _args.d_a1;
                      return f0(std::move(m0), m1, mlist_rec<T1>(f, f0, m1));
                    }},
         m->v());
   }
 
   struct mtree {
-  public:
+    // TYPES
     struct Leaf {
-      std::shared_ptr<maybe> _a0;
+      std::shared_ptr<maybe> d_a0;
     };
+
     struct Node {
-      std::shared_ptr<mlist> _a0;
+      std::shared_ptr<mlist> d_a0;
     };
+
     using variant_t = std::variant<Leaf, Node>;
 
   private:
-    variant_t v_;
-    explicit mtree(Leaf _v) : v_(std::move(_v)) {}
-    explicit mtree(Node _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit mtree(Leaf _v) : d_v_(std::move(_v)) {}
+
+    explicit mtree(Node _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<mtree> Leaf_(const std::shared_ptr<maybe> &a0) {
         return std::shared_ptr<mtree>(new mtree(Leaf{a0}));
       }
+
       static std::shared_ptr<mtree> Node_(const std::shared_ptr<mlist> &a0) {
         return std::shared_ptr<mtree>(new mtree(Node{a0}));
       }
+
       static std::unique_ptr<mtree>
       Leaf_uptr(const std::shared_ptr<maybe> &a0) {
         return std::unique_ptr<mtree>(new mtree(Leaf{a0}));
       }
+
       static std::unique_ptr<mtree>
       Node_uptr(const std::shared_ptr<mlist> &a0) {
         return std::unique_ptr<mtree>(new mtree(Node{a0}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, std::shared_ptr<maybe>> F0,
             MapsTo<T1, std::shared_ptr<mlist>> F1>
   static T1 mtree_rect(F0 &&f, F1 &&f0, const std::shared_ptr<mtree> &m) {
     return std::visit(Overloaded{[&](const typename mtree::Leaf _args) -> T1 {
-                                   std::shared_ptr<maybe> m0 = _args._a0;
+                                   std::shared_ptr<maybe> m0 = _args.d_a0;
                                    return f(std::move(m0));
                                  },
                                  [&](const typename mtree::Node _args) -> T1 {
-                                   std::shared_ptr<mlist> m0 = _args._a0;
+                                   std::shared_ptr<mlist> m0 = _args.d_a0;
                                    return f0(std::move(m0));
                                  }},
                       m->v());
@@ -203,17 +251,18 @@ template <Elem E> struct Container {
             MapsTo<T1, std::shared_ptr<mlist>> F1>
   static T1 mtree_rec(F0 &&f, F1 &&f0, const std::shared_ptr<mtree> &m) {
     return std::visit(Overloaded{[&](const typename mtree::Leaf _args) -> T1 {
-                                   std::shared_ptr<maybe> m0 = _args._a0;
+                                   std::shared_ptr<maybe> m0 = _args.d_a0;
                                    return f(std::move(m0));
                                  },
                                  [&](const typename mtree::Node _args) -> T1 {
-                                   std::shared_ptr<mlist> m0 = _args._a0;
+                                   std::shared_ptr<mlist> m0 = _args.d_a0;
                                    return f0(std::move(m0));
                                  }},
                       m->v());
   }
 
-  static bool is_nothing(const std::shared_ptr<maybe> &m) {
+  __attribute__((pure)) static bool
+  is_nothing(const std::shared_ptr<maybe> &m) {
     return std::visit(
         Overloaded{
             [](const typename maybe::Nothing _args) -> bool { return true; },
@@ -221,29 +270,31 @@ template <Elem E> struct Container {
         m->v());
   }
 
-  static unsigned int mlist_length(const std::shared_ptr<mlist> &l) {
+  __attribute__((pure)) static unsigned int
+  mlist_length(const std::shared_ptr<mlist> &l) {
     return std::visit(
         Overloaded{
             [](const typename mlist::MNil _args) -> unsigned int { return 0u; },
             [](const typename mlist::MCons _args) -> unsigned int {
-              std::shared_ptr<mlist> rest = _args._a1;
+              std::shared_ptr<mlist> rest = _args.d_a1;
               return (mlist_length(std::move(rest)) + 1);
             }},
         l->v());
   }
 
-  static unsigned int tree_size(const std::shared_ptr<mtree> &t0) {
+  __attribute__((pure)) static unsigned int
+  tree_size(const std::shared_ptr<mtree> &t0) {
     return std::visit(
         Overloaded{[](const typename mtree::Leaf _args) -> unsigned int {
-                     std::shared_ptr<maybe> m = _args._a0;
-                     if (is_nothing(m)) {
+                     std::shared_ptr<maybe> m = _args.d_a0;
+                     if (is_nothing(std::move(m))) {
                        return 0u;
                      } else {
                        return 1u;
                      }
                    },
                    [](const typename mtree::Node _args) -> unsigned int {
-                     std::shared_ptr<mlist> children = _args._a0;
+                     std::shared_ptr<mlist> children = _args.d_a0;
                      return mlist_length(std::move(children));
                    }},
         t0->v());
@@ -274,18 +325,16 @@ template <Elem E> struct Container {
 
 struct NatElem {
   using t = unsigned int;
-
   static inline const unsigned int dflt = 42u;
 };
+
 static_assert(Elem<NatElem>);
-
 using NatContainer = Container<NatElem>;
-
 const bool test_is_nothing =
     NatContainer::is_nothing(NatContainer::empty_maybe());
-
 const unsigned int test_list_len =
     NatContainer::mlist_length(NatContainer::sample_list());
-
 const unsigned int test_tree_size =
     NatContainer::tree_size(NatContainer::sample_tree());
+
+#endif // INCLUDED_MULTI_IND_FUNCTOR

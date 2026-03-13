@@ -1,3 +1,5 @@
+#include <parallel.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -7,13 +9,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <parallel.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int ParallelTest::ack(const std::pair<unsigned int, unsigned int> p) {
+__attribute__((pure)) unsigned int
+ParallelTest::ack(const std::pair<unsigned int, unsigned int> p) {
   std::function<unsigned int(unsigned int, unsigned int)> f;
   f = [&](unsigned int m, unsigned int n) -> unsigned int {
     std::function<unsigned int(unsigned int)> ack_m;
@@ -35,9 +37,9 @@ unsigned int ParallelTest::ack(const std::pair<unsigned int, unsigned int> p) {
   return f(p.first, p.second);
 }
 
-std::pair<unsigned int, unsigned int> ParallelTest::fast(const unsigned int m,
-                                                         const unsigned int n) {
-  return [&](void) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+ParallelTest::fast(const unsigned int m, const unsigned int n) {
+  return [=](void) mutable {
     std::pair<unsigned int, unsigned int> p = std::make_pair(m, n);
     std::future<unsigned int> t1 = std::async(std::launch::async, ack, p);
     std::future<unsigned int> t2 = std::async(std::launch::async, ack, p);
@@ -47,8 +49,8 @@ std::pair<unsigned int, unsigned int> ParallelTest::fast(const unsigned int m,
   }();
 }
 
-std::pair<unsigned int, unsigned int> ParallelTest::slow(const unsigned int m,
-                                                         const unsigned int n) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+ParallelTest::slow(const unsigned int m, const unsigned int n) {
   std::pair<unsigned int, unsigned int> p =
       std::make_pair(std::move(m), std::move(n));
   unsigned int r1 = ack(std::move(p));

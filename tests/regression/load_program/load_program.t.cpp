@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <load_program.h>
 
-int main()
-{
-    (void)LoadProgram::t;
-    return 0;
+int main() {
+  (void)LoadProgram::t;
+  return 0;
 }

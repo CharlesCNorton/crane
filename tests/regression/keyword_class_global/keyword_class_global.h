@@ -1,3 +1,6 @@
+#ifndef INCLUDED_KEYWORD_CLASS_GLOBAL
+#define INCLUDED_KEYWORD_CLASS_GLOBAL
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,7 +21,8 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct KeywordClassGlobal {
-  static unsigned int class_(const unsigned int n);
-
+  __attribute__((pure)) static unsigned int class_(const unsigned int n);
   static inline const unsigned int t = class_(4u);
 };
+
+#endif // INCLUDED_KEYWORD_CLASS_GLOBAL

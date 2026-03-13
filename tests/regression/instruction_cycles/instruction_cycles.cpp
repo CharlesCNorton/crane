@@ -1,8 +1,9 @@
+#include <instruction_cycles.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
-#include <instruction_cycles.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -11,28 +12,28 @@
 #include <utility>
 #include <variant>
 
-unsigned int InstructionCycles::cycles_jcn(
+__attribute__((pure)) unsigned int InstructionCycles::cycles_jcn(
     const std::shared_ptr<InstructionCycles::state1> &s,
     const std::shared_ptr<InstructionCycles::instruction1> &i) {
   return std::visit(
       Overloaded{[&](const typename InstructionCycles::instruction1::JCN1 _args)
                      -> unsigned int {
-                   unsigned int cond = _args._a0;
+                   unsigned int cond = _args.d_a0;
                    unsigned int c1 = Nat::div(std::move(cond), 8u);
                    unsigned int c2 = (Nat::div(std::move(cond), 4u) % 2u);
                    unsigned int c3 = (Nat::div(std::move(cond), 2u) % 2u);
                    unsigned int c4 = (std::move(cond) % 2u);
                    bool base_cond =
-                       (((s->acc1 == 0u) && (std::move(c2) == 1u)) ||
-                        ((s->carry1 && (std::move(c3) == 1u)) ||
-                         (!(s->test_pin1) && (std::move(c4) == 1u))));
+                       ((s->acc1 == 0u && std::move(c2) == 1u) ||
+                        ((s->carry1 && std::move(c3) == 1u) ||
+                         (!(s->test_pin1) && std::move(c4) == 1u)));
                    bool jump;
-                   if ((std::move(c1) == 1u)) {
+                   if (std::move(c1) == 1u) {
                      jump = !(std::move(base_cond));
                    } else {
                      jump = std::move(base_cond);
                    }
-                   if (jump) {
+                   if (std::move(jump)) {
                      return 16u;
                    } else {
                      return 8u;
@@ -43,7 +44,7 @@ unsigned int InstructionCycles::cycles_jcn(
       i->v());
 }
 
-unsigned int InstructionCycles::cycles_jms(
+__attribute__((pure)) unsigned int InstructionCycles::cycles_jms(
     const std::shared_ptr<InstructionCycles::state2> &_x,
     const std::shared_ptr<InstructionCycles::instruction2> &i) {
   return std::visit(
@@ -54,75 +55,77 @@ unsigned int InstructionCycles::cycles_jms(
       i->v());
 }
 
-unsigned int InstructionCycles::cycles_min(const InstructionCycles::instr3 i) {
+__attribute__((pure)) unsigned int
+InstructionCycles::cycles_min(const InstructionCycles::Instr3 i) {
   return [&](void) {
     switch (i) {
-    case instr3::NOP3: {
+    case Instr3::e_NOP3: {
       return 8u;
     }
-    case instr3::ADD3: {
+    case Instr3::e_ADD3: {
       return 8u;
     }
-    case instr3::WRM3: {
+    case Instr3::e_WRM3: {
       return 8u;
     }
-    case instr3::FIM3: {
+    case Instr3::e_FIM3: {
       return 16u;
     }
-    case instr3::JMS3: {
+    case Instr3::e_JMS3: {
       return 24u;
     }
-    case instr3::JCNTaken3: {
+    case Instr3::e_JCNTAKEN3: {
       return 16u;
     }
-    case instr3::JCNNotTaken3: {
+    case Instr3::e_JCNNOTTAKEN3: {
       return 8u;
     }
-    case instr3::ISZTaken3: {
+    case Instr3::e_ISZTAKEN3: {
       return 16u;
     }
-    case instr3::ISZZero3: {
+    case Instr3::e_ISZZERO3: {
       return 8u;
     }
     }
   }();
 }
 
-unsigned int InstructionCycles::cycles_max(const InstructionCycles::instr4 i) {
+__attribute__((pure)) unsigned int
+InstructionCycles::cycles_max(const InstructionCycles::Instr4 i) {
   return [&](void) {
     switch (i) {
-    case instr4::NOP4: {
+    case Instr4::e_NOP4: {
       return 8u;
     }
-    case instr4::ADD4: {
+    case Instr4::e_ADD4: {
       return 8u;
     }
-    case instr4::WRM4: {
+    case Instr4::e_WRM4: {
       return 8u;
     }
-    case instr4::FIM4: {
+    case Instr4::e_FIM4: {
       return 16u;
     }
-    case instr4::JMS4: {
+    case Instr4::e_JMS4: {
       return 24u;
     }
-    case instr4::JCNTaken4: {
+    case Instr4::e_JCNTAKEN4: {
       return 16u;
     }
-    case instr4::JCNNotTaken4: {
+    case Instr4::e_JCNNOTTAKEN4: {
       return 8u;
     }
-    case instr4::ISZTaken4: {
+    case Instr4::e_ISZTAKEN4: {
       return 16u;
     }
-    case instr4::ISZZero4: {
+    case Instr4::e_ISZZERO4: {
       return 8u;
     }
     }
   }();
 }
 
-unsigned int InstructionCycles::cycles_sum(
+__attribute__((pure)) unsigned int InstructionCycles::cycles_sum(
     const std::shared_ptr<InstructionCycles::state5> &s,
     const std::shared_ptr<InstructionCycles::instruction5> &i) {
   return std::visit(
@@ -130,11 +133,12 @@ unsigned int InstructionCycles::cycles_sum(
                      -> unsigned int { return 8u; },
                  [&](const typename InstructionCycles::instruction5::JCN5 _args)
                      -> unsigned int {
-                   unsigned int n = _args._a0;
-                   if ((Nat::div(n, 8u) == 1u)) {
+                   unsigned int n = _args.d_a0;
+                   if (Nat::div(n, 8u) == 1u) {
                      return 16u;
                    } else {
-                     if (((s->acc5 == 0u) && ((Nat::div(n, 4u) % 2u) == 1u))) {
+                     if ((s->acc5 == 0u &&
+                          (Nat::div(std::move(n), 4u) % 2u) == 1u)) {
                        return 16u;
                      } else {
                        return 8u;
@@ -166,78 +170,77 @@ std::shared_ptr<InstructionCycles::state5> InstructionCycles::execute5(
       i->v());
 }
 
-unsigned int InstructionCycles::program_cycles5(
+__attribute__((pure)) unsigned int InstructionCycles::program_cycles5(
     const std::shared_ptr<InstructionCycles::state5> &s,
     const std::shared_ptr<
         List<std::shared_ptr<InstructionCycles::instruction5>>> &prog) {
   return std::visit(
       Overloaded{
           [](const typename List<
-              std::shared_ptr<InstructionCycles::instruction5>>::nil _args)
+              std::shared_ptr<InstructionCycles::instruction5>>::Nil _args)
               -> unsigned int { return 0u; },
           [&](const typename List<
-              std::shared_ptr<InstructionCycles::instruction5>>::cons _args)
+              std::shared_ptr<InstructionCycles::instruction5>>::Cons _args)
               -> unsigned int {
-            std::shared_ptr<InstructionCycles::instruction5> i = _args._a0;
+            std::shared_ptr<InstructionCycles::instruction5> i = _args.d_a0;
             std::shared_ptr<
                 List<std::shared_ptr<InstructionCycles::instruction5>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             return (cycles_sum(s, i) +
                     program_cycles5(execute5(s, i), std::move(rest)));
           }},
       prog->v());
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 InstructionCycles::cycles6(const std::shared_ptr<InstructionCycles::state6> &_x,
-                           const InstructionCycles::instruction6 _x0) {
+                           const InstructionCycles::Instruction6 _x0) {
   return 8u;
 }
 
-unsigned int InstructionCycles::program_cycles6(
+__attribute__((pure)) unsigned int InstructionCycles::program_cycles6(
     const std::shared_ptr<InstructionCycles::state6> &s,
-    const std::shared_ptr<List<InstructionCycles::instruction6>> &prog) {
+    const std::shared_ptr<List<InstructionCycles::Instruction6>> &prog) {
   return std::visit(
       Overloaded{
-          [](const typename List<InstructionCycles::instruction6>::nil _args)
+          [](const typename List<InstructionCycles::Instruction6>::Nil _args)
               -> unsigned int { return 0u; },
-          [&](const typename List<InstructionCycles::instruction6>::cons _args)
+          [&](const typename List<InstructionCycles::Instruction6>::Cons _args)
               -> unsigned int {
-            InstructionCycles::instruction6 i = _args._a0;
-            std::shared_ptr<List<InstructionCycles::instruction6>> rest =
-                _args._a1;
+            InstructionCycles::Instruction6 i = _args.d_a0;
+            std::shared_ptr<List<InstructionCycles::Instruction6>> rest =
+                _args.d_a1;
             return (cycles6(s, i) + program_cycles6(s, std::move(rest)));
           }},
       prog->v());
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 InstructionCycles::cycles7(const std::shared_ptr<InstructionCycles::state7> &_x,
-                           const InstructionCycles::instruction7 _x0) {
+                           const InstructionCycles::Instruction7 _x0) {
   return 8u;
 }
 
-unsigned int InstructionCycles::program_cycles7(
+__attribute__((pure)) unsigned int InstructionCycles::program_cycles7(
     const std::shared_ptr<InstructionCycles::state7> &s,
-    const std::shared_ptr<List<InstructionCycles::instruction7>> &prog) {
+    const std::shared_ptr<List<InstructionCycles::Instruction7>> &prog) {
   return std::visit(
       Overloaded{
-          [](const typename List<InstructionCycles::instruction7>::nil _args)
+          [](const typename List<InstructionCycles::Instruction7>::Nil _args)
               -> unsigned int { return 0u; },
-          [&](const typename List<InstructionCycles::instruction7>::cons _args)
+          [&](const typename List<InstructionCycles::Instruction7>::Cons _args)
               -> unsigned int {
-            InstructionCycles::instruction7 i = _args._a0;
-            std::shared_ptr<List<InstructionCycles::instruction7>> rest =
-                _args._a1;
+            InstructionCycles::Instruction7 i = _args.d_a0;
+            std::shared_ptr<List<InstructionCycles::Instruction7>> rest =
+                _args.d_a1;
             return (cycles7(s, i) + program_cycles7(s, std::move(rest)));
           }},
       prog->v());
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -251,7 +254,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

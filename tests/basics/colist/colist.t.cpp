@@ -15,50 +15,50 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
-int nat_to_int(const std::shared_ptr<Nat>& n) {
-  return std::visit(Overloaded{
-    [](const Nat::O) -> int { return 0; },
-    [](const Nat::S s) -> int { return 1 + nat_to_int(s._a0); }
-  }, n->v());
+int nat_to_int(const std::shared_ptr<Nat> &n) {
+  return std::visit(
+      Overloaded{[](const Nat::O) -> int { return 0; },
+                 [](const Nat::S s) -> int { return 1 + nat_to_int(s.d_a0); }},
+      n->v());
 }
 
 template <typename A>
-std::vector<A> list_to_vec(const std::shared_ptr<List<A>>& l) {
+std::vector<A> list_to_vec(const std::shared_ptr<List<A>> &l) {
   std::vector<A> result;
   auto cur = l;
   while (true) {
-    bool done = std::visit(Overloaded{
-      [&](const typename List<A>::nil) -> bool { return true; },
-      [&](const typename List<A>::cons c) -> bool {
-        result.push_back(c._a0);
-        cur = c._a1;
-        return false;
-      }
-    }, cur->v());
-    if (done) break;
+    bool done = std::visit(
+        Overloaded{[&](const typename List<A>::Nil) -> bool { return true; },
+                   [&](const typename List<A>::Cons c) -> bool {
+                     result.push_back(c.d_a0);
+                     cur = c.d_a1;
+                     return false;
+                   }},
+        cur->v());
+    if (done)
+      break;
   }
   return result;
 }
 
 std::shared_ptr<Nat> int_to_nat(int x) {
-  if (x <= 0) return Nat::ctor::O_();
+  if (x <= 0)
+    return Nat::ctor::O_();
   return Nat::ctor::S_(int_to_nat(x - 1));
 }
 

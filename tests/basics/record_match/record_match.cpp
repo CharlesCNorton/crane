@@ -1,3 +1,5 @@
+#include <record_match.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,12 +7,12 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <record_match.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-unsigned int RecordMatch::sum(const std::shared_ptr<RecordMatch::MyRec> &r) {
+__attribute__((pure)) unsigned int
+RecordMatch::sum(const std::shared_ptr<RecordMatch::MyRec> &r) {
   return [&](void) {
     unsigned int n1 = r->f1;
     unsigned int n2 = r->f2;

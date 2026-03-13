@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <prom_ops.h>
 
-int main()
-{
-    (void)PromOps::t;
-    return 0;
+int main() {
+  (void)PromOps::t;
+  return 0;
 }

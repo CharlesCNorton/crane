@@ -1,3 +1,5 @@
+#include <sigma_assert.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,12 +7,11 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <sigma_assert.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-unsigned int PeanoNat::pred(const unsigned int n) {
+__attribute__((pure)) unsigned int PeanoNat::pred(const unsigned int n) {
   if (n <= 0) {
     return std::move(n);
   } else {
@@ -19,7 +20,7 @@ unsigned int PeanoNat::pred(const unsigned int n) {
   }
 }
 
-unsigned int PeanoNat::div2(const unsigned int n) {
+__attribute__((pure)) unsigned int PeanoNat::div2(const unsigned int n) {
   if (n <= 0) {
     return 0u;
   } else {
@@ -33,13 +34,13 @@ unsigned int PeanoNat::div2(const unsigned int n) {
   }
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 SigmaAssert::safe_pred(const unsigned int n) { // Precondition: n != 0
   assert(n != 0);
   return PeanoNat::pred(n);
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 SigmaAssert::safe_div2(const unsigned int n) { // Precondition: n >= 1
   assert(n >= 1);
   return PeanoNat::div2(n);

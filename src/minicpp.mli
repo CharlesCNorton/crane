@@ -5,194 +5,344 @@
 
    Crane's extraction pipeline has two intermediate representations:
 
-     Rocq CIC  --[extraction.ml]-->  MiniML  --[translation.ml]-->  MiniCpp  --[cpp.ml]-->  C++
+   Rocq CIC --[extraction.ml]--> MiniML --[translation.ml]--> MiniCpp
+   --[cpp.ml]--> C++
 
-   MiniML (miniml.ml) handles type erasure, signature computation, and
-   ML-level optimizations on a language-agnostic functional AST.  MiniCpp
-   (this file) captures C++-specific idioms: shared_ptr/unique_ptr memory
-   management, std::variant, templates, concepts, namespaces, structs
-   with visibility, move semantics, enum classes, and constructors.
+   MiniML (miniml.ml) handles type erasure, signature computation, and ML-level
+   optimizations on a language-agnostic functional AST. MiniCpp (this file)
+   captures C++-specific idioms: shared_ptr/unique_ptr memory management,
+   std::variant, templates, concepts, namespaces, structs with visibility, move
+   semantics, enum classes, and constructors.
 
-   See minicpp.ml for a detailed explanation of why both representations
-   are needed and cannot be merged. *)
+   See minicpp.ml for a detailed explanation of why both representations are
+   needed and cannot be merged. *)
 
 open Names
 
-(** {2 Pre-resolved C++ name.
-   Computed during translation so the pretty-printer doesn't need
-   name-resolution logic} *)
+(** {2 Pre-resolved C++ name}
+
+    Computed during translation so the pretty-printer doesn't need
+    name-resolution logic. *)
+
+(** Pre-resolved C++ identifier with qualification information. *)
 type cpp_name = {
-  cn_base : string;               (* e.g., "add", "list", "Nat" *)
-  cn_qualified : string option;    (* Some "Nat::" for wrapper-qualified names *)
-  cn_needs_typename : bool;        (* true if dependent type in template context *)
+  cn_base : string;  (** Base identifier, e.g., "add", "list", "Nat" *)
+  cn_qualified : string option;
+      (** Optional qualifier prefix, e.g., Some "Nat::" *)
+  cn_needs_typename : bool;
+      (** True if dependent type requires typename keyword in template context
+      *)
 }
 
-(** {2 Inductive classification — determined once during translation} *)
+(** {2 Inductive classification}
+
+    Determined once during translation. *)
+
+(** Classification of an inductive type for C++ code generation. *)
 type cpp_ind_kind =
-  | IK_Standard                             (* std::variant sum type *)
-  | IK_Enum                                 (* enum class *)
-  | IK_Record of GlobRef.t option list      (* struct with named fields *)
-  | IK_Eponymous of GlobRef.t option list   (* record merged into module *)
-  | IK_TypeClass of GlobRef.t option list   (* C++ concept *)
+  | IK_Standard  (** Sum type rendered as std::variant *)
+  | IK_Enum  (** Simple enumeration rendered as enum class *)
+  | IK_Record of GlobRef.t option list
+      (** Product type rendered as struct, with field references *)
+  | IK_Eponymous of GlobRef.t option list
+      (** Record merged into its module struct to avoid naming conflicts *)
+  | IK_TypeClass of GlobRef.t option list
+      (** Type class rendered as C++ concept *)
 
-(** {2 Custom extraction info — resolved once during translation} *)
+(** {2 Custom extraction info}
+
+    Resolved once during translation. *)
+
+(** Custom extraction metadata for manually mapped entities. *)
 type custom_info = {
-  ci_inline : string option;   (* Some code if to_inline, None otherwise *)
-  ci_is_custom : bool;
+  ci_inline : string option;
+      (** Some code if entity should be inlined, None otherwise *)
+  ci_is_custom : bool;  (** True if entity has custom C++ mapping *)
 }
 
-(** {2 Visibility for struct members} *)
-type cpp_visibility = VPublic | VPrivate
+(** {2 Visibility modifiers} *)
 
+(** Visibility for struct members (C++ public/private). *)
+type cpp_visibility =
+  | VPublic
+  | VPrivate
+
+(** BDE section tags for struct member grouping. *)
+type section_tag =
+  | STypes
+  | SData
+  | SCreators
+  | SManipulators
+  | SAccessors
+  | SNoTag
+
+(** {2 C++ type modifiers} *)
+
+(** Type modifiers (const, static, extern). *)
 type cpp_tymod =
-  | TMconst
-  | TMstatic
-  | TMextern
+  | TMconst  (** Const qualifier *)
+  | TMstatic  (** Static storage class *)
+  | TMextern  (** External linkage *)
 
+(** {2 C++ type expressions} *)
 
+(** C++ type representation. *)
 type cpp_type =
   | Tvar of int * Id.t option
-  | Tid of Id.t * cpp_type list  (* Simple Id-based type, for local names like nested structs *)
+      (** Type variable with De Bruijn index and optional name *)
+  | Tid of Id.t * cpp_type list
+      (** Local type identifier with type arguments, for nested structs *)
   | Tglob of GlobRef.t * cpp_type list * cpp_expr list
+      (** Global type reference with type and value arguments *)
   | Tfun of cpp_type list * cpp_type
+      (** Function type: domain types and codomain *)
   | Tmod of cpp_tymod * cpp_type
+      (** Type with modifier (const, static, extern) *)
   | Tnamespace of GlobRef.t * cpp_type
-  | Tqualified of cpp_type * Id.t  (* typename Base<T>::nested - for nested struct access *)
-  | Tref of cpp_type
-  | Tvariant of cpp_type list
-  | Tshared_ptr of cpp_type
-  | Tunique_ptr of cpp_type
-  | Tvoid
-  | Ttodo
-  | Tunknown
-  | Tany  (* std::any - for type-erased storage of existential types *)
+      (** Type qualified by namespace reference *)
+  | Tqualified of cpp_type * Id.t
+      (** Nested type access, e.g., typename Base<T>::nested *)
+  | Tref of cpp_type  (** C++ reference type *)
+  | Tvariant of cpp_type list  (** std::variant<...> for sum types *)
+  | Tshared_ptr of cpp_type  (** std::shared_ptr<T> for managed memory *)
+  | Tunique_ptr of cpp_type  (** std::unique_ptr<T> for unique ownership *)
+  | Tvoid  (** void type *)
+  | Ttodo  (** Placeholder during development *)
+  | Tunknown  (** Type inference failed *)
+  | Tany  (** std::any for type-erased storage of existentials *)
 
-and cpp_meta = { id : int; mutable contents : cpp_type option }
-
-and cpp_stmt =
-  | Sreturn of cpp_expr option
-  | Sdecl of Id.t * cpp_type
-  | Sasgn of Id.t * cpp_type option * cpp_expr
-  | Sexpr of cpp_expr
-  | Scustom_case of cpp_type * cpp_expr * cpp_type list * ((Id.t * cpp_type) list * cpp_type * cpp_stmt list) list * string
-  | Sthrow of string  (* throw statement for unreachable/absurd cases *)
-  | Sswitch of cpp_expr * GlobRef.t * (Id.t * cpp_stmt list) list  (* switch on enum: scrutinee, enum type, branches *)
-  | Sassert of string * string option  (* runtime assert: C++ expression string, optional Rocq predicate comment *)
-  | Sif of cpp_expr * cpp_stmt list * cpp_stmt list
-      (* if-else: condition, then-branch, else-branch.
-         Used for reuse optimization's use_count() check. *)
-  | Sraw of string
-      (* Raw C++ code, printed verbatim.
-         Used for low-level operations in reuse optimization. *)
-  | Sassign_field of cpp_expr * Id.t * cpp_expr
-      (* Field assignment: obj.field = expr.
-         Used for in-place mutation during memory reuse. *)
-
-and cpp_expr =
-  | CPPvar of Id.t
-  | CPPglob of GlobRef.t * cpp_type list * custom_info option
-  | CPPnamespace of GlobRef.t * cpp_expr
-  | CPPfun_call of cpp_expr * cpp_expr list
-  | CPPderef of cpp_expr
-  | CPPmove of cpp_expr
-  | CPPforward of cpp_type * cpp_expr
-  | CPPlambda of (cpp_type * Id.t option) list * cpp_type option * cpp_stmt list * bool (* capture_by_value *)
-  | CPPvisit
-  | CPPmk_shared of cpp_type
-  | CPPoverloaded of cpp_expr list (* cpp_expressions in list should only be lambdas. TODO: enforce in the AST? split up to a funcall *)
-  | CPPstructmk of GlobRef.t * cpp_type list * cpp_expr list
-  | CPPstruct of GlobRef.t * cpp_type list *  cpp_expr list (* record struct construction via namespace *)
-  | CPPstruct_id of Id.t * cpp_type list * cpp_expr list (* Local struct init with Id, e.g., Leaf{} *)
-  | CPPget of cpp_expr * Id.t (* access from a struct (or class) *)
-  | CPPget' of cpp_expr * GlobRef.t (* access from a struct (or class) *)
-  | CPPstring of Pstring.t
-  | CPPuint   of Uint63.t
-  | CPPfloat  of Float64.t
-  | CPPparray of cpp_expr array * cpp_expr
-  | CPPrequires of (cpp_type * Id.t) list * (cpp_expr * cpp_constraint) list * cpp_type list
-  (* requires (params) { typename type_reqs; { expr } -> constraint; } *)
-  | CPPnew of cpp_type * cpp_expr list  (* new Type(args) or new Type{args} *)
-  | CPPshared_ptr_ctor of cpp_type * cpp_expr  (* std::shared_ptr<T>(expr) *)
-  | CPPunique_ptr_ctor of cpp_type * cpp_expr  (* std::unique_ptr<T>(expr) *)
-  | CPPmk_unique of cpp_type                   (* std::make_unique<T> *)
-  | CPPthis  (* this pointer in methods *)
-  | CPPshared_from_this of cpp_type  (* std::const_pointer_cast<T>(shared_from_this()) — for returning this as shared_ptr *)
-  | CPPmember of cpp_expr * Id.t  (* expr.member - for accessing v_ etc *)
-  | CPParrow of cpp_expr * Id.t   (* expr->member - for ptr->v_ access *)
-  | CPPmethod_call of cpp_expr * Id.t * cpp_expr list  (* obj->method(args) *)
-  | CPPqualified of cpp_expr * Id.t  (* expr::id - for qualified name access like Type::ctor *)
-  | CPPconvertible_to of cpp_type  (* std::convertible_to<T> constraint *)
-  | CPPabort of string  (* unreachable code / absurd case - calls std::abort() *)
-  | CPPenum_val of GlobRef.t * Id.t  (* enum class value: EnumType::Constructor *)
-  | CPPraw of string
-      (* Raw C++ expression, printed verbatim.
-         Used for low-level operations (e.g., literal "1" for use_count check). *)
-  | CPPbinop of string * cpp_expr * cpp_expr
-      (* Binary operator: operator string, lhs, rhs.
-         Used for conditions in reuse optimization (&&, ==). *)
-
-and cpp_constraint = cpp_expr
-
-and template_type =
-  | TTtypename
-  | TTtypename_default of cpp_type  (* typename T = default_type *)
-  | TTfun of (cpp_type list * cpp_type)
-  | TTconcept of GlobRef.t  (* e.g., 'Eq T' *)
-
-(* TODO: maybe switch all Id.t to GlobRef.t *)
-and cpp_field =
-  | Fvar of Id.t * cpp_type
-  | Fvar' of GlobRef.t * cpp_type
-  | Ffundef of Id.t * cpp_type * (Id.t * cpp_type) list * cpp_stmt list
-  | Ffundecl of Id.t * cpp_type * (Id.t * cpp_type) list
-  | Fmethod of method_field
-  (* Private constructor: params, initializer list (as stmts for v_(x) style) *)
-  | Fconstructor of (Id.t * cpp_type) list * (Id.t * cpp_expr) list * bool (* bool = explicit *)
-  (* Nested struct with its own visibility-annotated fields *)
-  | Fnested_struct of Id.t * (cpp_field * cpp_visibility) list
-  (* Nested using declaration *)
-  | Fnested_using of Id.t * cpp_type
-  (* Deleted default constructor: ctor() = delete *)
-  | Fdeleted_ctor
-
-and method_field = {
-  mf_name : Id.t;
-  mf_tparams : (template_type * Id.t) list;
-  mf_ret_type : cpp_type;
-  mf_params : (Id.t * cpp_type) list;
-  mf_body : cpp_stmt list;
-  mf_is_const : bool;
-  mf_is_static : bool;
+(** Type metavariable for unification. *)
+and cpp_meta = {
+  id : int;  (** Unique identifier *)
+  mutable contents : cpp_type option;
+      (** Unification result, None if unresolved *)
 }
 
-(* C++ type schema.
-   The integer is the number of variables in the schema. *)
+(** {2 C++ statements} *)
 
+(** C++ statement representation. *)
+and cpp_stmt =
+  | Sreturn of cpp_expr option  (** Return statement with optional expression *)
+  | Sdecl of Id.t * cpp_type  (** Variable declaration *)
+  | Sasgn of Id.t * cpp_type option * cpp_expr
+      (** Variable assignment with optional type annotation *)
+  | Sexpr of cpp_expr  (** Expression statement *)
+  | Scustom_case of
+      cpp_type
+      * cpp_expr
+      * cpp_type list
+      * ((Id.t * cpp_type) list * cpp_type * cpp_stmt list) list
+      * string
+      (** Custom pattern match: return type, scrutinee, type args, branches
+          (params, type, body), custom match string *)
+  | Sthrow of string
+      (** Throw exception with message, for unreachable/absurd cases *)
+  | Sswitch of cpp_expr * GlobRef.t * (Id.t * cpp_stmt list) list
+      (** Switch statement: scrutinee, enum type reference, branches
+          (constructor, body) *)
+  | Sassert of string * string option
+      (** Runtime assertion: C++ condition, optional Rocq predicate comment *)
+  | Sif of cpp_expr * cpp_stmt list * cpp_stmt list
+      (** Conditional: condition, then-branch, else-branch (used for reuse
+          optimization) *)
+  | Sraw of string  (** Raw C++ code printed verbatim *)
+  | Sassign_field of cpp_expr * Id.t * cpp_expr
+      (** Field assignment for in-place mutation during memory reuse *)
+
+(** {2 C++ expressions} *)
+
+(** C++ expression representation. *)
+and cpp_expr =
+  | CPPvar of Id.t  (** Local variable reference *)
+  | CPPglob of GlobRef.t * cpp_type list * custom_info option
+      (** Global reference with type arguments and optional custom extraction
+          info *)
+  | CPPnamespace of GlobRef.t * cpp_expr  (** Namespace-qualified expression *)
+  | CPPfun_call of cpp_expr * cpp_expr list
+      (** Function call with arguments (stored in reverse order) *)
+  | CPPderef of cpp_expr  (** Pointer dereference *)
+  | CPPmove of cpp_expr  (** std::move for move semantics *)
+  | CPPforward of cpp_type * cpp_expr
+      (** std::forward<T> for perfect forwarding *)
+  | CPPlambda of
+      (cpp_type * Id.t option) list * cpp_type option * cpp_stmt list * bool
+      (** Lambda: params, optional return type, body, capture_by_value flag *)
+  | CPPvisit  (** std::visit for variant pattern matching *)
+  | CPPmk_shared of cpp_type  (** std::make_shared<T> factory function *)
+  | CPPoverloaded of cpp_expr list
+      (** Overloaded visitor set for variant matching *)
+  | CPPstructmk of GlobRef.t * cpp_type list * cpp_expr list
+      (** Struct construction via factory function *)
+  | CPPstruct of GlobRef.t * cpp_type list * cpp_expr list
+      (** Record struct construction via namespace-qualified initializer *)
+  | CPPstruct_id of Id.t * cpp_type list * cpp_expr list
+      (** Local struct initialization by Id, e.g., Leaf{args} *)
+  | CPPget of cpp_expr * Id.t  (** Member access by local identifier *)
+  | CPPget' of cpp_expr * GlobRef.t  (** Member access by global reference *)
+  | CPPstring of Pstring.t  (** String literal *)
+  | CPPuint of Uint63.t  (** Unsigned 63-bit integer literal *)
+  | CPPfloat of Float64.t  (** Floating-point literal *)
+  | CPPparray of cpp_expr array * cpp_expr
+      (** Persistent array with element array and default value *)
+  | CPPrequires of
+      (cpp_type * Id.t) list * (cpp_expr * cpp_constraint) list * cpp_type list
+      (** Requires expression: parameters, expression-constraint pairs, type
+          requirements *)
+  | CPPnew of cpp_type * cpp_expr list  (** Heap allocation: new Type(args) *)
+  | CPPshared_ptr_ctor of cpp_type * cpp_expr
+      (** Direct std::shared_ptr<T>(expr) construction *)
+  | CPPunique_ptr_ctor of cpp_type * cpp_expr
+      (** Direct std::unique_ptr<T>(expr) construction *)
+  | CPPmk_unique of cpp_type  (** std::make_unique<T> factory function *)
+  | CPPthis  (** this pointer in method context *)
+  | CPPshared_from_this of cpp_type
+      (** std::const_pointer_cast<T>(shared_from_this()) *)
+  | CPPmember of cpp_expr * Id.t
+      (** Member access with dot operator: expr.member *)
+  | CPParrow of cpp_expr * Id.t
+      (** Member access with arrow operator: expr->member *)
+  | CPPmethod_call of cpp_expr * Id.t * cpp_expr list
+      (** Method call: object, method name, arguments *)
+  | CPPqualified of cpp_expr * Id.t  (** Scope resolution: expr::id *)
+  | CPPconvertible_to of cpp_type  (** std::convertible_to<T> type trait *)
+  | CPPabort of string  (** Unreachable code marker, calls std::abort() *)
+  | CPPenum_val of GlobRef.t * Id.t
+      (** Enum class value: EnumType::Constructor *)
+  | CPPraw of string  (** Raw C++ expression code *)
+  | CPPbinop of string * cpp_expr * cpp_expr
+      (** Binary operator for reuse optimization conditions *)
+
+(** Alias for constraint expressions in requires clauses. *)
+and cpp_constraint = cpp_expr
+
+(** {2 Template parameters} *)
+
+(** Template parameter kinds. *)
+and template_type =
+  | TTtypename  (** Plain typename parameter *)
+  | TTtypename_default of cpp_type
+      (** typename with default: typename T = default_type *)
+  | TTfun of (cpp_type list * cpp_type)
+      (** Function type parameter for higher-order templates *)
+  | TTconcept of GlobRef.t  (** Concept-constrained parameter, e.g., Eq T *)
+
+(** {2 Struct fields} *)
+
+(** Struct/class field declarations. *)
+and cpp_field =
+  | Fvar of Id.t * cpp_type  (** Field variable by local identifier *)
+  | Fvar' of GlobRef.t * cpp_type  (** Field variable by global reference *)
+  | Ffundef of Id.t * cpp_type * (Id.t * cpp_type) list * cpp_stmt list
+      (** Member function definition: name, return type, parameters, body *)
+  | Ffundecl of Id.t * cpp_type * (Id.t * cpp_type) list
+      (** Member function declaration without body *)
+  | Fmethod of method_field  (** Method with full descriptor *)
+  | Fconstructor of (Id.t * cpp_type) list * (Id.t * cpp_expr) list * bool
+      (** Constructor: parameters, member initializer list, explicit flag *)
+  | Fnested_struct of Id.t * (cpp_field * cpp_visibility * section_tag) list
+      (** Nested struct definition with visibility-annotated fields *)
+  | Fnested_using of Id.t * cpp_type  (** Nested using type alias declaration *)
+  | Fdeleted_ctor  (** Deleted default constructor: ctor() = delete *)
+
+(** Method descriptor record. *)
+and method_field = {
+  mf_name : Id.t;  (** Method name *)
+  mf_tparams : (template_type * Id.t) list;  (** Template parameters *)
+  mf_ret_type : cpp_type;  (** Return type *)
+  mf_params : (Id.t * cpp_type) list;  (** Parameters *)
+  mf_body : cpp_stmt list;  (** Method body *)
+  mf_is_const : bool;  (** True if const method *)
+  mf_is_static : bool;  (** True if static method *)
+}
+
+(** {2 Type schemas} *)
+
+(** C++ type schema: number of type variables and the type expression. *)
 type cpp_schema = int * cpp_type
 
+(** {2 Helper constructors} *)
+
+(** Construct a shared_ptr type wrapping an inductive type. *)
 val ind_ty_ptr : GlobRef.t -> cpp_type list -> cpp_type
+
+(** Construct a unique_ptr type wrapping an inductive type. *)
 val ind_ty_uptr : GlobRef.t -> cpp_type list -> cpp_type
 
+(** {2 Generic AST traversal combinators}
+
+    These enable writing AST transformations without manually matching every
+    constructor. Pass custom cases for the constructors you care about; the
+    combinator handles structural recursion for the rest. *)
+
+(** [map_cpp_type f ty] applies [f] to every sub-type in [ty]. Use this to build
+    type transformations: pass a function that handles your custom case and
+    delegates to [map_cpp_type f] for the recursive case. *)
+val map_cpp_type : (cpp_type -> cpp_type) -> cpp_type -> cpp_type
+
+(** [map_expr fe fs ft e] applies [fe] to sub-expressions, [fs] to
+    sub-statements, [ft] to sub-types, performing one level of structural
+    descent. *)
+val map_expr :
+  (cpp_expr -> cpp_expr) ->
+  (cpp_stmt -> cpp_stmt) ->
+  (cpp_type -> cpp_type) ->
+  cpp_expr ->
+  cpp_expr
+
+(** [map_stmt fe fs ft s] applies [fe] to sub-expressions, [fs] to
+    sub-statements, [ft] to sub-types, performing one level of structural
+    descent. *)
+val map_stmt :
+  (cpp_expr -> cpp_expr) ->
+  (cpp_stmt -> cpp_stmt) ->
+  (cpp_type -> cpp_type) ->
+  cpp_stmt ->
+  cpp_stmt
+
+(** {2 Top-level declarations} *)
+
+(** C++ top-level declaration. *)
 type cpp_decl =
-  | Dtemplate of (template_type * Id.t) list  * cpp_constraint option * cpp_decl
+  | Dtemplate of (template_type * Id.t) list * cpp_constraint option * cpp_decl
+      (** Template declaration: parameters, optional constraint, inner
+          declaration *)
   | Dnspace of GlobRef.t option * cpp_decl list
-  | Dfundef of (GlobRef.t * cpp_type list) list * cpp_type * (Id.t * cpp_type) list * cpp_stmt list
-  | Dfundecl of (GlobRef.t * cpp_type list) list * cpp_type * (Id.t option * cpp_type) list
+      (** Namespace with optional reference and declarations *)
+  | Dfundef of
+      (GlobRef.t * cpp_type list) list
+      * cpp_type
+      * (Id.t * cpp_type) list
+      * cpp_stmt list
+      (** Function definition: names with type args, return type, parameters,
+          body *)
+  | Dfundecl of
+      (GlobRef.t * cpp_type list) list
+      * cpp_type
+      * (Id.t option * cpp_type) list
+      (** Function declaration: names with type args, return type, parameters
+          (may be unnamed) *)
   | Dstruct of {
-      ds_ref : GlobRef.t;
-      ds_fields : (cpp_field * cpp_visibility) list;
-      ds_tparams : (template_type * Id.t) list;      (* [] for non-template structs *)
-      ds_constraint : cpp_constraint option;          (* template constraint, if any *)
-      ds_needs_shared_from_this : bool;               (* inherit enable_shared_from_this when a method returns this *)
+      ds_ref : GlobRef.t;  (** Struct reference *)
+      ds_fields : (cpp_field * cpp_visibility * section_tag) list;
+          (** Fields with visibility *)
+      ds_tparams : (template_type * Id.t) list;
+          (** Template parameters (empty for non-templates) *)
+      ds_constraint : cpp_constraint option;
+          (** Optional template constraint *)
+      ds_needs_shared_from_this : bool;
+          (** True if inherits enable_shared_from_this *)
     }
-  | Dstruct_decl of GlobRef.t
-  | Dusing of GlobRef.t * cpp_type
+  | Dstruct_decl of GlobRef.t  (** Forward struct declaration *)
+  | Dusing of GlobRef.t * cpp_type  (** Type alias: using name = type *)
   | Dasgn of GlobRef.t * cpp_type * cpp_expr
-  | Ddecl of GlobRef.t * cpp_type
-  | Dconcept of GlobRef.t * cpp_expr (* template params are provided by an outer Dtemplate *)
+      (** Global variable definition with initializer *)
+  | Ddecl of GlobRef.t * cpp_type  (** Global variable declaration *)
+  | Dconcept of GlobRef.t * cpp_expr
+      (** Concept definition (template params from outer Dtemplate) *)
   | Dstatic_assert of cpp_expr * string option
+      (** Static assertion with optional message *)
   | Denum of {
-      de_ref : GlobRef.t;
-      de_ctors : Id.t list;
-      de_tparams : (template_type * Id.t) list;
+      de_ref : GlobRef.t;  (** Enum reference *)
+      de_ctors : Id.t list;  (** Constructor names *)
+      de_tparams : (template_type * Id.t) list;  (** Template parameters *)
     }

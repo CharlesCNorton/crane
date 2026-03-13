@@ -1,3 +1,6 @@
+#ifndef INCLUDED_TODO_NESTED_MODULE_TYPE
+#define INCLUDED_TODO_NESTED_MODULE_TYPE
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -46,17 +49,16 @@ struct TodoNestedModuleType {
 
   struct NatInner {
     using t = unsigned int;
-
     static inline const unsigned int zero = 0u;
   };
 
   struct NatOuter {
     using Inner = NatInner;
-
-    static Inner::t step(const unsigned int n);
+    __attribute__((pure)) static Inner::t step(const unsigned int n);
   };
 
   using UseNat = Make<NatOuter>;
-
   static inline const unsigned int test_twice = UseNat::twice();
 };
+
+#endif // INCLUDED_TODO_NESTED_MODULE_TYPE

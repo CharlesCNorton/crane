@@ -1,3 +1,6 @@
+#ifndef INCLUDED_IDENTIFIER_ESCAPE_PARAM
+#define INCLUDED_IDENTIFIER_ESCAPE_PARAM
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,9 +21,11 @@ template <class... Ts> struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct IdentifierEscapeParam {
-  static unsigned int id_from_param(const unsigned int double0);
-
-  static unsigned int add_one_from_param(const unsigned int double0);
-
+  __attribute__((pure)) static unsigned int
+  id_from_param(const unsigned int double0);
+  __attribute__((pure)) static unsigned int
+  add_one_from_param(const unsigned int double0);
   static inline const unsigned int t = add_one_from_param(6u);
 };
+
+#endif // INCLUDED_IDENTIFIER_ESCAPE_PARAM

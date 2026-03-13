@@ -1,3 +1,5 @@
+#include <wrm_then_rdm_reads_back.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -9,15 +11,14 @@
 #include <string>
 #include <utility>
 #include <variant>
-#include <wrm_then_rdm_reads_back.h>
 
-unsigned int WrmThenRdmReadsBack::get_reg(
+__attribute__((pure)) unsigned int WrmThenRdmReadsBack::get_reg(
     const std::shared_ptr<WrmThenRdmReadsBack::state> &s,
     const unsigned int r) {
   return s->regs->nth(r, 0u);
 }
 
-unsigned int WrmThenRdmReadsBack::get_reg_pair(
+__attribute__((pure)) unsigned int WrmThenRdmReadsBack::get_reg_pair(
     const std::shared_ptr<WrmThenRdmReadsBack::state> &s,
     const unsigned int r) {
   unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));

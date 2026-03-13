@@ -29,132 +29,180 @@ open Miniml
 
 module Refmap' = GlobRef.Map_env
 module Refset' = GlobRef.Set_env
-
-module StringMap = HMap.Make(String)
+module StringMap = HMap.Make (String)
 module StringSet = StringMap.Set
 
-(** {1 Utilities about [module_path] and [kernel_names] and [global_reference]} *)
+(** {1 Utilities about [module_path] and [kernel_names] and [global_reference]}
+*)
 
-let occur_kn_in_ref kn = let open GlobRef in function
-  | IndRef (kn',_)
-  | ConstructRef ((kn',_),_) -> MutInd.CanOrd.equal kn kn'
-  | ConstRef _ | VarRef _ -> false
+(** Check if a kernel name occurs in a global reference (for
+    inductives/constructors only). *)
+let occur_kn_in_ref kn =
+  let open GlobRef in
+  function
+    | IndRef (kn', _) | ConstructRef ((kn', _), _) -> MutInd.CanOrd.equal kn kn'
+    | ConstRef _ | VarRef _ -> false
 
-(* Return the "canonical" name used for declaring a name *)
+(** Return the canonical KerName representation used for declaring a global
+    reference. *)
+let repr_of_r =
+  let open GlobRef in
+  function
+    | ConstRef kn -> Constant.user kn
+    | IndRef (kn, _) | ConstructRef ((kn, _), _) -> MutInd.user kn
+    | VarRef v -> Lib.make_kn v
 
-let repr_of_r = let open GlobRef in function
-  | ConstRef kn -> Constant.user kn
-  | IndRef (kn,_)
-  | ConstructRef ((kn,_),_) -> MutInd.user kn
-  | VarRef v -> Lib.make_kn v
+(** Extract the module path from a global reference. *)
+let modpath_of_r r = KerName.modpath (repr_of_r r)
 
-let modpath_of_r r =
-  KerName.modpath (repr_of_r r)
+(** Extract the label (final name component) from a global reference. *)
+let label_of_r r = KerName.label (repr_of_r r)
 
-let label_of_r r =
-  KerName.label (repr_of_r r)
-
+(** Strip module applications to find the base module path by recursively
+    unwrapping MPdot. *)
 let rec base_mp = function
-  | MPdot (mp,l) -> base_mp mp
+  | MPdot (mp, l) -> base_mp mp
   | mp -> mp
 
+(** Check if a module path represents a top-level module file (MPfile). *)
 let is_modfile = function
   | MPfile _ -> true
   | _ -> false
 
+(** Convert a module file path to its raw capitalized string representation. *)
 let raw_string_of_modfile = function
-  | MPfile f -> String.capitalize_ascii (Id.to_string (List.hd (DirPath.repr f)))
+  | MPfile f ->
+    String.capitalize_ascii (Id.to_string (List.hd (DirPath.repr f)))
   | _ -> assert false
 
-let extraction_current_mp () = fst (Safe_typing.flatten_env (Global.safe_env ()))
+(** Get the current module path during extraction from the global environment.
+*)
+let extraction_current_mp () =
+  fst (Safe_typing.flatten_env (Global.safe_env ()))
 
+(** Check if a module path is the toplevel (interactive) module. *)
 let is_toplevel mp = ModPath.equal mp (extraction_current_mp ())
 
-let at_toplevel mp =
-  is_modfile mp || is_toplevel mp
+(** Check if we are currently extracting at the toplevel (either a module file
+    or the interactive module). *)
+let at_toplevel mp = is_modfile mp || is_toplevel mp
 
+(** Compute the depth/length of a module path by counting MPdot constructors. *)
 let mp_length mp =
   let mp0 = extraction_current_mp () in
   let rec len = function
     | mp when ModPath.equal mp mp0 -> 1
-    | MPdot (mp,_) -> 1 + len mp
+    | MPdot (mp, _) -> 1 + len mp
     | _ -> 1
-  in len mp
+  in
+  len mp
 
-let rec prefixes_mp mp = match mp with
-  | MPdot (mp',_) -> MPset.add mp (prefixes_mp mp')
+(** Generate all prefix module paths of a given path, useful for finding common
+    prefixes. *)
+let rec prefixes_mp mp =
+  match mp with
+  | MPdot (mp', _) -> MPset.add mp (prefixes_mp mp')
   | _ -> MPset.singleton mp
 
+(** Get the nth label in a module path using 1-based indexing. *)
 let rec get_nth_label_mp n = function
-  | MPdot (mp,l) -> if Int.equal n 1 then l else get_nth_label_mp (n-1) mp
+  | MPdot (mp, l) -> if Int.equal n 1 then l else get_nth_label_mp (n - 1) mp
   | _ -> CErrors.anomaly (Pp.str "get_nth_label: not enough MPdot.")
 
+(** Find the common module path prefix between mp0 and a list of module paths.
+*)
 let common_prefix_from_list mp0 mpl =
   let prefixes = prefixes_mp mp0 in
   let rec f = function
     | [] -> None
     | mp :: l -> if MPset.mem mp prefixes then Some mp else f l
-  in f mpl
+  in
+  f mpl
 
+(** Split a module path into (base_mp, label_list) by recursively extracting
+    labels. *)
 let rec parse_labels2 ll = function
-  | MPdot (mp,l) -> parse_labels2 (l::ll) mp
-  | mp -> mp,ll
+  | MPdot (mp, l) -> parse_labels2 (l :: ll) mp
+  | mp -> (mp, ll)
 
+(** Get the (base_mp, labels) pair for a global reference by decomposing its
+    kernel name. *)
 let labels_of_ref r =
-  let mp,l = KerName.repr (repr_of_r r) in
+  let mp, l = KerName.repr (repr_of_r r) in
   parse_labels2 [l] mp
-
 
 (** {1 The main tables: constants, inductives, records,} *)
 
-(* These tables are not registered within Rocq save/undo mechanism
-   since we reset their contents at each run of Extraction *)
+(* These tables are not registered within Rocq save/undo mechanism since we
+   reset their contents at each run of Extraction *)
 
-(* We use [constant_body] (resp. [mutual_inductive_body]) as checksum
-   to ensure that the table contents aren't outdated. *)
+(* We use [constant_body] (resp. [mutual_inductive_body]) as checksum to ensure
+   that the table contents aren't outdated. *)
 
 (** {2 Constants tables} *)
 
-let typedefs = ref (Cmap_env.empty : (constant_body * ml_type) Cmap_env.t)
-let init_typedefs () = typedefs := Cmap_env.empty
-let add_typedef kn cb t =
-  typedefs := Cmap_env.add kn (cb,t) !typedefs
-let lookup_typedef kn cb =
-  match Cmap_env.find_opt kn !typedefs with
-  | Some (cb0, t) when cb0 == cb -> Some t
+(** Generic lookup helper with body checksum validation. Returns [Some data] if
+    the key exists and the body checksum matches. *)
+let lookup_with_body_check find_opt kn cb =
+  match find_opt kn with
+  | Some (cb0, data) when cb0 == cb -> Some data
   | _ -> None
 
-let cst_types =
-  ref (Cmap_env.empty : (constant_body * ml_schema) Cmap_env.t)
+let typedefs = ref (Cmap_env.empty : (constant_body * ml_type) Cmap_env.t)
+
+(** Initialize the typedef cache table. *)
+let init_typedefs () = typedefs := Cmap_env.empty
+
+(** Cache a type definition expansion for a constant, using the constant body as
+    a checksum. *)
+let add_typedef kn cb t = typedefs := Cmap_env.add kn (cb, t) !typedefs
+
+(** Lookup a cached typedef, returning Some only if the constant body checksum
+    matches. *)
+let lookup_typedef kn cb =
+  lookup_with_body_check (fun kn -> Cmap_env.find_opt kn !typedefs) kn cb
+
+let cst_types = ref (Cmap_env.empty : (constant_body * ml_schema) Cmap_env.t)
+
+(** Initialize the constant type scheme cache table. *)
 let init_cst_types () = cst_types := Cmap_env.empty
-let add_cst_type kn cb s = cst_types := Cmap_env.add kn (cb,s) !cst_types
+
+(** Cache a type scheme for a constant, using the constant body as a checksum.
+*)
+let add_cst_type kn cb s = cst_types := Cmap_env.add kn (cb, s) !cst_types
+
+(** Lookup a cached constant type scheme, returning Some only if the constant
+    body checksum matches. *)
 let lookup_cst_type kn cb =
-  match Cmap_env.find_opt kn !cst_types with
-  | Some (cb0, s) when cb0 == cb -> Some s
-  | _ -> None
+  lookup_with_body_check (fun kn -> Cmap_env.find_opt kn !cst_types) kn cb
 
 (** {2 Inductives table} *)
 
 let inductives =
   ref (Mindmap_env.empty : (mutual_inductive_body * ml_ind) Mindmap_env.t)
+
 let init_inductives () = inductives := Mindmap_env.empty
+
 let add_ind kn mib ml_ind =
-  inductives := Mindmap_env.add kn (mib,ml_ind) !inductives
+  inductives := Mindmap_env.add kn (mib, ml_ind) !inductives
+
 let lookup_ind kn mib =
   match Mindmap_env.find_opt kn !inductives with
   | Some (mib0, ml_ind) when mib == mib0 -> Some ml_ind
   | _ -> None
 
+(** Lookup inductive extraction info without safety checks, may raise Not_found.
+*)
 let unsafe_lookup_ind kn = snd (Mindmap_env.find kn !inductives)
 
-(* Get the number of parameters (not indices) for an inductive type.
-   Returns None if the inductive is not in the table. *)
+(* Get the number of parameters (not indices) for an inductive type. Returns
+   None if the inductive is not in the table. *)
 let get_ind_nparams_opt kn =
-  try Some (unsafe_lookup_ind kn).ind_nparams
-  with Not_found -> None
+  try Some (unsafe_lookup_ind kn).ind_nparams with Not_found -> None
 
-(* Get the number of parameter type vars for an inductive (via ip_sign).
-   This counts how many Keep entries are in the first nparams positions of ip_sign. *)
+(* Get the number of parameter type vars for an inductive (via ip_sign). This
+   counts how many Keep entries are in the first nparams positions of
+   ip_sign. *)
 let get_ind_num_param_vars_opt kn =
   try
     let ind = unsafe_lookup_ind kn in
@@ -163,101 +211,121 @@ let get_ind_num_param_vars_opt kn =
     Some (List.length (List.filter (fun x -> x == Miniml.Keep) param_sign))
   with Not_found | Invalid_argument _ -> None
 
-let inductive_kinds =
-  ref (Mindmap_env.empty : inductive_kind Mindmap_env.t)
+let inductive_kinds = ref (Mindmap_env.empty : inductive_kind Mindmap_env.t)
+
 let init_inductive_kinds () = inductive_kinds := Mindmap_env.empty
+
 let add_inductive_kind kn k =
-    inductive_kinds := Mindmap_env.add kn k !inductive_kinds
+  inductive_kinds := Mindmap_env.add kn k !inductive_kinds
+
 let is_coinductive r =
-  let open GlobRef in match r with
-    | ConstructRef ((kn,_),_) | IndRef (kn,_) ->
-      (match Mindmap_env.find_opt kn !inductive_kinds with
-       | Some Coinductive -> true
-       | _ -> false)
-    | ConstRef _ | VarRef _ -> false
+  let open GlobRef in
+  match r with
+  | ConstructRef ((kn, _), _) | IndRef (kn, _) ->
+    ( match Mindmap_env.find_opt kn !inductive_kinds with
+    | Some Coinductive -> true
+    | _ -> false )
+  | ConstRef _ | VarRef _ -> false
 
 let has_any_coinductive () =
   Mindmap_env.exists (fun _ kind -> kind == Coinductive) !inductive_kinds
 
 (* Flag for tracking whether the current file needs string literal operators *)
 let needs_string_literals_flag = ref false
+
 let mark_needs_string_literals () = needs_string_literals_flag := true
+
 let needs_string_literals () = !needs_string_literals_flag
+
 let reset_needs_string_literals () = needs_string_literals_flag := false
 
+(** Check if an ML type is a coinductive type by inspecting its global
+    reference. *)
 let is_coinductive_type = function
-  | Tglob (r,_,_) -> is_coinductive r
+  | Tglob (r, _, _) -> is_coinductive r
   | _ -> false
 
+(** Get the list of field references for a record or typeclass inductive type.
+*)
 let get_record_fields r =
-  let kn = let open GlobRef in match r with
-    | ConstructRef ((kn,_),_) -> kn
-    | IndRef (kn,_) -> kn
+  let kn =
+    let open GlobRef in
+    match r with
+    | ConstructRef ((kn, _), _) -> kn
+    | IndRef (kn, _) -> kn
     | _ -> assert false
   in
   match Mindmap_env.find_opt kn !inductive_kinds with
   | Some (Record f | TypeClass f) -> f
   | _ -> []
 
+(** Get record fields from an ML type, filtering by extracting from Tglob. *)
 let record_fields_of_type = function
-  | Tglob (r,_,_) -> get_record_fields r
+  | Tglob (r, _, _) -> get_record_fields r
   | _ -> []
 
-(* Get the field types from a record/typeclass inductive.
-   Returns the ML types for each field in order. *)
+(** Get the ML types of record/typeclass fields in order, with parameter
+    substitution applied. *)
 let record_field_types r =
-  let open GlobRef in match r with
+  let open GlobRef in
+  match r with
   | IndRef (kn, i) | ConstructRef ((kn, i), _) ->
-      (try
+    ( try
         let ind = unsafe_lookup_ind kn in
         let packet = ind.ind_packets.(i) in
         (* For records/typeclasses, there's one constructor and ip_types.(0)
            contains the field types as a list *)
         if Array.length packet.ip_types > 0 then
           packet.ip_types.(0)
-        else []
-      with Not_found | Invalid_argument _ -> [])
+        else
+          []
+      with Not_found | Invalid_argument _ -> [] )
   | _ -> []
 
-(* Get the ip_vars (type variable names) for an inductive type.
-   For promoted dependent records, this includes the promoted carrier names. *)
+(** Get the type variable names (ip_vars) for an inductive, including promoted
+    carriers for dependent records. *)
 let get_ind_ip_vars r =
-  let open GlobRef in match r with
+  let open GlobRef in
+  match r with
   | IndRef (kn, i) | ConstructRef ((kn, i), _) ->
-      (try
+    ( try
         let ind = unsafe_lookup_ind kn in
         ind.ind_packets.(i).ip_vars
-      with Not_found | Invalid_argument _ -> [])
+      with Not_found | Invalid_argument _ -> [] )
   | _ -> []
 
-(* Get the number of Keep entries in ip_sign for an inductive type.
-   This is the number of real (non-promoted) type parameters. *)
+(** Count the number of kept (non-erased) fields in an inductive's ip_sign, i.e.
+    real type parameters. *)
 let get_ind_nb_sign_keeps r =
-  let open GlobRef in match r with
+  let open GlobRef in
+  match r with
   | IndRef (kn, i) | ConstructRef ((kn, i), _) ->
-      (try
+    ( try
         let ind = unsafe_lookup_ind kn in
-        List.length (List.filter (fun x -> x == Miniml.Keep) ind.ind_packets.(i).ip_sign)
-      with Not_found | Invalid_argument _ -> 0)
+        List.length
+          (List.filter (fun x -> x == Miniml.Keep) ind.ind_packets.(i).ip_sign)
+      with Not_found | Invalid_argument _ -> 0 )
   | _ -> 0
 
 let is_typeclass r =
-  let open GlobRef in match r with
-  | ConstructRef ((kn,_),_) | IndRef (kn,_) ->
-    (match Mindmap_env.find_opt kn !inductive_kinds with
-     | Some (TypeClass _) -> true
-     | _ -> false)
-  | _ -> false  (* ConstRef, VarRef are not type classes *)
+  let open GlobRef in
+  match r with
+  | ConstructRef ((kn, _), _) | IndRef (kn, _) ->
+    ( match Mindmap_env.find_opt kn !inductive_kinds with
+    | Some (TypeClass _) -> true
+    | _ -> false )
+  | _ -> false (* ConstRef, VarRef are not type classes *)
 
 let is_typeclass_type = function
-  | Tglob (r,_,_) -> is_typeclass r
+  | Tglob (r, _, _) -> is_typeclass r
   | _ -> false
 
 (* Check if a C++ type is a type class type (unwrap modifiers first) *)
 let rec is_typeclass_type_cpp = function
-  | Minicpp.Tglob (r,_,_) -> is_typeclass r
-  | Minicpp.Tmod (_, t) -> is_typeclass_type_cpp t  (* Unwrap const/static/extern *)
-  | Minicpp.Tref t -> is_typeclass_type_cpp t       (* Unwrap references *)
+  | Minicpp.Tglob (r, _, _) -> is_typeclass r
+  | Minicpp.Tmod (_, t) ->
+    is_typeclass_type_cpp t (* Unwrap const/static/extern *)
+  | Minicpp.Tref t -> is_typeclass_type_cpp t (* Unwrap references *)
   | Minicpp.Tshared_ptr t -> is_typeclass_type_cpp t (* Unwrap shared_ptr *)
   | Minicpp.Tunique_ptr t -> is_typeclass_type_cpp t (* Unwrap unique_ptr *)
   | _ -> false
@@ -265,25 +333,49 @@ let rec is_typeclass_type_cpp = function
 (** {2 Enum inductives table} *)
 
 let enum_inductives = ref Refset'.empty
+
 let init_enum_inductives () = enum_inductives := Refset'.empty
+
 let add_enum_inductive r = enum_inductives := Refset'.add r !enum_inductives
+
 let is_enum_inductive r = Refset'.mem r !enum_inductives
+
+(** Check if an inductive packet qualifies as an enum: all constructors nullary,
+    no kept type parameters, at least one constructor. *)
+let is_enum_inductive_packet ind i =
+  let p = ind.ind_packets.(i) in
+  let all_nullary = Array.for_all (fun tys_list -> tys_list = []) p.ip_types in
+  let param_sign = List.firstn ind.ind_nparams p.ip_sign in
+  let num_param_vars =
+    List.length (List.filter (fun x -> x == Miniml.Keep) param_sign)
+  in
+  all_nullary && num_param_vars = 0 && Array.length p.ip_types > 0
 
 (** {2 Sigma assertion table} *)
 
 type sigma_assertion =
-  | AssertExpr of string    (* translatable: C++ expression template, %0 = param name *)
+  | AssertExpr of
+      string (* translatable: C++ expression template, %0 = param name *)
   | AssertComment of string (* untranslatable: Rocq predicate as comment *)
 
 (* Maps function GlobRef to list of (param_index, assertion) *)
-let sigma_assertions : (int * sigma_assertion) list Refmap'.t ref = ref Refmap'.empty
+let sigma_assertions : (int * sigma_assertion) list Refmap'.t ref =
+  ref Refmap'.empty
+
+(** Initialize the sigma type assertion table. *)
 let init_sigma_assertions () = sigma_assertions := Refmap'.empty
+
+(** Record a sigma type assertion for a function parameter at the given index.
+*)
 let add_sigma_assertion r idx a =
-  let existing = match Refmap'.find_opt r !sigma_assertions with
+  let existing =
+    match Refmap'.find_opt r !sigma_assertions with
     | Some l -> l
     | None -> []
   in
   sigma_assertions := Refmap'.add r ((idx, a) :: existing) !sigma_assertions
+
+(** Retrieve all sigma type assertions for a given function reference. *)
 let get_sigma_assertions r =
   match Refmap'.find_opt r !sigma_assertions with
   | Some l -> l
@@ -291,24 +383,23 @@ let get_sigma_assertions r =
 
 (** {2 Recursors table} *)
 
-(* NB: here we can use the equivalence between canonical
-   and user constant names. *)
+(* NB: here we can use the equivalence between canonical and user constant
+   names. *)
 
 let recursors = ref KNset.empty
+
 let init_recursors () = recursors := KNset.empty
 
 let add_recursors env ind =
   let kn = MutInd.canonical ind in
-  let mk_kn id =
-    KerName.make (KerName.modpath kn) (Label.of_id id)
-  in
+  let mk_kn id = KerName.make (KerName.modpath kn) (Label.of_id id) in
   let mib = Environ.lookup_mind ind env in
   Array.iter
     (fun mip ->
-       let id = mip.mind_typename in
-       let kn_rec = mk_kn (Nameops.add_suffix id "_rec")
-       and kn_rect = mk_kn (Nameops.add_suffix id "_rect") in
-       recursors := KNset.add kn_rec (KNset.add kn_rect !recursors))
+      let id = mip.mind_typename in
+      let kn_rec = mk_kn (Nameops.add_suffix id "_rec")
+      and kn_rect = mk_kn (Nameops.add_suffix id "_rect") in
+      recursors := KNset.add kn_rec (KNset.add kn_rect !recursors) )
     mib.mind_packets
 
 let is_recursor = function
@@ -319,57 +410,119 @@ let is_recursor = function
 
 (* NB: here, working modulo name equivalence is ok *)
 
-let projs = ref (GlobRef.Map.empty : (inductive*int) GlobRef.Map.t)
+let projs = ref (GlobRef.Map.empty : (inductive * int) GlobRef.Map.t)
+
 let init_projs () = projs := GlobRef.Map.empty
-let add_projection n kn ip = projs := GlobRef.Map.add (GlobRef.ConstRef kn) (ip,n) !projs
+
+let add_projection n kn ip =
+  projs := GlobRef.Map.add (GlobRef.ConstRef kn) (ip, n) !projs
+
 let is_projection r = GlobRef.Map.mem r !projs
+
 let projection_arity r = snd (GlobRef.Map.find r !projs)
+
 let projection_info r = GlobRef.Map.find r !projs
 
-(* Table of promoted type variables from dependent records.
-   Maps a ConstRef (erased carrier projection) to its variable name (Id.t). *)
+(* Table of promoted type variables from dependent records. Maps a ConstRef
+   (erased carrier projection) to its variable name (Id.t). *)
 let promoted_type_vars = ref (GlobRef.Map.empty : Names.Id.t GlobRef.Map.t)
+
 let init_promoted_type_vars () = promoted_type_vars := GlobRef.Map.empty
-let add_promoted_type_var r name = promoted_type_vars := GlobRef.Map.add r name !promoted_type_vars
+
+let add_promoted_type_var r name =
+  promoted_type_vars := GlobRef.Map.add r name !promoted_type_vars
+
 let is_promoted_type_var r = GlobRef.Map.mem r !promoted_type_vars
+
 let promoted_type_var_name r = GlobRef.Map.find_opt r !promoted_type_vars
 
-(* Table of promoted type bindings for typeclass instances.
-   Maps an instance ConstRef (e.g., nat_magma) to its promoted type variable
-   bindings [(carrier, nat)], so that call sites can substitute promoted
-   Tvars with concrete types during eta expansion. *)
-let instance_promoted_types = ref (GlobRef.Map.empty : (Names.Id.t * ml_type) list GlobRef.Map.t)
-let init_instance_promoted_types () = instance_promoted_types := GlobRef.Map.empty
+(* Table of promoted type bindings for typeclass instances. Maps an instance
+   ConstRef (e.g., nat_magma) to its promoted type variable bindings [(carrier,
+   nat)], so that call sites can substitute promoted Tvars with concrete types
+   during eta expansion. *)
+let instance_promoted_types =
+  ref (GlobRef.Map.empty : (Names.Id.t * ml_type) list GlobRef.Map.t)
+
+let init_instance_promoted_types () =
+  instance_promoted_types := GlobRef.Map.empty
+
 let add_instance_promoted_types r bindings =
   instance_promoted_types := GlobRef.Map.add r bindings !instance_promoted_types
+
 let get_instance_promoted_types r =
   match GlobRef.Map.find_opt r !instance_promoted_types with
   | Some bindings -> bindings
   | None -> []
 
 (* Table of projections used in higher-order positions (as function values).
-   Projections not in this set are only accessed via record->field syntax
-   and don't need standalone C++ function definitions. *)
+   Projections not in this set are only accessed via record->field syntax and
+   don't need standalone C++ function definitions. *)
 let higher_order_projections = ref Refset'.empty
+
 let init_higher_order_projections () = higher_order_projections := Refset'.empty
-let mark_higher_order_projection r = higher_order_projections := Refset'.add r !higher_order_projections
+
+let mark_higher_order_projection r =
+  higher_order_projections := Refset'.add r !higher_order_projections
+
 let is_higher_order_projection r = Refset'.mem r !higher_order_projections
 
 (** {2 Table of used axioms} *)
 
 let info_axioms = ref Refset'.empty
+
 let log_axioms = ref Refset'.empty
+
+let cofixpoints = ref Refset'.empty
+
+let axiom_values = ref Refset'.empty
+
 let symbols = ref Refmap'.empty
-let init_axioms () = info_axioms := Refset'.empty; log_axioms := Refset'.empty; symbols := Refmap'.empty
+
+let init_axioms () =
+  info_axioms := Refset'.empty;
+  log_axioms := Refset'.empty;
+  cofixpoints := Refset'.empty;
+  axiom_values := Refset'.empty;
+  symbols := Refmap'.empty
+
 let add_info_axiom r = info_axioms := Refset'.add r !info_axioms
+
 let remove_info_axiom r = info_axioms := Refset'.remove r !info_axioms
+
 let add_log_axiom r = log_axioms := Refset'.add r !log_axioms
-let add_symbol r = symbols := Refmap'.update r (function Some l -> Some l | _ -> Some []) !symbols
-let add_symbol_rule r l = symbols := Refmap'.update r (function Some lst -> Some (l :: lst) | _ -> Some [l]) !symbols
+
+let add_cofixpoint r = cofixpoints := Refset'.add r !cofixpoints
+
+let is_cofixpoint r = Refset'.mem r !cofixpoints
+
+let add_axiom_value r = axiom_values := Refset'.add r !axiom_values
+
+let is_axiom_value r = Refset'.mem r !axiom_values
+
+let add_symbol r =
+  symbols :=
+    Refmap'.update
+      r
+      (function
+        | Some l -> Some l
+        | _ -> Some [] )
+      !symbols
+
+let add_symbol_rule r l =
+  symbols :=
+    Refmap'.update
+      r
+      (function
+        | Some lst -> Some (l :: lst)
+        | _ -> Some [l] )
+      !symbols
 
 let opaques = ref Refset'.empty
+
 let init_opaques () = opaques := Refset'.empty
+
 let add_opaque r = opaques := Refset'.add r !opaques
+
 let remove_opaque r = opaques := Refset'.remove r !opaques
 
 (** {2 Extraction modes: modular or monolithic, library or minimal ?
@@ -380,47 +533,53 @@ Nota:
  - Crane Extraction Library : modular, library} *)
 
 let modular_ref = ref false
+
 let library_ref = ref false
 
 let set_modular b = modular_ref := b
+
 let modular () = !modular_ref
 
 let set_library b = library_ref := b
+
 let library () = !library_ref
 
 let extrcompute = ref false
 
 let set_extrcompute b = extrcompute := b
+
 let is_extrcompute () = !extrcompute
 
 (** {2 Printing} *)
 
-(* The following functions work even on objects not in [Global.env ()].
-   Warning: for inductive objects, this only works if an [extract_inductive]
-   have been done earlier, otherwise we can only ask the Nametab about
-   currently visible objects. *)
+(* The following functions work even on objects not in [Global.env ()]. Warning:
+   for inductive objects, this only works if an [extract_inductive] have been
+   done earlier, otherwise we can only ask the Nametab about currently visible
+   objects. *)
 
 let safe_basename_of_global r =
   let last_chance r =
     try Nametab.basename_of_global r
     with Not_found ->
-      anomaly (Pp.str "Inductive object unknown to extraction and not globally visible.")
+      anomaly
+        (Pp.str
+           "Inductive object unknown to extraction and not globally visible." )
   in
   let open GlobRef in
   match r with
-    | ConstRef kn -> Label.to_id (Constant.label kn)
-    | IndRef (kn,0) -> Label.to_id (MutInd.label kn)
-    | IndRef (kn,i) ->
-      (try (unsafe_lookup_ind kn).ind_packets.(i).ip_typename
-       with Not_found -> last_chance r)
-    | ConstructRef ((kn,i),j) ->
-      (try (unsafe_lookup_ind kn).ind_packets.(i).ip_consnames.(j-1)
-       with Not_found -> last_chance r)
-    | VarRef v -> v
+  | ConstRef kn -> Label.to_id (Constant.label kn)
+  | IndRef (kn, 0) -> Label.to_id (MutInd.label kn)
+  | IndRef (kn, i) ->
+    ( try (unsafe_lookup_ind kn).ind_packets.(i).ip_typename
+      with Not_found -> last_chance r )
+  | ConstructRef ((kn, i), j) ->
+    ( try (unsafe_lookup_ind kn).ind_packets.(i).ip_consnames.(j - 1)
+      with Not_found -> last_chance r )
+  | VarRef v -> v
 
 let string_of_global r =
- try string_of_qualid (Nametab.shortest_qualid_of_global Id.Set.empty r)
- with Not_found -> Id.to_string (safe_basename_of_global r)
+  try string_of_qualid (Nametab.shortest_qualid_of_global Id.Set.empty r)
+  with Not_found -> Id.to_string (safe_basename_of_global r)
 
 let safe_pr_global r = str (string_of_global r)
 
@@ -428,11 +587,12 @@ let safe_pr_global r = str (string_of_global r)
 
 let safe_pr_long_global r =
   try Printer.pr_global r
-  with Not_found -> match r with
+  with Not_found ->
+    ( match r with
     | GlobRef.ConstRef kn ->
-        let mp,l = KerName.repr (Constant.user kn) in
-        str ((ModPath.to_string mp)^"."^(Label.to_string l))
-    | _ -> assert false
+      let mp, l = KerName.repr (Constant.user kn) in
+      str (ModPath.to_string mp ^ "." ^ Label.to_string l)
+    | _ -> assert false )
 
 let pr_long_mp mp =
   let lid = DirPath.repr (Nametab.dirpath_of_module mp) in
@@ -445,38 +605,52 @@ let pr_long_global ref = pr_path (Nametab.path_of_global ref)
 let err ?loc s = user_err ?loc s
 
 let warn_extraction_axiom_to_realize =
-  CWarnings.create ~name:"crane-extraction-axiom-to-realize" ~category:CWarnings.CoreCategories.extraction
-         (fun axioms ->
-          let s = if Int.equal (List.length axioms) 1 then "axiom" else "axioms" in
-          strbrk ("The following "^s^" must be realized in the extracted code:")
-                   ++ hov 1 (spc () ++ prlist_with_sep spc safe_pr_global axioms)
-                   ++ str "." ++ fnl ())
+  CWarnings.create
+    ~name:"crane-extraction-axiom-to-realize"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun axioms ->
+    let s = if Int.equal (List.length axioms) 1 then "axiom" else "axioms" in
+    strbrk ("The following " ^ s ^ " must be realized in the extracted code:")
+    ++ hov 1 (spc () ++ prlist_with_sep spc safe_pr_global axioms)
+    ++ str "."
+    ++ fnl () )
 
 let warn_extraction_logical_axiom =
-  CWarnings.create ~name:"crane-extraction-logical-axiom" ~category:CWarnings.CoreCategories.extraction
-         (fun axioms ->
-          let s =
-            if Int.equal (List.length axioms) 1 then "axiom was" else "axioms were"
-          in
-          (strbrk ("The following logical "^s^" encountered:") ++
-             hov 1 (spc () ++ prlist_with_sep spc safe_pr_global axioms ++ str ".\n")
-           ++ strbrk "Having invalid logical axiom in the environment when extracting"
-           ++ spc () ++ strbrk "may lead to incorrect or non-terminating ML terms." ++
-             fnl ()))
+  CWarnings.create
+    ~name:"crane-extraction-logical-axiom"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun axioms ->
+    let s =
+      if Int.equal (List.length axioms) 1 then "axiom was" else "axioms were"
+    in
+    strbrk ("The following logical " ^ s ^ " encountered:")
+    ++ hov 1 (spc () ++ prlist_with_sep spc safe_pr_global axioms ++ str ".\n")
+    ++ strbrk "Having invalid logical axiom in the environment when extracting"
+    ++ spc ()
+    ++ strbrk "may lead to incorrect or non-terminating ML terms."
+    ++ fnl () )
 
 let warn_extraction_symbols =
   let pp_symb_with_rules (symb, rules) =
-    safe_pr_global symb ++
-    if List.is_empty rules then str " (no rules)" else
-    str ":" ++ spc() ++ prlist_with_sep spc Label.print rules
+    safe_pr_global symb
+    ++
+    if List.is_empty rules then
+      str " (no rules)"
+    else
+      str ":" ++ spc () ++ prlist_with_sep spc Label.print rules
   in
-  CWarnings.create ~name:"crane-extraction-symbols" ~category:CWarnings.CoreCategories.extraction
+  CWarnings.create
+    ~name:"crane-extraction-symbols"
+    ~category:CWarnings.CoreCategories.extraction
     (fun symbols ->
-      strbrk ("The following symbols and rules were encountered:") ++ fnl () ++
-      prlist_with_sep fnl pp_symb_with_rules symbols ++ fnl () ++
-      strbrk "The symbols must be realized such that the rewrite rules apply," ++ spc () ++
-      strbrk "or extraction may lead to incorrect or non-terminating ML terms." ++
-      fnl ())
+    strbrk "The following symbols and rules were encountered:"
+    ++ fnl ()
+    ++ prlist_with_sep fnl pp_symb_with_rules symbols
+    ++ fnl ()
+    ++ strbrk "The symbols must be realized such that the rewrite rules apply,"
+    ++ spc ()
+    ++ strbrk "or extraction may lead to incorrect or non-terminating ML terms."
+    ++ fnl () )
 
 let warning_axioms () =
   let info_axioms = Refset'.elements !info_axioms in
@@ -490,54 +664,94 @@ let warning_axioms () =
     warn_extraction_symbols symbols
 
 let warn_extraction_opaque_accessed =
-  CWarnings.create ~name:"crane-extraction-opaque-accessed" ~category:CWarnings.CoreCategories.extraction
-    (fun lst -> strbrk "The extraction is currently set to bypass opacity, " ++
-                  strbrk "the following opaque constant bodies have been accessed :" ++
-                  lst ++ str "." ++ fnl ())
+  CWarnings.create
+    ~name:"crane-extraction-opaque-accessed"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun lst ->
+    strbrk "The extraction is currently set to bypass opacity, "
+    ++ strbrk "the following opaque constant bodies have been accessed :"
+    ++ lst
+    ++ str "."
+    ++ fnl () )
 
 let warn_extraction_opaque_as_axiom =
-  CWarnings.create ~name:"crane-extraction-opaque-as-axiom" ~category:CWarnings.CoreCategories.extraction
-    (fun lst -> strbrk "The extraction now honors the opacity constraints by default, " ++
-         strbrk "the following opaque constants have been extracted as axioms :" ++
-         lst ++ str "." ++ fnl () ++
-         strbrk "If necessary, use \"Set Extraction AccessOpaque\" to change this."
-         ++ fnl ())
+  CWarnings.create
+    ~name:"crane-extraction-opaque-as-axiom"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun lst ->
+    strbrk "The extraction now honors the opacity constraints by default, "
+    ++ strbrk "the following opaque constants have been extracted as axioms :"
+    ++ lst
+    ++ str "."
+    ++ fnl ()
+    ++ strbrk
+         "If necessary, use \"Set Extraction AccessOpaque\" to change this."
+    ++ fnl () )
 
 let warning_opaques accessed =
   let opaques = Refset'.elements !opaques in
   if not (List.is_empty opaques) then
     let lst = hov 1 (spc () ++ prlist_with_sep spc safe_pr_global opaques) in
-    if accessed then warn_extraction_opaque_accessed lst
-    else warn_extraction_opaque_as_axiom lst
+    if accessed then
+      warn_extraction_opaque_accessed lst
+    else
+      warn_extraction_opaque_as_axiom lst
 
 let warning_ambiguous_name =
-  CWarnings.create_with_quickfix ~name:"crane-extraction-ambiguous-name" ~category:CWarnings.CoreCategories.extraction
-    (fun (q,mp,r) -> strbrk "The name " ++ pr_qualid q ++ strbrk " is ambiguous, " ++
-                       strbrk "do you mean module " ++
-                       pr_long_mp mp ++
-                       strbrk " or object " ++
-                       pr_long_global r ++ str " ?" ++ fnl () ++
-                       strbrk "First choice is assumed, for the second one please use " ++
-                       strbrk "fully qualified name." ++ fnl ())
-let warning_ambiguous_name ?loc (_,mp,r as x) =
+  CWarnings.create_with_quickfix
+    ~name:"crane-extraction-ambiguous-name"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun (q, mp, r) ->
+    strbrk "The name "
+    ++ pr_qualid q
+    ++ strbrk " is ambiguous, "
+    ++ strbrk "do you mean module "
+    ++ pr_long_mp mp
+    ++ strbrk " or object "
+    ++ pr_long_global r
+    ++ str " ?"
+    ++ fnl ()
+    ++ strbrk "First choice is assumed, for the second one please use "
+    ++ strbrk "fully qualified name."
+    ++ fnl () )
+
+let warning_ambiguous_name ?loc ((_, mp, r) as x) =
   match loc with
   | None -> warning_ambiguous_name x
-  | Some loc -> warning_ambiguous_name ~loc ~quickfix:(List.map (Quickfix.make ~loc) [pr_long_mp mp;pr_long_global r]) x
+  | Some loc ->
+    warning_ambiguous_name
+      ~loc
+      ~quickfix:
+        (List.map (Quickfix.make ~loc) [pr_long_mp mp; pr_long_global r])
+      x
 
 let error_axiom_scheme ?loc r i =
-  err ?loc (str "The type scheme axiom " ++ spc () ++
-       safe_pr_global r ++ spc () ++ str "needs " ++ int i ++
-       str " type variable(s).")
+  err
+    ?loc
+    ( str "The type scheme axiom "
+    ++ spc ()
+    ++ safe_pr_global r
+    ++ spc ()
+    ++ str "needs "
+    ++ int i
+    ++ str " type variable(s)." )
 
 let check_inside_section () =
   if Lib.sections_are_opened () then
-    err (str "You can't do that within a section." ++ fnl () ++
-         str "Close it and try again.")
+    err
+      ( str "You can't do that within a section."
+      ++ fnl ()
+      ++ str "Close it and try again." )
 
 let warn_extraction_reserved_identifier =
-  CWarnings.create ~name:"crane-extraction-reserved-identifier" ~category:CWarnings.CoreCategories.extraction
-    (fun s -> strbrk ("The identifier "^s^
-                " contains __ which is reserved for the extraction"))
+  CWarnings.create
+    ~name:"crane-extraction-reserved-identifier"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun s ->
+    strbrk
+      ( "The identifier "
+      ^ s
+      ^ " contains __ which is reserved for the extraction" ) )
 
 let warning_id s = warn_extraction_reserved_identifier s
 
@@ -547,142 +761,177 @@ let error_constant ?loc r =
 let error_inductive ?loc r =
   err ?loc (safe_pr_global r ++ spc () ++ str "is not an inductive type.")
 
-let error_nb_cons () =
-  err (str "Not the right number of constructors.")
+let error_nb_cons () = err (str "Not the right number of constructors.")
 
 let error_module_clash mp1 mp2 =
-  err (str "The Rocq modules " ++ pr_long_mp mp1 ++ str " and " ++
-       pr_long_mp mp2 ++ str " have the same ML name.\n" ++
-       str "This is not supported yet. Please do some renaming first.")
+  err
+    ( str "The Rocq modules "
+    ++ pr_long_mp mp1
+    ++ str " and "
+    ++ pr_long_mp mp2
+    ++ str " have the same ML name.\n"
+    ++ str "This is not supported yet. Please do some renaming first." )
 
 let error_no_module_expr mp =
-  err (str "The module " ++ pr_long_mp mp
-       ++ str " has no body, it probably comes from\n"
-       ++ str "some Declare Module outside any Module Type.\n"
-       ++ str "This situation is currently unsupported by the extraction.")
+  err
+    ( str "The module "
+    ++ pr_long_mp mp
+    ++ str " has no body, it probably comes from\n"
+    ++ str "some Declare Module outside any Module Type.\n"
+    ++ str "This situation is currently unsupported by the extraction." )
 
 let error_singleton_become_prop ind =
-  err (str "The informative inductive type " ++ safe_pr_global (IndRef ind) ++
-       str " has a Prop instance" ++ str "." ++ fnl () ++
-       str "This happens when a sort-polymorphic singleton inductive type\n" ++
-       str "has logical parameters, such as (I,I) : (True * True) : Prop.\n" ++
-       str "Extraction cannot handle this situation yet.\n" ++
-       str "Instead, use a sort-monomorphic type such as (True /\\ True)\n" ++
-       str "or extract to Haskell.")
+  err
+    ( str "The informative inductive type "
+    ++ safe_pr_global (IndRef ind)
+    ++ str " has a Prop instance"
+    ++ str "."
+    ++ fnl ()
+    ++ str "This happens when a sort-polymorphic singleton inductive type\n"
+    ++ str "has logical parameters, such as (I,I) : (True * True) : Prop.\n"
+    ++ str "Extraction cannot handle this situation yet.\n"
+    ++ str "Instead, use a sort-monomorphic type such as (True /\\ True)\n"
+    ++ str "or extract to Haskell." )
 
 let error_unknown_module ?loc m =
   err ?loc (str "Module" ++ spc () ++ pr_qualid m ++ spc () ++ str "not found.")
 
-let error_scheme () =
-  err (str "No Scheme modular extraction available yet.")
+let error_scheme () = err (str "No Scheme modular extraction available yet.")
 
 let error_not_visible r =
-  err (safe_pr_global r ++ str " is not directly visible.\n" ++
-       str "For example, it may be inside an applied functor.\n" ++
-       str "Use Recursive Extraction to get the whole environment.")
+  err
+    ( safe_pr_global r
+    ++ str " is not directly visible.\n"
+    ++ str "For example, it may be inside an applied functor.\n"
+    ++ str "Use Recursive Extraction to get the whole environment." )
 
 let error_MPfile_as_mod mp b =
   let s1 = if b then "asked" else "required" in
   let s2 = if b then "extract some objects of this module or\n" else "" in
-  err (str ("Extraction of file "^(raw_string_of_modfile mp)^
-            ".v as a module is "^s1^".\n"^
-            "Monolithic Extraction cannot deal with this situation.\n"^
-            "Please "^s2^"use (Recursive) Extraction Library instead.\n"))
+  err
+    (str
+       ( "Extraction of file "
+       ^ raw_string_of_modfile mp
+       ^ ".v as a module is "
+       ^ s1
+       ^ ".\n"
+       ^ "Monolithic Extraction cannot deal with this situation.\n"
+       ^ "Please "
+       ^ s2
+       ^ "use (Recursive) Extraction Library instead.\n" ) )
 
+(** Extract argument names from a global definition's type by decomposing the
+    product. *)
 let argnames_of_global r =
   let env = Global.env () in
   let typ, _ = Typeops.type_of_global_in_context env r in
-  let rels,_ =
-    decompose_prod (Reduction.whd_all env typ) in
+  let rels, _ = decompose_prod (Reduction.whd_all env typ) in
   List.rev_map (fun x -> Context.binder_name (fst x)) rels
 
 let msg_of_implicit = function
-  | Kimplicit (r,i) ->
-     let name = match (List.nth (argnames_of_global r) (i-1)) with
-       | Anonymous -> ""
-       | Name id -> "(" ^ Id.to_string id ^ ") "
-     in
-     (String.ordinal i)^" argument "^name^"of "^(string_of_global r)
+  | Kimplicit (r, i) ->
+    let name =
+      match List.nth (argnames_of_global r) (i - 1) with
+      | Anonymous -> ""
+      | Name id -> "(" ^ Id.to_string id ^ ") "
+    in
+    String.ordinal i ^ " argument " ^ name ^ "of " ^ string_of_global r
   | Ktype | Kprop -> ""
 
 let error_remaining_implicit k =
   let s = msg_of_implicit k in
-  err (str ("An implicit occurs after extraction : "^s^".") ++ fnl () ++
-       str "Please check your Extraction Implicit declarations." ++ fnl() ++
-       str "You might also try Unset Extraction SafeImplicits to force" ++
-       fnl() ++ str "the extraction of unsafe code and review it manually.")
+  err
+    ( str ("An implicit occurs after extraction : " ^ s ^ ".")
+    ++ fnl ()
+    ++ str "Please check your Extraction Implicit declarations."
+    ++ fnl ()
+    ++ str "You might also try Unset Extraction SafeImplicits to force"
+    ++ fnl ()
+    ++ str "the extraction of unsafe code and review it manually." )
 
 let warn_extraction_remaining_implicit =
-  CWarnings.create ~name:"crane-extraction-remaining-implicit" ~category:CWarnings.CoreCategories.extraction
-    (fun s -> strbrk ("At least an implicit occurs after extraction : "^s^".") ++ fnl () ++
-     strbrk "Extraction SafeImplicits is unset, extracting nonetheless,"
-     ++ strbrk "but this code is potentially unsafe, please review it manually.")
+  CWarnings.create
+    ~name:"crane-extraction-remaining-implicit"
+    ~category:CWarnings.CoreCategories.extraction
+    (fun s ->
+    strbrk ("At least an implicit occurs after extraction : " ^ s ^ ".")
+    ++ fnl ()
+    ++ strbrk "Extraction SafeImplicits is unset, extracting nonetheless,"
+    ++ strbrk "but this code is potentially unsafe, please review it manually." )
 
 let warning_remaining_implicit k =
   let s = msg_of_implicit k in
   warn_extraction_remaining_implicit s
 
-let check_loaded_modfile mp = match base_mp mp with
+let check_loaded_modfile mp =
+  match base_mp mp with
   | MPfile dp ->
-      if not (Library.library_is_loaded dp) then begin
-        match base_mp (extraction_current_mp ()) with
-          | MPfile dp' when not (DirPath.equal dp dp') ->
-            err (str "Please load library " ++ DirPath.print dp ++ str " first.")
-          | _ -> ()
-      end
+    if not (Library.library_is_loaded dp) then (
+      match
+        base_mp (extraction_current_mp ())
+      with
+      | MPfile dp' when not (DirPath.equal dp dp') ->
+        err (str "Please load library " ++ DirPath.print dp ++ str " first.")
+      | _ -> () )
   | _ -> ()
 
 let info_file f =
-  Flags.if_verbose Feedback.msg_info
-    (str ("The file "^f^" has been created by extraction."))
-
+  Flags.if_verbose
+    Feedback.msg_info
+    (str ("The file " ^ f ^ " has been created by extraction."))
 
 (** {1 The Extraction auxiliary commands} *)
 
-(* The objects defined below should survive an arbitrary time,
-   so we register them to Rocq save/undo mechanism. *)
+(* The objects defined below should survive an arbitrary time, so we register
+   them to Rocq save/undo mechanism. *)
 
 let my_bool_option name value =
-  let { Goptions.get } =
-    declare_bool_option_and_ref
-    ~key:["Crane"; "Extraction"; name]
-    ~value
-    ()
+  let {Goptions.get} =
+    declare_bool_option_and_ref ~key:["Crane"; "Extraction"; name] ~value ()
   in
   get
 
 (** {2 Crane Extraction Output Directory} *)
 
 let warn_using_current_directory =
-  CWarnings.(create ~name:"crane-extraction-default-directory" ~category:CoreCategories.extraction)
+  CWarnings.(
+    create
+      ~name:"crane-extraction-default-directory"
+      ~category:CoreCategories.extraction )
     (fun s ->
-       Pp.(strbrk
-             "Setting extraction output directory by default to \"" ++ str s ++ strbrk "\". Use \"" ++
-           str "Set Crane Extraction Output Directory" ++
-           strbrk "\" or command line option \"-output-directory\" to " ++
-           strbrk "set a different directory for extracted files to appear in."))
+    Pp.(
+      strbrk "Setting extraction output directory by default to \""
+      ++ str s
+      ++ strbrk "\". Use \""
+      ++ str "Set Crane Extraction Output Directory"
+      ++ strbrk "\" or command line option \"-output-directory\" to "
+      ++ strbrk "set a different directory for extracted files to appear in." ) )
 
 let output_directory_key = ["Crane"; "Extraction"; "Output"; "Directory"]
 
-let { Goptions.get = output_directory } =
-  declare_stringopt_option_and_ref ~stage:Summary.Stage.Interp ~value:None
-    ~key:output_directory_key ()
+let {Goptions.get = output_directory} =
+  declare_stringopt_option_and_ref
+    ~stage:Summary.Stage.Interp
+    ~value:None
+    ~key:output_directory_key
+    ()
 
 let output_directory () =
-  match output_directory (), !Flags.output_directory with
+  match (output_directory (), !Flags.output_directory) with
   | Some dir, _ | None, Some dir ->
-      (* Ensure that the directory exists *)
-      System.mkdir dir;
-      dir
+    (* Ensure that the directory exists *)
+    System.mkdir dir;
+    dir
   | None, None ->
     let pwd = Sys.getcwd () in
     warn_using_current_directory pwd;
-    (* Note: in case of error in the caller of output_directory, the effect of the setting will be undo *)
+    (* Note: in case of error in the caller of output_directory, the effect of
+       the setting will be undo *)
     set_string_option_value ~stage:Summary.Stage.Interp output_directory_key pwd;
     pwd
 
-(* Get output directory with module subdirectory appended.
-   This is used to output files to the same subdirectory structure as the source.
+(* Get output directory with module subdirectory appended. This is used to
+   output files to the same subdirectory structure as the source.
 
    Example: For a source file at tests/basics/list/List.v with base output ".",
    the library path is CraneTestsBasics.list.List. This function extracts "list"
@@ -692,7 +941,8 @@ let output_directory () =
    reverse order: [List; list; CraneTestsBasics]. The second element (subdir)
    corresponds to the immediate parent directory of the source file.
 
-   Falls back to base_dir if the path structure doesn't match or on any error. *)
+   Falls back to base_dir if the path structure doesn't match or on any
+   error. *)
 let output_directory_for_module () =
   let base_dir = output_directory () in
   try
@@ -700,10 +950,10 @@ let output_directory_for_module () =
     let parts = Names.DirPath.repr dp in
     match parts with
     | _mod_name :: subdir :: _rest when List.length parts >= 2 ->
-        let subdir_name = Names.Id.to_string subdir in
-        let full_path = Filename.concat base_dir subdir_name in
-        System.mkdir full_path;
-        full_path
+      let subdir_name = Names.Id.to_string subdir in
+      let full_path = Filename.concat base_dir subdir_name in
+      System.mkdir full_path;
+      full_path
     | _ -> base_dir
   with _ -> base_dir
 
@@ -721,98 +971,105 @@ let type_expand = my_bool_option "TypeExpand" true
 
 (** {2 Crane Extraction Optimize} *)
 
-type opt_flag =
-    { opt_kill_dum : bool; (* 1 *)
-      opt_fix_fun : bool;   (* 2 *)
-      opt_case_iot : bool;  (* 4 *)
-      opt_case_idr : bool;  (* 8 *)
-      opt_case_idg : bool;  (* 16 *)
-      opt_case_cst : bool;  (* 32 *)
-      opt_case_fun : bool;  (* 64 *)
-      opt_case_app : bool;  (* 128 *)
-      opt_let_app : bool;   (* 256 *)
-      opt_lin_let : bool;   (* 512 *)
-      opt_lin_beta : bool } (* 1024 *)
+type opt_flag = {
+  opt_kill_dum : bool; (* 1 *)
+  opt_fix_fun : bool; (* 2 *)
+  opt_case_iot : bool; (* 4 *)
+  opt_case_idr : bool; (* 8 *)
+  opt_case_idg : bool; (* 16 *)
+  opt_case_cst : bool; (* 32 *)
+  opt_case_fun : bool; (* 64 *)
+  opt_case_app : bool; (* 128 *)
+  opt_let_app : bool; (* 256 *)
+  opt_lin_let : bool; (* 512 *)
+  opt_lin_beta : bool;
+}
+(* 1024 *)
 
 let kth_digit n k = not (Int.equal (n land (1 lsl k)) 0)
 
 let flag_of_int n =
-    { opt_kill_dum = kth_digit n 0;
-      opt_fix_fun = kth_digit n 1;
-      opt_case_iot = kth_digit n 2;
-      opt_case_idr = kth_digit n 3;
-      opt_case_idg = kth_digit n 4;
-      opt_case_cst = kth_digit n 5;
-      opt_case_fun = kth_digit n 6;
-      opt_case_app = kth_digit n 7;
-      opt_let_app = kth_digit n 8;
-      opt_lin_let = kth_digit n 9;
-      opt_lin_beta = kth_digit n 10 }
+  {
+    opt_kill_dum = kth_digit n 0;
+    opt_fix_fun = kth_digit n 1;
+    opt_case_iot = kth_digit n 2;
+    opt_case_idr = kth_digit n 3;
+    opt_case_idg = kth_digit n 4;
+    opt_case_cst = kth_digit n 5;
+    opt_case_fun = kth_digit n 6;
+    opt_case_app = kth_digit n 7;
+    opt_let_app = kth_digit n 8;
+    opt_lin_let = kth_digit n 9;
+    opt_lin_beta = kth_digit n 10;
+  }
 
-(* For the moment, we allow by default everything except :
-   - the type-unsafe optimization [opt_case_idg], which anyway
-     cannot be activated currently (cf [Mlutil.branch_as_fun])
-   - the linear let and beta reduction [opt_lin_let] and [opt_lin_beta]
-     (may lead to complexity blow-up, subsumed by finer reductions
-      when inlining recursors).
-*)
+(* For the moment, we allow by default everything except : - the type-unsafe
+   optimization [opt_case_idg], which anyway cannot be activated currently (cf
+   [Mlutil.branch_as_fun]) - the linear let and beta reduction [opt_lin_let] and
+   [opt_lin_beta] (may lead to complexity blow-up, subsumed by finer reductions
+   when inlining recursors). *)
 
-let int_flag_init = 1 + 2 + 4 + 8 (*+ 16*) + 32 + 64 + 128 + 256 (*+ 512 + 1024*)
+let int_flag_init =
+  1 + 2 + 4 + 8 (*+ 16*) + 32 + 64 + 128 + 256 (*+ 512 + 1024*)
 
 let int_flag_ref = ref int_flag_init
+
 let opt_flag_ref = ref (flag_of_int int_flag_init)
 
-let chg_flag n = int_flag_ref := n; opt_flag_ref := flag_of_int n
+let chg_flag n =
+  int_flag_ref := n;
+  opt_flag_ref := flag_of_int n
 
 let optims () = !opt_flag_ref
 
-let () = declare_bool_option
-          {optstage = Summary.Stage.Interp;
-           optdepr = None;
-           optkey = ["Crane"; "Extraction"; "Optimize"];
-           optread = (fun () -> not (Int.equal !int_flag_ref 0));
-           optwrite = (fun b -> chg_flag (if b then int_flag_init else 0))}
+let () =
+  declare_bool_option
+    {
+      optstage = Summary.Stage.Interp;
+      optdepr = None;
+      optkey = ["Crane"; "Extraction"; "Optimize"];
+      optread = (fun () -> not (Int.equal !int_flag_ref 0));
+      optwrite = (fun b -> chg_flag (if b then int_flag_init else 0));
+    }
 
-let () = declare_int_option
-          { optstage = Summary.Stage.Interp;
-            optdepr = None;
-            optkey = ["Crane"; "Extraction"; "Flag"];
-            optread = (fun _ -> Some !int_flag_ref);
-            optwrite = (function
-                          | None -> chg_flag 0
-                          | Some i -> chg_flag (max i 0))}
+let () =
+  declare_int_option
+    {
+      optstage = Summary.Stage.Interp;
+      optdepr = None;
+      optkey = ["Crane"; "Extraction"; "Flag"];
+      optread = (fun _ -> Some !int_flag_ref);
+      optwrite =
+        (function
+          | None -> chg_flag 0
+          | Some i -> chg_flag (max i 0) );
+    }
 
-(* This option is passed to clang-format in the -style option.
-   With one exception, if the option is set to "BDE",
-   then bde-format will be called instead of clang-format. *)
-let { Goptions.get = format_style } =
+(* This option is passed to clang-format in the -style option. With one
+   exception, if the option is set to "BDE", then bde-format will be called
+   instead of clang-format. *)
+let {Goptions.get = format_style} =
   declare_string_option_and_ref
     ~key:["Crane"; "Format"; "Style"]
-    ~value:"LLVM"
+    ~value:"{BasedOnStyle: LLVM, SeparateDefinitionBlocks: Always}"
     ()
 
-let { Goptions.get = std_lib } =
-  declare_string_option_and_ref
-    ~key:["Crane"; "StdLib"]
-    ~value:"std"
-    ()
+let {Goptions.get = std_lib} =
+  declare_string_option_and_ref ~key:["Crane"; "StdLib"] ~value:"std" ()
 
-let { Goptions.get = bde_dir } =
-  declare_string_option_and_ref
-    ~key:["Crane"; "BDE"; "Directory"]
-    ~value:""
-    ()
+let {Goptions.get = bde_dir} =
+  declare_string_option_and_ref ~key:["Crane"; "BDE"; "Directory"] ~value:"" ()
 
-(* This option controls whether "dummy lambda" are removed when a
-   toplevel constant is defined. *)
-let { Goptions.get = conservative_types } =
+(* This option controls whether "dummy lambda" are removed when a toplevel
+   constant is defined. *)
+let {Goptions.get = conservative_types} =
   declare_bool_option_and_ref
     ~key:["Crane"; "Extraction"; "Conservative"; "Types"]
     ~value:false
     ()
 
 (* Allows to print a comment at the beginning of the output files *)
-let { Goptions.get = file_comment } =
+let {Goptions.get = file_comment} =
   declare_string_option_and_ref
     ~key:["Crane"; "Extraction"; "File"; "Comment"]
     ~value:""
@@ -821,22 +1078,27 @@ let { Goptions.get = file_comment } =
 (** {2 Crane Extraction Lang} *)
 
 type lang = Cpp
-type benchmark_lang = BenchmarkOCaml | BenchmarkCpp
+
+type benchmark_lang =
+  | BenchmarkOCaml
+  | BenchmarkCpp
 
 let lang_ref = Summary.ref Cpp ~name:"CraneExtrLang"
 
 let lang () = !lang_ref
 
 let extr_lang : lang -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Extraction Lang"
-    ~cache:(fun l -> lang_ref := l)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Extraction Lang"
+       ~cache:(fun l -> lang_ref := l)
+       ~subst:None
 
 let extraction_language x = Lib.add_leaf (extr_lang x)
 
 (** {2 Crane Extraction Inline/NoInline} *)
 
-let empty_inline_table = (Refset'.empty,Refset'.empty)
+let empty_inline_table = (Refset'.empty, Refset'.empty)
 
 let inline_table = Summary.ref empty_inline_table ~name:"CraneExtrInline"
 
@@ -865,13 +1127,11 @@ let to_keep r = Refset'.mem r (snd !inline_table)
 
 let add_inline_entries b l =
   let f b = if b then Refset'.add else Refset'.remove in
-  let i,k = !inline_table in
-  inline_table :=
-  (List.fold_right (f b) l i),
-  (List.fold_right (f (not b)) l k)
+  let i, k = !inline_table in
+  inline_table := (List.fold_right (f b) l i, List.fold_right (f (not b)) l k)
 
 let add_foreign_entries l =
-  foreign_set := List.fold_right (Refset'.add) l !foreign_set
+  foreign_set := List.fold_right Refset'.add l !foreign_set
 
 (* Adds the qualid_ref and alias opt to the callback_map. *)
 let add_callback_entry alias_opt qualid_ref =
@@ -880,65 +1140,90 @@ let add_callback_entry alias_opt qualid_ref =
 (* Registration of operations for rollback. *)
 
 let inline_extraction : bool * GlobRef.t list -> obj =
-  declare_object @@ superglobal_object "Crane Extraction Inline"
-    ~cache:(fun (b,l) -> add_inline_entries b l)
-    ~subst:(Some (fun (s,(b,l)) -> (b,(List.map (fun x -> fst (subst_global s x)) l))))
-    ~discharge:(fun x -> Some x)
+  declare_object
+  @@ superglobal_object
+       "Crane Extraction Inline"
+       ~cache:(fun (b, l) -> add_inline_entries b l)
+       ~subst:
+         (Some
+            (fun (s, (b, l)) ->
+              (b, List.map (fun x -> fst (subst_global s x)) l) ) )
+       ~discharge:(fun x -> Some x)
 
 let foreign_extraction : GlobRef.t list -> obj =
-  declare_object @@ superglobal_object "Crane Extraction Foreign"
-    ~cache:(fun l -> add_foreign_entries l)
-    ~subst:(Some (fun (s,l) -> (List.map (fun x -> fst (subst_global s x)) l)))
-    ~discharge:(fun x -> Some x)
+  declare_object
+  @@ superglobal_object
+       "Crane Extraction Foreign"
+       ~cache:(fun l -> add_foreign_entries l)
+       ~subst:(Some (fun (s, l) -> List.map (fun x -> fst (subst_global s x)) l))
+       ~discharge:(fun x -> Some x)
 
 let callback_extraction : string option * GlobRef.t -> obj =
-  declare_object @@ superglobal_object "Crane Extraction Callback"
-    ~cache:(fun (alias, x) -> add_callback_entry alias x)
-    ~subst:(Some (fun (s,(alias, x)) -> (alias, (fst (subst_global s x)))))
-    ~discharge:(fun x -> Some x)
-
-
+  declare_object
+  @@ superglobal_object
+       "Crane Extraction Callback"
+       ~cache:(fun (alias, x) -> add_callback_entry alias x)
+       ~subst:(Some (fun (s, (alias, x)) -> (alias, fst (subst_global s x))))
+       ~discharge:(fun x -> Some x)
 
 (* Grammar entries. *)
 
 let extraction_inline b l =
   let refs = List.map Smartlocate.global_with_alias l in
   List.iter
-    (fun r -> match r with
-       | GlobRef.ConstRef _ -> ()
-       | _ -> error_constant r) refs;
-  Lib.add_leaf (inline_extraction (b,refs))
+    (fun r ->
+      match r with
+      | GlobRef.ConstRef _ -> ()
+      | _ -> error_constant r )
+    refs;
+  Lib.add_leaf (inline_extraction (b, refs))
 
 (* Printing part *)
 
 let print_extraction_inline () =
-  let (i,n)= !inline_table in
-  let i'= Refset'.filter (function GlobRef.ConstRef _ -> true | _ -> false) i in
-    (str "Extraction Inline:" ++ fnl () ++
-     Refset'.fold
-       (fun r p ->
-          (p ++ str "  " ++ safe_pr_long_global r ++ fnl ())) i' (mt ()) ++
-     str "Extraction NoInline:" ++ fnl () ++
-     Refset'.fold
-       (fun r p ->
-          (p ++ str "  " ++ safe_pr_long_global r ++ fnl ())) n (mt ()))
+  let i, n = !inline_table in
+  let i' =
+    Refset'.filter
+      (function
+        | GlobRef.ConstRef _ -> true
+        | _ -> false )
+      i
+  in
+  str "Extraction Inline:"
+  ++ fnl ()
+  ++ Refset'.fold
+       (fun r p -> p ++ str "  " ++ safe_pr_long_global r ++ fnl ())
+       i'
+       (mt ())
+  ++ str "Extraction NoInline:"
+  ++ fnl ()
+  ++ Refset'.fold
+       (fun r p -> p ++ str "  " ++ safe_pr_long_global r ++ fnl ())
+       n
+       (mt ())
 
 (* Reset part *)
 
 let reset_inline : unit -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Reset Extraction Inline"
-    ~cache:(fun () -> inline_table := empty_inline_table)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Reset Extraction Inline"
+       ~cache:(fun () -> inline_table := empty_inline_table)
+       ~subst:None
 
 let reset_foreign : unit -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Reset Extraction Foreign"
-    ~cache:(fun () -> foreign_set := empty_foreign_set)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Reset Extraction Foreign"
+       ~cache:(fun () -> foreign_set := empty_foreign_set)
+       ~subst:None
 
 let reset_callback : unit -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Reset Extraction Callback"
-    ~cache:(fun () -> callback_map := empty_callback_map)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Reset Extraction Callback"
+       ~cache:(fun () -> callback_map := empty_callback_map)
+       ~subst:None
 
 let reset_extraction_inline () = Lib.add_leaf (reset_inline ())
 
@@ -956,7 +1241,9 @@ let err_or_warn_remaining_implicit k =
   else
     warning_remaining_implicit k
 
-type int_or_id = ArgInt of int | ArgId of Id.t
+type int_or_id =
+  | ArgInt of int
+  | ArgId of Id.t
 
 let implicits_table = Summary.ref Refmap'.empty ~name:"CraneExtrImplicit"
 
@@ -965,21 +1252,26 @@ let implicits_of_global r =
   | Some s -> s
   | None -> Int.Set.empty
 
+(** Register implicit argument positions for a global reference by index or
+    name. *)
 let add_implicits r l =
   let names = argnames_of_global r in
   let n = List.length names in
   let add_arg s = function
     | ArgInt i ->
-        if 1 <= i && i <= n then Int.Set.add i s
-        else err (int i ++ str " is not a valid argument number for " ++
-                  safe_pr_global r)
+      if 1 <= i && i <= n then
+        Int.Set.add i s
+      else
+        err
+          ( int i
+          ++ str " is not a valid argument number for "
+          ++ safe_pr_global r )
     | ArgId id ->
-       try
-         let i = List.index Name.equal (Name id) names in
-         Int.Set.add i s
-       with Not_found ->
-         err (str "No argument " ++ Id.print id ++ str " for " ++
-              safe_pr_global r)
+    try
+      let i = List.index Name.equal (Name id) names in
+      Int.Set.add i s
+    with Not_found ->
+      err (str "No argument " ++ Id.print id ++ str " for " ++ safe_pr_global r)
   in
   let ints = List.fold_left add_arg Int.Set.empty l in
   implicits_table := Refmap'.add r ints !implicits_table
@@ -987,28 +1279,32 @@ let add_implicits r l =
 (* Registration of operations for rollback. *)
 
 let implicit_extraction : GlobRef.t * int_or_id list -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Extraction Implicit"
-    ~cache:(fun (r,l) -> add_implicits r l)
-    ~subst:(Some (fun (s,(r,l)) -> (fst (subst_global s r), l)))
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Extraction Implicit"
+       ~cache:(fun (r, l) -> add_implicits r l)
+       ~subst:(Some (fun (s, (r, l)) -> (fst (subst_global s r), l)))
 
 (* Grammar entries. *)
 
 let extraction_implicit r l =
   check_inside_section ();
-  Lib.add_leaf (implicit_extraction (Smartlocate.global_with_alias r,l))
-
+  Lib.add_leaf (implicit_extraction (Smartlocate.global_with_alias r, l))
 
 (** {2 Crane Extraction Blacklist of filenames not to use while extracting} *)
 
 let blacklist_table = Summary.ref Id.Set.empty ~name:"CraneExtrBlacklist"
 
 let modfile_ids = ref Id.Set.empty
+
 let modfile_mps = ref MPmap.empty
 
 let reset_modfile () =
   modfile_ids := !blacklist_table;
   modfile_mps := MPmap.empty
 
+(** Convert a module file to its output filename, avoiding blacklisted names via
+    de-duplication. *)
 let string_of_modfile mp =
   match MPmap.find_opt mp !modfile_mps with
   | Some s -> s
@@ -1020,10 +1316,11 @@ let string_of_modfile mp =
     modfile_mps := MPmap.add mp s' !modfile_mps;
     s'
 
-(* same as [string_of_modfile], but preserves the capital/uncapital 1st char *)
-
+(** Compute the full output file path for a module, preserving the original
+    capitalization of the first character. *)
 let file_of_modfile mp =
-  let s0 = match mp with
+  let s0 =
+    match mp with
     | MPfile f -> Id.to_string (List.hd (DirPath.repr f))
     | _ -> assert false
   in
@@ -1031,15 +1328,19 @@ let file_of_modfile mp =
 
 let add_blacklist_entries l =
   blacklist_table :=
-    List.fold_right (fun s -> Id.Set.add (Id.of_string (String.capitalize_ascii s)))
-      l !blacklist_table
+    List.fold_right
+      (fun s -> Id.Set.add (Id.of_string (String.capitalize_ascii s)))
+      l
+      !blacklist_table
 
 (* Registration of operations for rollback. *)
 
 let blacklist_extraction : string list -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Extraction Blacklist"
-    ~cache:add_blacklist_entries
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Extraction Blacklist"
+       ~cache:add_blacklist_entries
+       ~subst:None
 
 (* Grammar entries. *)
 
@@ -1055,38 +1356,42 @@ let print_extraction_blacklist () =
 (* Reset part *)
 
 let reset_blacklist : unit -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Reset Extraction Blacklist"
-    ~cache:(fun ()-> blacklist_table := Id.Set.empty)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Reset Extraction Blacklist"
+       ~cache:(fun () -> blacklist_table := Id.Set.empty)
+       ~subst:None
 
 let reset_extraction_blacklist () = Lib.add_leaf (reset_blacklist ())
 
 (** {2 Crane Extract Constant/Inductive} *)
 
 (* UGLY HACK: to be defined in [extraction.ml] *)
-let (use_type_scheme_nb_args, type_scheme_nb_args_hook) = Hook.make ()
+let use_type_scheme_nb_args, type_scheme_nb_args_hook = Hook.make ()
 
 (* Track which custom GlobRefs are actually used during extraction. *)
 let used_refs = ref Refset'.empty
+
 let mark_custom_used r =
   used_refs := Refset'.add r !used_refs;
-  (* When a constructor is used, also mark its parent inductive so that
-     imports registered on the IndRef are included. *)
+  (* When a constructor is used, also mark its parent inductive so that imports
+     registered on the IndRef are included. *)
   match r with
   | GlobRef.ConstructRef (ip, _) ->
     used_refs := Refset'.add (GlobRef.IndRef ip) !used_refs
   | _ -> ()
+
 let reset_used_custom_imports () = used_refs := Refset'.empty
 
 let customs = Summary.ref Refmap'.empty ~name:"CraneExtrCustom"
 
-let add_custom r ids s = customs := Refmap'.add r (ids,s) !customs
+let add_custom r ids s = customs := Refmap'.add r (ids, s) !customs
 
 let is_custom r = Refmap'.mem r !customs
 
-let is_inline_custom r = (is_custom r) && (to_inline r)
+let is_inline_custom r = is_custom r && to_inline r
 
-let is_foreign_custom r = (is_custom r) && (to_foreign r)
+let is_foreign_custom r = is_custom r && to_foreign r
 
 let find_callback r = Refmap'.find r !callback_map
 
@@ -1097,24 +1402,23 @@ let find_custom r =
 let find_custom_opt r =
   match Refmap'.find_opt r !customs with
   | Some (ids, s) ->
-      mark_custom_used r;
-      Some s
+    mark_custom_used r;
+    Some s
   | None -> None
 
 let find_type_custom r = Refmap'.find r !customs
 
 let custom_matchs = Summary.ref Refmap'.empty ~name:"CraneExtrCustomMatchs"
 
-let add_custom_match r s =
-  custom_matchs := Refmap'.add r s !custom_matchs
+let add_custom_match r s = custom_matchs := Refmap'.add r s !custom_matchs
 
 let indref_of_match pv =
   if Array.is_empty pv then raise Not_found;
-  let (_,_,pat,_) = pv.(0) in
+  let _, _, pat, _ = pv.(0) in
   match pat with
-    | Pusual (GlobRef.ConstructRef (ip,_)) -> GlobRef.IndRef ip
-    | Pcons (GlobRef.ConstructRef (ip,_),_) -> GlobRef.IndRef ip
-    | _ -> raise Not_found
+  | Pusual (GlobRef.ConstructRef (ip, _)) -> GlobRef.IndRef ip
+  | Pcons (GlobRef.ConstructRef (ip, _), _) -> GlobRef.IndRef ip
+  | _ -> raise Not_found
 
 let is_custom_match pv =
   match indref_of_match pv with
@@ -1129,60 +1433,87 @@ let find_custom_match pv =
 (* Printing entries *)
 
 let print_constref_extractions ref_set val_lookup_f section_str =
-  let i'= Refset'.filter (function GlobRef.ConstRef _ -> true | _ -> false) ref_set in
-      (str section_str ++ fnl () ++
-       Refset'.fold
-         (fun r p ->
-            (p ++ str "  " ++ safe_pr_long_global r ++ str " => \"" ++ str (val_lookup_f r) ++ str "\"" ++ fnl ())) i' (mt ())
-       )
+  let i' =
+    Refset'.filter
+      (function
+        | GlobRef.ConstRef _ -> true
+        | _ -> false )
+      ref_set
+  in
+  str section_str
+  ++ fnl ()
+  ++ Refset'.fold
+       (fun r p ->
+         p
+         ++ str "  "
+         ++ safe_pr_long_global r
+         ++ str " => \""
+         ++ str (val_lookup_f r)
+         ++ str "\""
+         ++ fnl () )
+       i'
+       (mt ())
 
 let print_extraction_foreign () =
-  print_constref_extractions !foreign_set (find_custom) "Extraction Foreign Constant:"
+  print_constref_extractions
+    !foreign_set
+    find_custom
+    "Extraction Foreign Constant:"
 
 let print_extraction_callback () =
   let keys = Refmap'.domain !callback_map in
-  print_constref_extractions keys (fun r ->
-    match find_callback r with
-     | None   -> "no custom alias"
-     | Some s -> s) "Extraction Callbacks for Constants:"
+  print_constref_extractions
+    keys
+    (fun r ->
+      match find_callback r with
+      | None -> "no custom alias"
+      | Some s -> s )
+    "Extraction Callbacks for Constants:"
 
 (* Registration of operations for rollback. *)
 
 let in_customs : GlobRef.t * string list * string -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane ML extractions"
-    ~cache:(fun (r,ids,s) -> add_custom r ids s)
-    ~subst:(Some (fun (s,(r,ids,str)) -> (fst (subst_global s r), ids, str)))
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane ML extractions"
+       ~cache:(fun (r, ids, s) -> add_custom r ids s)
+       ~subst:
+         (Some (fun (s, (r, ids, str)) -> (fst (subst_global s r), ids, str)))
 
 let in_custom_matchs : GlobRef.t * string -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane ML extractions custom matches"
-    ~cache:(fun (r,s) -> add_custom_match r s)
-    ~subst:(Some (fun (subs,(r,s)) -> (fst (subst_global subs r), s)))
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane ML extractions custom matches"
+       ~cache:(fun (r, s) -> add_custom_match r s)
+       ~subst:(Some (fun (subs, (r, s)) -> (fst (subst_global subs r), s)))
 
 (* Grammar entries. *)
 
-(* Custom imports are now tracked per-GlobRef rather than globally.
-   When a [From "header.h"] clause appears in an extraction directive,
-   the header is associated with the specific GlobRef being mapped.
-   During extraction, [find_custom] records which GlobRefs are actually
-   used, and [get_custom_imports] returns only the headers for those refs.
-   This prevents unused mappings (e.g. PrimArray in a file that only uses
-   PrimInt63) from injecting spurious #include directives. *)
+(* Custom imports are now tracked per-GlobRef rather than globally. When a [From
+   "header.h"] clause appears in an extraction directive, the header is
+   associated with the specific GlobRef being mapped. During extraction,
+   [find_custom] records which GlobRefs are actually used, and
+   [get_custom_imports] returns only the headers for those refs. This prevents
+   unused mappings (e.g. PrimArray in a file that only uses PrimInt63) from
+   injecting spurious #include directives. *)
 
 let ref_imports = Summary.ref Refmap'.empty ~name:"CraneRefImports"
 
 let add_ref_import r s =
   if not (String.is_empty s) then
-    let existing = match Refmap'.find_opt r !ref_imports with
+    let existing =
+      match Refmap'.find_opt r !ref_imports with
       | Some s -> s
       | None -> StringSet.empty
     in
     ref_imports := Refmap'.add r (StringSet.add s existing) !ref_imports
 
-let ref_imports_object : (GlobRef.t * string) -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Ref Imports"
-    ~cache:(fun (r, s) -> add_ref_import r s)
-    ~subst:(Some (fun (sub, (r, s)) -> (fst (subst_global sub r), s)))
-
+let ref_imports_object : GlobRef.t * string -> obj =
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Ref Imports"
+       ~cache:(fun (r, s) -> add_ref_import r s)
+       ~subst:(Some (fun (sub, (r, s)) -> (fst (subst_global sub r), s)))
 
 (* Legacy global custom imports (kept for backward compatibility with
    [add_custom_import] which is called directly in some places). *)
@@ -1195,68 +1526,102 @@ let add_custom_import s =
     custom_imports := StringSet.add s !custom_imports
 
 let custom_imports_object : string -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Custom Imports"
-    ~cache:(fun s -> add_custom_import s)
-    ~subst:None
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Custom Imports"
+       ~cache:(fun s -> add_custom_import s)
+       ~subst:None
 
-(* Returns only the imports for custom constants/inductives that were
-   actually referenced during extraction, plus any legacy global imports. *)
+(* Returns only the imports for custom constants/inductives that were actually
+   referenced during extraction, plus any legacy global imports. *)
 let get_custom_imports () =
-  let used_imports = Refset'.fold (fun r acc ->
-    match Refmap'.find_opt r !ref_imports with
-    | Some imports -> StringSet.union imports acc
-    | None -> acc
-  ) !used_refs StringSet.empty in
+  let used_imports =
+    Refset'.fold
+      (fun r acc ->
+        match Refmap'.find_opt r !ref_imports with
+        | Some imports -> StringSet.union imports acc
+        | None -> acc )
+      !used_refs
+      StringSet.empty
+  in
   StringSet.elements (StringSet.union !custom_imports used_imports)
 
 let extract_callback optstr x =
   if lang () != Cpp then
-      CErrors.user_err (Pp.str "Extract Callback is supported only for C++ extraction.");
+    CErrors.user_err
+      (Pp.str "Extract Callback is supported only for C++ extraction.");
 
   let qualid_ref = Smartlocate.global_with_alias x in
   match qualid_ref with
-      (* Add the alias and qualid_ref to callback extraction.*)
-    | GlobRef.ConstRef _ -> Lib.add_leaf (callback_extraction (optstr, qualid_ref))
-    | _                  -> error_constant ?loc:x.CAst.loc qualid_ref
+  (* Add the alias and qualid_ref to callback extraction.*)
+  | GlobRef.ConstRef _ ->
+    Lib.add_leaf (callback_extraction (optstr, qualid_ref))
+  | _ -> error_constant ?loc:x.CAst.loc qualid_ref
 
-let extract_constant_generic r ids s arity_handler (is_redef, redef_msg) extr_type =
+(** Generic constant extraction with validation, arity handling, and
+    registration to prevent redefinition. *)
+let extract_constant_generic
+    r
+    ids
+    s
+    arity_handler
+    (is_redef, redef_msg)
+    extr_type =
   check_inside_section ();
   let g = Smartlocate.global_with_alias r in
   match g with
-    | GlobRef.ConstRef kn ->
-        let env = Global.env () in
-        let typ, _ = Typeops.type_of_global_in_context env (GlobRef.ConstRef kn) in
-        let typ = Reduction.whd_all env typ in
-        if Reduction.is_arity env typ then arity_handler env typ g;
-        if is_redef g then
-          CErrors.user_err ((str "The term ") ++ safe_pr_long_global g ++ (str " is already defined as ")
-            ++ (str redef_msg) ++ (str " custom constant."));
-        Lib.add_leaf (extr_type g);
-        Lib.add_leaf (in_customs (g,ids,s));
-    | _ -> error_constant ?loc:r.CAst.loc g
+  | GlobRef.ConstRef kn ->
+    let env = Global.env () in
+    let typ, _ = Typeops.type_of_global_in_context env (GlobRef.ConstRef kn) in
+    let typ = Reduction.whd_all env typ in
+    if Reduction.is_arity env typ then arity_handler env typ g;
+    if is_redef g then
+      CErrors.user_err
+        ( str "The term "
+        ++ safe_pr_long_global g
+        ++ str " is already defined as "
+        ++ str redef_msg
+        ++ str " custom constant." );
+    Lib.add_leaf (extr_type g);
+    Lib.add_leaf (in_customs (g, ids, s))
+  | _ -> error_constant ?loc:r.CAst.loc g
 
 let extract_constant_inline inline r ids s =
-  (*let arity_handler env typ g =
-    let nargs = Hook.get use_type_scheme_nb_args env typ in
-    if not (Int.equal (List.length ids) nargs) then error_axiom_scheme ?loc:r.CAst.loc g nargs
-  in*)
-  extract_constant_generic r ids s (fun _ _ _ -> ()) (is_foreign_custom, "foreign") (fun g -> inline_extraction (inline,[g]))
+  (*let arity_handler env typ g = let nargs = Hook.get use_type_scheme_nb_args
+    env typ in if not (Int.equal (List.length ids) nargs) then
+    error_axiom_scheme ?loc:r.CAst.loc g nargs in*)
+  extract_constant_generic
+    r
+    ids
+    s
+    (fun _ _ _ -> ())
+    (is_foreign_custom, "foreign")
+    (fun g -> inline_extraction (inline, [g]))
 
 (* const_name : qualid -> replacement : string*)
 let extract_constant_foreign r s =
   if lang () != Cpp then
-      CErrors.user_err (Pp.str "Extract Foreign Constant is supported only for C++ extraction.");
+    CErrors.user_err
+      (Pp.str "Extract Foreign Constant is supported only for C++ extraction.");
   let arity_handler env typ g =
-      CErrors.user_err (Pp.str "Extract Foreign Constant is supported only for functions.")
+    CErrors.user_err
+      (Pp.str "Extract Foreign Constant is supported only for functions.")
   in
-  extract_constant_generic r [] s (arity_handler) (is_inline_custom, "inline") (fun g -> foreign_extraction [g])
+  extract_constant_generic
+    r
+    []
+    s
+    arity_handler
+    (is_inline_custom, "inline")
+    (fun g -> foreign_extraction [g] )
 
 let extract_constant_import inline r ids s imports =
   let g = Smartlocate.global_with_alias r in
-  List.iter (fun i ->
-    add_ref_import g i;
-    Lib.add_leaf (ref_imports_object (g, i))
-  ) imports;
+  List.iter
+    (fun i ->
+      add_ref_import g i;
+      Lib.add_leaf (ref_imports_object (g, i)) )
+    imports;
   extract_constant_inline inline r ids s
 
 let extract_inductive r s l optstr imports =
@@ -1264,172 +1629,206 @@ let extract_inductive r s l optstr imports =
   let g = Smartlocate.global_with_alias r in
   Dumpglob.add_glob ?loc:r.CAst.loc g;
   match g with
-    | GlobRef.IndRef ((kn,i) as ip) ->
-        List.iter (fun i ->
-          add_ref_import g i;
-          Lib.add_leaf (ref_imports_object (g, i))
-        ) imports;
-        let mib = Global.lookup_mind kn in
-        let n = Array.length mib.mind_packets.(i).mind_consnames in
-        if not (Int.equal n (List.length l)) then error_nb_cons ();
-        Lib.add_leaf (inline_extraction (true,[g]));
-        Lib.add_leaf (in_customs (g,[],s));
-        Option.iter (fun s -> Lib.add_leaf (in_custom_matchs (g,s)))
-          optstr;
-        List.iteri
-          (fun j s ->
-             let g = GlobRef.ConstructRef (ip,succ j) in
-             Lib.add_leaf (inline_extraction (true,[g]));
-             Lib.add_leaf (in_customs (g,[],s))) l
-    | _ -> error_inductive ?loc:r.CAst.loc g
+  | GlobRef.IndRef ((kn, i) as ip) ->
+    List.iter
+      (fun i ->
+        add_ref_import g i;
+        Lib.add_leaf (ref_imports_object (g, i)) )
+      imports;
+    let mib = Global.lookup_mind kn in
+    let n = Array.length mib.mind_packets.(i).mind_consnames in
+    if not (Int.equal n (List.length l)) then error_nb_cons ();
+    Lib.add_leaf (inline_extraction (true, [g]));
+    Lib.add_leaf (in_customs (g, [], s));
+    Option.iter (fun s -> Lib.add_leaf (in_custom_matchs (g, s))) optstr;
+    List.iteri
+      (fun j s ->
+        let g = GlobRef.ConstructRef (ip, succ j) in
+        Lib.add_leaf (inline_extraction (true, [g]));
+        Lib.add_leaf (in_customs (g, [], s)) )
+      l
+  | _ -> error_inductive ?loc:r.CAst.loc g
 
 let glob_tys = Summary.ref Refmap'.empty ~name:"GlobalDefTypes"
-let init_glob_tys () = glob_tys := Refmap'.empty
-let add_type id ty = glob_tys := Refmap'.add id ty !glob_tys
-let find_type id = Refmap'.find id !glob_tys
-let glob_def_registration : GlobRef.t * ml_type -> obj =
-  declare_object @@ superglobal_object "Crane Global Def Type Registration"
-    ~cache:(fun (id, ty) ->
-      add_type id ty
-      )
-    ~subst:(Some (fun (s,(id, ty)) -> (fst (subst_global s id), ty)))
-    ~discharge:(fun x -> Some x)
 
-let register_glob_def id ty  =
+let init_glob_tys () = glob_tys := Refmap'.empty
+
+let add_type id ty = glob_tys := Refmap'.add id ty !glob_tys
+
+let find_type id = Refmap'.find id !glob_tys
+
+let glob_def_registration : GlobRef.t * ml_type -> obj =
+  declare_object
+  @@ superglobal_object
+       "Crane Global Def Type Registration"
+       ~cache:(fun (id, ty) -> add_type id ty)
+       ~subst:(Some (fun (s, (id, ty)) -> (fst (subst_global s id), ty)))
+       ~discharge:(fun x -> Some x)
+
+let register_glob_def id ty =
   check_inside_section ();
   add_type id ty;
   Lib.add_leaf (glob_def_registration (id, ty))
 
 let monads = Summary.ref Refmap'.empty ~name:"CraneExtrMonad"
+
 let binds = Summary.ref Refmap'.empty ~name:"CraneExtrMonadBind"
+
 let rets = Summary.ref Refmap'.empty ~name:"CraneExtrMonadRet"
+
 let effects = Summary.ref Refmap'.empty ~name:"CraneExtrEffect"
 
 let add_monad m b r s = monads := Refmap'.add m (b, r, s) !monads
+
 let add_bind m b r s = binds := Refmap'.add b (m, r, s) !binds
+
 let add_ret m b r s = rets := Refmap'.add r (m, b, s) !rets
 
 let is_monad m = Refmap'.mem m !monads
+
 let is_bind b = Refmap'.mem b !binds
+
 let is_ret r = Refmap'.mem r !rets
 
 let monad_extraction : GlobRef.t * GlobRef.t * GlobRef.t * string -> obj =
-  declare_object @@ superglobal_object "Crane Monad extractions"
-    ~cache:(fun (m,b,r,str) ->
-      add_monad m b r str;
-      add_inline_entries true [m];
-      add_bind m b r str;
-      add_ret m b r str;
-      )
-    ~subst:(Some (fun (s,(m,b,r,str)) -> (fst (subst_global s m), fst (subst_global s b), fst (subst_global s r), str)))
-    ~discharge:(fun x -> Some x)
-      (* TODO: figure out what subst is doing/if I need to fix. *)
+  declare_object
+  @@ superglobal_object
+       "Crane Monad extractions"
+       ~cache:(fun (m, b, r, str) ->
+         add_monad m b r str;
+         add_inline_entries true [m];
+         add_bind m b r str;
+         add_ret m b r str )
+       ~subst:
+         (Some
+            (fun (s, (m, b, r, str)) ->
+              ( fst (subst_global s m),
+                fst (subst_global s b),
+                fst (subst_global s r),
+                str ) ) )
+       ~discharge:(fun x -> Some x)
+(* TODO: figure out what subst is doing/if I need to fix. *)
 
 let extract_monad m b r s imports =
   check_inside_section ();
   let mon = Smartlocate.global_with_alias m in
   let bind = Smartlocate.global_with_alias b in
   let ret = Smartlocate.global_with_alias r in
+  (* Shared handler for monad extraction (works for both ConstRef and IndRef) *)
+  let handle_monad_extraction mon bind ret s imports =
+    if is_monad mon then
+      CErrors.user_err
+        ( str "The term "
+        ++ safe_pr_long_global mon
+        ++ str " is already defined as a custom monad" );
+    List.iter
+      (fun i ->
+        add_ref_import mon i;
+        Lib.add_leaf (ref_imports_object (mon, i)) )
+      imports;
+    Lib.add_leaf (monad_extraction (mon, bind, ret, s));
+    Lib.add_leaf (in_customs (mon, [], s))
+  in
   match mon with
-    | GlobRef.ConstRef kn ->
-        if is_monad mon then
-          CErrors.user_err ((str "The term ") ++ safe_pr_long_global mon ++ (str " is already defined as a custom monad"));
-        List.iter (fun i ->
-          add_ref_import mon i;
-          Lib.add_leaf (ref_imports_object (mon, i))
-        ) imports;
-        Lib.add_leaf (monad_extraction (mon,bind,ret,s));
-        Lib.add_leaf (in_customs (mon,[],s));
-    | GlobRef.IndRef kn ->
-        if is_monad mon then
-          CErrors.user_err ((str "The term ") ++ safe_pr_long_global mon ++ (str " is already defined as a custom monad"));
-        List.iter (fun i ->
-          add_ref_import mon i;
-          Lib.add_leaf (ref_imports_object (mon, i))
-        ) imports;
-        Lib.add_leaf (monad_extraction (mon,bind,ret,s));
-        Lib.add_leaf (in_customs (mon,[],s));
-    | _ -> error_constant ?loc:m.CAst.loc mon
+  | GlobRef.ConstRef _ | GlobRef.IndRef _ ->
+    handle_monad_extraction mon bind ret s imports
+  | _ -> error_constant ?loc:m.CAst.loc mon
 
 let void_ty = Summary.ref Refmap'.empty ~name:"CraneVoidTy"
+
 let ghost_tm = Summary.ref Refmap'.empty ~name:"CraneVoidTm"
 
 let add_void_ty v g = void_ty := Refmap'.add v g !void_ty
+
 let add_ghost_tm v g = ghost_tm := Refmap'.add g v !ghost_tm
 
 let is_void v = Refmap'.mem v !void_ty
+
 let is_ghost g = Refmap'.mem g !ghost_tm
 
-let is_any_custom r = is_custom r || is_monad r || is_bind r || is_ret r || is_void r || is_ghost r
+let is_any_custom r =
+  is_custom r || is_monad r || is_bind r || is_ret r || is_void r || is_ghost r
 
-let is_any_inline_custom r =((is_custom r) && (to_inline r)) || is_monad r || is_bind r || is_ret r || is_void r || is_ghost r
+let is_any_inline_custom r =
+  (is_custom r && to_inline r)
+  || is_monad r
+  || is_bind r
+  || is_ret r
+  || is_void r
+  || is_ghost r
 
 let in_void : GlobRef.t * GlobRef.t -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Void extraction"
-    ~cache:(fun (v, g) ->
-      add_void_ty v g;
-      add_inline_entries true [v];
-      add_ghost_tm v g;
-      add_inline_entries true [g]
-      )
-    ~subst:(Some (fun (s,(v,g)) -> (fst (subst_global s v), g)))
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Void extraction"
+       ~cache:(fun (v, g) ->
+         add_void_ty v g;
+         add_inline_entries true [v];
+         add_ghost_tm v g;
+         add_inline_entries true [g] )
+       ~subst:(Some (fun (s, (v, g)) -> (fst (subst_global s v), g)))
 
 let extract_void v g =
   check_inside_section ();
   let void = Smartlocate.global_with_alias v in
   let ghost = Smartlocate.global_with_alias g in
   match void with
-    | GlobRef.ConstRef kn ->
-        if is_void void then
-          CErrors.user_err ((str "The term ") ++ safe_pr_long_global void ++ (str " is already defined as a void type"));
-        Lib.add_leaf (in_void (void, ghost));
-        Lib.add_leaf (in_customs (ghost,[],""));
-        Lib.add_leaf (inline_extraction (true,[void]));
-    | _ -> error_constant ?loc:v.CAst.loc void
+  | GlobRef.ConstRef kn ->
+    if is_void void then
+      CErrors.user_err
+        ( str "The term "
+        ++ safe_pr_long_global void
+        ++ str " is already defined as a void type" );
+    Lib.add_leaf (in_void (void, ghost));
+    Lib.add_leaf (in_customs (ghost, [], ""));
+    Lib.add_leaf (inline_extraction (true, [void]))
+  | _ -> error_constant ?loc:v.CAst.loc void
 
-let in_skip : GlobRef.t  -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Skip extraction"
-    ~cache:(fun sk ->
-      add_inline_entries true [sk]
-      )
-    ~subst:(Some (fun (s,sk) -> (fst (subst_global s sk))))
+let in_skip : GlobRef.t -> obj =
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Skip extraction"
+       ~cache:(fun sk -> add_inline_entries true [sk])
+       ~subst:(Some (fun (s, sk) -> fst (subst_global s sk)))
 
 let extract_skip sk =
   check_inside_section ();
   let skip = Smartlocate.global_with_alias sk in
   Lib.add_leaf (in_skip skip);
-        Lib.add_leaf (in_customs (skip,[],""));
-  Lib.add_leaf (inline_extraction (true,[skip]))
+  Lib.add_leaf (in_customs (skip, [], ""));
+  Lib.add_leaf (inline_extraction (true, [skip]))
 
 (* Module skip set - for skipping entire modules during extraction *)
 let empty_skip_module_set = MPset.empty
 
-let skip_module_set = Summary.ref empty_skip_module_set ~name:"CraneExtrSkipModule"
+let skip_module_set =
+  Summary.ref empty_skip_module_set ~name:"CraneExtrSkipModule"
 
-let add_skip_module mp =
-  skip_module_set := MPset.add mp !skip_module_set
+let add_skip_module mp = skip_module_set := MPset.add mp !skip_module_set
 
-let is_skip_module mp =
-  MPset.mem mp !skip_module_set
+let is_skip_module mp = MPset.mem mp !skip_module_set
 
 let in_skip_module : ModPath.t -> obj =
-  declare_object @@ superglobal_object_nodischarge "Crane Skip Module extraction"
-    ~cache:(fun mp -> add_skip_module mp)
-    ~subst:(Some (fun (s, mp) -> Mod_subst.subst_mp s mp))
+  declare_object
+  @@ superglobal_object_nodischarge
+       "Crane Skip Module extraction"
+       ~cache:(fun mp -> add_skip_module mp)
+       ~subst:(Some (fun (s, mp) -> Mod_subst.subst_mp s mp))
 
 let extract_skip_module m =
   check_inside_section ();
-  let mp = try Nametab.locate_module m
-           with Not_found -> error_unknown_module ?loc:m.CAst.loc m in
+  let mp =
+    try Nametab.locate_module m
+    with Not_found -> error_unknown_module ?loc:m.CAst.loc m
+  in
   Lib.add_leaf (in_skip_module mp)
 
-(* Numeral inductive tracking.
-   Stores (zero_ctor_index, succ_ctor_index) for Peano-style numerals.
-   Constructor indices are 1-based (Rocq convention). *)
+(* Numeral inductive tracking. Stores (zero_ctor_index, succ_ctor_index) for
+   Peano-style numerals. Constructor indices are 1-based (Rocq convention). *)
 type numeral_info = {
-  num_zero_ctor : int;   (* constructor index of zero, 1-based *)
-  num_succ_ctor : int;   (* constructor index of successor, 1-based *)
-  num_fmt : string;      (* format string with %n placeholder for the integer *)
+  num_zero_ctor : int; (* constructor index of zero, 1-based *)
+  num_succ_ctor : int; (* constructor index of successor, 1-based *)
+  num_fmt : string; (* format string with %n placeholder for the integer *)
 }
 
 let numeral_table = Summary.ref Refmap'.empty ~name:"CraneExtrNumeral"
@@ -1442,11 +1841,15 @@ let is_numeral_inductive r = Refmap'.mem r !numeral_table
 let get_numeral_info r = Refmap'.find_opt r !numeral_table
 
 let in_numeral : GlobRef.t * numeral_info -> obj =
-  declare_object @@ superglobal_object "Crane Numeral extraction"
-    ~cache:(fun (r, info) -> add_numeral_inductive r info)
-    ~subst:(Some (fun (s, (r, info)) -> (fst (subst_global s r), info)))
-    ~discharge:(fun x -> Some x)
+  declare_object
+  @@ superglobal_object
+       "Crane Numeral extraction"
+       ~cache:(fun (r, info) -> add_numeral_inductive r info)
+       ~subst:(Some (fun (s, (r, info)) -> (fst (subst_global s r), info)))
+       ~discharge:(fun x -> Some x)
 
+(** Detect and register numeral-like inductive types (zero/successor pattern)
+    for optimized extraction. *)
 let extract_numeral r fmt =
   check_inside_section ();
   let g = Smartlocate.global_with_alias r in
@@ -1458,48 +1861,71 @@ let extract_numeral r fmt =
     let n = Array.length mip.mind_consnames in
     (* Must have exactly 2 constructors for Peano numerals *)
     if n <> 2 then
-      CErrors.user_err (Pp.str "Crane Extract Numeral requires an inductive with exactly 2 constructors (zero and successor)");
-    (* Detect which is zero (0 args) and which is successor (1 arg).
-       Use mind_consnrealdecls to get non-parameter argument counts. *)
+      CErrors.user_err
+        (Pp.str
+           "Crane Extract Numeral requires an inductive with exactly 2 \
+            constructors (zero and successor)" );
+    (* Detect which is zero (0 args) and which is successor (1 arg). Use
+       mind_consnrealdecls to get non-parameter argument counts. *)
     let ctor_arities = mip.mind_consnrealdecls in
     let zero_idx = ref (-1) in
     let succ_idx = ref (-1) in
-    Array.iteri (fun j arity ->
-      if arity = 0 then zero_idx := j + 1  (* 1-based *)
-      else if arity = 1 then succ_idx := j + 1
-    ) ctor_arities;
+    Array.iteri
+      (fun j arity ->
+        if arity = 0 then
+          zero_idx := j + 1 (* 1-based *)
+        else if arity = 1 then
+          succ_idx := j + 1 )
+      ctor_arities;
     if !zero_idx < 0 || !succ_idx < 0 then
-      CErrors.user_err (Pp.str "Crane Extract Numeral: could not identify a zero constructor (0 args) and a successor constructor (1 arg)");
-    let info = { num_zero_ctor = !zero_idx; num_succ_ctor = !succ_idx; num_fmt = fmt } in
+      CErrors.user_err
+        (Pp.str
+           "Crane Extract Numeral: could not identify a zero constructor (0 \
+            args) and a successor constructor (1 arg)" );
+    let info =
+      {num_zero_ctor = !zero_idx; num_succ_ctor = !succ_idx; num_fmt = fmt}
+    in
     Lib.add_leaf (in_numeral (g, info))
   | _ ->
-    CErrors.user_err (Pp.str "Crane Extract Numeral: argument must be an inductive type")
+    CErrors.user_err
+      (Pp.str "Crane Extract Numeral: argument must be an inductive type")
 
 (* Try to skip as either a module or a global reference *)
 let extract_skip_or_module q =
   check_inside_section ();
   (* First try to resolve as a module *)
-  let mpo = match Nametab.locate_module q with
+  let mpo =
+    match Nametab.locate_module q with
     | mp -> Some mp
     | exception Not_found -> None
   in
   match mpo with
   | Some mp ->
-      (* It's a module - skip it *)
-      Lib.add_leaf (in_skip_module mp)
+    (* It's a module - skip it *)
+    Lib.add_leaf (in_skip_module mp)
   | None ->
-      (* Not a module, try as a global reference *)
-      let skip = Smartlocate.global_with_alias q in
-      Lib.add_leaf (in_skip skip);
-      Lib.add_leaf (in_customs (skip,[],""));
-      Lib.add_leaf (inline_extraction (true,[skip]))
-
+    (* Not a module, try as a global reference *)
+    let skip = Smartlocate.global_with_alias q in
+    Lib.add_leaf (in_skip skip);
+    Lib.add_leaf (in_customs (skip, [], ""));
+    Lib.add_leaf (inline_extraction (true, [skip]))
 
 (** {2 Tables synchronization} *)
 
 let reset_tables () =
-  init_typedefs (); init_cst_types (); init_inductives ();
-  init_inductive_kinds (); init_enum_inductives (); init_sigma_assertions (); init_recursors ();
-  init_projs (); init_promoted_type_vars (); init_instance_promoted_types (); init_higher_order_projections ();
-  init_axioms (); init_opaques (); reset_modfile ();
-  init_glob_tys (); reset_used_custom_imports ()
+  init_typedefs ();
+  init_cst_types ();
+  init_inductives ();
+  init_inductive_kinds ();
+  init_enum_inductives ();
+  init_sigma_assertions ();
+  init_recursors ();
+  init_projs ();
+  init_promoted_type_vars ();
+  init_instance_promoted_types ();
+  init_higher_order_projections ();
+  init_axioms ();
+  init_opaques ();
+  reset_modfile ();
+  init_glob_tys ();
+  reset_used_custom_imports ()

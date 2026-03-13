@@ -1,7 +1,8 @@
+#include <empty_match.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <empty_match.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -10,7 +11,7 @@
 #include <string>
 #include <variant>
 
-unsigned int
+__attribute__((pure)) unsigned int
 EmptyMatch::from_empty(const std::shared_ptr<EmptyMatch::empty> &_x0) {
   return absurd<unsigned int>(_x0);
 }

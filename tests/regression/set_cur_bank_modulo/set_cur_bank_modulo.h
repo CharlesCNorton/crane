@@ -1,3 +1,6 @@
+#ifndef INCLUDED_SET_CUR_BANK_MODULO
+#define INCLUDED_SET_CUR_BANK_MODULO
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -28,7 +31,8 @@ struct SetCurBankModulo {
 
   static std::shared_ptr<state> set_cur_bank(std::shared_ptr<state> s,
                                              const unsigned int b);
-
   static inline const unsigned int t =
       set_cur_bank(std::make_shared<state>(state{0u, 9u}), 7u)->cur_bank;
 };
+
+#endif // INCLUDED_SET_CUR_BANK_MODULO

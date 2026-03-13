@@ -10,7 +10,8 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
-(** Utility functions over ML types and terms, type environments, and optimization passes. *)
+(** Utility functions over ML types and terms, type environments, and
+    optimization passes. *)
 
 open Names
 open Miniml
@@ -55,6 +56,7 @@ val generalizable : ml_ast -> bool
 
 module Mlenv : sig
   type t
+
   val empty : t
 
   (** Get the n-th most recently entered schema and instantiate it. *)
@@ -126,10 +128,10 @@ val case_expunge : signature -> ml_ast -> (ml_ident * ml_type) list * ml_ast
 (** Expunge dummy arguments from a term. *)
 val term_expunge : signature -> (ml_ident * ml_type) list * ml_ast -> ml_ast
 
-
 (** {2 Special identifiers}
 
-    [dummy_name] is to be used for dead code and will be printed as [_] in concrete (Caml) code. *)
+    [dummy_name] is to be used for dead code and will be printed as [_] in
+    concrete (Caml) code. *)
 
 (** The anonymous identifier used for unnamed binders. *)
 val anonymous_name : Id.t
@@ -148,7 +150,8 @@ val tmp_id : ml_ident -> ml_ident
 
 (** {2 Lambda collection}
 
-    [collect_lams MLlam(id1,...MLlam(idn,t)...)] returns the list [idn;...;id1] and the term [t]. *)
+    [collect_lams MLlam(id1,...MLlam(idn,t)...)] returns the list [idn;...;id1]
+    and the term [t]. *)
 
 (** Collect all lambda abstractions from a term. *)
 val collect_lams : ml_ast -> (ml_ident * ml_type) list * ml_ast
@@ -168,10 +171,12 @@ val named_lams : (ml_ident * ml_type) list -> ml_ast -> ml_ast
 (** Wrap a term in n dummy lambda abstractions. *)
 val dummy_lams : ml_ast -> int -> ml_ast
 
-(** Wrap a term in anonymous or dummy lambda abstractions based on the signature. *)
+(** Wrap a term in anonymous or dummy lambda abstractions based on the
+    signature. *)
 val anonym_or_dummy_lams : ml_ast -> signature -> ml_ast
 
-(** Wrap a term in anonymous or dummy lambda abstractions with types based on the signature. *)
+(** Wrap a term in anonymous or dummy lambda abstractions with types based on
+    the signature. *)
 val anonym_or_dummy_lams_typed : ml_ast -> ml_type list -> signature -> ml_ast
 
 (** Generate eta-expanded argument list based on arity and signature. *)

@@ -1,3 +1,6 @@
+#ifndef INCLUDED_VALID_LAYOUT_WINDOW
+#define INCLUDED_VALID_LAYOUT_WINDOW
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -23,8 +26,8 @@ struct ValidLayoutWindow {
     unsigned int code_size;
   };
 
-  static bool valid_layoutb(const std::shared_ptr<layout> &l);
-
+  __attribute__((pure)) static bool
+  valid_layoutb(const std::shared_ptr<layout> &l);
   static inline const unsigned int t =
       ([](void) {
         if (valid_layoutb(std::make_shared<layout>(layout{128u, 256u}))) {
@@ -41,3 +44,5 @@ struct ValidLayoutWindow {
          }
        }());
 };
+
+#endif // INCLUDED_VALID_LAYOUT_WINDOW

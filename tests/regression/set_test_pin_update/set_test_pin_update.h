@@ -1,3 +1,6 @@
+#ifndef INCLUDED_SET_TEST_PIN_UPDATE
+#define INCLUDED_SET_TEST_PIN_UPDATE
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -25,7 +28,6 @@ struct SetTestPinUpdate {
 
   static std::shared_ptr<state> set_test_pin(std::shared_ptr<state> s,
                                              const bool v);
-
   static inline const unsigned int t = []() {
     return [](void) {
       std::shared_ptr<state> s_ =
@@ -40,3 +42,5 @@ struct SetTestPinUpdate {
     }();
   }();
 };
+
+#endif // INCLUDED_SET_TEST_PIN_UPDATE

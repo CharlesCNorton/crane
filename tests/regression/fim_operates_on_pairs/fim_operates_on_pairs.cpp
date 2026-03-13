@@ -1,7 +1,8 @@
+#include <fim_operates_on_pairs.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <fim_operates_on_pairs.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,7 +12,7 @@
 #include <utility>
 #include <variant>
 
-unsigned int
+__attribute__((pure)) unsigned int
 FimOperatesOnPairs::get_reg(const std::shared_ptr<FimOperatesOnPairs::state> &s,
                             const unsigned int r) {
   return s->regs->nth(r, 0u);
@@ -25,7 +26,7 @@ FimOperatesOnPairs::set_reg(std::shared_ptr<FimOperatesOnPairs::state> s,
                                      std::move(s)->regs)});
 }
 
-unsigned int FimOperatesOnPairs::get_reg_pair(
+__attribute__((pure)) unsigned int FimOperatesOnPairs::get_reg_pair(
     const std::shared_ptr<FimOperatesOnPairs::state> &s, const unsigned int r) {
   unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
   return ((get_reg(s, base) * 16u) + get_reg(s, (base + 1u)));
@@ -48,10 +49,9 @@ std::shared_ptr<FimOperatesOnPairs::state> FimOperatesOnPairs::execute_fim(
   return set_reg_pair(_x0, _x1, _x2);
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -65,7 +65,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

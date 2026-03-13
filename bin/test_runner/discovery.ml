@@ -14,13 +14,17 @@ let find_tests_in_category root category =
     []
   else
     let entries = Sys.readdir category_path in
-    let tests = Array.fold_left (fun acc name ->
-      let full_path = Filename.concat category_path name in
-      if Sys.is_directory full_path && has_test_file full_path then
-        { category; name } :: acc
-      else
-        acc
-    ) [] entries in
+    let tests =
+      Array.fold_left
+        (fun acc name ->
+          let full_path = Filename.concat category_path name in
+          if Sys.is_directory full_path && has_test_file full_path then
+            {category; name} :: acc
+          else
+            acc )
+        []
+        entries
+    in
     List.sort compare_test_id tests
 
 let find_all_tests root =

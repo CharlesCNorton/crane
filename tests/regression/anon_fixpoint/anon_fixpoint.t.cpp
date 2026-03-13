@@ -12,37 +12,35 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
-    // Test sum_to
-    ASSERT(AnonFixpoint::test_sum_5 == 15u);
-    ASSERT(AnonFixpoint::test_sum_0 == 0u);
+  // Test sum_to
+  ASSERT(AnonFixpoint::test_sum_5 == 15u);
+  ASSERT(AnonFixpoint::test_sum_0 == 0u);
 
-    // Test factorial
-    ASSERT(AnonFixpoint::test_fact_5 == 120u);
-    ASSERT(AnonFixpoint::test_fact_0 == 1u);
+  // Test factorial
+  ASSERT(AnonFixpoint::test_fact_5 == 120u);
+  ASSERT(AnonFixpoint::test_fact_0 == 1u);
 
-    // Test double sum
-    ASSERT(AnonFixpoint::test_double == 6u);
+  // Test double sum
+  ASSERT(AnonFixpoint::test_double == 6u);
 
-    // Test gcd
-    ASSERT(AnonFixpoint::test_gcd == 6u);
+  // Test gcd
+  ASSERT(AnonFixpoint::test_gcd == 6u);
 
-    return testStatus;
+  return testStatus;
 }

@@ -1,3 +1,5 @@
+#include <shadow_qual_node.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,12 +7,11 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <shadow_qual_node.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-ShadowQualNode::Node::shadow
-ShadowQualNode::id(const ShadowQualNode::Node::shadow x) {
+__attribute__((pure)) ShadowQualNode::Node::Shadow
+ShadowQualNode::id(const ShadowQualNode::Node::Shadow x) {
   return x;
 }

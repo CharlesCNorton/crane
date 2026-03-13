@@ -1,3 +1,5 @@
+#include <register_pair_ops.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,13 +7,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <register_pair_ops.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int PeanoNat::sub(const unsigned int n, const unsigned int m) {
+__attribute__((pure)) unsigned int PeanoNat::sub(const unsigned int n,
+                                                 const unsigned int m) {
   if (n <= 0) {
     return std::move(n);
   } else {
@@ -25,7 +27,8 @@ unsigned int PeanoNat::sub(const unsigned int n, const unsigned int m) {
   }
 }
 
-bool PeanoNat::eqb(const unsigned int n, const unsigned int m) {
+__attribute__((pure)) bool PeanoNat::eqb(const unsigned int n,
+                                         const unsigned int m) {
   if (n <= 0) {
     if (m <= 0) {
       return true;
@@ -44,7 +47,8 @@ bool PeanoNat::eqb(const unsigned int n, const unsigned int m) {
   }
 }
 
-bool PeanoNat::leb(const unsigned int n, const unsigned int m) {
+__attribute__((pure)) bool PeanoNat::leb(const unsigned int n,
+                                         const unsigned int m) {
   if (n <= 0) {
     return true;
   } else {
@@ -58,14 +62,14 @@ bool PeanoNat::leb(const unsigned int n, const unsigned int m) {
   }
 }
 
-bool PeanoNat::ltb(const unsigned int n, const unsigned int m) {
+__attribute__((pure)) bool PeanoNat::ltb(const unsigned int n,
+                                         const unsigned int m) {
   return PeanoNat::leb((std::move(n) + 1), m);
 }
 
-std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
-                                                       const unsigned int y,
-                                                       const unsigned int q,
-                                                       const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+PeanoNat::divmod(const unsigned int x, const unsigned int y,
+                 const unsigned int q, const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -79,7 +83,8 @@ std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
   }
 }
 
-unsigned int PeanoNat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int PeanoNat::div(const unsigned int x,
+                                                 const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {
@@ -88,7 +93,8 @@ unsigned int PeanoNat::div(const unsigned int x, const unsigned int y) {
   }
 }
 
-unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int PeanoNat::modulo(const unsigned int x,
+                                                    const unsigned int y) {
   if (y <= 0) {
     return std::move(x);
   } else {
@@ -97,7 +103,7 @@ unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
   }
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 RegisterPairOps::get_reg(const std::shared_ptr<RegisterPairOps::state> &s,
                          const unsigned int r) {
   return s->regs->nth(r, 0u);
@@ -112,7 +118,7 @@ RegisterPairOps::set_reg(std::shared_ptr<RegisterPairOps::state> s,
                                      std::move(s)->regs)});
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 RegisterPairOps::get_reg_pair(const std::shared_ptr<RegisterPairOps::state> &s,
                               const unsigned int r) {
   unsigned int base =
@@ -132,16 +138,19 @@ RegisterPairOps::set_reg_pair(const std::shared_ptr<RegisterPairOps::state> &s,
   return set_reg(std::move(s1), (std::move(base) + 1u), std::move(lo));
 }
 
-unsigned int RegisterPairOps::pair_base(const unsigned int r) {
+__attribute__((pure)) unsigned int
+RegisterPairOps::pair_base(const unsigned int r) {
   return (
       ((r - PeanoNat::modulo(r, 2u)) > r ? 0 : (r - PeanoNat::modulo(r, 2u))));
 }
 
-unsigned int RegisterPairOps::pair_index(const unsigned int r) {
+__attribute__((pure)) unsigned int
+RegisterPairOps::pair_index(const unsigned int r) {
   return PeanoNat::div(r, 2u);
 }
 
-bool RegisterPairOps::pair_property(const unsigned int r) {
+__attribute__((pure)) bool
+RegisterPairOps::pair_property(const unsigned int r) {
   unsigned int p = pair_index(r);
   return (PeanoNat::ltb(p, 8u) &&
           (PeanoNat::eqb(r, (2u * p)) || PeanoNat::eqb(r, ((2u * p) + 1u))));
@@ -150,10 +159,10 @@ bool RegisterPairOps::pair_property(const unsigned int r) {
 std::shared_ptr<List<unsigned int>> ListDef::seq(const unsigned int start,
                                                  const unsigned int len) {
   if (len <= 0) {
-    return List<unsigned int>::ctor::nil_();
+    return List<unsigned int>::ctor::Nil_();
   } else {
     unsigned int len0 = len - 1;
-    return List<unsigned int>::ctor::cons_(start,
+    return List<unsigned int>::ctor::Cons_(start,
                                            ListDef::seq((start + 1), len0));
   }
 }

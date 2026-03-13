@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <jin_uses_pair_for_jump.h>
 
-int main()
-{
-    (void)JinUsesPairForJump::t;
-    return 0;
+int main() {
+  (void)JinUsesPairForJump::t;
+  return 0;
 }

@@ -1,3 +1,6 @@
+#ifndef INCLUDED_PORT_WRITE_NIBBLE_MASK
+#define INCLUDED_PORT_WRITE_NIBBLE_MASK
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -23,12 +26,12 @@ struct PortWriteNibbleMask {
     unsigned int chip_port;
   };
 
-  static unsigned int nibble_of_nat(const unsigned int n);
-
+  __attribute__((pure)) static unsigned int nibble_of_nat(const unsigned int n);
   static std::shared_ptr<ram_chip>
   upd_port_in_chip(const std::shared_ptr<ram_chip> &_x, const unsigned int v);
-
   static inline const unsigned int t =
       upd_port_in_chip(std::make_shared<ram_chip>(ram_chip{0u}), 31u)
           ->chip_port;
 };
+
+#endif // INCLUDED_PORT_WRITE_NIBBLE_MASK

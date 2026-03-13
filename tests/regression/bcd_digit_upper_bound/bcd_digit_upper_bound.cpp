@@ -1,6 +1,7 @@
+#include <bcd_digit_upper_bound.h>
+
 #include <algorithm>
 #include <any>
-#include <bcd_digit_upper_bound.h>
 #include <cassert>
 #include <functional>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <string>
 #include <variant>
 
-bool BcdDigitUpperBound::is_bcd_digitb(const unsigned int n) {
-  return (n <= 9u);
+__attribute__((pure)) bool
+BcdDigitUpperBound::is_bcd_digitb(const unsigned int n) {
+  return n <= 9u;
 }

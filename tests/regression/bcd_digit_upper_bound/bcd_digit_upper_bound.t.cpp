@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <bcd_digit_upper_bound.h>
 
-int main()
-{
-    (void)BcdDigitUpperBound::t;
-    return 0;
+int main() {
+  (void)BcdDigitUpperBound::t;
+  return 0;
 }

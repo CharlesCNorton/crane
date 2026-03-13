@@ -1,3 +1,6 @@
+#ifndef INCLUDED_STEP_FETCH_DECODE_EXEC
+#define INCLUDED_STEP_FETCH_DECODE_EXEC
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,59 +21,77 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
-public:
-  struct nil {};
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+template <typename t_A> struct List {
+  // TYPES
+  struct Nil {};
+
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
-  using variant_t = std::variant<nil, cons>;
+
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
-  variant_t v_;
-  explicit List(nil _v) : v_(std::move(_v)) {}
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  // DATA
+  variant_t d_v_;
+
+  // CREATORS
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
+
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
+  // TYPES
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
-  A nth(const unsigned int n, const A default0) const {
+
+  // MANIPULATORS
+  __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+  // ACCESSORS
+  __attribute__((pure)) const variant_t &v() const { return d_v_; }
+
+  t_A nth(const unsigned int n, const t_A default0) const {
     if (n <= 0) {
-      return std::visit(Overloaded{[&](const typename List<A>::nil _args) -> A {
-                                     return default0;
-                                   },
-                                   [](const typename List<A>::cons _args) -> A {
-                                     A x = _args._a0;
-                                     return x;
-                                   }},
-                        this->v());
+      return std::visit(
+          Overloaded{[&](const typename List<t_A>::Nil _args) -> t_A {
+                       return default0;
+                     },
+                     [](const typename List<t_A>::Cons _args) -> t_A {
+                       t_A x = _args.d_a0;
+                       return x;
+                     }},
+          this->v());
     } else {
       unsigned int m = n - 1;
       return std::visit(
-          Overloaded{
-              [&](const typename List<A>::nil _args) -> A { return default0; },
-              [&](const typename List<A>::cons _args) -> A {
-                std::shared_ptr<List<A>> l_ = _args._a1;
-                return std::move(l_)->nth(m, default0);
-              }},
+          Overloaded{[&](const typename List<t_A>::Nil _args) -> t_A {
+                       return default0;
+                     },
+                     [&](const typename List<t_A>::Cons _args) -> t_A {
+                       std::shared_ptr<List<t_A>> l_ = _args.d_a1;
+                       return std::move(l_)->nth(m, default0);
+                     }},
           this->v());
     }
   }
@@ -78,36 +99,51 @@ public:
 
 struct StepFetchDecodeExec {
   struct instruction {
-  public:
+    // TYPES
     struct NOP {};
+
     struct ADD_ACC {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     using variant_t = std::variant<NOP, ADD_ACC>;
 
   private:
-    variant_t v_;
-    explicit instruction(NOP _v) : v_(std::move(_v)) {}
-    explicit instruction(ADD_ACC _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit instruction(NOP _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction(ADD_ACC _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction> NOP_() {
         return std::shared_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::shared_ptr<instruction> ADD_ACC_(unsigned int a0) {
         return std::shared_ptr<instruction>(new instruction(ADD_ACC{a0}));
       }
+
       static std::unique_ptr<instruction> NOP_uptr() {
         return std::unique_ptr<instruction>(new instruction(NOP{}));
       }
+
       static std::unique_ptr<instruction> ADD_ACC_uptr(unsigned int a0) {
         return std::unique_ptr<instruction>(new instruction(ADD_ACC{a0}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F1>
@@ -117,7 +153,7 @@ struct StepFetchDecodeExec {
         Overloaded{
             [&](const typename instruction::NOP _args) -> T1 { return f; },
             [&](const typename instruction::ADD_ACC _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -130,7 +166,7 @@ struct StepFetchDecodeExec {
         Overloaded{
             [&](const typename instruction::NOP _args) -> T1 { return f; },
             [&](const typename instruction::ADD_ACC _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -142,24 +178,22 @@ struct StepFetchDecodeExec {
     std::shared_ptr<List<unsigned int>> rom;
   };
 
-  static unsigned int fetch_byte(const std::shared_ptr<state> &s,
-                                 const unsigned int addr);
-
+  __attribute__((pure)) static unsigned int
+  fetch_byte(const std::shared_ptr<state> &s, const unsigned int addr);
   static std::shared_ptr<instruction> decode(const unsigned int b1,
                                              const unsigned int b2);
-
   static std::shared_ptr<state> execute(std::shared_ptr<state> s,
                                         const std::shared_ptr<instruction> &i);
-
   static std::shared_ptr<state> step(const std::shared_ptr<state> &s);
-
   static inline const unsigned int t = [](void) {
     std::shared_ptr<state> s1 = step(std::make_shared<state>(
         state{3u, 0u,
-              List<unsigned int>::ctor::cons_(
-                  1u, List<unsigned int>::ctor::cons_(
-                          6u, List<unsigned int>::ctor::cons_(
-                                  0u, List<unsigned int>::ctor::nil_())))}));
+              List<unsigned int>::ctor::Cons_(
+                  1u, List<unsigned int>::ctor::Cons_(
+                          6u, List<unsigned int>::ctor::Cons_(
+                                  0u, List<unsigned int>::ctor::Nil_())))}));
     return (s1->acc + s1->pc);
   }();
 };
+
+#endif // INCLUDED_STEP_FETCH_DECODE_EXEC

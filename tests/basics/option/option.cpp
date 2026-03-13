@@ -1,17 +1,19 @@
+#include <option.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <option.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-unsigned int Option::get_or_default(const std::optional<unsigned int> o,
-                                    const unsigned int default0) {
+__attribute__((pure)) unsigned int
+Option::get_or_default(const std::optional<unsigned int> o,
+                       const unsigned int default0) {
   if (o.has_value()) {
     unsigned int x = *o;
     return std::move(x);
@@ -20,7 +22,8 @@ unsigned int Option::get_or_default(const std::optional<unsigned int> o,
   }
 }
 
-std::optional<unsigned int> Option::safe_pred(const unsigned int n) {
+__attribute__((pure)) std::optional<unsigned int>
+Option::safe_pred(const unsigned int n) {
   if (n <= 0) {
     return std::nullopt;
   } else {
@@ -29,7 +32,7 @@ std::optional<unsigned int> Option::safe_pred(const unsigned int n) {
   }
 }
 
-std::optional<unsigned int>
+__attribute__((pure)) std::optional<unsigned int>
 Option::chain_options(const std::optional<unsigned int> o1,
                       const std::optional<unsigned int> o2) {
   if (o1.has_value()) {

@@ -1,3 +1,6 @@
+#ifndef INCLUDED_QUALIFIED_RECORD_SHADOW
+#define INCLUDED_QUALIFIED_RECORD_SHADOW
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -23,7 +26,8 @@ struct QualifiedRecordShadow {
   };
 
   static std::shared_ptr<Shadow> bump(const std::shared_ptr<Shadow> &x);
-
   static inline const std::shared_ptr<Shadow> t =
       bump(std::make_shared<Shadow>(Shadow{1u}));
 };
+
+#endif // INCLUDED_QUALIFIED_RECORD_SHADOW

@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <nested_ind.h>
 
-int main()
-{
-    (void)NestedInd::t;
-    return 0;
+int main() {
+  (void)NestedInd::t;
+  return 0;
 }

@@ -4,8 +4,7 @@
 
 #include "todo_with_module_constraint.h"
 
-int main()
-{
-    assert(TodoWithModuleConstraint::test_twice == 2u);
-    return 0;
+int main() {
+  assert(TodoWithModuleConstraint::test_twice == 2u);
+  return 0;
 }

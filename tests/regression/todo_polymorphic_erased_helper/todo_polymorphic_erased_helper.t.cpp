@@ -4,8 +4,7 @@
 
 #include "todo_polymorphic_erased_helper.h"
 
-int main()
-{
-    assert(TodoPolymorphicErasedHelper::test_value == 8u);
-    return 0;
+int main() {
+  assert(TodoPolymorphicErasedHelper::test_value == 8u);
+  return 0;
 }

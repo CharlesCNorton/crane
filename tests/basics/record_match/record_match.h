@@ -1,3 +1,6 @@
+#ifndef INCLUDED_RECORD_MATCH
+#define INCLUDED_RECORD_MATCH
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -24,5 +27,8 @@ struct RecordMatch {
     unsigned int f3;
   };
 
-  static unsigned int sum(const std::shared_ptr<MyRec> &r);
+  __attribute__((pure)) static unsigned int
+  sum(const std::shared_ptr<MyRec> &r);
 };
+
+#endif // INCLUDED_RECORD_MATCH

@@ -1,3 +1,5 @@
+#include <todo_nested_module_type.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -7,10 +9,9 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <todo_nested_module_type.h>
 #include <variant>
 
-TodoNestedModuleType::NatOuter::Inner::t
+__attribute__((pure)) TodoNestedModuleType::NatOuter::Inner::t
 TodoNestedModuleType::NatOuter::step(const unsigned int n) {
   return (std::move(n) + 1);
 }

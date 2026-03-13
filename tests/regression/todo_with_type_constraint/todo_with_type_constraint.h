@@ -1,3 +1,6 @@
+#ifndef INCLUDED_TODO_WITH_TYPE_CONSTRAINT
+#define INCLUDED_TODO_WITH_TYPE_CONSTRAINT
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -35,10 +38,8 @@ concept NAT_BASE = BASE<M>;
 struct TodoWithTypeConstraint {
   struct NatBase {
     using t = unsigned int;
-
     static inline const unsigned int zero = 0u;
-
-    static unsigned int bump(const unsigned int n);
+    __attribute__((pure)) static unsigned int bump(const unsigned int n);
   };
 
   template <NAT_BASE X> struct UseNat {
@@ -49,6 +50,7 @@ struct TodoWithTypeConstraint {
   };
 
   using Applied = UseNat<NatBase>;
-
   static inline const unsigned int test_twice = Applied::twice();
 };
+
+#endif // INCLUDED_TODO_WITH_TYPE_CONSTRAINT

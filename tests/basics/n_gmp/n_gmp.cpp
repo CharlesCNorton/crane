@@ -1,3 +1,5 @@
+#include <n_gmp.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,14 +7,13 @@
 #include <gmpxx.h>
 #include <iostream>
 #include <memory>
-#include <n_gmp.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-mpz_class Pos::succ(const mpz_class x) {
+__attribute__((pure)) mpz_class Pos::succ(const mpz_class x) {
   if (x == 1) {
     return (2 * mpz_class(1));
   } else if (x % 2 != 0) {
@@ -24,7 +25,7 @@ mpz_class Pos::succ(const mpz_class x) {
   }
 }
 
-mpz_class Pos::pred_double(const mpz_class x) {
+__attribute__((pure)) mpz_class Pos::pred_double(const mpz_class x) {
   if (x == 1) {
     return mpz_class(1);
   } else if (x % 2 != 0) {
@@ -36,7 +37,7 @@ mpz_class Pos::pred_double(const mpz_class x) {
   }
 }
 
-mpz_class Pos::pred_N(const mpz_class x) {
+__attribute__((pure)) mpz_class Pos::pred_N(const mpz_class x) {
   if (x == 1) {
     return mpz_class(0);
   } else if (x % 2 != 0) {
@@ -58,7 +59,7 @@ Pos::succ_double_mask(const std::shared_ptr<Pos::mask> &x) {
           },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            mpz_class p = _args._a0;
+            mpz_class p = _args.d_a0;
             return mask::ctor::IsPos_((2 * std::move(p) + 1));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -74,7 +75,7 @@ Pos::double_mask(const std::shared_ptr<Pos::mask> &x) {
               -> std::shared_ptr<Pos::mask> { return mask::ctor::IsNul_(); },
           [](const typename Pos::mask::IsPos _args)
               -> std::shared_ptr<Pos::mask> {
-            mpz_class p = _args._a0;
+            mpz_class p = _args.d_a0;
             return mask::ctor::IsPos_((2 * std::move(p)));
           },
           [](const typename Pos::mask::IsNeg _args)
@@ -129,6 +130,7 @@ std::shared_ptr<Pos::mask> Pos::sub_mask(const mpz_class x, const mpz_class y) {
     }
   }
 }
+
 std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const mpz_class x,
                                                const mpz_class y) {
   if (x == 1) {
@@ -158,36 +160,37 @@ std::shared_ptr<Pos::mask> Pos::sub_mask_carry(const mpz_class x,
   }
 }
 
-comparison Pos::compare_cont(const comparison r, const mpz_class x,
-                             const mpz_class y) {
+__attribute__((pure)) Comparison Pos::compare_cont(const Comparison r,
+                                                   const mpz_class x,
+                                                   const mpz_class y) {
   if (x == 1) {
     if (y == 1) {
       return r;
     } else if (y % 2 != 0) {
       mpz_class _x = (y - 1) / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       mpz_class _x = y / 2;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else if (x % 2 != 0) {
     mpz_class p = (x - 1) / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
       return compare_cont(r, p, q);
     } else {
       mpz_class q = y / 2;
-      return compare_cont(comparison::Gt, p, q);
+      return compare_cont(Comparison::e_GT, p, q);
     }
   } else {
     mpz_class p = x / 2;
     if (y == 1) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2 != 0) {
       mpz_class q = (y - 1) / 2;
-      return compare_cont(comparison::Lt, p, q);
+      return compare_cont(Comparison::e_LT, p, q);
     } else {
       mpz_class q = y / 2;
       return compare_cont(r, p, q);
@@ -195,11 +198,12 @@ comparison Pos::compare_cont(const comparison r, const mpz_class x,
   }
 }
 
-comparison Pos::compare(const mpz_class _x0, const mpz_class _x1) {
-  return compare_cont(comparison::Eq, _x0, _x1);
+__attribute__((pure)) Comparison Pos::compare(const mpz_class _x0,
+                                              const mpz_class _x1) {
+  return compare_cont(Comparison::e_EQ, _x0, _x1);
 }
 
-bool Pos::eqb(const mpz_class p, const mpz_class q) {
+__attribute__((pure)) bool Pos::eqb(const mpz_class p, const mpz_class q) {
   if (p == 1) {
     if (q == 1) {
       return true;
@@ -235,7 +239,8 @@ bool Pos::eqb(const mpz_class p, const mpz_class q) {
   }
 }
 
-mpz_class Coq_Pos::add_carry(const mpz_class x, const mpz_class y) {
+__attribute__((pure)) mpz_class Coq_Pos::add_carry(const mpz_class x,
+                                                   const mpz_class y) {
   if (x == 1) {
     if (y == 1) {
       return (2 * mpz_class(1) + 1);
@@ -271,18 +276,19 @@ mpz_class Coq_Pos::add_carry(const mpz_class x, const mpz_class y) {
   }
 }
 
-comparison BinNat::compare(const mpz_class n, const mpz_class m) {
+__attribute__((pure)) Comparison BinNat::compare(const mpz_class n,
+                                                 const mpz_class m) {
   if (n == 0) {
     if (m == 0) {
-      return comparison::Eq;
+      return Comparison::e_EQ;
     } else {
       mpz_class _x = m;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else {
     mpz_class n_ = n;
     if (m == 0) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else {
       mpz_class m_ = m;
       return Pos::compare(n_, m_);
@@ -290,8 +296,8 @@ comparison BinNat::compare(const mpz_class n, const mpz_class m) {
   }
 }
 
-std::pair<mpz_class, mpz_class> BinNat::pos_div_eucl(const mpz_class a,
-                                                     const mpz_class b) {
+__attribute__((pure)) std::pair<mpz_class, mpz_class>
+BinNat::pos_div_eucl(const mpz_class a, const mpz_class b) {
   if (a == 1) {
     if (b == 0) {
       return std::make_pair(mpz_class(0), mpz_class(1));
@@ -312,7 +318,7 @@ std::pair<mpz_class, mpz_class> BinNat::pos_div_eucl(const mpz_class a,
     mpz_class q = BinNat::pos_div_eucl(a_, b).first;
     mpz_class r = BinNat::pos_div_eucl(a_, b).second;
     mpz_class r_ = (std::move(r) * 2 + 1);
-    if ((b <= r_)) {
+    if (b <= std::move(r_)) {
       return std::make_pair(
           (q * 2 + 1), (std::move(r_) >= b ? std::move(r_) - b : mpz_class(0)));
     } else {
@@ -323,7 +329,7 @@ std::pair<mpz_class, mpz_class> BinNat::pos_div_eucl(const mpz_class a,
     mpz_class q = BinNat::pos_div_eucl(a_, b).first;
     mpz_class r = BinNat::pos_div_eucl(a_, b).second;
     mpz_class r_ = (std::move(r) * 2);
-    if ((b <= r_)) {
+    if (b <= std::move(r_)) {
       return std::make_pair(
           (q * 2 + 1), (std::move(r_) >= b ? std::move(r_) - b : mpz_class(0)));
     } else {
@@ -332,8 +338,8 @@ std::pair<mpz_class, mpz_class> BinNat::pos_div_eucl(const mpz_class a,
   }
 }
 
-std::pair<mpz_class, mpz_class> BinNat::div_eucl(const mpz_class a,
-                                                 const mpz_class b) {
+__attribute__((pure)) std::pair<mpz_class, mpz_class>
+BinNat::div_eucl(const mpz_class a, const mpz_class b) {
   if (a == 0) {
     return std::make_pair(mpz_class(0), mpz_class(0));
   } else {
@@ -347,43 +353,54 @@ std::pair<mpz_class, mpz_class> BinNat::div_eucl(const mpz_class a,
   }
 }
 
-mpz_class NGMPTest::add_test(const mpz_class _x0, const mpz_class _x1) {
+__attribute__((pure)) mpz_class NGMPTest::add_test(const mpz_class _x0,
+                                                   const mpz_class _x1) {
   return (_x0 + _x1);
 }
 
-mpz_class NGMPTest::mul_test(const mpz_class _x0, const mpz_class _x1) {
+__attribute__((pure)) mpz_class NGMPTest::mul_test(const mpz_class _x0,
+                                                   const mpz_class _x1) {
   return (_x0 * _x1);
 }
 
-mpz_class NGMPTest::sub_test(const mpz_class _x0, const mpz_class _x1) {
+__attribute__((pure)) mpz_class NGMPTest::sub_test(const mpz_class _x0,
+                                                   const mpz_class _x1) {
   return (_x0 >= _x1 ? _x0 - _x1 : mpz_class(0));
 }
 
-mpz_class NGMPTest::div_test(const mpz_class _x0, const mpz_class _x1) {
+__attribute__((pure)) mpz_class NGMPTest::div_test(const mpz_class _x0,
+                                                   const mpz_class _x1) {
   return (_x1 == 0 ? mpz_class(0) : _x0 / _x1);
 }
 
-bool NGMPTest::eqb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 == _x1);
+__attribute__((pure)) bool NGMPTest::eqb_test(const mpz_class _x0,
+                                              const mpz_class _x1) {
+  return _x0 == _x1;
 }
 
-bool NGMPTest::ltb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 < _x1);
+__attribute__((pure)) bool NGMPTest::ltb_test(const mpz_class _x0,
+                                              const mpz_class _x1) {
+  return _x0 < _x1;
 }
 
-bool NGMPTest::leb_test(const mpz_class _x0, const mpz_class _x1) {
-  return (_x0 <= _x1);
+__attribute__((pure)) bool NGMPTest::leb_test(const mpz_class _x0,
+                                              const mpz_class _x1) {
+  return _x0 <= _x1;
 }
 
-mpz_class NGMPTest::succ_test(const mpz_class _x0) { return (_x0 + 1); }
+__attribute__((pure)) mpz_class NGMPTest::succ_test(const mpz_class _x0) {
+  return (_x0 + 1);
+}
 
-mpz_class NGMPTest::pred_test(const mpz_class _x0) {
+__attribute__((pure)) mpz_class NGMPTest::pred_test(const mpz_class _x0) {
   return (_x0 == 0 ? mpz_class(0) : _x0 - 1);
 }
 
-mpz_class NGMPTest::double_test(const mpz_class _x0) { return (_x0 * 2); }
+__attribute__((pure)) mpz_class NGMPTest::double_test(const mpz_class _x0) {
+  return (_x0 * 2);
+}
 
-bool NGMPTest::is_zero(const mpz_class n) {
+__attribute__((pure)) bool NGMPTest::is_zero(const mpz_class n) {
   if (n == 0) {
     return true;
   } else {
@@ -392,8 +409,11 @@ bool NGMPTest::is_zero(const mpz_class n) {
   }
 }
 
-mpz_class NGMPTest::pos_add(const mpz_class _x0, const mpz_class _x1) {
+__attribute__((pure)) mpz_class NGMPTest::pos_add(const mpz_class _x0,
+                                                  const mpz_class _x1) {
   return (_x0 + _x1);
 }
 
-mpz_class NGMPTest::pos_succ(const mpz_class _x0) { return (_x0 + 1); }
+__attribute__((pure)) mpz_class NGMPTest::pos_succ(const mpz_class _x0) {
+  return (_x0 + 1);
+}

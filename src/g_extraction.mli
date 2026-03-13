@@ -10,6 +10,8 @@
 (*         *     (see LICENSE file for the text of the license)         *)
 (************************************************************************)
 
-val wit_crane_int_or_id: Table.int_or_id Genarg.vernac_genarg_type
-val wit_crane_language: Table.lang Genarg.vernac_genarg_type
-val wit_cppname: string Genarg.vernac_genarg_type
+val wit_crane_int_or_id : Table.int_or_id Genarg.vernac_genarg_type
+
+val wit_crane_language : Table.lang Genarg.vernac_genarg_type
+
+val wit_cppname : string Genarg.vernac_genarg_type

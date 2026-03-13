@@ -1,3 +1,5 @@
+#include <port_write_nibble_mask.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,13 +7,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <port_write_nibble_mask.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int PortWriteNibbleMask::nibble_of_nat(const unsigned int n) {
+__attribute__((pure)) unsigned int
+PortWriteNibbleMask::nibble_of_nat(const unsigned int n) {
   return (n % 16u);
 }
 

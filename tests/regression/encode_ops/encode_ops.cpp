@@ -1,7 +1,8 @@
+#include <encode_ops.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <encode_ops.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,7 +12,7 @@
 #include <utility>
 #include <variant>
 
-std::pair<unsigned int, unsigned int>
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
 EncodeOps::encode1(const std::shared_ptr<EncodeOps::instruction1> &i) {
   return std::visit(
       Overloaded{[](const typename EncodeOps::instruction1::CLB _args)
@@ -28,20 +29,20 @@ EncodeOps::encode1(const std::shared_ptr<EncodeOps::instruction1> &i) {
                  },
                  [](const typename EncodeOps::instruction1::FIM _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int r = _args._a0;
-                   unsigned int d = _args._a1;
+                   unsigned int r = _args.d_a0;
+                   unsigned int d = _args.d_a1;
                    return std::make_pair(
                        (32u + (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))))),
                        (std::move(d) % 256u));
                  },
                  [](const typename EncodeOps::instruction1::JUN _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int a = _args._a0;
+                   unsigned int a = _args.d_a0;
                    return std::make_pair((64u + Nat::div(a, 256u)), (a % 256u));
                  },
                  [](const typename EncodeOps::instruction1::LDM1 _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return std::make_pair((208u + (std::move(n) % 16u)), 0u);
                  },
                  [](const typename EncodeOps::instruction1::NOP1 _args)
@@ -67,13 +68,14 @@ EncodeOps::encode1(const std::shared_ptr<EncodeOps::instruction1> &i) {
       i->v());
 }
 
-bool EncodeOps::pair_in_range(const std::pair<unsigned int, unsigned int> p) {
+__attribute__((pure)) bool
+EncodeOps::pair_in_range(const std::pair<unsigned int, unsigned int> p) {
   unsigned int b1 = p.first;
   unsigned int b2 = p.second;
-  return ((b1 < 256u) && (b2 < 256u));
+  return (b1 < 256u && b2 < 256u);
 }
 
-std::pair<unsigned int, unsigned int>
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
 EncodeOps::encode2(const std::shared_ptr<EncodeOps::instruction2> &i) {
   return std::visit(
       Overloaded{[](const typename EncodeOps::instruction2::NOP2 _args)
@@ -82,7 +84,7 @@ EncodeOps::encode2(const std::shared_ptr<EncodeOps::instruction2> &i) {
                  },
                  [](const typename EncodeOps::instruction2::LDM2 _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return std::make_pair(13u, (std::move(n) % 16u));
                  }},
       i->v());
@@ -93,25 +95,25 @@ std::shared_ptr<List<unsigned int>> EncodeOps::encode_list2(
         &prog) {
   return std::visit(
       Overloaded{
-          [](const typename List<std::shared_ptr<EncodeOps::instruction2>>::nil
+          [](const typename List<std::shared_ptr<EncodeOps::instruction2>>::Nil
                  _args) -> std::shared_ptr<List<unsigned int>> {
-            return List<unsigned int>::ctor::nil_();
+            return List<unsigned int>::ctor::Nil_();
           },
-          [](const typename List<std::shared_ptr<EncodeOps::instruction2>>::cons
+          [](const typename List<std::shared_ptr<EncodeOps::instruction2>>::Cons
                  _args) -> std::shared_ptr<List<unsigned int>> {
-            std::shared_ptr<EncodeOps::instruction2> i = _args._a0;
+            std::shared_ptr<EncodeOps::instruction2> i = _args.d_a0;
             std::shared_ptr<List<std::shared_ptr<EncodeOps::instruction2>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             unsigned int b1 = encode2(i).first;
             unsigned int b2 = encode2(i).second;
-            return List<unsigned int>::ctor::cons_(
-                std::move(b1), List<unsigned int>::ctor::cons_(
+            return List<unsigned int>::ctor::Cons_(
+                std::move(b1), List<unsigned int>::ctor::Cons_(
                                    std::move(b2), encode_list2(rest)));
           }},
       prog->v());
 }
 
-std::pair<unsigned int, unsigned int>
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
 EncodeOps::encode3(const std::shared_ptr<EncodeOps::instruction3> &i) {
   return std::visit(
       Overloaded{[](const typename EncodeOps::instruction3::NOP3 _args)
@@ -120,7 +122,7 @@ EncodeOps::encode3(const std::shared_ptr<EncodeOps::instruction3> &i) {
                  },
                  [](const typename EncodeOps::instruction3::LDM3 _args)
                      -> std::pair<unsigned int, unsigned int> {
-                   unsigned int n = _args._a0;
+                   unsigned int n = _args.d_a0;
                    return std::make_pair(((13u * 16u) + (std::move(n) % 16u)),
                                          0u);
                  }},
@@ -132,27 +134,26 @@ std::shared_ptr<List<unsigned int>> EncodeOps::encode_list3(
         &prog) {
   return std::visit(
       Overloaded{
-          [](const typename List<std::shared_ptr<EncodeOps::instruction3>>::nil
+          [](const typename List<std::shared_ptr<EncodeOps::instruction3>>::Nil
                  _args) -> std::shared_ptr<List<unsigned int>> {
-            return List<unsigned int>::ctor::nil_();
+            return List<unsigned int>::ctor::Nil_();
           },
-          [](const typename List<std::shared_ptr<EncodeOps::instruction3>>::cons
+          [](const typename List<std::shared_ptr<EncodeOps::instruction3>>::Cons
                  _args) -> std::shared_ptr<List<unsigned int>> {
-            std::shared_ptr<EncodeOps::instruction3> i = _args._a0;
+            std::shared_ptr<EncodeOps::instruction3> i = _args.d_a0;
             std::shared_ptr<List<std::shared_ptr<EncodeOps::instruction3>>>
-                rest = _args._a1;
+                rest = _args.d_a1;
             std::pair<unsigned int, unsigned int> p = encode3(std::move(i));
-            return List<unsigned int>::ctor::cons_(
-                p.first, List<unsigned int>::ctor::cons_(
+            return List<unsigned int>::ctor::Cons_(
+                p.first, List<unsigned int>::ctor::Cons_(
                              p.second, encode_list3(std::move(rest))));
           }},
       prog->v());
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -166,7 +167,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

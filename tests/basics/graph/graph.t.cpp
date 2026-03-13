@@ -16,31 +16,32 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
   // Test that the code compiles and basic functionality works
   ASSERT(test_int_eq == true);
 
   // Test that test_eq works with explicit type class instance
-  auto five_a = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
-  auto five_b = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
-  auto six = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))));
+  auto five_a = Nat::ctor::S_(Nat::ctor::S_(
+      Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
+  auto five_b = Nat::ctor::S_(Nat::ctor::S_(
+      Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_())))));
+  auto six = Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(
+      Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::S_(Nat::ctor::O_()))))));
 
   bool result = test_eq<NatEq, std::shared_ptr<Nat>>(five_a, five_b);
   ASSERT(result == true);

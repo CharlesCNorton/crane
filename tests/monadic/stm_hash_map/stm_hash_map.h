@@ -1,3 +1,6 @@
+#ifndef INCLUDED_STM_HASH_MAP
+#define INCLUDED_STM_HASH_MAP
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -21,40 +24,55 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
-public:
-  struct nil {};
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+template <typename t_A> struct List {
+  // TYPES
+  struct Nil {};
+
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
-  using variant_t = std::variant<nil, cons>;
+
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
-  variant_t v_;
-  explicit List(nil _v) : v_(std::move(_v)) {}
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  // DATA
+  variant_t d_v_;
+
+  // CREATORS
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
+
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
+  // TYPES
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
+
+  // MANIPULATORS
+  __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+  // ACCESSORS
+  __attribute__((pure)) const variant_t &v() const { return d_v_; }
 };
 
 struct STM {};
@@ -70,6 +88,8 @@ template <typename K, typename V> struct CHT {
   int64_t cht_nbuckets;
   std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>>
       cht_fallback;
+
+  __attribute__((pure))
   std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>>
   bucket_of(const K k) const {
     int64_t i = (this->CHT::cht_nbuckets == 0
@@ -77,14 +97,16 @@ template <typename K, typename V> struct CHT {
                      : this->CHT::cht_hash(k) % this->CHT::cht_nbuckets);
     return this->CHT::cht_buckets.at(i);
   }
-  std::optional<V> stm_get(const K k) const {
+
+  __attribute__((pure)) std::optional<V> stm_get(const K k) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List<std::pair<K, V>>> xs = b->read();
     return CHT<int, int>::template assoc_lookup<K, V>(this->CHT::cht_eqb, k,
                                                       xs);
   }
-  void stm_put(const K k, const V v) const {
+
+  __attribute__((pure)) void stm_put(const K k, const V v) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List<std::pair<K, V>>> xs = b->read();
@@ -94,7 +116,8 @@ template <typename K, typename V> struct CHT {
     b->write(xs_);
     return;
   }
-  std::optional<V> stm_delete(const K k) const {
+
+  __attribute__((pure)) std::optional<V> stm_delete(const K k) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List<std::pair<K, V>>> xs = b->read();
@@ -108,8 +131,9 @@ template <typename K, typename V> struct CHT {
       return p.first;
     }
   }
+
   template <MapsTo<V, std::optional<V>> F1>
-  V stm_update(const K k, F1 &&f) const {
+  __attribute__((pure)) V stm_update(const K k, F1 &&f) const {
     std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<K, V>>>>> b =
         this->bucket_of(k);
     std::shared_ptr<List<std::pair<K, V>>> xs = b->read();
@@ -122,7 +146,8 @@ template <typename K, typename V> struct CHT {
     b->write(xs_);
     return v;
   }
-  V stm_get_or(const K k, const V dflt) const {
+
+  __attribute__((pure)) V stm_get_or(const K k, const V dflt) const {
     std::optional<V> v = this->stm_get(k);
     if (v.has_value()) {
       V x = *v;
@@ -131,36 +156,42 @@ template <typename K, typename V> struct CHT {
       return dflt;
     }
   }
-  void put(const K k, const V v) const {
+
+  __attribute__((pure)) void put(const K k, const V v) const {
     return stm::atomically([&] { return this->stm_put(k, v); });
   }
-  std::optional<V> get(const K k) const {
+
+  __attribute__((pure)) std::optional<V> get(const K k) const {
     return stm::atomically([&] { return this->stm_get(k); });
   }
-  std::optional<V> hash_delete(const K k) const {
+
+  __attribute__((pure)) std::optional<V> hash_delete(const K k) const {
     return stm::atomically([&] { return this->stm_delete(k); });
   }
+
   template <MapsTo<V, std::optional<V>> F1>
-  V hash_update(const K k, F1 &&f) const {
+  __attribute__((pure)) V hash_update(const K k, F1 &&f) const {
     return stm::atomically([&] { return this->stm_update(k, f); });
   }
-  V get_or(const K k, const V dflt) const {
+
+  __attribute__((pure)) V get_or(const K k, const V dflt) const {
     return stm::atomically([&] { return this->stm_get_or(k, dflt); });
   }
+
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
-  static std::optional<T2>
+  __attribute__((pure)) static std::optional<T2>
   assoc_lookup(F0 &&eqb, const T1 k,
                const std::shared_ptr<List<std::pair<T1, T2>>> &xs) {
     return std::visit(
-        Overloaded{[](const typename List<std::pair<T1, T2>>::nil _args)
+        Overloaded{[](const typename List<std::pair<T1, T2>>::Nil _args)
                        -> std::optional<T2> { return std::nullopt; },
-                   [&](const typename List<std::pair<T1, T2>>::cons _args)
+                   [&](const typename List<std::pair<T1, T2>>::Cons _args)
                        -> std::optional<T2> {
-                     std::pair<T1, T2> p = _args._a0;
-                     std::shared_ptr<List<std::pair<T1, T2>>> tl = _args._a1;
+                     std::pair<T1, T2> p = _args.d_a0;
+                     std::shared_ptr<List<std::pair<T1, T2>>> tl = _args.d_a1;
                      T1 k_ = p.first;
                      T2 v = p.second;
-                     if (eqb(k, k_)) {
+                     if (eqb(k, std::move(k_))) {
                        return std::make_optional<T2>(std::move(v));
                      } else {
                        return CHT<int, int>::template assoc_lookup<T1, T2>(
@@ -176,22 +207,22 @@ template <typename K, typename V> struct CHT {
                           const std::shared_ptr<List<std::pair<T1, T2>>> &xs) {
     return std::visit(
         Overloaded{
-            [&](const typename List<std::pair<T1, T2>>::nil _args)
+            [&](const typename List<std::pair<T1, T2>>::Nil _args)
                 -> std::shared_ptr<List<std::pair<T1, T2>>> {
-              return List<std::pair<T1, T2>>::ctor::cons_(
-                  std::make_pair(k, v), List<std::pair<T1, T2>>::ctor::nil_());
+              return List<std::pair<T1, T2>>::ctor::Cons_(
+                  std::make_pair(k, v), List<std::pair<T1, T2>>::ctor::Nil_());
             },
-            [&](const typename List<std::pair<T1, T2>>::cons _args)
+            [&](const typename List<std::pair<T1, T2>>::Cons _args)
                 -> std::shared_ptr<List<std::pair<T1, T2>>> {
-              std::pair<T1, T2> p = _args._a0;
-              std::shared_ptr<List<std::pair<T1, T2>>> tl = _args._a1;
+              std::pair<T1, T2> p = _args.d_a0;
+              std::shared_ptr<List<std::pair<T1, T2>>> tl = _args.d_a1;
               T1 k_ = p.first;
               T2 v_ = p.second;
-              if (eqb(k, k_)) {
-                return List<std::pair<T1, T2>>::ctor::cons_(
+              if (eqb(k, std::move(k_))) {
+                return List<std::pair<T1, T2>>::ctor::Cons_(
                     std::make_pair(k, v), tl);
               } else {
-                return List<std::pair<T1, T2>>::ctor::cons_(
+                return List<std::pair<T1, T2>>::ctor::Cons_(
                     std::make_pair(std::move(k_), std::move(v_)),
                     CHT<int, int>::template assoc_insert_or_replace<T1, T2>(
                         eqb, k, v, tl));
@@ -201,42 +232,44 @@ template <typename K, typename V> struct CHT {
   }
 
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0>
-  static std::pair<std::optional<T2>, std::shared_ptr<List<std::pair<T1, T2>>>>
+  __attribute__((pure)) static std::pair<
+      std::optional<T2>, std::shared_ptr<List<std::pair<T1, T2>>>>
   assoc_remove(F0 &&eqb, const T1 k,
                std::shared_ptr<List<std::pair<T1, T2>>> xs) {
     return std::visit(
-        Overloaded{
-            [&](const typename List<std::pair<T1, T2>>::nil _args)
-                -> std::pair<std::optional<T2>,
-                             std::shared_ptr<List<std::pair<T1, T2>>>> {
-              return std::make_pair(std::nullopt, std::move(xs));
-            },
-            [&](const typename List<std::pair<T1, T2>>::cons _args)
-                -> std::pair<std::optional<T2>,
-                             std::shared_ptr<List<std::pair<T1, T2>>>> {
-              std::pair<T1, T2> p = _args._a0;
-              std::shared_ptr<List<std::pair<T1, T2>>> tl = _args._a1;
-              T1 k_ = p.first;
-              T2 v_ = p.second;
-              if (eqb(k, k_)) {
-                return std::make_pair(std::make_optional<T2>(std::move(v_)),
-                                      std::move(tl));
-              } else {
-                std::pair<std::optional<T2>,
-                          std::shared_ptr<List<std::pair<T1, T2>>>>
-                    q = CHT<int, int>::template assoc_remove<T1, T2>(
-                        eqb, k, std::move(tl));
-                return std::make_pair(
-                    q.first, List<std::pair<T1, T2>>::ctor::cons_(
-                                 std::make_pair(std::move(k_), std::move(v_)),
-                                 q.second));
-              }
-            }},
+        Overloaded{[&](const typename List<std::pair<T1, T2>>::Nil _args)
+                       -> std::pair<std::optional<T2>,
+                                    std::shared_ptr<List<std::pair<T1, T2>>>> {
+                     return std::make_pair(std::nullopt, std::move(xs));
+                   },
+                   [&](const typename List<std::pair<T1, T2>>::Cons _args)
+                       -> std::pair<std::optional<T2>,
+                                    std::shared_ptr<List<std::pair<T1, T2>>>> {
+                     std::pair<T1, T2> p = _args.d_a0;
+                     std::shared_ptr<List<std::pair<T1, T2>>> tl = _args.d_a1;
+                     T1 k_ = p.first;
+                     T2 v_ = p.second;
+                     if (eqb(k, std::move(k_))) {
+                       return std::make_pair(
+                           std::make_optional<T2>(std::move(v_)),
+                           std::move(tl));
+                     } else {
+                       std::pair<std::optional<T2>,
+                                 std::shared_ptr<List<std::pair<T1, T2>>>>
+                           q = CHT<int, int>::template assoc_remove<T1, T2>(
+                               eqb, k, std::move(tl));
+                       return std::make_pair(
+                           std::move(q).first,
+                           List<std::pair<T1, T2>>::ctor::Cons_(
+                               std::make_pair(std::move(k_), std::move(v_)),
+                               std::move(q).second));
+                     }
+                   }},
         xs->v());
   }
 
   template <typename T1, typename T2>
-  static std::vector<
+  __attribute__((pure)) static std::vector<
       std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<T1, T2>>>>>>
   mk_buckets(const int64_t num) {
     std::vector<
@@ -255,7 +288,7 @@ template <typename K, typename V> struct CHT {
         std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<T1, T2>>>>> b =
             stm::atomically([&] {
               return stm::newTVar<std::shared_ptr<List<std::pair<T1, T2>>>>(
-                  List<std::pair<T1, T2>>::ctor::nil_());
+                  List<std::pair<T1, T2>>::ctor::Nil_());
             });
         buckets.push_back(b);
         return f(n_);
@@ -266,8 +299,8 @@ template <typename K, typename V> struct CHT {
 
   template <typename T1, typename T2, MapsTo<bool, T1, T1> F0,
             MapsTo<int64_t, T1> F1>
-  static std::shared_ptr<CHT<T1, T2>> new_hash(F0 &&eqb, F1 &&hash,
-                                               const int64_t requested) {
+  __attribute__((pure)) static std::shared_ptr<CHT<T1, T2>>
+  new_hash(F0 &&eqb, F1 &&hash, const int64_t requested) {
     int64_t n = std::max(requested, int64_t(1));
     std::vector<
         std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<T1, T2>>>>>>
@@ -277,7 +310,7 @@ template <typename K, typename V> struct CHT {
       std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<T1, T2>>>>> fb =
           stm::atomically([&] {
             return stm::newTVar<std::shared_ptr<List<std::pair<T1, T2>>>>(
-                List<std::pair<T1, T2>>::ctor::nil_());
+                List<std::pair<T1, T2>>::ctor::Nil_());
           });
       std::vector<
           std::shared_ptr<stm::TVar<std::shared_ptr<List<std::pair<T1, T2>>>>>>
@@ -292,3 +325,5 @@ template <typename K, typename V> struct CHT {
     }
   }
 };
+
+#endif // INCLUDED_STM_HASH_MAP

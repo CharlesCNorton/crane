@@ -1,3 +1,6 @@
+#ifndef INCLUDED_IND_PARAM
+#define INCLUDED_IND_PARAM
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -31,40 +34,55 @@ struct IndParam {
     using wrapped = std::shared_ptr<typename C::t>;
 
     struct result {
-    public:
+      // TYPES
       struct Ok {
-        std::shared_ptr<typename C::t> _a0;
+        std::shared_ptr<typename C::t> d_a0;
       };
+
       struct Err {
-        unsigned int _a0;
+        unsigned int d_a0;
       };
+
       using variant_t = std::variant<Ok, Err>;
 
     private:
-      variant_t v_;
-      explicit result(Ok _v) : v_(std::move(_v)) {}
-      explicit result(Err _v) : v_(std::move(_v)) {}
+      // DATA
+      variant_t d_v_;
+
+      // CREATORS
+      explicit result(Ok _v) : d_v_(std::move(_v)) {}
+
+      explicit result(Err _v) : d_v_(std::move(_v)) {}
 
     public:
+      // TYPES
       struct ctor {
         ctor() = delete;
+
         static std::shared_ptr<result>
         Ok_(const std::shared_ptr<typename C::t> &a0) {
           return std::shared_ptr<result>(new result(Ok{a0}));
         }
+
         static std::shared_ptr<result> Err_(unsigned int a0) {
           return std::shared_ptr<result>(new result(Err{a0}));
         }
+
         static std::unique_ptr<result>
         Ok_uptr(const std::shared_ptr<typename C::t> &a0) {
           return std::unique_ptr<result>(new result(Ok{a0}));
         }
+
         static std::unique_ptr<result> Err_uptr(unsigned int a0) {
           return std::unique_ptr<result>(new result(Err{a0}));
         }
       };
-      const variant_t &v() const { return v_; }
-      variant_t &v_mut() { return v_; }
+
+      // MANIPULATORS
+      __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+      // ACCESSORS
+      __attribute__((pure)) const variant_t &v() const { return d_v_; }
     };
 
     template <typename T1, MapsTo<T1, std::shared_ptr<typename C::t>> F0,
@@ -72,11 +90,11 @@ struct IndParam {
     static T1 result_rect(F0 &&f, F1 &&f0, const std::shared_ptr<result> &r) {
       return std::visit(Overloaded{[&](const typename result::Ok _args) -> T1 {
                                      std::shared_ptr<typename C::t> t0 =
-                                         _args._a0;
+                                         _args.d_a0;
                                      return f(std::move(t0));
                                    },
                                    [&](const typename result::Err _args) -> T1 {
-                                     unsigned int n = _args._a0;
+                                     unsigned int n = _args.d_a0;
                                      return f0(std::move(n));
                                    }},
                         r->v());
@@ -87,11 +105,11 @@ struct IndParam {
     static T1 result_rec(F0 &&f, F1 &&f0, const std::shared_ptr<result> &r) {
       return std::visit(Overloaded{[&](const typename result::Ok _args) -> T1 {
                                      std::shared_ptr<typename C::t> t0 =
-                                         _args._a0;
+                                         _args.d_a0;
                                      return f(std::move(t0));
                                    },
                                    [&](const typename result::Err _args) -> T1 {
-                                     unsigned int n = _args._a0;
+                                     unsigned int n = _args.d_a0;
                                      return f0(std::move(n));
                                    }},
                         r->v());
@@ -106,10 +124,11 @@ struct IndParam {
       return result::ctor::Ok_(C::t::ctor::Pair_(e1, e2));
     }
 
-    static unsigned int get_size(const std::shared_ptr<result> &r) {
+    __attribute__((pure)) static unsigned int
+    get_size(const std::shared_ptr<result> &r) {
       return std::visit(
           Overloaded{[](const typename result::Ok _args) -> unsigned int {
-                       std::shared_ptr<typename C::t> c = _args._a0;
+                       std::shared_ptr<typename C::t> c = _args.d_a0;
                        return C::size(std::move(c));
                      },
                      [](const typename result::Err _args) -> unsigned int {
@@ -134,47 +153,66 @@ struct IndParam {
     using elem = unsigned int;
 
     struct t {
-    public:
+      // TYPES
       struct Empty {};
+
       struct Single {
-        elem _a0;
+        elem d_a0;
       };
+
       struct Pair {
-        elem _a0;
-        elem _a1;
+        elem d_a0;
+        elem d_a1;
       };
+
       using variant_t = std::variant<Empty, Single, Pair>;
 
     private:
-      variant_t v_;
-      explicit t(Empty _v) : v_(std::move(_v)) {}
-      explicit t(Single _v) : v_(std::move(_v)) {}
-      explicit t(Pair _v) : v_(std::move(_v)) {}
+      // DATA
+      variant_t d_v_;
+
+      // CREATORS
+      explicit t(Empty _v) : d_v_(std::move(_v)) {}
+
+      explicit t(Single _v) : d_v_(std::move(_v)) {}
+
+      explicit t(Pair _v) : d_v_(std::move(_v)) {}
 
     public:
+      // TYPES
       struct ctor {
         ctor() = delete;
+
         static std::shared_ptr<t> Empty_() {
           return std::shared_ptr<t>(new t(Empty{}));
         }
+
         static std::shared_ptr<t> Single_(elem a0) {
           return std::shared_ptr<t>(new t(Single{a0}));
         }
+
         static std::shared_ptr<t> Pair_(elem a0, elem a1) {
           return std::shared_ptr<t>(new t(Pair{a0, a1}));
         }
+
         static std::unique_ptr<t> Empty_uptr() {
           return std::unique_ptr<t>(new t(Empty{}));
         }
+
         static std::unique_ptr<t> Single_uptr(elem a0) {
           return std::unique_ptr<t>(new t(Single{a0}));
         }
+
         static std::unique_ptr<t> Pair_uptr(elem a0, elem a1) {
           return std::unique_ptr<t>(new t(Pair{a0, a1}));
         }
       };
-      const variant_t &v() const { return v_; }
-      variant_t &v_mut() { return v_; }
+
+      // MANIPULATORS
+      __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+      // ACCESSORS
+      __attribute__((pure)) const variant_t &v() const { return d_v_; }
     };
 
     template <typename T1, MapsTo<T1, unsigned int> F1,
@@ -184,12 +222,12 @@ struct IndParam {
       return std::visit(
           Overloaded{[&](const typename t::Empty _args) -> T1 { return f; },
                      [&](const typename t::Single _args) -> T1 {
-                       unsigned int e = _args._a0;
+                       unsigned int e = _args.d_a0;
                        return f0(std::move(e));
                      },
                      [&](const typename t::Pair _args) -> T1 {
-                       unsigned int e = _args._a0;
-                       unsigned int e0 = _args._a1;
+                       unsigned int e = _args.d_a0;
+                       unsigned int e0 = _args.d_a1;
                        return f1(std::move(e), std::move(e0));
                      }},
           t0->v());
@@ -202,34 +240,31 @@ struct IndParam {
       return std::visit(
           Overloaded{[&](const typename t::Empty _args) -> T1 { return f; },
                      [&](const typename t::Single _args) -> T1 {
-                       unsigned int e = _args._a0;
+                       unsigned int e = _args.d_a0;
                        return f0(std::move(e));
                      },
                      [&](const typename t::Pair _args) -> T1 {
-                       unsigned int e = _args._a0;
-                       unsigned int e0 = _args._a1;
+                       unsigned int e = _args.d_a0;
+                       unsigned int e0 = _args.d_a1;
                        return f1(std::move(e), std::move(e0));
                      }},
           t0->v());
     }
 
-    static unsigned int size(const std::shared_ptr<t> &c);
+    __attribute__((pure)) static unsigned int size(const std::shared_ptr<t> &c);
   };
 
   using NatWrapper = Wrapper<NatContainer>;
-
   static inline const std::shared_ptr<NatWrapper::result> test_single =
       NatWrapper::make_single(42u);
-
   static inline const std::shared_ptr<NatWrapper::result> test_pair =
       NatWrapper::make_pair(1u, 2u);
-
   static inline const unsigned int test_size_single =
       NatWrapper::get_size(test_single);
-
   static inline const unsigned int test_size_pair =
       NatWrapper::get_size(test_pair);
-
   static inline const unsigned int test_error =
       NatWrapper::get_size(NatWrapper::error_result());
 };
+
+#endif // INCLUDED_IND_PARAM

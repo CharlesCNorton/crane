@@ -40,9 +40,9 @@ Crane Extract Inlined Constant Nat.pred => "(%a0 ? %a0 - 1 : %a0)".
 Crane Extract Inlined Constant Nat.sub => "(((%a0 - %a1) > %a0 ? 0 : (%a0 - %a1)))".
 Crane Extract Inlined Constant Nat.max => "bsl::max(%a0, %a1)" From "bsl_algorithm.h".
 Crane Extract Inlined Constant Nat.min => "bsl::min(%a0, %a1)" From "bsl_algorithm.h".
-Crane Extract Inlined Constant Nat.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant Nat.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant Nat.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant Nat.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant Nat.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant Nat.leb => "%a0 <= %a1".
 
 
 From Corelib Require Import PrimInt63.

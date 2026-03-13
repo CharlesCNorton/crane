@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <even_length_byte_validation.h>
 
-int main()
-{
-    (void)EvenLengthByteValidation::t;
-    return 0;
+int main() {
+  (void)EvenLengthByteValidation::t;
+  return 0;
 }

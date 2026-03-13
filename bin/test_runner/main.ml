@@ -2,36 +2,59 @@ open Types
 
 let get_cpu_count () =
   try
-    if Sys.os_type = "Unix" then
-      let ic = Unix.open_process_in "sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4" in
+    if Sys.os_type = "Unix" then (
+      let ic =
+        Unix.open_process_in
+          "sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4"
+      in
       let line = input_line ic in
       ignore (Unix.close_process_in ic);
-      int_of_string (String.trim line)
-    else 4
+      int_of_string (String.trim line) )
+    else
+      4
   with _ -> 4
 
 let parse_args () =
   let jobs = ref (get_cpu_count ()) in
   let verbose = ref false in
-  let specs = [
-    ("-j", Arg.Set_int jobs, "N Number of parallel jobs (default: CPU count)");
-    ("--jobs", Arg.Set_int jobs, "N Number of parallel jobs (default: CPU count)");
-    ("-v", Arg.Set verbose, " Verbose output (show error details)");
-    ("--verbose", Arg.Set verbose, " Verbose output (show error details)");
-  ] in
+  let folder = ref None in
+  let specs =
+    [
+      ("-j", Arg.Set_int jobs, "N Number of parallel jobs (default: CPU count)");
+      ( "--jobs",
+        Arg.Set_int jobs,
+        "N Number of parallel jobs (default: CPU count)" );
+      ("-v", Arg.Set verbose, " Verbose output (show error details)");
+      ("--verbose", Arg.Set verbose, " Verbose output (show error details)");
+      ( "--folder",
+        Arg.String (fun f -> folder := Some f),
+        " Run tests only from specified folder (basics, monadic, wip, \
+         regression)" );
+    ]
+  in
   let usage = "Usage: crane-test-runner [options]" in
   Arg.parse specs (fun _ -> ()) usage;
   let project_root = Sys.getcwd () in
-  { jobs = !jobs; verbose = !verbose; project_root }
+  {jobs = !jobs; verbose = !verbose; project_root; folder = !folder}
 
 let main () =
   let config = parse_args () in
-  let tests = Discovery.find_all_tests config.project_root in
+  let all_tests = Discovery.find_all_tests config.project_root in
 
-  if tests = [] then begin
-    Printf.eprintf "No tests found\n";
-    exit 0
-  end;
+  let tests =
+    match config.folder with
+    | None -> all_tests
+    | Some folder -> List.filter (fun t -> t.category = folder) all_tests
+  in
+
+  ( if tests = [] then
+      match
+        config.folder
+      with
+      | None -> Printf.eprintf "No tests found\n"
+      | Some folder ->
+        Printf.eprintf "No tests found in folder '%s'\n" folder;
+        exit 0 );
 
   Output.print_header ();
 

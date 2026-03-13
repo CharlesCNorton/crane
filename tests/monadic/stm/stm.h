@@ -1,3 +1,6 @@
+#ifndef INCLUDED_STM
+#define INCLUDED_STM
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,51 +21,67 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
-public:
-  struct nil {};
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+template <typename t_A> struct List {
+  // TYPES
+  struct Nil {};
+
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
-  using variant_t = std::variant<nil, cons>;
+
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
-  variant_t v_;
-  explicit List(nil _v) : v_(std::move(_v)) {}
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  // DATA
+  variant_t d_v_;
+
+  // CREATORS
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
+
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
+  // TYPES
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
-  std::shared_ptr<List<A>> app(std::shared_ptr<List<A>> m) const {
-    return std::visit(Overloaded{[&](const typename List<A>::nil _args)
-                                     -> std::shared_ptr<List<A>> { return m; },
-                                 [&](const typename List<A>::cons _args)
-                                     -> std::shared_ptr<List<A>> {
-                                   A a = _args._a0;
-                                   std::shared_ptr<List<A>> l1 = _args._a1;
-                                   return List<A>::ctor::cons_(
-                                       a, std::move(l1)->app(m));
-                                 }},
-                      this->v());
+
+  // MANIPULATORS
+  __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+  // ACCESSORS
+  __attribute__((pure)) const variant_t &v() const { return d_v_; }
+
+  std::shared_ptr<List<t_A>> app(std::shared_ptr<List<t_A>> m) const {
+    return std::visit(
+        Overloaded{[&](const typename List<t_A>::Nil _args)
+                       -> std::shared_ptr<List<t_A>> { return m; },
+                   [&](const typename List<t_A>::Cons _args)
+                       -> std::shared_ptr<List<t_A>> {
+                     t_A a = _args.d_a0;
+                     std::shared_ptr<List<t_A>> l1 = _args.d_a1;
+                     return List<t_A>::ctor::Cons_(a, std::move(l1)->app(m));
+                   }},
+        this->v());
   }
 };
 
@@ -71,7 +90,8 @@ struct STM {};
 struct TVar {};
 
 template <typename T1, MapsTo<T1, T1> F1>
-void modifyTVar(const std::shared_ptr<stm::TVar<T1>> a, F1 &&f) {
+__attribute__((pure)) void modifyTVar(const std::shared_ptr<stm::TVar<T1>> a,
+                                      F1 &&f) {
   T1 val = a->read();
   a->write(f(val));
   return;
@@ -79,7 +99,8 @@ void modifyTVar(const std::shared_ptr<stm::TVar<T1>> a, F1 &&f) {
 
 struct stmtest {
   template <typename T1, MapsTo<bool, T1> F1>
-  static T1 readOrRetry(const std::shared_ptr<stm::TVar<T1>> tv, F1 &&ok) {
+  __attribute__((pure)) static T1
+  readOrRetry(const std::shared_ptr<stm::TVar<T1>> tv, F1 &&ok) {
     T1 x = tv->read();
     if (ok(x)) {
       return x;
@@ -88,34 +109,26 @@ struct stmtest {
     }
   }
 
-  static unsigned int stm_basic_counter();
-
-  static unsigned int io_basic_counter();
-
-  static unsigned int stm_inc(const unsigned int x);
-
-  static unsigned int io_inc(const unsigned int x);
-
-  static unsigned int stm_add_self(const unsigned int x);
-
-  static unsigned int io_add_self(const unsigned int x);
-
-  static void stm_enqueue(
+  __attribute__((pure)) static unsigned int stm_basic_counter();
+  __attribute__((pure)) static unsigned int io_basic_counter();
+  __attribute__((pure)) static unsigned int stm_inc(const unsigned int x);
+  __attribute__((pure)) static unsigned int io_inc(const unsigned int x);
+  __attribute__((pure)) static unsigned int stm_add_self(const unsigned int x);
+  __attribute__((pure)) static unsigned int io_add_self(const unsigned int x);
+  __attribute__((pure)) static void stm_enqueue(
       const std::shared_ptr<stm::TVar<std::shared_ptr<List<unsigned int>>>> q,
       const unsigned int x);
-
-  static unsigned int stm_dequeue(
+  __attribute__((pure)) static unsigned int stm_dequeue(
       const std::shared_ptr<stm::TVar<std::shared_ptr<List<unsigned int>>>> q);
-
-  static unsigned int stm_tryDequeue(
+  __attribute__((pure)) static unsigned int stm_tryDequeue(
       const std::shared_ptr<stm::TVar<std::shared_ptr<List<unsigned int>>>> q,
       const unsigned int dflt);
-
-  static unsigned int stm_queue_roundtrip(const unsigned int x);
-
-  static unsigned int io_queue_roundtrip(const unsigned int x);
-
-  static unsigned int stm_orElse_retry_example();
-
-  static unsigned int io_orElse_retry_example();
+  __attribute__((pure)) static unsigned int
+  stm_queue_roundtrip(const unsigned int x);
+  __attribute__((pure)) static unsigned int
+  io_queue_roundtrip(const unsigned int x);
+  __attribute__((pure)) static unsigned int stm_orElse_retry_example();
+  __attribute__((pure)) static unsigned int io_orElse_retry_example();
 };
+
+#endif // INCLUDED_STM

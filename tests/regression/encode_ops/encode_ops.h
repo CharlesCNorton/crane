@@ -1,3 +1,6 @@
+#ifndef INCLUDED_ENCODE_OPS
+#define INCLUDED_ENCODE_OPS
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,47 +21,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
-public:
-  struct nil {};
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+template <typename t_A> struct List {
+  // TYPES
+  struct Nil {};
+
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
-  using variant_t = std::variant<nil, cons>;
+
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
-  variant_t v_;
-  explicit List(nil _v) : v_(std::move(_v)) {}
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  // DATA
+  variant_t d_v_;
+
+  // CREATORS
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
+
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
+  // TYPES
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
-  unsigned int length() const {
+
+  // MANIPULATORS
+  __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+  // ACCESSORS
+  __attribute__((pure)) const variant_t &v() const { return d_v_; }
+
+  __attribute__((pure)) unsigned int length() const {
     return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+        Overloaded{[](const typename List<t_A>::Nil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename List<A>::cons _args) -> unsigned int {
-                     std::shared_ptr<List<A>> l_ = _args._a1;
+                   [](const typename List<t_A>::Cons _args) -> unsigned int {
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
                      return (std::move(l_)->length() + 1);
                    }},
         this->v());
@@ -66,126 +85,176 @@ public:
 };
 
 struct Nat {
-  static std::pair<unsigned int, unsigned int> divmod(const unsigned int x,
-                                                      const unsigned int y,
-                                                      const unsigned int q,
-                                                      const unsigned int u);
-
-  static unsigned int div(const unsigned int x, const unsigned int y);
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
+  divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+         const unsigned int u);
+  __attribute__((pure)) static unsigned int div(const unsigned int x,
+                                                const unsigned int y);
 };
 
 struct EncodeOps {
   struct instruction1 {
-  public:
+    // TYPES
     struct CLB {};
+
     struct CMC {};
+
     struct DAA {};
+
     struct FIM {
-      unsigned int _a0;
-      unsigned int _a1;
+      unsigned int d_a0;
+      unsigned int d_a1;
     };
+
     struct JUN {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     struct LDM1 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     struct NOP1 {};
+
     struct RDM {};
+
     struct TCS {};
+
     struct WPM {};
+
     struct WR0 {};
+
     using variant_t =
         std::variant<CLB, CMC, DAA, FIM, JUN, LDM1, NOP1, RDM, TCS, WPM, WR0>;
 
   private:
-    variant_t v_;
-    explicit instruction1(CLB _v) : v_(std::move(_v)) {}
-    explicit instruction1(CMC _v) : v_(std::move(_v)) {}
-    explicit instruction1(DAA _v) : v_(std::move(_v)) {}
-    explicit instruction1(FIM _v) : v_(std::move(_v)) {}
-    explicit instruction1(JUN _v) : v_(std::move(_v)) {}
-    explicit instruction1(LDM1 _v) : v_(std::move(_v)) {}
-    explicit instruction1(NOP1 _v) : v_(std::move(_v)) {}
-    explicit instruction1(RDM _v) : v_(std::move(_v)) {}
-    explicit instruction1(TCS _v) : v_(std::move(_v)) {}
-    explicit instruction1(WPM _v) : v_(std::move(_v)) {}
-    explicit instruction1(WR0 _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit instruction1(CLB _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(CMC _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(DAA _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(FIM _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(JUN _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(LDM1 _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(NOP1 _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(RDM _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(TCS _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(WPM _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction1(WR0 _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction1> CLB_() {
         return std::shared_ptr<instruction1>(new instruction1(CLB{}));
       }
+
       static std::shared_ptr<instruction1> CMC_() {
         return std::shared_ptr<instruction1>(new instruction1(CMC{}));
       }
+
       static std::shared_ptr<instruction1> DAA_() {
         return std::shared_ptr<instruction1>(new instruction1(DAA{}));
       }
+
       static std::shared_ptr<instruction1> FIM_(unsigned int a0,
                                                 unsigned int a1) {
         return std::shared_ptr<instruction1>(new instruction1(FIM{a0, a1}));
       }
+
       static std::shared_ptr<instruction1> JUN_(unsigned int a0) {
         return std::shared_ptr<instruction1>(new instruction1(JUN{a0}));
       }
+
       static std::shared_ptr<instruction1> LDM1_(unsigned int a0) {
         return std::shared_ptr<instruction1>(new instruction1(LDM1{a0}));
       }
+
       static std::shared_ptr<instruction1> NOP1_() {
         return std::shared_ptr<instruction1>(new instruction1(NOP1{}));
       }
+
       static std::shared_ptr<instruction1> RDM_() {
         return std::shared_ptr<instruction1>(new instruction1(RDM{}));
       }
+
       static std::shared_ptr<instruction1> TCS_() {
         return std::shared_ptr<instruction1>(new instruction1(TCS{}));
       }
+
       static std::shared_ptr<instruction1> WPM_() {
         return std::shared_ptr<instruction1>(new instruction1(WPM{}));
       }
+
       static std::shared_ptr<instruction1> WR0_() {
         return std::shared_ptr<instruction1>(new instruction1(WR0{}));
       }
+
       static std::unique_ptr<instruction1> CLB_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(CLB{}));
       }
+
       static std::unique_ptr<instruction1> CMC_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(CMC{}));
       }
+
       static std::unique_ptr<instruction1> DAA_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(DAA{}));
       }
+
       static std::unique_ptr<instruction1> FIM_uptr(unsigned int a0,
                                                     unsigned int a1) {
         return std::unique_ptr<instruction1>(new instruction1(FIM{a0, a1}));
       }
+
       static std::unique_ptr<instruction1> JUN_uptr(unsigned int a0) {
         return std::unique_ptr<instruction1>(new instruction1(JUN{a0}));
       }
+
       static std::unique_ptr<instruction1> LDM1_uptr(unsigned int a0) {
         return std::unique_ptr<instruction1>(new instruction1(LDM1{a0}));
       }
+
       static std::unique_ptr<instruction1> NOP1_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(NOP1{}));
       }
+
       static std::unique_ptr<instruction1> RDM_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(RDM{}));
       }
+
       static std::unique_ptr<instruction1> TCS_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(TCS{}));
       }
+
       static std::unique_ptr<instruction1> WPM_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(WPM{}));
       }
+
       static std::unique_ptr<instruction1> WR0_uptr() {
         return std::unique_ptr<instruction1>(new instruction1(WR0{}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int, unsigned int> F3,
@@ -200,16 +269,16 @@ struct EncodeOps {
             [&](const typename instruction1::CMC _args) -> T1 { return f0; },
             [&](const typename instruction1::DAA _args) -> T1 { return f1; },
             [&](const typename instruction1::FIM _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
               return f2(std::move(n), std::move(n0));
             },
             [&](const typename instruction1::JUN _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f3(std::move(n));
             },
             [&](const typename instruction1::LDM1 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f4(std::move(n));
             },
             [&](const typename instruction1::NOP1 _args) -> T1 { return f5; },
@@ -232,16 +301,16 @@ struct EncodeOps {
             [&](const typename instruction1::CMC _args) -> T1 { return f0; },
             [&](const typename instruction1::DAA _args) -> T1 { return f1; },
             [&](const typename instruction1::FIM _args) -> T1 {
-              unsigned int n = _args._a0;
-              unsigned int n0 = _args._a1;
+              unsigned int n = _args.d_a0;
+              unsigned int n0 = _args.d_a1;
               return f2(std::move(n), std::move(n0));
             },
             [&](const typename instruction1::JUN _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f3(std::move(n));
             },
             [&](const typename instruction1::LDM1 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f4(std::move(n));
             },
             [&](const typename instruction1::NOP1 _args) -> T1 { return f5; },
@@ -252,11 +321,10 @@ struct EncodeOps {
         i->v());
   }
 
-  static std::pair<unsigned int, unsigned int>
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
   encode1(const std::shared_ptr<instruction1> &i);
-
-  static bool pair_in_range(const std::pair<unsigned int, unsigned int> p);
-
+  __attribute__((pure)) static bool
+  pair_in_range(const std::pair<unsigned int, unsigned int> p);
   static inline const bool test_encode_bytes_in_range =
       ((((((((((pair_in_range(encode1(instruction1::ctor::CLB_())) &&
                 pair_in_range(encode1(instruction1::ctor::CMC_()))) &&
@@ -271,36 +339,51 @@ struct EncodeOps {
        pair_in_range(encode1(instruction1::ctor::WR0_())));
 
   struct instruction2 {
-  public:
+    // TYPES
     struct NOP2 {};
+
     struct LDM2 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     using variant_t = std::variant<NOP2, LDM2>;
 
   private:
-    variant_t v_;
-    explicit instruction2(NOP2 _v) : v_(std::move(_v)) {}
-    explicit instruction2(LDM2 _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit instruction2(NOP2 _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction2(LDM2 _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction2> NOP2_() {
         return std::shared_ptr<instruction2>(new instruction2(NOP2{}));
       }
+
       static std::shared_ptr<instruction2> LDM2_(unsigned int a0) {
         return std::shared_ptr<instruction2>(new instruction2(LDM2{a0}));
       }
+
       static std::unique_ptr<instruction2> NOP2_uptr() {
         return std::unique_ptr<instruction2>(new instruction2(NOP2{}));
       }
+
       static std::unique_ptr<instruction2> LDM2_uptr(unsigned int a0) {
         return std::unique_ptr<instruction2>(new instruction2(LDM2{a0}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F1>
@@ -310,7 +393,7 @@ struct EncodeOps {
         Overloaded{
             [&](const typename instruction2::NOP2 _args) -> T1 { return f; },
             [&](const typename instruction2::LDM2 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -323,60 +406,73 @@ struct EncodeOps {
         Overloaded{
             [&](const typename instruction2::NOP2 _args) -> T1 { return f; },
             [&](const typename instruction2::LDM2 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
   }
 
-  static std::pair<unsigned int, unsigned int>
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
   encode2(const std::shared_ptr<instruction2> &i);
-
   static std::shared_ptr<List<unsigned int>> encode_list2(
       const std::shared_ptr<List<std::shared_ptr<instruction2>>> &prog);
-
   static inline const unsigned int test_encode_list_byte_count =
       encode_list2(
-          List<std::shared_ptr<instruction2>>::ctor::cons_(
+          List<std::shared_ptr<instruction2>>::ctor::Cons_(
               instruction2::ctor::NOP2_(),
-              List<std::shared_ptr<instruction2>>::ctor::cons_(
+              List<std::shared_ptr<instruction2>>::ctor::Cons_(
                   instruction2::ctor::LDM2_(5u),
-                  List<std::shared_ptr<instruction2>>::ctor::cons_(
+                  List<std::shared_ptr<instruction2>>::ctor::Cons_(
                       instruction2::ctor::NOP2_(),
-                      List<std::shared_ptr<instruction2>>::ctor::nil_()))))
+                      List<std::shared_ptr<instruction2>>::ctor::Nil_()))))
           ->length();
 
   struct instruction3 {
-  public:
+    // TYPES
     struct NOP3 {};
+
     struct LDM3 {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     using variant_t = std::variant<NOP3, LDM3>;
 
   private:
-    variant_t v_;
-    explicit instruction3(NOP3 _v) : v_(std::move(_v)) {}
-    explicit instruction3(LDM3 _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit instruction3(NOP3 _v) : d_v_(std::move(_v)) {}
+
+    explicit instruction3(LDM3 _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<instruction3> NOP3_() {
         return std::shared_ptr<instruction3>(new instruction3(NOP3{}));
       }
+
       static std::shared_ptr<instruction3> LDM3_(unsigned int a0) {
         return std::shared_ptr<instruction3>(new instruction3(LDM3{a0}));
       }
+
       static std::unique_ptr<instruction3> NOP3_uptr() {
         return std::unique_ptr<instruction3>(new instruction3(NOP3{}));
       }
+
       static std::unique_ptr<instruction3> LDM3_uptr(unsigned int a0) {
         return std::unique_ptr<instruction3>(new instruction3(LDM3{a0}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F1>
@@ -386,7 +482,7 @@ struct EncodeOps {
         Overloaded{
             [&](const typename instruction3::NOP3 _args) -> T1 { return f; },
             [&](const typename instruction3::LDM3 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
@@ -399,31 +495,30 @@ struct EncodeOps {
         Overloaded{
             [&](const typename instruction3::NOP3 _args) -> T1 { return f; },
             [&](const typename instruction3::LDM3 _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f0(std::move(n));
             }},
         i->v());
   }
 
-  static std::pair<unsigned int, unsigned int>
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
   encode3(const std::shared_ptr<instruction3> &i);
-
   static std::shared_ptr<List<unsigned int>> encode_list3(
       const std::shared_ptr<List<std::shared_ptr<instruction3>>> &prog);
-
   static inline const unsigned int test_instruction_byte_stream_encode =
       encode_list3(
-          List<std::shared_ptr<instruction3>>::ctor::cons_(
+          List<std::shared_ptr<instruction3>>::ctor::Cons_(
               instruction3::ctor::NOP3_(),
-              List<std::shared_ptr<instruction3>>::ctor::cons_(
+              List<std::shared_ptr<instruction3>>::ctor::Cons_(
                   instruction3::ctor::LDM3_(3u),
-                  List<std::shared_ptr<instruction3>>::ctor::cons_(
+                  List<std::shared_ptr<instruction3>>::ctor::Cons_(
                       instruction3::ctor::LDM3_(12u),
-                      List<std::shared_ptr<instruction3>>::ctor::nil_()))))
+                      List<std::shared_ptr<instruction3>>::ctor::Nil_()))))
           ->length();
-
   static inline const std::pair<std::pair<bool, unsigned int>, unsigned int> t =
       std::make_pair(std::make_pair(test_encode_bytes_in_range,
                                     test_encode_list_byte_count),
                      test_instruction_byte_stream_encode);
 };
+
+#endif // INCLUDED_ENCODE_OPS

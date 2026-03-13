@@ -1,3 +1,5 @@
+#include <unit_type.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -7,21 +9,24 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <unit_type.h>
 #include <variant>
 
-unit UnitType::return_unit(const unsigned int _x) { return unit::tt; }
+__attribute__((pure)) Unit UnitType::return_unit(const unsigned int _x) {
+  return Unit::e_TT;
+}
 
-unsigned int UnitType::take_unit(const unit _x) { return 5u; }
+__attribute__((pure)) unsigned int UnitType::take_unit(const Unit _x) {
+  return 5u;
+}
 
-unsigned int UnitType::match_unit(const unit u) {
+__attribute__((pure)) unsigned int UnitType::match_unit(const Unit u) {
   return [&](void) {
     switch (u) {
-    case unit::tt: {
+    case Unit::e_TT: {
       return 7u;
     }
     }
   }();
 }
 
-unit UnitType::unit_to_unit(const unit u) { return u; }
+__attribute__((pure)) Unit UnitType::unit_to_unit(const Unit u) { return u; }

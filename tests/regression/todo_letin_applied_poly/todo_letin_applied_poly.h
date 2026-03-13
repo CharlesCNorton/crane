@@ -1,3 +1,6 @@
+#ifndef INCLUDED_TODO_LETIN_APPLIED_POLY
+#define INCLUDED_TODO_LETIN_APPLIED_POLY
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -19,9 +22,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct TodoLetinAppliedPoly {
   static inline const unsigned int demo_nat = 7u;
-
   static inline const bool demo_bool = true;
-
   static inline const unsigned int test_value = [](void) {
     if (demo_bool) {
       return demo_nat;
@@ -30,3 +31,5 @@ struct TodoLetinAppliedPoly {
     }
   }();
 };
+
+#endif // INCLUDED_TODO_LETIN_APPLIED_POLY

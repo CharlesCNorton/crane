@@ -1,3 +1,5 @@
+#include <src_wrr_updates_rom_port.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,19 +7,18 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <src_wrr_updates_rom_port.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int SrcWrrUpdatesRomPort::get_reg(
+__attribute__((pure)) unsigned int SrcWrrUpdatesRomPort::get_reg(
     const std::shared_ptr<SrcWrrUpdatesRomPort::state> &s,
     const unsigned int r) {
   return s->regs->nth(r, 0u);
 }
 
-unsigned int SrcWrrUpdatesRomPort::get_reg_pair(
+__attribute__((pure)) unsigned int SrcWrrUpdatesRomPort::get_reg_pair(
     const std::shared_ptr<SrcWrrUpdatesRomPort::state> &s,
     const unsigned int r) {
   unsigned int base = (((r - (r % 2u)) > r ? 0 : (r - (r % 2u))));
@@ -38,10 +39,9 @@ std::shared_ptr<SrcWrrUpdatesRomPort::state> SrcWrrUpdatesRomPort::execute_wrr(
       update_nth<unsigned int>(s->sel_rom, s->acc, s->rom_ports), s->sel_rom});
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -55,7 +55,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

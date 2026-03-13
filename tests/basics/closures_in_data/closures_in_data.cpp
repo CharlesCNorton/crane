@@ -1,7 +1,8 @@
+#include <closures_in_data.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <closures_in_data.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,24 +12,30 @@
 #include <utility>
 #include <variant>
 
+/// apply_all fns x applies every function in fns to x,
+/// returning the list of results.
 std::shared_ptr<List<unsigned int>> ClosuresInData::apply_all(
     const std::shared_ptr<List<std::function<unsigned int(unsigned int)>>> &fns,
     const unsigned int x) {
   return fns->template map<unsigned int>(
-      [&](std::function<unsigned int(unsigned int)> f) { return f(x); });
+      [=](std::function<unsigned int(unsigned int)> f) mutable {
+        return f(x);
+      });
 }
 
-unsigned int ClosuresInData::apply_forward(
+__attribute__((pure)) unsigned int ClosuresInData::apply_forward(
     const std::shared_ptr<ClosuresInData::transform> &t, const unsigned int x) {
   return t->forward(x);
 }
 
-unsigned int ClosuresInData::apply_backward(
+__attribute__((pure)) unsigned int ClosuresInData::apply_backward(
     const std::shared_ptr<ClosuresInData::transform> &t, const unsigned int x) {
   return t->backward(x);
 }
 
-unsigned int ClosuresInData::compose_all(
+/// compose_all fns x folds fns left, threading x through each
+/// function in sequence.
+__attribute__((pure)) unsigned int ClosuresInData::compose_all(
     const std::shared_ptr<List<std::function<unsigned int(unsigned int)>>> &fns,
     const unsigned int x) {
   return fns->template fold_left<unsigned int>(
@@ -38,7 +45,9 @@ unsigned int ClosuresInData::compose_all(
       x);
 }
 
-unsigned int ClosuresInData::maybe_apply(
+/// maybe_apply mf x applies function mf to x if present,
+/// otherwise returns x unchanged.
+__attribute__((pure)) unsigned int ClosuresInData::maybe_apply(
     const std::optional<std::function<unsigned int(unsigned int)>> mf,
     const unsigned int x) {
   if (mf.has_value()) {
@@ -49,10 +58,9 @@ unsigned int ClosuresInData::maybe_apply(
   }
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -66,7 +74,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

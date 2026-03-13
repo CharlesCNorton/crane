@@ -1,3 +1,6 @@
+#ifndef INCLUDED_KBP_MULTIBIT_DEFAULT
+#define INCLUDED_KBP_MULTIBIT_DEFAULT
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -23,9 +26,10 @@ struct KbpMultibitDefault {
   };
 
   static std::shared_ptr<state> execute_kbp(const std::shared_ptr<state> &s);
-
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{3u});
 
-  static inline const bool t = (execute_kbp(sample)->acc == 15u);
+  static inline const bool t = execute_kbp(sample)->acc == 15u;
 };
+
+#endif // INCLUDED_KBP_MULTIBIT_DEFAULT

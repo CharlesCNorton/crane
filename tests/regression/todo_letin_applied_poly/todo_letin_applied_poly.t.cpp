@@ -4,8 +4,7 @@
 
 #include "todo_letin_applied_poly.h"
 
-int main()
-{
-    assert(TodoLetinAppliedPoly::test_value == 7u);
-    return 0;
+int main() {
+  assert(TodoLetinAppliedPoly::test_value == 7u);
+  return 0;
 }

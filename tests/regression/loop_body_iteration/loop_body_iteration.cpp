@@ -1,9 +1,10 @@
+#include <loop_body_iteration.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <loop_body_iteration.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -11,7 +12,7 @@
 #include <utility>
 #include <variant>
 
-unsigned int LoopBodyIteration::get_reg0(
+__attribute__((pure)) unsigned int LoopBodyIteration::get_reg0(
     const std::shared_ptr<LoopBodyIteration::state> &s) {
   return s->regs_->nth(0u, 0u);
 }

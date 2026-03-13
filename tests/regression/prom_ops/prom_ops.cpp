@@ -1,3 +1,5 @@
+#include <prom_ops.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,39 +7,39 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <prom_ops.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-bool PromOps::nat_list_eqb(const std::shared_ptr<List<unsigned int>> &xs,
-                           const std::shared_ptr<List<unsigned int>> &ys) {
+__attribute__((pure)) bool
+PromOps::nat_list_eqb(const std::shared_ptr<List<unsigned int>> &xs,
+                      const std::shared_ptr<List<unsigned int>> &ys) {
   return std::visit(
       Overloaded{
-          [&](const typename List<unsigned int>::nil _args) -> bool {
+          [&](const typename List<unsigned int>::Nil _args) -> bool {
             return std::visit(
                 Overloaded{
-                    [](const typename List<unsigned int>::nil _args) -> bool {
+                    [](const typename List<unsigned int>::Nil _args) -> bool {
                       return true;
                     },
-                    [](const typename List<unsigned int>::cons _args) -> bool {
+                    [](const typename List<unsigned int>::Cons _args) -> bool {
                       return false;
                     }},
                 ys->v());
           },
-          [&](const typename List<unsigned int>::cons _args) -> bool {
-            unsigned int x = _args._a0;
-            std::shared_ptr<List<unsigned int>> xs_ = _args._a1;
+          [&](const typename List<unsigned int>::Cons _args) -> bool {
+            unsigned int x = _args.d_a0;
+            std::shared_ptr<List<unsigned int>> xs_ = _args.d_a1;
             return std::visit(
                 Overloaded{
-                    [](const typename List<unsigned int>::nil _args) -> bool {
+                    [](const typename List<unsigned int>::Nil _args) -> bool {
                       return false;
                     },
-                    [&](const typename List<unsigned int>::cons _args) -> bool {
-                      unsigned int y = _args._a0;
-                      std::shared_ptr<List<unsigned int>> ys_ = _args._a1;
-                      return ((std::move(x) == std::move(y)) &&
+                    [&](const typename List<unsigned int>::Cons _args) -> bool {
+                      unsigned int y = _args.d_a0;
+                      std::shared_ptr<List<unsigned int>> ys_ = _args.d_a1;
+                      return (std::move(x) == std::move(y) &&
                               nat_list_eqb(std::move(xs_), std::move(ys_)));
                     }},
                 ys->v());
@@ -45,7 +47,7 @@ bool PromOps::nat_list_eqb(const std::shared_ptr<List<unsigned int>> &xs,
       xs->v());
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 PromOps::prom_data_or_zero(const std::shared_ptr<PromOps::state1> &s) {
   if (s->prom_enable1) {
     return s->prom_data1;
@@ -54,7 +56,8 @@ PromOps::prom_data_or_zero(const std::shared_ptr<PromOps::state1> &s) {
   }
 }
 
-unsigned int PromOps::flagged_sum(const std::shared_ptr<PromOps::state2> &s) {
+__attribute__((pure)) unsigned int
+PromOps::flagged_sum(const std::shared_ptr<PromOps::state2> &s) {
   return ((s->acc2 + s->prom_addr2) + [&](void) {
     if (s->prom_enable2) {
       return s->prom_data2;
@@ -153,7 +156,7 @@ PromOps::execute_wpm11(std::shared_ptr<PromOps::state11> s) {
   }
 }
 
-bool Bool::eqb(const bool b1, const bool b2) {
+__attribute__((pure)) bool Bool::eqb(const bool b1, const bool b2) {
   if (b1) {
     if (b2) {
       return true;

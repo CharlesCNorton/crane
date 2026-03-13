@@ -1,3 +1,5 @@
+#include <well_founded_rec.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -9,9 +11,9 @@
 #include <string>
 #include <utility>
 #include <variant>
-#include <well_founded_rec.h>
 
-unsigned int PeanoNat::sub(const unsigned int n, const unsigned int m) {
+__attribute__((pure)) unsigned int PeanoNat::sub(const unsigned int n,
+                                                 const unsigned int m) {
   if (n <= 0) {
     return std::move(n);
   } else {
@@ -25,10 +27,9 @@ unsigned int PeanoNat::sub(const unsigned int n, const unsigned int m) {
   }
 }
 
-std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
-                                                       const unsigned int y,
-                                                       const unsigned int q,
-                                                       const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+PeanoNat::divmod(const unsigned int x, const unsigned int y,
+                 const unsigned int q, const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -42,7 +43,8 @@ std::pair<unsigned int, unsigned int> PeanoNat::divmod(const unsigned int x,
   }
 }
 
-unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int PeanoNat::modulo(const unsigned int x,
+                                                    const unsigned int y) {
   if (y <= 0) {
     return std::move(x);
   } else {
@@ -54,11 +56,11 @@ unsigned int PeanoNat::modulo(const unsigned int x, const unsigned int y) {
 std::shared_ptr<List<unsigned int>>
 WellFoundedRec::countdown_acc(const unsigned int n) {
   if (n <= 0) {
-    return List<unsigned int>::ctor::cons_(0u,
-                                           List<unsigned int>::ctor::nil_());
+    return List<unsigned int>::ctor::Cons_(0u,
+                                           List<unsigned int>::ctor::Nil_());
   } else {
     unsigned int m = n - 1;
-    return List<unsigned int>::ctor::cons_(n, countdown_acc(std::move(m)));
+    return List<unsigned int>::ctor::Cons_(n, countdown_acc(std::move(m)));
   }
 }
 
@@ -67,7 +69,8 @@ WellFoundedRec::countdown(const unsigned int _x0) {
   return countdown_acc(_x0);
 }
 
-unsigned int WellFoundedRec::div2_wf(const unsigned int x) {
+__attribute__((pure)) unsigned int
+WellFoundedRec::div2_wf(const unsigned int x) {
   if (x <= 0) {
     return 0u;
   } else {
@@ -81,8 +84,8 @@ unsigned int WellFoundedRec::div2_wf(const unsigned int x) {
   }
 }
 
-unsigned int WellFoundedRec::gcd_wf(const unsigned int x,
-                                    const unsigned int b) {
+__attribute__((pure)) unsigned int
+WellFoundedRec::gcd_wf(const unsigned int x, const unsigned int b) {
   if (x <= 0) {
     return std::move(b);
   } else {

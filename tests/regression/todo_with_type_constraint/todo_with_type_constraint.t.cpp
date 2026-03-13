@@ -4,8 +4,7 @@
 
 #include "todo_with_type_constraint.h"
 
-int main()
-{
-    assert(TodoWithTypeConstraint::test_twice == 2u);
-    return 0;
+int main() {
+  assert(TodoWithTypeConstraint::test_twice == 2u);
+  return 0;
 }

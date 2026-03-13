@@ -1,3 +1,6 @@
+#ifndef INCLUDED_MUTUAL_FUNCTOR
+#define INCLUDED_MUTUAL_FUNCTOR
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -32,90 +35,122 @@ concept Elem = requires {
 template <Elem E> struct MutualTree {
   struct tree;
   struct forest;
+
   struct tree {
-  public:
+    // TYPES
     struct Leaf {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     struct Node {
-      unsigned int _a0;
-      std::shared_ptr<forest> _a1;
+      unsigned int d_a0;
+      std::shared_ptr<forest> d_a1;
     };
+
     using variant_t = std::variant<Leaf, Node>;
 
   private:
-    variant_t v_;
-    explicit tree(Leaf _v) : v_(std::move(_v)) {}
-    explicit tree(Node _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit tree(Leaf _v) : d_v_(std::move(_v)) {}
+
+    explicit tree(Node _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<tree> Leaf_(unsigned int a0) {
         return std::shared_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::shared_ptr<tree> Node_(unsigned int a0,
                                          const std::shared_ptr<forest> &a1) {
         return std::shared_ptr<tree>(new tree(Node{a0, a1}));
       }
+
       static std::unique_ptr<tree> Leaf_uptr(unsigned int a0) {
         return std::unique_ptr<tree>(new tree(Leaf{a0}));
       }
+
       static std::unique_ptr<tree>
       Node_uptr(unsigned int a0, const std::shared_ptr<forest> &a1) {
         return std::unique_ptr<tree>(new tree(Node{a0, a1}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
+
   struct forest {
-  public:
+    // TYPES
     struct FNil {};
+
     struct FCons {
-      std::shared_ptr<tree> _a0;
-      std::shared_ptr<forest> _a1;
+      std::shared_ptr<tree> d_a0;
+      std::shared_ptr<forest> d_a1;
     };
+
     using variant_t = std::variant<FNil, FCons>;
 
   private:
-    variant_t v_;
-    explicit forest(FNil _v) : v_(std::move(_v)) {}
-    explicit forest(FCons _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit forest(FNil _v) : d_v_(std::move(_v)) {}
+
+    explicit forest(FCons _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<forest> FNil_() {
         return std::shared_ptr<forest>(new forest(FNil{}));
       }
+
       static std::shared_ptr<forest> FCons_(const std::shared_ptr<tree> &a0,
                                             const std::shared_ptr<forest> &a1) {
         return std::shared_ptr<forest>(new forest(FCons{a0, a1}));
       }
+
       static std::unique_ptr<forest> FNil_uptr() {
         return std::unique_ptr<forest>(new forest(FNil{}));
       }
+
       static std::unique_ptr<forest>
       FCons_uptr(const std::shared_ptr<tree> &a0,
                  const std::shared_ptr<forest> &a1) {
         return std::unique_ptr<forest>(new forest(FCons{a0, a1}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0,
             MapsTo<T1, unsigned int, std::shared_ptr<forest>> F1>
   static T1 tree_rect(F0 &&f, F1 &&f0, const std::shared_ptr<tree> &t0) {
     return std::visit(Overloaded{[&](const typename tree::Leaf _args) -> T1 {
-                                   unsigned int n = _args._a0;
+                                   unsigned int n = _args.d_a0;
                                    return f(std::move(n));
                                  },
                                  [&](const typename tree::Node _args) -> T1 {
-                                   unsigned int n = _args._a0;
-                                   std::shared_ptr<forest> f1 = _args._a1;
+                                   unsigned int n = _args.d_a0;
+                                   std::shared_ptr<forest> f1 = _args.d_a1;
                                    return f0(std::move(n), std::move(f1));
                                  }},
                       t0->v());
@@ -125,12 +160,12 @@ template <Elem E> struct MutualTree {
             MapsTo<T1, unsigned int, std::shared_ptr<forest>> F1>
   static T1 tree_rec(F0 &&f, F1 &&f0, const std::shared_ptr<tree> &t0) {
     return std::visit(Overloaded{[&](const typename tree::Leaf _args) -> T1 {
-                                   unsigned int n = _args._a0;
+                                   unsigned int n = _args.d_a0;
                                    return f(std::move(n));
                                  },
                                  [&](const typename tree::Node _args) -> T1 {
-                                   unsigned int n = _args._a0;
-                                   std::shared_ptr<forest> f1 = _args._a1;
+                                   unsigned int n = _args.d_a0;
+                                   std::shared_ptr<forest> f1 = _args.d_a1;
                                    return f0(std::move(n), std::move(f1));
                                  }},
                       t0->v());
@@ -143,8 +178,8 @@ template <Elem E> struct MutualTree {
     return std::visit(
         Overloaded{[&](const typename forest::FNil _args) -> T1 { return f; },
                    [&](const typename forest::FCons _args) -> T1 {
-                     std::shared_ptr<tree> t0 = _args._a0;
-                     std::shared_ptr<forest> f2 = _args._a1;
+                     std::shared_ptr<tree> t0 = _args.d_a0;
+                     std::shared_ptr<forest> f2 = _args.d_a1;
                      return f0(std::move(t0), f2, forest_rect<T1>(f, f0, f2));
                    }},
         f1->v());
@@ -156,58 +191,64 @@ template <Elem E> struct MutualTree {
     return std::visit(
         Overloaded{[&](const typename forest::FNil _args) -> T1 { return f; },
                    [&](const typename forest::FCons _args) -> T1 {
-                     std::shared_ptr<tree> t0 = _args._a0;
-                     std::shared_ptr<forest> f2 = _args._a1;
+                     std::shared_ptr<tree> t0 = _args.d_a0;
+                     std::shared_ptr<forest> f2 = _args.d_a1;
                      return f0(std::move(t0), f2, forest_rec<T1>(f, f0, f2));
                    }},
         f1->v());
   }
 
-  static unsigned int tree_size(const std::shared_ptr<tree> &t0) {
+  __attribute__((pure)) static unsigned int
+  tree_size(const std::shared_ptr<tree> &t0) {
     return std::visit(
         Overloaded{
             [](const typename tree::Leaf _args) -> unsigned int { return 1u; },
             [](const typename tree::Node _args) -> unsigned int {
-              std::shared_ptr<forest> f = _args._a1;
+              std::shared_ptr<forest> f = _args.d_a1;
               return (1u + forest_size(std::move(f)));
             }},
         t0->v());
   }
-  static unsigned int forest_size(const std::shared_ptr<forest> &f) {
+
+  __attribute__((pure)) static unsigned int
+  forest_size(const std::shared_ptr<forest> &f) {
     return std::visit(
         Overloaded{[](const typename forest::FNil _args) -> unsigned int {
                      return 0u;
                    },
                    [](const typename forest::FCons _args) -> unsigned int {
-                     std::shared_ptr<tree> t0 = _args._a0;
-                     std::shared_ptr<forest> rest = _args._a1;
+                     std::shared_ptr<tree> t0 = _args.d_a0;
+                     std::shared_ptr<forest> rest = _args.d_a1;
                      return (tree_size(std::move(t0)) +
                              forest_size(std::move(rest)));
                    }},
         f->v());
   }
 
-  static unsigned int tree_sum(const std::shared_ptr<tree> &t0) {
+  __attribute__((pure)) static unsigned int
+  tree_sum(const std::shared_ptr<tree> &t0) {
     return std::visit(
         Overloaded{[](const typename tree::Leaf _args) -> unsigned int {
-                     unsigned int n = _args._a0;
+                     unsigned int n = _args.d_a0;
                      return std::move(n);
                    },
                    [](const typename tree::Node _args) -> unsigned int {
-                     unsigned int n = _args._a0;
-                     std::shared_ptr<forest> f = _args._a1;
+                     unsigned int n = _args.d_a0;
+                     std::shared_ptr<forest> f = _args.d_a1;
                      return (std::move(n) + forest_sum(std::move(f)));
                    }},
         t0->v());
   }
-  static unsigned int forest_sum(const std::shared_ptr<forest> &f) {
+
+  __attribute__((pure)) static unsigned int
+  forest_sum(const std::shared_ptr<forest> &f) {
     return std::visit(
         Overloaded{[](const typename forest::FNil _args) -> unsigned int {
                      return 0u;
                    },
                    [](const typename forest::FCons _args) -> unsigned int {
-                     std::shared_ptr<tree> t0 = _args._a0;
-                     std::shared_ptr<forest> rest = _args._a1;
+                     std::shared_ptr<tree> t0 = _args.d_a0;
+                     std::shared_ptr<forest> rest = _args.d_a1;
                      return (tree_sum(std::move(t0)) +
                              forest_sum(std::move(rest)));
                    }},
@@ -239,16 +280,14 @@ template <Elem E> struct MutualTree {
 
 struct NatElem {
   using t = unsigned int;
-
   static inline const unsigned int dflt = 0u;
 };
+
 static_assert(Elem<NatElem>);
-
 using NatTree = MutualTree<NatElem>;
-
 const unsigned int test_tree_size = NatTree::tree_size(NatTree::sample_tree());
-
 const unsigned int test_forest_size =
     NatTree::forest_size(NatTree::small_forest());
-
 const unsigned int test_tree_sum = NatTree::tree_sum(NatTree::sample_tree());
+
+#endif // INCLUDED_MUTUAL_FUNCTOR

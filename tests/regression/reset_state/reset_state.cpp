@@ -1,3 +1,5 @@
+#include <reset_state.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,7 +7,6 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <reset_state.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -14,7 +15,7 @@
 std::shared_ptr<ResetState::state_full>
 ResetState::reset_state_full(std::shared_ptr<ResetState::state_full> s) {
   return std::make_shared<ResetState::state_full>(
-      state_full{0u, s->regs_full, false, 0u, List<unsigned int>::ctor::nil_(),
+      state_full{0u, s->regs_full, false, 0u, List<unsigned int>::ctor::Nil_(),
                  s->ram_sys, s->rom});
 }
 

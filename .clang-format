@@ -1,0 +1,4 @@
+---
+Language: Cpp
+BasedOnStyle:  LLVM
+SeparateDefinitionBlocks: Leave

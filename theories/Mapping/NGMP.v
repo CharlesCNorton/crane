@@ -32,9 +32,9 @@ Crane Extract Inlined Constant Pos.sub => "(%a0 - %a1)".
 Crane Extract Inlined Constant Pos.mul => "(%a0 * %a1)".
 Crane Extract Inlined Constant Pos.succ => "(%a0 + 1)".
 Crane Extract Inlined Constant Pos.pred => "(%a0 - 1)".
-Crane Extract Inlined Constant Pos.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant Pos.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant Pos.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant Pos.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant Pos.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant Pos.leb => "%a0 <= %a1".
 Crane Extract Inlined Constant Pos.min => "(%a0 <= %a1 ? %a0 : %a1)".
 Crane Extract Inlined Constant Pos.max => "(%a0 >= %a1 ? %a0 : %a1)".
 
@@ -46,9 +46,9 @@ Crane Extract Inlined Constant N.div => "(%a1 == 0 ? mpz_class(0) : %a0 / %a1)".
 Crane Extract Inlined Constant N.modulo => "(%a1 == 0 ? mpz_class(0) : %a0 % %a1)".
 Crane Extract Inlined Constant N.succ => "(%a0 + 1)".
 Crane Extract Inlined Constant N.pred => "(%a0 == 0 ? mpz_class(0) : %a0 - 1)".
-Crane Extract Inlined Constant N.eqb => "(%a0 == %a1)".
-Crane Extract Inlined Constant N.ltb => "(%a0 < %a1)".
-Crane Extract Inlined Constant N.leb => "(%a0 <= %a1)".
+Crane Extract Inlined Constant N.eqb => "%a0 == %a1".
+Crane Extract Inlined Constant N.ltb => "%a0 < %a1".
+Crane Extract Inlined Constant N.leb => "%a0 <= %a1".
 Crane Extract Inlined Constant N.min => "(%a0 <= %a1 ? %a0 : %a1)".
 Crane Extract Inlined Constant N.max => "(%a0 >= %a1 ? %a0 : %a1)".
 Crane Extract Inlined Constant N.double => "(%a0 * 2)".

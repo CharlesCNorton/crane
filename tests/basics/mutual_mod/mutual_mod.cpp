@@ -1,16 +1,17 @@
+#include <mutual_mod.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <mutual_mod.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-unsigned int
+__attribute__((pure)) unsigned int
 EvenOdd::even_length(const std::shared_ptr<EvenOdd::even_list> &e) {
   return std::visit(
       Overloaded{
@@ -18,16 +19,18 @@ EvenOdd::even_length(const std::shared_ptr<EvenOdd::even_list> &e) {
             return 0u;
           },
           [](const typename EvenOdd::even_list::ECons _args) -> unsigned int {
-            std::shared_ptr<EvenOdd::odd_list> o = _args._a1;
+            std::shared_ptr<EvenOdd::odd_list> o = _args.d_a1;
             return (odd_length(std::move(o)) + 1);
           }},
       e->v());
 }
-unsigned int EvenOdd::odd_length(const std::shared_ptr<EvenOdd::odd_list> &o) {
+
+__attribute__((pure)) unsigned int
+EvenOdd::odd_length(const std::shared_ptr<EvenOdd::odd_list> &o) {
   return std::visit(
       Overloaded{
           [](const typename EvenOdd::odd_list::OCons _args) -> unsigned int {
-            std::shared_ptr<EvenOdd::even_list> e = _args._a1;
+            std::shared_ptr<EvenOdd::even_list> e = _args.d_a1;
             return (even_length(std::move(e)) + 1);
           }},
       o->v());

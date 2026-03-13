@@ -1,3 +1,5 @@
+#include <partial_apply.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,7 +7,6 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <partial_apply.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -33,8 +34,8 @@ std::shared_ptr<List<std::function<
 PartialApply::prepend_each(const std::shared_ptr<List<unsigned int>> &l) {
   return l->template map<std::function<std::shared_ptr<List<unsigned int>>(
       std::shared_ptr<List<unsigned int>>)>>([](unsigned int x) {
-    return [=](std::shared_ptr<List<unsigned int>> x0) {
-      return List<unsigned int>::ctor::cons_(x, x0);
+    return [=](std::shared_ptr<List<unsigned int>> x0) mutable {
+      return List<unsigned int>::ctor::Cons_(x, x0);
     };
   });
 }
@@ -43,7 +44,7 @@ std::shared_ptr<List<std::shared_ptr<PartialApply::tagged<bool>>>>
 PartialApply::tag_with(const unsigned int n,
                        const std::shared_ptr<List<bool>> &l) {
   return l->template map<std::shared_ptr<PartialApply::tagged<bool>>>(
-      [&](bool x) { return tagged<bool>::ctor::Tag_(n, x); });
+      [=](bool x) mutable { return tagged<bool>::ctor::Tag_(n, x); });
 }
 
 std::shared_ptr<
@@ -54,11 +55,11 @@ PartialApply::double_tag(const std::shared_ptr<List<unsigned int>> &l) {
       [](unsigned int x) { return std::make_pair(x, std::make_pair(x, x)); });
 }
 
-unsigned int
+__attribute__((pure)) unsigned int
 PartialApply::sum_with_init(const unsigned int init,
                             const std::shared_ptr<List<unsigned int>> &l) {
   return l->template fold_left<unsigned int>(
-      [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
+      [](unsigned int _x0, unsigned int _x1) -> unsigned int {
         return (_x0 + _x1);
       },
       init);

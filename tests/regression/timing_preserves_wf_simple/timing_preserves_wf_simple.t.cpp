@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <timing_preserves_wf_simple.h>
 
-int main()
-{
-    (void)TimingPreservesWfSimple::t;
-    return 0;
+int main() {
+  (void)TimingPreservesWfSimple::t;
+  return 0;
 }

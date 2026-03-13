@@ -1,3 +1,6 @@
+#ifndef INCLUDED_STACK_OPS
+#define INCLUDED_STACK_OPS
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -18,47 +21,63 @@ template <class... Ts> struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-template <typename A> struct List {
-public:
-  struct nil {};
-  struct cons {
-    A _a0;
-    std::shared_ptr<List<A>> _a1;
+template <typename t_A> struct List {
+  // TYPES
+  struct Nil {};
+
+  struct Cons {
+    t_A d_a0;
+    std::shared_ptr<List<t_A>> d_a1;
   };
-  using variant_t = std::variant<nil, cons>;
+
+  using variant_t = std::variant<Nil, Cons>;
 
 private:
-  variant_t v_;
-  explicit List(nil _v) : v_(std::move(_v)) {}
-  explicit List(cons _v) : v_(std::move(_v)) {}
+  // DATA
+  variant_t d_v_;
+
+  // CREATORS
+  explicit List(Nil _v) : d_v_(std::move(_v)) {}
+
+  explicit List(Cons _v) : d_v_(std::move(_v)) {}
 
 public:
+  // TYPES
   struct ctor {
     ctor() = delete;
-    static std::shared_ptr<List<A>> nil_() {
-      return std::shared_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::shared_ptr<List<t_A>> Nil_() {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::shared_ptr<List<A>> cons_(A a0,
-                                          const std::shared_ptr<List<A>> &a1) {
-      return std::shared_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::shared_ptr<List<t_A>>
+    Cons_(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::shared_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
-    static std::unique_ptr<List<A>> nil_uptr() {
-      return std::unique_ptr<List<A>>(new List<A>(nil{}));
+
+    static std::unique_ptr<List<t_A>> Nil_uptr() {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Nil{}));
     }
-    static std::unique_ptr<List<A>>
-    cons_uptr(A a0, const std::shared_ptr<List<A>> &a1) {
-      return std::unique_ptr<List<A>>(new List<A>(cons{a0, a1}));
+
+    static std::unique_ptr<List<t_A>>
+    Cons_uptr(t_A a0, const std::shared_ptr<List<t_A>> &a1) {
+      return std::unique_ptr<List<t_A>>(new List<t_A>(Cons{a0, a1}));
     }
   };
-  const variant_t &v() const { return v_; }
-  variant_t &v_mut() { return v_; }
-  unsigned int length() const {
+
+  // MANIPULATORS
+  __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+  // ACCESSORS
+  __attribute__((pure)) const variant_t &v() const { return d_v_; }
+
+  __attribute__((pure)) unsigned int length() const {
     return std::visit(
-        Overloaded{[](const typename List<A>::nil _args) -> unsigned int {
+        Overloaded{[](const typename List<t_A>::Nil _args) -> unsigned int {
                      return 0u;
                    },
-                   [](const typename List<A>::cons _args) -> unsigned int {
-                     std::shared_ptr<List<A>> l_ = _args._a1;
+                   [](const typename List<t_A>::Cons _args) -> unsigned int {
+                     std::shared_ptr<List<t_A>> l_ = _args.d_a1;
                      return (std::move(l_)->length() + 1);
                    }},
         this->v());
@@ -75,41 +94,39 @@ struct StackOps {
     unsigned int acc;
   };
 
-  static std::pair<std::optional<unsigned int>, std::shared_ptr<state_basic>>
+  __attribute__((pure)) static std::pair<std::optional<unsigned int>,
+                                         std::shared_ptr<state_basic>>
   pop_stack(std::shared_ptr<state_basic> s);
-
-  static bool is_none(const std::optional<unsigned int> o);
-
-  static unsigned int option_or_zero(const std::optional<unsigned int> o);
-
+  __attribute__((pure)) static bool
+  is_none(const std::optional<unsigned int> o);
+  __attribute__((pure)) static unsigned int
+  option_or_zero(const std::optional<unsigned int> o);
   static inline const bool empty_is_none =
       is_none(pop_stack(std::make_shared<state_basic>(
-                            state_basic{List<unsigned int>::ctor::nil_()}))
+                            state_basic{List<unsigned int>::ctor::Nil_()}))
                   .first);
-
   static inline const unsigned int some_addr = option_or_zero(
       pop_stack(std::make_shared<state_basic>(
-                    state_basic{List<unsigned int>::ctor::cons_(
-                        9u, List<unsigned int>::ctor::cons_(
-                                8u, List<unsigned int>::ctor::nil_()))}))
+                    state_basic{List<unsigned int>::ctor::Cons_(
+                        9u, List<unsigned int>::ctor::Cons_(
+                                8u, List<unsigned int>::ctor::Nil_()))}))
           .first);
-
-  static std::pair<std::optional<unsigned int>, std::shared_ptr<state_with_acc>>
+  __attribute__((pure)) static std::pair<std::optional<unsigned int>,
+                                         std::shared_ptr<state_with_acc>>
   pop_stack_acc(std::shared_ptr<state_with_acc> s);
-
   static inline const unsigned int pop_acc_test = [](void) {
     std::optional<unsigned int> o =
         pop_stack_acc(std::make_shared<state_with_acc>(state_with_acc{
-                          List<unsigned int>::ctor::cons_(
-                              9u, List<unsigned int>::ctor::cons_(
-                                      8u, List<unsigned int>::ctor::nil_())),
+                          List<unsigned int>::ctor::Cons_(
+                              9u, List<unsigned int>::ctor::Cons_(
+                                      8u, List<unsigned int>::ctor::Nil_())),
                           3u}))
             .first;
     std::shared_ptr<state_with_acc> s_ =
         pop_stack_acc(std::make_shared<state_with_acc>(state_with_acc{
-                          List<unsigned int>::ctor::cons_(
-                              9u, List<unsigned int>::ctor::cons_(
-                                      8u, List<unsigned int>::ctor::nil_())),
+                          List<unsigned int>::ctor::Cons_(
+                              9u, List<unsigned int>::ctor::Cons_(
+                                      8u, List<unsigned int>::ctor::Nil_())),
                           3u}))
             .second;
     if (o.has_value()) {
@@ -119,52 +136,45 @@ struct StackOps {
       return std::move(s_)->acc;
     }
   }();
-
   static std::shared_ptr<state_basic>
   push_stack(const std::shared_ptr<state_basic> &s, const unsigned int addr);
-
-  static unsigned int top_or_zero(const std::shared_ptr<state_basic> &s);
-
+  __attribute__((pure)) static unsigned int
+  top_or_zero(const std::shared_ptr<state_basic> &s);
   static inline const unsigned int empty_len =
       push_stack(std::make_shared<state_basic>(
-                     state_basic{List<unsigned int>::ctor::nil_()}),
+                     state_basic{List<unsigned int>::ctor::Nil_()}),
                  12u)
           ->stack_basic->length();
-
   static inline const unsigned int overflow_head = top_or_zero(push_stack(
-      std::make_shared<state_basic>(state_basic{List<unsigned int>::ctor::cons_(
-          1u, List<unsigned int>::ctor::cons_(
-                  2u, List<unsigned int>::ctor::cons_(
-                          3u, List<unsigned int>::ctor::nil_())))}),
+      std::make_shared<state_basic>(state_basic{List<unsigned int>::ctor::Cons_(
+          1u, List<unsigned int>::ctor::Cons_(
+                  2u, List<unsigned int>::ctor::Cons_(
+                          3u, List<unsigned int>::ctor::Nil_())))}),
       9u));
-
   static inline const unsigned int overflow_len =
       push_stack(
           std::make_shared<state_basic>(
-              state_basic{List<unsigned int>::ctor::cons_(
-                  1u, List<unsigned int>::ctor::cons_(
-                          2u, List<unsigned int>::ctor::cons_(
-                                  3u, List<unsigned int>::ctor::nil_())))}),
+              state_basic{List<unsigned int>::ctor::Cons_(
+                  1u, List<unsigned int>::ctor::Cons_(
+                          2u, List<unsigned int>::ctor::Cons_(
+                                  3u, List<unsigned int>::ctor::Nil_())))}),
           9u)
           ->stack_basic->length();
-
   static std::shared_ptr<state_basic>
   push_stack_cap(const std::shared_ptr<state_basic> &s,
                  const unsigned int addr);
-
   static inline const unsigned int push_cap_test =
       push_stack_cap(
           std::make_shared<state_basic>(
-              state_basic{List<unsigned int>::ctor::cons_(
+              state_basic{List<unsigned int>::ctor::Cons_(
                   10u,
-                  List<unsigned int>::ctor::cons_(
+                  List<unsigned int>::ctor::Cons_(
                       20u,
-                      List<unsigned int>::ctor::cons_(
-                          30u, List<unsigned int>::ctor::cons_(
-                                   40u, List<unsigned int>::ctor::nil_()))))}),
+                      List<unsigned int>::ctor::Cons_(
+                          30u, List<unsigned int>::ctor::Cons_(
+                                   40u, List<unsigned int>::ctor::Nil_()))))}),
           7u)
           ->stack_basic->length();
-
   static inline const std::pair<
       std::pair<std::pair<std::pair<unsigned int, bool>, unsigned int>,
                 std::pair<std::pair<unsigned int, unsigned int>, unsigned int>>,
@@ -177,3 +187,5 @@ struct StackOps {
                              overflow_len)),
           push_cap_test);
 };
+
+#endif // INCLUDED_STACK_OPS

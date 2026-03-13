@@ -1,149 +1,152 @@
+#include <large_enum.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <large_enum.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-unsigned int LargeEnum::color_to_nat(const LargeEnum::color c) {
+__attribute__((pure)) unsigned int
+LargeEnum::color_to_nat(const LargeEnum::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return 0u;
     }
-    case color::Orange: {
+    case Color::e_ORANGE: {
       return 1u;
     }
-    case color::Yellow: {
+    case Color::e_YELLOW: {
       return 2u;
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return 3u;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return 4u;
     }
-    case color::Indigo: {
+    case Color::e_INDIGO: {
       return 5u;
     }
-    case color::Violet: {
+    case Color::e_VIOLET: {
       return 6u;
     }
-    case color::Black: {
+    case Color::e_BLACK: {
       return 7u;
     }
-    case color::White: {
+    case Color::e_WHITE: {
       return 8u;
     }
-    case color::Gray: {
+    case Color::e_GRAY: {
       return 9u;
     }
-    case color::Brown: {
+    case Color::e_BROWN: {
       return 10u;
     }
-    case color::Pink: {
+    case Color::e_PINK: {
       return 11u;
     }
     }
   }();
 }
 
-bool LargeEnum::is_warm(const LargeEnum::color c) {
+__attribute__((pure)) bool LargeEnum::is_warm(const LargeEnum::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return true;
     }
-    case color::Orange: {
+    case Color::e_ORANGE: {
       return true;
     }
-    case color::Yellow: {
+    case Color::e_YELLOW: {
       return true;
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return false;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return false;
     }
-    case color::Indigo: {
+    case Color::e_INDIGO: {
       return false;
     }
-    case color::Violet: {
+    case Color::e_VIOLET: {
       return false;
     }
-    case color::Black: {
+    case Color::e_BLACK: {
       return false;
     }
-    case color::White: {
+    case Color::e_WHITE: {
       return false;
     }
-    case color::Gray: {
+    case Color::e_GRAY: {
       return false;
     }
-    case color::Brown: {
+    case Color::e_BROWN: {
       return true;
     }
-    case color::Pink: {
+    case Color::e_PINK: {
       return true;
     }
     }
   }();
 }
 
-bool LargeEnum::is_neutral(const LargeEnum::color c) {
+__attribute__((pure)) bool LargeEnum::is_neutral(const LargeEnum::Color c) {
   return [&](void) {
     switch (c) {
-    case color::Red: {
+    case Color::e_RED: {
       return false;
     }
-    case color::Orange: {
+    case Color::e_ORANGE: {
       return false;
     }
-    case color::Yellow: {
+    case Color::e_YELLOW: {
       return false;
     }
-    case color::Green: {
+    case Color::e_GREEN: {
       return false;
     }
-    case color::Blue: {
+    case Color::e_BLUE: {
       return false;
     }
-    case color::Indigo: {
+    case Color::e_INDIGO: {
       return false;
     }
-    case color::Violet: {
+    case Color::e_VIOLET: {
       return false;
     }
-    case color::Black: {
+    case Color::e_BLACK: {
       return true;
     }
-    case color::White: {
+    case Color::e_WHITE: {
       return true;
     }
-    case color::Gray: {
+    case Color::e_GRAY: {
       return true;
     }
-    case color::Brown: {
+    case Color::e_BROWN: {
       return false;
     }
-    case color::Pink: {
+    case Color::e_PINK: {
       return false;
     }
     }
   }();
 }
 
-unsigned int LargeEnum::tok_to_nat(const std::shared_ptr<LargeEnum::tok> &t) {
+__attribute__((pure)) unsigned int
+LargeEnum::tok_to_nat(const std::shared_ptr<LargeEnum::tok> &t) {
   return std::visit(
       Overloaded{
           [](const typename LargeEnum::tok::TNum _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
           [](const typename LargeEnum::tok::TPlus _args) -> unsigned int {
@@ -174,7 +177,7 @@ unsigned int LargeEnum::tok_to_nat(const std::shared_ptr<LargeEnum::tok> &t) {
             return 108u;
           },
           [](const typename LargeEnum::tok::TIdent _args) -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return (200u + std::move(n));
           },
           [](const typename LargeEnum::tok::TEOF _args) -> unsigned int {
@@ -183,7 +186,8 @@ unsigned int LargeEnum::tok_to_nat(const std::shared_ptr<LargeEnum::tok> &t) {
       t->v());
 }
 
-bool LargeEnum::is_operator(const std::shared_ptr<LargeEnum::tok> &t) {
+__attribute__((pure)) bool
+LargeEnum::is_operator(const std::shared_ptr<LargeEnum::tok> &t) {
   return std::visit(
       Overloaded{[](const typename LargeEnum::tok::TNum _args) -> bool {
                    return false;

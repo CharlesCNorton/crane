@@ -1,3 +1,6 @@
+#ifndef INCLUDED_TODO_DEPENDENT_FIELD_ALIAS
+#define INCLUDED_TODO_DEPENDENT_FIELD_ALIAS
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -28,10 +31,13 @@ struct TodoDependentFieldAlias {
 
   struct nat_magma {
     using carrier = unsigned int;
-    static unsigned int op(unsigned int a0, unsigned int a1) {
+
+    __attribute__((pure)) static unsigned int op(unsigned int a0,
+                                                 unsigned int a1) {
       return (a0 + a1);
     }
   };
+
   static_assert(Magma<nat_magma>);
 
   template <typename _tcI0, typename carrier>
@@ -41,9 +47,11 @@ struct TodoDependentFieldAlias {
 
   static inline const unsigned int test_value = [](void) {
     std::function<unsigned int(unsigned int, unsigned int)> alias =
-        [](const unsigned int _x0, const unsigned int _x1) -> unsigned int {
-      return pick_op<nat_magma>(_x0, _x1);
+        [](unsigned int _x0, unsigned int _x1) -> unsigned int {
+      return pick_op<nat_magma, unsigned int>(_x0, _x1);
     };
     return alias(2u, 3u);
   }();
 };
+
+#endif // INCLUDED_TODO_DEPENDENT_FIELD_ALIAS

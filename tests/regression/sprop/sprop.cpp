@@ -1,3 +1,5 @@
+#include <sprop.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -5,13 +7,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <sprop.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int SPropTest::guarded_pred(const unsigned int n) {
+__attribute__((pure)) unsigned int
+SPropTest::guarded_pred(const unsigned int n) {
   if (n <= 0) {
     return 0u;
   } else {
@@ -20,15 +22,14 @@ unsigned int SPropTest::guarded_pred(const unsigned int n) {
   }
 }
 
-unsigned int SPropTest::safe_div(const unsigned int _x0,
-                                 const unsigned int _x1) {
+__attribute__((pure)) unsigned int SPropTest::safe_div(const unsigned int _x0,
+                                                       const unsigned int _x1) {
   return Nat::div(_x0, _x1);
 }
 
-std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
-                                                  const unsigned int y,
-                                                  const unsigned int q,
-                                                  const unsigned int u) {
+__attribute__((pure)) std::pair<unsigned int, unsigned int>
+Nat::divmod(const unsigned int x, const unsigned int y, const unsigned int q,
+            const unsigned int u) {
   if (x <= 0) {
     return std::make_pair(std::move(q), std::move(u));
   } else {
@@ -42,7 +43,8 @@ std::pair<unsigned int, unsigned int> Nat::divmod(const unsigned int x,
   }
 }
 
-unsigned int Nat::div(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Nat::div(const unsigned int x,
+                                            const unsigned int y) {
   if (y <= 0) {
     return std::move(y);
   } else {

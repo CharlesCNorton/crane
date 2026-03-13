@@ -1,3 +1,5 @@
+#include <timing_preserves_wf_simple.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -7,32 +9,31 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <timing_preserves_wf_simple.h>
 #include <variant>
 
-bool TimingPreservesWfSimple::wf(
+__attribute__((pure)) bool TimingPreservesWfSimple::wf(
     const std::shared_ptr<TimingPreservesWfSimple::state> &s) {
-  return ((s->regs_len == 4u) &&
-          ((s->rom_len == 4u) && ((s->pc < 4096u) && (s->stack_len <= 3u))));
+  return (s->regs_len == 4u &&
+          (s->rom_len == 4u && (s->pc < 4096u && s->stack_len <= 3u)));
 }
 
-unsigned int
-TimingPreservesWfSimple::cycles(const TimingPreservesWfSimple::instr i) {
+__attribute__((pure)) unsigned int
+TimingPreservesWfSimple::cycles(const TimingPreservesWfSimple::Instr i) {
   return [&](void) {
     switch (i) {
-    case instr::NOP: {
+    case Instr::e_NOP: {
       return 8u;
     }
-    case instr::ADD: {
+    case Instr::e_ADD: {
       return 8u;
     }
-    case instr::WRM: {
+    case Instr::e_WRM: {
       return 8u;
     }
-    case instr::FIM: {
+    case Instr::e_FIM: {
       return 16u;
     }
-    case instr::JMS: {
+    case Instr::e_JMS: {
       return 24u;
     }
     }
@@ -42,26 +43,26 @@ TimingPreservesWfSimple::cycles(const TimingPreservesWfSimple::instr i) {
 std::shared_ptr<TimingPreservesWfSimple::state>
 TimingPreservesWfSimple::execute(
     std::shared_ptr<TimingPreservesWfSimple::state> s,
-    const TimingPreservesWfSimple::instr i) {
+    const TimingPreservesWfSimple::Instr i) {
   return [&](void) {
     switch (i) {
-    case instr::NOP: {
+    case Instr::e_NOP: {
       return std::make_shared<TimingPreservesWfSimple::state>(
           state{s->regs_len, s->rom_len, s->pc, s->stack_len});
     }
-    case instr::ADD: {
+    case Instr::e_ADD: {
       return std::make_shared<TimingPreservesWfSimple::state>(
           state{s->regs_len, s->rom_len, s->pc, s->stack_len});
     }
-    case instr::WRM: {
+    case Instr::e_WRM: {
       return std::make_shared<TimingPreservesWfSimple::state>(
           state{s->regs_len, s->rom_len, s->pc, s->stack_len});
     }
-    case instr::FIM: {
+    case Instr::e_FIM: {
       return std::make_shared<TimingPreservesWfSimple::state>(
           state{s->regs_len, s->rom_len, s->pc, s->stack_len});
     }
-    case instr::JMS: {
+    case Instr::e_JMS: {
       return std::make_shared<TimingPreservesWfSimple::state>(
           state{s->regs_len, s->rom_len, s->pc, (s->stack_len + 1)});
     }

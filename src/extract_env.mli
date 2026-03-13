@@ -16,38 +16,45 @@
     Coordinates the full extraction pipeline:
     {v Rocq source  -->  MiniML  -->  MiniCpp  -->  C++ files v}
 
-    Also handles dependency resolution, file I/O, compilation with
-    clang, and benchmarking. *)
+    Also handles dependency resolution, file I/O, compilation with clang, and
+    benchmarking. *)
 
 open Names
 open Libnames
 open Table
 
-val simple_extraction : opaque_access:Global.indirect_accessor -> qualid -> unit
 (** [Extraction qualid]: extract a single definition and print to stdout. *)
+val simple_extraction : opaque_access:Global.indirect_accessor -> qualid -> unit
 
-val full_extraction : opaque_access:Global.indirect_accessor -> string option -> qualid list -> unit
 (** [Crane Extraction "file" qualids]: extract listed definitions to a file. *)
+val full_extraction :
+  opaque_access:Global.indirect_accessor -> string option -> qualid list -> unit
 
-val separate_extraction : opaque_access:Global.indirect_accessor -> qualid list -> unit
 (** [Separate Extraction qualids]: extract each definition to its own file. *)
+val separate_extraction :
+  opaque_access:Global.indirect_accessor -> qualid list -> unit
 
-val extraction_library : opaque_access:Global.indirect_accessor -> bool -> lident -> unit
 (** [Extraction Library lib]: extract an entire library module. *)
+val extraction_library :
+  opaque_access:Global.indirect_accessor -> bool -> lident -> unit
 
-val extract_and_compile : opaque_access:Global.indirect_accessor -> string option -> qualid list -> unit
-(** Extract to file then compile with clang.  Used by the test suite. *)
+(** Extract to file then compile with clang. Used by the test suite. *)
+val extract_and_compile :
+  opaque_access:Global.indirect_accessor -> string option -> qualid list -> unit
 
-val mono_environment :
- opaque_access:Global.indirect_accessor -> GlobRef.t list -> ModPath.t list -> Miniml.ml_structure
 (** Build the complete MiniML structure for a set of definitions. *)
+val mono_environment :
+  opaque_access:Global.indirect_accessor ->
+  GlobRef.t list ->
+  ModPath.t list ->
+  Miniml.ml_structure
 
-val print_one_decl :
-  Miniml.ml_structure -> ModPath.t -> Miniml.ml_decl -> Pp.t
-(** Pretty-print a single declaration.  Used by the Relation Extraction plugin. *)
+(** Pretty-print a single declaration. Used by the Relation Extraction plugin.
+*)
+val print_one_decl : Miniml.ml_structure -> ModPath.t -> Miniml.ml_decl -> Pp.t
 
-val show_extraction : pstate:Declare.Proof.t -> unit
 (** [Show Extraction]: show the extraction of the current ongoing proof. *)
+val show_extraction : pstate:Declare.Proof.t -> unit
 
-val benchmark : qualid -> (benchmark_lang * string * string) list -> unit
 (** [Crane Benchmark]: extract, compile, and benchmark with hyperfine. *)
+val benchmark : qualid -> (benchmark_lang * string * string) list -> unit

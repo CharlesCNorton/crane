@@ -8,26 +8,23 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-                  << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
-int main()
-{
-    ASSERT(BoolDecBde::t1 == true);
-    ASSERT(BoolDecBde::t2 == false);
-    return testStatus;
+int main() {
+  ASSERT(BoolDecBde::t1 == true);
+  ASSERT(BoolDecBde::t2 == false);
+  return testStatus;
 }

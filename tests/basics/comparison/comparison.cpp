@@ -1,7 +1,8 @@
+#include <comparison.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <comparison.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -10,99 +11,103 @@
 #include <string>
 #include <variant>
 
-unsigned int Comparison::cmp_to_nat(const Comparison::cmp c) {
+__attribute__((pure)) unsigned int
+Comparison::cmp_to_nat(const Comparison::Cmp c) {
   return [&](void) {
     switch (c) {
-    case cmp::CmpLt: {
+    case Cmp::e_CMPLT: {
       return 0u;
     }
-    case cmp::CmpEq: {
+    case Cmp::e_CMPEQ: {
       return 1u;
     }
-    case cmp::CmpGt: {
+    case Cmp::e_CMPGT: {
       return 2u;
     }
     }
   }();
 }
 
-Comparison::cmp Comparison::compare_nats(const unsigned int a,
-                                         const unsigned int b) {
-  if ((a < b)) {
-    return cmp::CmpLt;
+__attribute__((pure)) Comparison::Cmp
+Comparison::compare_nats(const unsigned int a, const unsigned int b) {
+  if (a < b) {
+    return Cmp::e_CMPLT;
   } else {
-    if ((a == b)) {
-      return cmp::CmpEq;
+    if (a == b) {
+      return Cmp::e_CMPEQ;
     } else {
-      return cmp::CmpGt;
+      return Cmp::e_CMPGT;
     }
   }
 }
 
-unsigned int Comparison::max_nat(const unsigned int a, const unsigned int b) {
+__attribute__((pure)) unsigned int Comparison::max_nat(const unsigned int a,
+                                                       const unsigned int b) {
   return [&](void) {
     switch (compare_nats(a, b)) {
-    case cmp::CmpLt: {
+    case Cmp::e_CMPLT: {
       return std::move(b);
     }
-    case cmp::CmpEq: {
+    case Cmp::e_CMPEQ: {
       return std::move(a);
     }
-    case cmp::CmpGt: {
+    case Cmp::e_CMPGT: {
       return std::move(a);
     }
     }
   }();
 }
 
-unsigned int Comparison::min_nat(const unsigned int a, const unsigned int b) {
+__attribute__((pure)) unsigned int Comparison::min_nat(const unsigned int a,
+                                                       const unsigned int b) {
   return [&](void) {
     switch (compare_nats(a, b)) {
-    case cmp::CmpLt: {
+    case Cmp::e_CMPLT: {
       return std::move(a);
     }
-    case cmp::CmpEq: {
+    case Cmp::e_CMPEQ: {
       return std::move(a);
     }
-    case cmp::CmpGt: {
+    case Cmp::e_CMPGT: {
       return std::move(b);
     }
     }
   }();
 }
 
-unsigned int Comparison::clamp(const unsigned int val, const unsigned int lo,
-                               const unsigned int hi) {
+__attribute__((pure)) unsigned int Comparison::clamp(const unsigned int val,
+                                                     const unsigned int lo,
+                                                     const unsigned int hi) {
   return [&](void) {
     switch (compare_nats(val, lo)) {
-    case cmp::CmpLt: {
+    case Cmp::e_CMPLT: {
       return std::move(lo);
     }
-    case cmp::CmpEq: {
+    case Cmp::e_CMPEQ: {
       return [&](void) {
         switch (compare_nats(val, hi)) {
-        case cmp::CmpLt: {
+        case Cmp::e_CMPLT: {
           return std::move(val);
         }
-        case cmp::CmpEq: {
+        case Cmp::e_CMPEQ: {
           return std::move(val);
         }
-        case cmp::CmpGt: {
+        case Cmp::e_CMPGT: {
           return std::move(hi);
         }
         }
       }();
     }
-    case cmp::CmpGt: {
+    case Cmp::e_CMPGT: {
       return [&](void) {
         switch (compare_nats(val, hi)) {
-        case cmp::CmpLt: {
+        case Cmp::e_CMPLT: {
           return std::move(val);
         }
-        case cmp::CmpEq: {
+        case Cmp::e_CMPEQ: {
           return std::move(val);
         }
-        case cmp::CmpGt: {
+        case Cmp::e_CMPGT: {
           return std::move(hi);
         }
         }
@@ -112,17 +117,18 @@ unsigned int Comparison::clamp(const unsigned int val, const unsigned int lo,
   }();
 }
 
-Comparison::cmp Comparison::flip_cmp(const Comparison::cmp c) {
+__attribute__((pure)) Comparison::Cmp
+Comparison::flip_cmp(const Comparison::Cmp c) {
   return [&](void) {
     switch (c) {
-    case cmp::CmpLt: {
-      return cmp::CmpGt;
+    case Cmp::e_CMPLT: {
+      return Cmp::e_CMPGT;
     }
-    case cmp::CmpEq: {
-      return cmp::CmpEq;
+    case Cmp::e_CMPEQ: {
+      return Cmp::e_CMPEQ;
     }
-    case cmp::CmpGt: {
-      return cmp::CmpLt;
+    case Cmp::e_CMPGT: {
+      return Cmp::e_CMPLT;
     }
     }
   }();

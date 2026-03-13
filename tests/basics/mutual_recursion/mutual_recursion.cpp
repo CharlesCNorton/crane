@@ -1,16 +1,17 @@
+#include <mutual_recursion.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <mutual_recursion.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
 
-bool MutualRecursion::is_even(const unsigned int n) {
+__attribute__((pure)) bool MutualRecursion::is_even(const unsigned int n) {
   if (n <= 0) {
     return true;
   } else {
@@ -18,7 +19,8 @@ bool MutualRecursion::is_even(const unsigned int n) {
     return is_odd(m);
   }
 }
-bool MutualRecursion::is_odd(const unsigned int n) {
+
+__attribute__((pure)) bool MutualRecursion::is_odd(const unsigned int n) {
   if (n <= 0) {
     return false;
   } else {
@@ -27,24 +29,25 @@ bool MutualRecursion::is_odd(const unsigned int n) {
   }
 }
 
-unsigned int MutualRecursion::tree_sum(
+__attribute__((pure)) unsigned int MutualRecursion::tree_sum(
     const std::shared_ptr<MutualRecursion::tree<unsigned int>> &t) {
   return std::visit(
       Overloaded{
           [](const typename MutualRecursion::tree<unsigned int>::Leaf _args)
               -> unsigned int {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::move(n);
           },
           [](const typename MutualRecursion::tree<unsigned int>::Node _args)
               -> unsigned int {
             std::shared_ptr<MutualRecursion::forest<unsigned int>> f =
-                _args._a0;
+                _args.d_a0;
             return forest_sum(std::move(f));
           }},
       t->v());
 }
-unsigned int MutualRecursion::forest_sum(
+
+__attribute__((pure)) unsigned int MutualRecursion::forest_sum(
     const std::shared_ptr<MutualRecursion::forest<unsigned int>> &f) {
   return std::visit(
       Overloaded{
@@ -52,9 +55,9 @@ unsigned int MutualRecursion::forest_sum(
               -> unsigned int { return 0u; },
           [](const typename MutualRecursion::forest<unsigned int>::Trees _args)
               -> unsigned int {
-            std::shared_ptr<MutualRecursion::tree<unsigned int>> t = _args._a0;
+            std::shared_ptr<MutualRecursion::tree<unsigned int>> t = _args.d_a0;
             std::shared_ptr<MutualRecursion::forest<unsigned int>> rest =
-                _args._a1;
+                _args.d_a1;
             return (tree_sum(std::move(t)) + forest_sum(std::move(rest)));
           }},
       f->v());

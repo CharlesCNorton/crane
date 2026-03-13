@@ -1,3 +1,6 @@
+#ifndef INCLUDED_MATCH_FALLBACK_NAT
+#define INCLUDED_MATCH_FALLBACK_NAT
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -19,36 +22,51 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 struct MatchFallbackNat {
   struct maybe_nat {
-  public:
+    // TYPES
     struct SomeNat {
-      unsigned int _a0;
+      unsigned int d_a0;
     };
+
     struct NoneNat {};
+
     using variant_t = std::variant<SomeNat, NoneNat>;
 
   private:
-    variant_t v_;
-    explicit maybe_nat(SomeNat _v) : v_(std::move(_v)) {}
-    explicit maybe_nat(NoneNat _v) : v_(std::move(_v)) {}
+    // DATA
+    variant_t d_v_;
+
+    // CREATORS
+    explicit maybe_nat(SomeNat _v) : d_v_(std::move(_v)) {}
+
+    explicit maybe_nat(NoneNat _v) : d_v_(std::move(_v)) {}
 
   public:
+    // TYPES
     struct ctor {
       ctor() = delete;
+
       static std::shared_ptr<maybe_nat> SomeNat_(unsigned int a0) {
         return std::shared_ptr<maybe_nat>(new maybe_nat(SomeNat{a0}));
       }
+
       static std::shared_ptr<maybe_nat> NoneNat_() {
         return std::shared_ptr<maybe_nat>(new maybe_nat(NoneNat{}));
       }
+
       static std::unique_ptr<maybe_nat> SomeNat_uptr(unsigned int a0) {
         return std::unique_ptr<maybe_nat>(new maybe_nat(SomeNat{a0}));
       }
+
       static std::unique_ptr<maybe_nat> NoneNat_uptr() {
         return std::unique_ptr<maybe_nat>(new maybe_nat(NoneNat{}));
       }
     };
-    const variant_t &v() const { return v_; }
-    variant_t &v_mut() { return v_; }
+
+    // MANIPULATORS
+    __attribute__((pure)) variant_t &v_mut() { return d_v_; }
+
+    // ACCESSORS
+    __attribute__((pure)) const variant_t &v() const { return d_v_; }
   };
 
   template <typename T1, MapsTo<T1, unsigned int> F0>
@@ -57,7 +75,7 @@ struct MatchFallbackNat {
     return std::visit(
         Overloaded{
             [&](const typename maybe_nat::SomeNat _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename maybe_nat::NoneNat _args) -> T1 { return f0; }},
@@ -70,16 +88,19 @@ struct MatchFallbackNat {
     return std::visit(
         Overloaded{
             [&](const typename maybe_nat::SomeNat _args) -> T1 {
-              unsigned int n = _args._a0;
+              unsigned int n = _args.d_a0;
               return f(std::move(n));
             },
             [&](const typename maybe_nat::NoneNat _args) -> T1 { return f0; }},
         m->v());
   }
 
-  static unsigned int fallback(const std::shared_ptr<maybe_nat> &x);
+  __attribute__((pure)) static unsigned int
+  fallback(const std::shared_ptr<maybe_nat> &x);
 
   static inline const unsigned int t =
       (fallback(maybe_nat::ctor::NoneNat_()) +
        fallback(maybe_nat::ctor::SomeNat_(7u)));
 };
+
+#endif // INCLUDED_MATCH_FALLBACK_NAT

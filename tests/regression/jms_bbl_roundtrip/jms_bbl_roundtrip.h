@@ -1,3 +1,6 @@
+#ifndef INCLUDED_JMS_BBL_ROUNDTRIP
+#define INCLUDED_JMS_BBL_ROUNDTRIP
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -25,16 +28,14 @@ struct JmsBblRoundtrip {
     bool has_ret;
   };
 
-  static unsigned int addr12_of_nat(const unsigned int n);
-
+  __attribute__((pure)) static unsigned int addr12_of_nat(const unsigned int n);
   static std::shared_ptr<state> execute_jms(std::shared_ptr<state> s,
                                             const unsigned int addr);
-
   static std::shared_ptr<state> execute_bbl(std::shared_ptr<state> s);
-
   static inline const std::shared_ptr<state> sample =
       std::make_shared<state>(state{100u, 0u, false});
-
   static inline const bool t =
-      (execute_bbl(execute_jms(sample, 200u))->pc == 102u);
+      execute_bbl(execute_jms(sample, 200u))->pc == 102u;
 };
+
+#endif // INCLUDED_JMS_BBL_ROUNDTRIP

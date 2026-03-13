@@ -19,29 +19,26 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        bsl::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << bsl::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    bsl::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << bsl::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 bsl::shared_ptr<Nat::nat> int_to_nat(int x) {
   if (x <= 0) {
     return Nat::nat::ctor::O_();
-  }
-  else {
-    return Nat::nat::ctor::S_(int_to_nat(x-1));
+  } else {
+    return Nat::nat::ctor::S_(int_to_nat(x - 1));
   }
 }
 
@@ -56,14 +53,16 @@ int main() {
 }
 
 /*
-  clang++ -c -std=c++20 -Wno-deprecated-literal-operator -Wno-unused-command-line-argument \
+  clang++ -c -std=c++20 -Wno-deprecated-literal-operator
+  -Wno-unused-command-line-argument \
   -I. -I../../theories/cpp -I~/bde_install/include \
   nat_bde.cpp \
   -L~/bde_install/lib \
   -lbsl -lbal -lbdl -lbbl -lbbryu -linteldfp -lpcre2 \
   -o nat_bde.o
 
-  clang++ -std=c++20 -Wno-deprecated-literal-operator -Wno-unused-command-line-argument \
+  clang++ -std=c++20 -Wno-deprecated-literal-operator
+  -Wno-unused-command-line-argument \
   -I. -I../../theories/cpp -I~/bde_install/include \
   nat_bde.o nat_bde.t.cpp \
   -L~/bde_install/lib \

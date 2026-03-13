@@ -1,3 +1,6 @@
+#ifndef INCLUDED_PARALLEL
+#define INCLUDED_PARALLEL
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -25,11 +28,12 @@ struct Nat {
 };
 
 struct ParallelTest {
-  static unsigned int ack(const std::pair<unsigned int, unsigned int> p);
-
-  static std::pair<unsigned int, unsigned int> fast(const unsigned int m,
-                                                    const unsigned int n);
-
-  static std::pair<unsigned int, unsigned int> slow(const unsigned int m,
-                                                    const unsigned int n);
+  __attribute__((pure)) static unsigned int
+  ack(const std::pair<unsigned int, unsigned int> p);
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
+  fast(const unsigned int m, const unsigned int n);
+  __attribute__((pure)) static std::pair<unsigned int, unsigned int>
+  slow(const unsigned int m, const unsigned int n);
 };
+
+#endif // INCLUDED_PARALLEL

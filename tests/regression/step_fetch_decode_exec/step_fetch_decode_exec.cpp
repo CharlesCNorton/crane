@@ -1,3 +1,5 @@
+#include <step_fetch_decode_exec.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -6,12 +8,11 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <step_fetch_decode_exec.h>
 #include <string>
 #include <utility>
 #include <variant>
 
-unsigned int StepFetchDecodeExec::fetch_byte(
+__attribute__((pure)) unsigned int StepFetchDecodeExec::fetch_byte(
     const std::shared_ptr<StepFetchDecodeExec::state> &s,
     const unsigned int addr) {
   return s->rom->nth(addr, 0u);
@@ -19,7 +20,7 @@ unsigned int StepFetchDecodeExec::fetch_byte(
 
 std::shared_ptr<StepFetchDecodeExec::instruction>
 StepFetchDecodeExec::decode(const unsigned int b1, const unsigned int b2) {
-  if (((b1 % 2u) == 0u)) {
+  if ((b1 % 2u) == 0u) {
     return instruction::ctor::NOP_();
   } else {
     return instruction::ctor::ADD_ACC_((std::move(b2) % 16u));
@@ -38,7 +39,7 @@ std::shared_ptr<StepFetchDecodeExec::state> StepFetchDecodeExec::execute(
           },
           [&](const typename StepFetchDecodeExec::instruction::ADD_ACC _args)
               -> std::shared_ptr<StepFetchDecodeExec::state> {
-            unsigned int n = _args._a0;
+            unsigned int n = _args.d_a0;
             return std::make_shared<StepFetchDecodeExec::state>(
                 state{((s->acc + std::move(n)) % 16u), (s->pc + 2u), s->rom});
           }},

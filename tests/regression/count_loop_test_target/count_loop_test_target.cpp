@@ -1,7 +1,8 @@
+#include <count_loop_test_target.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
-#include <count_loop_test_target.h>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -15,12 +16,12 @@ CountLoopTestTarget::count_loop_test(const unsigned int loop_addr) {
   return instruction::ctor::ISZ_(0u, std::move(loop_addr));
 }
 
-unsigned int CountLoopTestTarget::target_of(
+__attribute__((pure)) unsigned int CountLoopTestTarget::target_of(
     const std::shared_ptr<CountLoopTestTarget::instruction> &i) {
   return std::visit(
       Overloaded{[](const typename CountLoopTestTarget::instruction::ISZ _args)
                      -> unsigned int {
-                   unsigned int a = _args._a1;
+                   unsigned int a = _args.d_a1;
                    return std::move(a);
                  },
                  [](const typename CountLoopTestTarget::instruction::NOP _args)

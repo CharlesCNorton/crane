@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <fin_operates_on_pairs.h>
 
-int main()
-{
-    (void)FinOperatesOnPairs::t;
-    return 0;
+int main() {
+  (void)FinOperatesOnPairs::t;
+  return 0;
 }

@@ -1,3 +1,5 @@
+#include <z_int.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -10,9 +12,8 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-#include <z_int.h>
 
-unsigned int Pos::succ(const unsigned int x) {
+__attribute__((pure)) unsigned int Pos::succ(const unsigned int x) {
   if (x == 1u) {
     return (2u * 1u);
   } else if (x % 2u != 0u) {
@@ -24,7 +25,8 @@ unsigned int Pos::succ(const unsigned int x) {
   }
 }
 
-unsigned int Pos::add(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Pos::add(const unsigned int x,
+                                            const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {
       return (2u * 1u);
@@ -59,7 +61,9 @@ unsigned int Pos::add(const unsigned int x, const unsigned int y) {
     }
   }
 }
-unsigned int Pos::add_carry(const unsigned int x, const unsigned int y) {
+
+__attribute__((pure)) unsigned int Pos::add_carry(const unsigned int x,
+                                                  const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {
       return (2u * 1u + 1u);
@@ -95,7 +99,7 @@ unsigned int Pos::add_carry(const unsigned int x, const unsigned int y) {
   }
 }
 
-unsigned int Pos::pred_double(const unsigned int x) {
+__attribute__((pure)) unsigned int Pos::pred_double(const unsigned int x) {
   if (x == 1u) {
     return 1u;
   } else if (x % 2u != 0u) {
@@ -107,7 +111,8 @@ unsigned int Pos::pred_double(const unsigned int x) {
   }
 }
 
-unsigned int Pos::mul(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) unsigned int Pos::mul(const unsigned int x,
+                                            const unsigned int y) {
   if (x == 1u) {
     return std::move(y);
   } else if (x % 2u != 0u) {
@@ -119,36 +124,37 @@ unsigned int Pos::mul(const unsigned int x, const unsigned int y) {
   }
 }
 
-comparison Pos::compare_cont(const comparison r, const unsigned int x,
-                             const unsigned int y) {
+__attribute__((pure)) Comparison Pos::compare_cont(const Comparison r,
+                                                   const unsigned int x,
+                                                   const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {
       return r;
     } else if (y % 2u != 0u) {
       unsigned int _x = (y - 1u) / 2u;
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       unsigned int _x = y / 2u;
-      return comparison::Lt;
+      return Comparison::e_LT;
     }
   } else if (x % 2u != 0u) {
     unsigned int p = (x - 1u) / 2u;
     if (y == 1u) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2u != 0u) {
       unsigned int q = (y - 1u) / 2u;
       return compare_cont(r, p, q);
     } else {
       unsigned int q = y / 2u;
-      return compare_cont(comparison::Gt, p, q);
+      return compare_cont(Comparison::e_GT, p, q);
     }
   } else {
     unsigned int p = x / 2u;
     if (y == 1u) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y % 2u != 0u) {
       unsigned int q = (y - 1u) / 2u;
-      return compare_cont(comparison::Lt, p, q);
+      return compare_cont(Comparison::e_LT, p, q);
     } else {
       unsigned int q = y / 2u;
       return compare_cont(r, p, q);
@@ -156,11 +162,13 @@ comparison Pos::compare_cont(const comparison r, const unsigned int x,
   }
 }
 
-comparison Pos::compare(const unsigned int _x0, const unsigned int _x1) {
-  return compare_cont(comparison::Eq, _x0, _x1);
+__attribute__((pure)) Comparison Pos::compare(const unsigned int _x0,
+                                              const unsigned int _x1) {
+  return compare_cont(Comparison::e_EQ, _x0, _x1);
 }
 
-bool Pos::eqb(const unsigned int p, const unsigned int q) {
+__attribute__((pure)) bool Pos::eqb(const unsigned int p,
+                                    const unsigned int q) {
   if (p == 1u) {
     if (q == 1u) {
       return true;
@@ -196,7 +204,7 @@ bool Pos::eqb(const unsigned int p, const unsigned int q) {
   }
 }
 
-int64_t BinInt::double_(const int64_t x) {
+__attribute__((pure)) int64_t BinInt::double_(const int64_t x) {
   if (x == 0) {
     return INT64_C(0);
   } else if (x > 0) {
@@ -208,7 +216,7 @@ int64_t BinInt::double_(const int64_t x) {
   }
 }
 
-int64_t BinInt::succ_double(const int64_t x) {
+__attribute__((pure)) int64_t BinInt::succ_double(const int64_t x) {
   if (x == 0) {
     return static_cast<int64_t>(1u);
   } else if (x > 0) {
@@ -220,7 +228,7 @@ int64_t BinInt::succ_double(const int64_t x) {
   }
 }
 
-int64_t BinInt::pred_double(const int64_t x) {
+__attribute__((pure)) int64_t BinInt::pred_double(const int64_t x) {
   if (x == 0) {
     return (-static_cast<int64_t>(1u));
   } else if (x > 0) {
@@ -232,7 +240,8 @@ int64_t BinInt::pred_double(const int64_t x) {
   }
 }
 
-int64_t BinInt::pos_sub(const unsigned int x, const unsigned int y) {
+__attribute__((pure)) int64_t BinInt::pos_sub(const unsigned int x,
+                                              const unsigned int y) {
   if (x == 1u) {
     if (y == 1u) {
       return INT64_C(0);
@@ -268,35 +277,36 @@ int64_t BinInt::pos_sub(const unsigned int x, const unsigned int y) {
   }
 }
 
-comparison BinInt::compare(const int64_t x, const int64_t y) {
+__attribute__((pure)) Comparison BinInt::compare(const int64_t x,
+                                                 const int64_t y) {
   if (x == 0) {
     if (y == 0) {
-      return comparison::Eq;
+      return Comparison::e_EQ;
     } else if (y > 0) {
       unsigned int _x = static_cast<unsigned int>(y);
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       unsigned int _x = static_cast<unsigned int>(-y);
-      return comparison::Gt;
+      return Comparison::e_GT;
     }
   } else if (x > 0) {
     unsigned int x_ = static_cast<unsigned int>(x);
     if (y == 0) {
-      return comparison::Gt;
+      return Comparison::e_GT;
     } else if (y > 0) {
       unsigned int y_ = static_cast<unsigned int>(y);
       return Pos::compare(x_, y_);
     } else {
       unsigned int _x = static_cast<unsigned int>(-y);
-      return comparison::Gt;
+      return Comparison::e_GT;
     }
   } else {
     unsigned int x_ = static_cast<unsigned int>(-x);
     if (y == 0) {
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else if (y > 0) {
       unsigned int _x = static_cast<unsigned int>(y);
-      return comparison::Lt;
+      return Comparison::e_LT;
     } else {
       unsigned int y_ = static_cast<unsigned int>(-y);
       return Datatypes::CompOpp(Pos::compare(x_, y_));
@@ -304,35 +314,45 @@ comparison BinInt::compare(const int64_t x, const int64_t y) {
   }
 }
 
-int64_t ZIntTest::add_test(const int64_t _x0, const int64_t _x1) {
+__attribute__((pure)) int64_t ZIntTest::add_test(const int64_t _x0,
+                                                 const int64_t _x1) {
   return (_x0 + _x1);
 }
 
-int64_t ZIntTest::mul_test(const int64_t _x0, const int64_t _x1) {
+__attribute__((pure)) int64_t ZIntTest::mul_test(const int64_t _x0,
+                                                 const int64_t _x1) {
   return (_x0 * _x1);
 }
 
-int64_t ZIntTest::sub_test(const int64_t _x0, const int64_t _x1) {
+__attribute__((pure)) int64_t ZIntTest::sub_test(const int64_t _x0,
+                                                 const int64_t _x1) {
   return (_x0 - _x1);
 }
 
-int64_t ZIntTest::abs_test(const int64_t _x0) { return std::abs(_x0); }
-
-int64_t ZIntTest::opp_test(const int64_t _x0) { return (-_x0); }
-
-bool ZIntTest::eqb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 == _x1);
+__attribute__((pure)) int64_t ZIntTest::abs_test(const int64_t _x0) {
+  return std::abs(_x0);
 }
 
-bool ZIntTest::ltb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 < _x1);
+__attribute__((pure)) int64_t ZIntTest::opp_test(const int64_t _x0) {
+  return (-_x0);
 }
 
-bool ZIntTest::leb_test(const int64_t _x0, const int64_t _x1) {
-  return (_x0 <= _x1);
+__attribute__((pure)) bool ZIntTest::eqb_test(const int64_t _x0,
+                                              const int64_t _x1) {
+  return _x0 == _x1;
 }
 
-int64_t ZIntTest::z_sign(const int64_t z) {
+__attribute__((pure)) bool ZIntTest::ltb_test(const int64_t _x0,
+                                              const int64_t _x1) {
+  return _x0 < _x1;
+}
+
+__attribute__((pure)) bool ZIntTest::leb_test(const int64_t _x0,
+                                              const int64_t _x1) {
+  return _x0 <= _x1;
+}
+
+__attribute__((pure)) int64_t ZIntTest::z_sign(const int64_t z) {
   if (z == 0) {
     return INT64_C(0);
   } else if (z > 0) {
@@ -344,17 +364,17 @@ int64_t ZIntTest::z_sign(const int64_t z) {
   }
 }
 
-comparison Datatypes::CompOpp(const comparison r) {
+__attribute__((pure)) Comparison Datatypes::CompOpp(const Comparison r) {
   return [&](void) {
     switch (r) {
-    case comparison::Eq: {
-      return comparison::Eq;
+    case Comparison::e_EQ: {
+      return Comparison::e_EQ;
     }
-    case comparison::Lt: {
-      return comparison::Gt;
+    case Comparison::e_LT: {
+      return Comparison::e_GT;
     }
-    case comparison::Gt: {
-      return comparison::Lt;
+    case Comparison::e_GT: {
+      return Comparison::e_LT;
     }
     }
   }();

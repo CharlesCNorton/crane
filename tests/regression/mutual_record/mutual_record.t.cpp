@@ -8,47 +8,44 @@ namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
-
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 int main() {
-    // Test 1: dept_id
-    {
-        ASSERT(MutualRecord::test_dept_id == 100);
-        std::cout << "Test 1 (dept_id): PASSED" << std::endl;
-    }
+  // Test 1: dept_id
+  {
+    ASSERT(MutualRecord::test_dept_id == 100);
+    std::cout << "Test 1 (dept_id): PASSED" << std::endl;
+  }
 
-    // Test 2: dept_total_salary (50+60+70 = 180)
-    {
-        ASSERT(MutualRecord::test_total_salary == 180);
-        std::cout << "Test 2 (total_salary): PASSED" << std::endl;
-    }
+  // Test 2: dept_total_salary (50+60+70 = 180)
+  {
+    ASSERT(MutualRecord::test_total_salary == 180);
+    std::cout << "Test 2 (total_salary): PASSED" << std::endl;
+  }
 
-    // Test 3: dept_count = 3
-    {
-        ASSERT(MutualRecord::test_dept_count == 3);
-        std::cout << "Test 3 (dept_count): PASSED" << std::endl;
-    }
+  // Test 3: dept_count = 3
+  {
+    ASSERT(MutualRecord::test_dept_count == 3);
+    std::cout << "Test 3 (dept_count): PASSED" << std::endl;
+  }
 
-    if (testStatus == 0) {
-        std::cout << "\nAll mutual_record tests passed!" << std::endl;
-    } else {
-        std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
-    }
-    return testStatus;
+  if (testStatus == 0) {
+    std::cout << "\nAll mutual_record tests passed!" << std::endl;
+  } else {
+    std::cout << "\n" << testStatus << " test(s) failed!" << std::endl;
+  }
+  return testStatus;
 }

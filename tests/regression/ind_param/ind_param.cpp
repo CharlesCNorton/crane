@@ -1,8 +1,9 @@
+#include <ind_param.h>
+
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <functional>
-#include <ind_param.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -10,7 +11,7 @@
 #include <string>
 #include <variant>
 
-unsigned int IndParam::NatContainer::size(
+__attribute__((pure)) unsigned int IndParam::NatContainer::size(
     const std::shared_ptr<IndParam::NatContainer::t> &c) {
   return std::visit(
       Overloaded{[](const typename IndParam::NatContainer::t::Empty _args)

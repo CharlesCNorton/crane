@@ -3,49 +3,45 @@
 #include <stm_hash_map.h>
 
 #include <atomic>
+#include <barrier>
 #include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iostream>
-#include <optional>
 #include <memory>
+#include <optional>
 #include <random>
 #include <string>
 #include <thread>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <barrier>
 
 // ============================================================================
 //                     STANDARD BDE ASSERT TEST FUNCTION
 // ----------------------------------------------------------------------------
 
 // CHT is a template struct, so we access static members via CHT<K,V>::
-template<typename K, typename V>
-using CHT_funcs = CHT<K, V>;
+template <typename K, typename V> using CHT_funcs = CHT<K, V>;
 
 namespace {
 
 int testStatus = 0;
 
-void aSsErT(bool condition, const char *message, int line)
-{
-    if (condition) {
-        std::cout << "Error " __FILE__ "(" << line << "): " << message
-             << "    (failed)" << std::endl;
+void aSsErT(bool condition, const char *message, int line) {
+  if (condition) {
+    std::cout << "Error " __FILE__ "(" << line << "): " << message
+              << "    (failed)" << std::endl;
 
-        if (0 <= testStatus && testStatus <= 100) {
-            ++testStatus;
-        }
+    if (0 <= testStatus && testStatus <= 100) {
+      ++testStatus;
     }
+  }
 }
 
-}  // close unnamed namespace
+} // namespace
 
-#define ASSERT(X)                                              \
-    aSsErT(!(X), #X, __LINE__);
-
+#define ASSERT(X) aSsErT(!(X), #X, __LINE__);
 
 // ---- Helpers: eq and hash for int keys ----
 static inline bool int_eq(int a, int b) { return a == b; }
@@ -63,12 +59,15 @@ void test_no_lost_updates() {
 
   const int NUM_KEYS = 2000;
   const int NUM_THREADS = 8;
-  const int OPS_PER_THREAD = 100'000; // total increments (fast but stressful) ~= 8e5 (fast but stressful)
+  const int OPS_PER_THREAD = 100'000; // total increments (fast but stressful)
+                                      // ~= 8e5 (fast but stressful)
   const int REQUESTED_BUCKETS = 4096;
 
-  auto tbl = CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
+  auto tbl =
+      CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
   std::vector<std::atomic<int>> expected(NUM_KEYS);
-  for (auto &a : expected) a.store(0, std::memory_order_relaxed);
+  for (auto &a : expected)
+    a.store(0, std::memory_order_relaxed);
 
   // Start together for maximum overlap.
   std::barrier start_barrier(NUM_THREADS);
@@ -83,9 +82,8 @@ void test_no_lost_updates() {
       int k = key_dist(rng);
 
       // Increment in the table (monotonic, so we can assert exact totals).
-      (void)tbl->hash_update(k, [](std::optional<int> prev) {
-        return prev.value_or(0) + 1;
-      });
+      (void)tbl->hash_update(
+          k, [](std::optional<int> prev) { return prev.value_or(0) + 1; });
 
       // Ground truth in atomics (no locking, linearizable counter).
       expected[k].fetch_add(1, std::memory_order_relaxed);
@@ -94,8 +92,10 @@ void test_no_lost_updates() {
 
   std::vector<std::thread> threads;
   threads.reserve(NUM_THREADS);
-  for (int t = 0; t < NUM_THREADS; ++t) threads.emplace_back(worker, t);
-  for (auto &th : threads) th.join();
+  for (int t = 0; t < NUM_THREADS; ++t)
+    threads.emplace_back(worker, t);
+  for (auto &th : threads)
+    th.join();
 
   // Verify exact equality per key.
   for (int k = 0; k < NUM_KEYS; ++k) {
@@ -124,7 +124,8 @@ void test_delete_single_winner() {
   const int NUM_THREADS = 6;
   const int REQUESTED_BUCKETS = 8192;
 
-  auto tbl = CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
+  auto tbl =
+      CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
 
   // Pre-insert unique keys -> value = 10 * key (easy to check).
   for (int k = 0; k < NUM_KEYS; ++k) {
@@ -152,8 +153,10 @@ void test_delete_single_winner() {
 
   std::vector<std::thread> threads;
   threads.reserve(NUM_THREADS);
-  for (int t = 0; t < NUM_THREADS; ++t) threads.emplace_back(worker, t);
-  for (auto &th : threads) th.join();
+  for (int t = 0; t < NUM_THREADS; ++t)
+    threads.emplace_back(worker, t);
+  for (auto &th : threads)
+    th.join();
 
   // Exactly NUM_KEYS deletes must have succeeded overall.
   assert(successes.load(std::memory_order_relaxed) == NUM_KEYS);
@@ -167,7 +170,8 @@ void test_delete_single_winner() {
     assert(v == dflt);
   }
 
-  std::cout << "  ✓ Passed: exactly one successful delete per key; keys absent afterwards.\n";
+  std::cout << "  ✓ Passed: exactly one successful delete per key; keys absent "
+               "afterwards.\n";
 }
 
 // ---- Test 3: Racy puts/gets smoke test ----
@@ -182,7 +186,8 @@ void test_racy_puts_gets_smoke() {
   const int OPS_PER_THREAD = 50'000;
   const int REQUESTED_BUCKETS = 2048;
 
-  auto tbl = CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
+  auto tbl =
+      CHT<int, int>::new_hash<int, int>(int_eq, int_hash, REQUESTED_BUCKETS);
 
   // Seed some values so gets often find something.
   for (int k = 0; k < NUM_KEYS; ++k) {
@@ -194,7 +199,8 @@ void test_racy_puts_gets_smoke() {
   auto worker = [&](int tid) {
     std::mt19937 rng(std::random_device{}() ^ (tid * 0x9E3779B9));
     std::uniform_int_distribution<int> key_dist(0, NUM_KEYS - 1);
-    std::uniform_int_distribution<int> op_dist(0, 99); // 0..39 put, 40..99 get (60% gets)
+    std::uniform_int_distribution<int> op_dist(
+        0, 99); // 0..39 put, 40..99 get (60% gets)
 
     start_barrier.arrive_and_wait();
 
@@ -203,10 +209,12 @@ void test_racy_puts_gets_smoke() {
       int op = op_dist(rng);
 
       if (op < 40) {
-        // Concurrent writers keep overwriting; final value should be any thread id.
+        // Concurrent writers keep overwriting; final value should be any thread
+        // id.
         tbl->put(k, tid);
       } else {
-        // Concurrent readers just fetch; value (if present) must be a plausible tid.
+        // Concurrent readers just fetch; value (if present) must be a plausible
+        // tid.
         auto v = tbl->get(k);
         if (v.has_value()) {
           int x = *v;
@@ -218,8 +226,10 @@ void test_racy_puts_gets_smoke() {
 
   std::vector<std::thread> threads;
   threads.reserve(NUM_THREADS);
-  for (int t = 0; t < NUM_THREADS; ++t) threads.emplace_back(worker, t);
-  for (auto &th : threads) th.join();
+  for (int t = 0; t < NUM_THREADS; ++t)
+    threads.emplace_back(worker, t);
+  for (auto &th : threads)
+    th.join();
 
   // Basic post-condition sanity: keys should still be present with a valid tid.
   for (int k = 0; k < NUM_KEYS; ++k) {
@@ -247,9 +257,10 @@ int main() {
   }
 
   std::cout << "\nAll tests passed ✅\n";
-  std::cout << "Tip: also run under ThreadSanitizer (-fsanitize=thread) for extra confidence.\n";
+  std::cout << "Tip: also run under ThreadSanitizer (-fsanitize=thread) for "
+               "extra confidence.\n";
   return 0;
 }
 
-// clang++ -I. -std=c++23 -fsanitize=thread -O2 hash.o hash.t.cpp -o hash.t.exe; ./hash.t.exe
-// clang++ -I. -std=c++23 -c hash.cpp -o hash.o
+// clang++ -I. -std=c++23 -fsanitize=thread -O2 hash.o hash.t.cpp -o hash.t.exe;
+// ./hash.t.exe clang++ -I. -std=c++23 -c hash.cpp -o hash.o

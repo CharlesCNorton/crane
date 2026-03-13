@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <jms_bbl_roundtrip.h>
 
-int main()
-{
-    (void)JmsBblRoundtrip::t;
-    return 0;
+int main() {
+  (void)JmsBblRoundtrip::t;
+  return 0;
 }

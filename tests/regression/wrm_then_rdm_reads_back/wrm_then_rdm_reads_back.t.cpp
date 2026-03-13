@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <wrm_then_rdm_reads_back.h>
 
-int main()
-{
-    (void)WrmThenRdmReadsBack::t;
-    return 0;
+int main() {
+  (void)WrmThenRdmReadsBack::t;
+  return 0;
 }

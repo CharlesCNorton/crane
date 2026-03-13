@@ -2,8 +2,7 @@
 // Distributed under the terms of the GNU LGPL v2.1 license.
 #include <wrr_preserves_other_ports.h>
 
-int main()
-{
-    (void)WrrPreservesOtherPorts::t;
-    return 0;
+int main() {
+  (void)WrrPreservesOtherPorts::t;
+  return 0;
 }
